@@ -27,12 +27,14 @@
         "coldbox":"coldbox/",
         "testbox":"testbox/",
         "cbsecurity":"modules/cbsecurity/",
-        "qb":"modules/qb/"
+        "qb":"modules/qb/",
+        "cbmailservices":"modules/cbmailservices/"
     },
     "dependencies":{
         "coldbox":"^6.0.0",
         "cbsecurity":"be",
-        "qb":"^8.10.0"
+        "qb":"^8.10.0",
+        "cbmailservices":"^2.5.0-snapshot"
     },
     "scripts":{
         "postPublish":"!git push --follow-tags",

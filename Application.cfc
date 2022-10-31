@@ -6,17 +6,10 @@
 component {
 
 	// Application properties
-	this.name              = hash( getCurrentTemplatePath() );
+	this.name              = "Genesis Starter App";
 	this.sessionManagement = true;
 	this.sessionTimeout    = createTimespan( 0, 0, 30, 0 );
 	this.setClientCookies  = true;
-
-	// Java Integration
-	this.javaSettings = {
-		loadPaths               : [ expandPath( "./lib" ) ],
-		loadColdFusionClassPath : true,
-		reloadOnChange          : false
-	};
 
 	// COLDBOX STATIC PROPERTY, DO NOT CHANGE UNLESS THIS IS NOT THE ROOT OF YOUR COLDBOX APP
 	COLDBOX_APP_ROOT_PATH = getDirectoryFromPath( getCurrentTemplatePath() );
