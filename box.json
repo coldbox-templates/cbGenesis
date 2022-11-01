@@ -23,19 +23,19 @@
         "commandbox-migrations":"*"
     },
     "dependencies":{
-        "cbsecurity":"be",
         "qb":"^8.10.0",
         "coldbox":"be",
         "cbmailservices":"^2.5.1+90",
-        "BCrypt":"^3.1.0+4"
+        "BCrypt":"^3.1.0+4",
+        "cbsecurity":"be"
     },
     "installPaths":{
         "testbox":"testbox/",
-        "cbsecurity":"modules/cbsecurity/",
         "qb":"modules/qb/",
         "coldbox":"coldbox/",
         "cbmailservices":"modules/cbmailservices/",
-        "BCrypt":"modules/BCrypt/"
+        "BCrypt":"modules/BCrypt/",
+        "cbsecurity":"modules/cbsecurity/"
     },
     "scripts":{
         "postPublish":"!git push --follow-tags",

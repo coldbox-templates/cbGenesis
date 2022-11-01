@@ -31,7 +31,7 @@ component accessors="true" singleton {
 
 	/**
 	 * New User Dispenser
-	 */
+	 */	w
 	BasicAuthUser function new() provider="BasicAuthUser@cbsecurity"{
 	}
 
