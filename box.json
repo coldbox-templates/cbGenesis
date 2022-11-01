@@ -26,21 +26,23 @@
         "cbsecurity":"be",
         "qb":"^8.10.0",
         "coldbox":"be",
-        "cbmailservices":"^2.5.1+90"
+        "cbmailservices":"^2.5.1+90",
+        "BCrypt":"^3.1.0+4"
     },
     "installPaths":{
         "testbox":"testbox/",
         "cbsecurity":"modules/cbsecurity/",
         "qb":"modules/qb/",
         "coldbox":"coldbox/",
-        "cbmailservices":"modules/cbmailservices/"
+        "cbmailservices":"modules/cbmailservices/",
+        "BCrypt":"modules/BCrypt/"
     },
     "scripts":{
         "postPublish":"!git push --follow-tags",
         "postInstall":"pathExists .env || cp .env.example .env",
-        "format":"cfformat run config/,handlers/,interceptors/,models/,modules_app/,tests/specs/,*.cfc --overwrite",
-        "format:check":"cfformat check config/,handlers/,interceptors/,models/,modules_app/,tests/specs/,*.cfc",
-        "format:watch":"cfformat watch path='config/,handlers/,interceptors/,models/,modules_app/,tests/specs/,*.cfc' settingsPath='.cfformat.json'",
+        "format":"cfformat run config/,handlers/,models/,modules_app/,tests/specs/,Application.cfc --overwrite",
+        "format:check":"cfformat check config/,handlers/,models/,modules_app/,tests/specs/,Application.cfc",
+        "format:watch":"cfformat watch path='config/,handlers/,models/,modules_app/,tests/specs/,Application.cfc' settingsPath='.cfformat.json'",
         "build:docker":"!docker build --no-cache -t my-coldbox-app -f ./Dockerfile ./",
         "run:docker":"!docker run -it -p 8080:8080 my-coldbox-app"
     },
