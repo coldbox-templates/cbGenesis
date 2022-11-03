@@ -26,15 +26,15 @@ component {
 
 		// User Registration
 		get( pattern: "/register", name: "register.request" ).to( "Registration.index" );
-		post( pattern: "/register", name: "register.create" )to( "Registration.create" );
+		post( pattern: "/register", name: "register.create" ).to( "Registration.create" );
 
 		// User Verification
 		get( pattern: "/verify-registration/:token", name: "verification.validate" ).to( "VerifyRegistration.index" );
-		post( pattern: "/verify-registration", name: "verification.create" )to( "VerifyRegistration.create" );
+		post( pattern: "/verify-registration", name: "verification.create" ).to( "VerifyRegistration.create" );
 
 		// Forgot Password
 		get( pattern: "/forgot-password", name: "password.request" ).to( "ForgetPassword.index" );
-		post( pattern: "/forgot-password", name: "password.reminder" )to( "ForgetPassword.create" );
+		post( pattern: "/forgot-password", name: "password.reminder" ).to( "ForgetPassword.create" );
 
 		// Reset Password
 		get( pattern: "/reset-password/:token", name: "password.reset" ).to( "ResetPassword.index" );

@@ -12,6 +12,8 @@ component accessors="true" extends="BaseEntity" {
 	property name="email";
 	property name="password";
 	property name="permissions";
+	property name="verifiedAt";
+	property name="lastLogin";
 
 	/**
 	 * Validation Constraints

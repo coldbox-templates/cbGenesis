@@ -68,7 +68,7 @@ component {
 				// Default Authorization Action: override or redirect when a user does not have enough permissions to access something
 				"defaultAuthorizationAction"  : "redirect",
 				// Firewall database event logs.
-				"logs"                        : { "enabled" : true, "table" : "cbsecurity_logs" }
+				"logs"                        : { "enabled" : true, "table" : "cbsecurity_logs" },
 				// Firewall Rules, this can be a struct of detailed configuration
 				// or a simple array of inline rules
 				"rules"                       : []

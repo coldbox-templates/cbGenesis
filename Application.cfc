@@ -54,10 +54,10 @@ component {
 	 * --------------------------------------------------------------------------
 	 * Location Mappings
 	 * --------------------------------------------------------------------------
-	 * - cbgenesis : Quick reference to root application
+	 * - cbapp : Quick reference to root application
 	 * - coldbox : Where ColdBox library is installed
 	 */
-	this.mappings[ "/cbgenesis" ] = COLDBOX_APP_ROOT_PATH;
+	this.mappings[ "/cbapp" ] = COLDBOX_APP_ROOT_PATH;
 	this.mappings[ "/coldbox" ]   = COLDBOX_APP_ROOT_PATH & "coldbox";
 
 	/**

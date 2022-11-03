@@ -1,5 +1,5 @@
 /**
- * The cbgenesis basic entity
+ * A cbgenesis basic entity
  */
 component accessors="true"{
 
@@ -20,7 +20,7 @@ component accessors="true"{
 	}
 
 	/**
-	 * Verify if this is a valid user or not
+	 * Do we have a new or loaded entity
 	 */
 	boolean function isLoaded(){
 		return ( !isNull( variables.id ) && len( variables.id ) );

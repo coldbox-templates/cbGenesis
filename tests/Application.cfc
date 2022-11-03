@@ -1,31 +1,42 @@
 /**
-* Copyright 2005-2007 ColdBox Framework by Luis Majano and Ortus Solutions, Corp
-* www.ortussolutions.com
-* ---
-*/
-component{
+ * Copyright 2005-2007 ColdBox Framework by Luis Majano and Ortus Solutions, Corp
+ * www.ortussolutions.com
+ * ---
+ */
+component {
 
 	// APPLICATION CFC PROPERTIES
-	this.name 				= "ColdBoxTestingSuite";
-	this.sessionManagement 	= true;
-	this.setClientCookies 	= true;
-	this.sessionTimeout 	= createTimeSpan( 0, 0, 15, 0 );
-	this.applicationTimeout = createTimeSpan( 0, 0, 15, 0 );
-    // Turn on/off white space management
+	this.name                 = "ColdBoxTestingSuite";
+	this.sessionManagement    = true;
+	this.setClientCookies     = true;
+	this.sessionTimeout       = createTimespan( 0, 0, 15, 0 );
+	this.applicationTimeout   = createTimespan( 0, 0, 15, 0 );
+	// Turn on/off white space management
 	this.whiteSpaceManagement = "smart";
-    this.enableNullSupport = shouldEnableFullNullSupport();
+	this.enableNullSupport    = shouldEnableFullNullSupport();
 
 	// Create testing mapping
 	this.mappings[ "/tests" ] = getDirectoryFromPath( getCurrentTemplatePath() );
 	// Map back to its root
-	rootPath = REReplaceNoCase( this.mappings[ "/tests" ], "tests(\\|/)", "" );
-	this.mappings[ "/root" ]   = rootPath;
+	rootPath                  = reReplaceNoCase( this.mappings[ "/tests" ], "tests(\\|/)", "" );
+	this.mappings[ "/cbapp" ] = rootPath;
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * ORM + Datasource Settings
+	 * --------------------------------------------------------------------------
+	 * - Please update the cfcLocation as needed to locate more ORM entities for your app
+	 * - Dialect is incredibly important! Do not let Hibernate auto configur it, you can get nasty errors.
+	 * So Make sure you select one.
+	 */
+	// Default Datasource
+	this.datasource = "coldbox";
 
 	public boolean function onRequestStart( targetPage ){
 		// Set a high timeout for long running tests
-		setting requestTimeout="9999";
+		setting requestTimeout   ="9999";
 		// New ColdBox Virtual Application Starter
-		request.coldBoxVirtualApp = new coldbox.system.testing.VirtualApp( appMapping = "/root" );
+		request.coldBoxVirtualApp= new coldbox.system.testing.VirtualApp( appMapping = "/cbapp" );
 
 		// If hitting the runner or specs, prep our virtual app
 		if ( getBaseTemplatePath().replace( expandPath( "/tests" ), "" ).reFindNoCase( "(runner|specs)" ) ) {
@@ -33,8 +44,8 @@ component{
 		}
 
 		// ORM Reload for fresh results
-		if( structKeyExists( url, "fwreinit" ) ){
-			if( structKeyExists( server, "lucee" ) ){
+		if ( structKeyExists( url, "fwreinit" ) ) {
+			if ( structKeyExists( server, "lucee" ) ) {
 				pagePoolClear();
 			}
 			// ormReload();
@@ -44,13 +55,14 @@ component{
 		return true;
 	}
 
-	public void function onRequestEnd( required targetPage ) {
+	public void function onRequestEnd( required targetPage ){
 		request.coldBoxVirtualApp.shutdown();
 	}
 
-    private boolean function shouldEnableFullNullSupport() {
-        var system = createObject( "java", "java.lang.System" );
-        var value = system.getEnv( "FULL_NULL" );
-        return isNull( value ) ? false : !!value;
-    }
+	private boolean function shouldEnableFullNullSupport(){
+		var system = createObject( "java", "java.lang.System" );
+		var value  = system.getEnv( "FULL_NULL" );
+		return isNull( value ) ? false : !!value;
+	}
+
 }

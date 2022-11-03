@@ -76,18 +76,6 @@ component {
 
 		/**
 		 * --------------------------------------------------------------------------
-		 * Module Loading Directives
-		 * --------------------------------------------------------------------------
-		 */
-		modules = {
-			// An array of modules names to load, empty means all of them
-			include : [],
-			// An array of modules names to NOT load, empty means none
-			exclude : []
-		};
-
-		/**
-		 * --------------------------------------------------------------------------
 		 * Application Logging (https://logbox.ortusbooks.com)
 		 * --------------------------------------------------------------------------
 		 * By Default we log to the console, but you can add many appenders or destinations to log to.
@@ -154,18 +142,6 @@ component {
 			autoSave     : true // automatically save flash scopes at end of a request and on relocations.
 		};
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * App Conventions
-		 * --------------------------------------------------------------------------
-		 */
-		conventions = {
-			handlersLocation : "handlers",
-			viewsLocation    : "views",
-			layoutsLocation  : "layouts",
-			modelsLocation   : "models",
-			eventAction      : "index"
-		};
 	}
 
 	/**
