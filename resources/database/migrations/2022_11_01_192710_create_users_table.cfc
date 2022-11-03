@@ -2,11 +2,12 @@ component {
 
     function up( schema, qb ) {
 		schema.create( "users", (table)=>{
-			table.string( "userId", 50 ).primaryKey();
+			table.string( "id", 50 ).primaryKey();
 			table.string( "firstName" );
 			table.string( "lastName" );
 			table.string( "email" );
 			table.string( "password" );
+			table.longText( "permissions" ).nullable();
 			table.datetime( "createdDate" ).withCurrent();
 			table.datetime( "updatedDate" ).withCurrent();
 			table.boolean( "isActive" ).default( true );

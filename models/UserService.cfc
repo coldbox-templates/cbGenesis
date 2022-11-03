@@ -1,6 +1,5 @@
 /**
  * This User Service provider connects to the database configured in your appliction.
- * It also leverages bcrypt for password encryption and the BasicAuthUser from cbSecurity as our Object Model.
  */
 component accessors="true" singleton {
 
@@ -31,8 +30,8 @@ component accessors="true" singleton {
 
 	/**
 	 * New User Dispenser
-	 */	w
-	BasicAuthUser function new() provider="BasicAuthUser@cbsecurity"{
+	 */
+	User function new() provider="User"{
 	}
 
 	/**
@@ -42,7 +41,7 @@ component accessors="true" singleton {
 	 *
 	 * @return The located user or a new un-loaded user object
 	 */
-	BasicAuthUser function retrieveUserById( required id ){
+	User function retrieveUserById( required id ){
 		return populator.populateFromStruct(
 			new (),
 			qb.table( "users" )
@@ -58,11 +57,11 @@ component accessors="true" singleton {
 	 *
 	 * @return The valid user object representing the username or an empty user object
 	 */
-	BasicAuthUser function retrieveUserByUsername( required username ){
+	User function retrieveUserByUsername( required username ){
 		return populator.populateFromStruct(
 			new (),
 			qb.table( "users" )
-				.where( "username", arguments.username )
+				.where( "email", arguments.username )
 				.first()
 		);
 	}
