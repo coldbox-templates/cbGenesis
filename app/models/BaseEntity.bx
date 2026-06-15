@@ -1,7 +1,7 @@
 /**
  * A cbgenesis basic entity which provides uniformity to all objects
  */
-component accessors="true" {
+class threadSafe{
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -18,7 +18,11 @@ component accessors="true" {
 	 * --------------------------------------------------------------------------
 	 */
 
+	/**
+	 * Every entity has an id, createdDate, modifiedDate and isActive property
+	 */
 	property name="id";
+	property name="entityName";
 	property name="createdDate";
 	property name="modifiedDate";
 	property
@@ -30,29 +34,28 @@ component accessors="true" {
 	 * Constructor
 	 */
 	function init(){
-		variables.isActive    = true;
-		variables.id = variables.createdDate = variables.modifiedDate = "";
+		variables.isActive    = true
+		variables.id = variables.createdDate = variables.modifiedDate = ""
 
-		return this;
+		return this
 	}
 
 	/**
 	 * Do we have a new or loaded entity
 	 */
 	boolean function isLoaded(){
-		return ( !isNull( variables.id ) && len( variables.id ) );
+		return ( !isNull( variables.id ) && len( variables.id ) )
 	}
 
 	/**
-	 * Get the entity name
+	 * Get the entity name. Used for logging and other purposes.
+	 * If the entityName property is not set, it will default to the class name.
 	 */
 	function getEntityName(){
 		if ( isNull( variables.entityName ) ) {
-			var md               = getMetadata( this );
-			variables.entityName = ( md.keyExists( "entityName" ) ? md.entityName : listLast( md.name, "." ) );
+			variables.entityName = this.$bx.meta.name
 		}
-
-		return variables.entityName;
+		return variables.entityName
 	}
 
 	/***** Persistence Events : Modeled After ORM Events ******/
@@ -61,13 +64,13 @@ component accessors="true" {
 	 * Called before an entity is inserted
 	 */
 	function preInsert( entity ){
-		var now = now();
+		var rightNow = now()
 		// prevent override of explicit stamps from imports
 		if ( isNull( variables.createdDate ) ) {
-			variables.createdDate = now;
+			variables.createdDate = rightNow
 		}
 		if ( isNull( variables.modifiedDate ) ) {
-			variables.modifiedDate = now;
+			variables.modifiedDate = rightNow
 		}
 	}
 
@@ -81,7 +84,7 @@ component accessors="true" {
 	 * Called before an entity is updated
 	 */
 	function preUpdate( entity ){
-		variables.modifiedDate = now();
+		variables.modifiedDate = now()
 	}
 
 	/**

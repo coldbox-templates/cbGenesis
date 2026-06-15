@@ -1,7 +1,9 @@
 /**
  * This User Service provider connects to the database configured in your appliction.
  */
-component accessors="true" singleton {
+@singleton
+@threadSafe
+class {
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -18,14 +20,14 @@ component accessors="true" singleton {
 	 * Constructor
 	 */
 	function init(){
-		return this;
+		return this
 	}
 
 	/**
 	 * New User Dispenser
 	 */
-	User function new() provider="User"{
-	}
+	@provider( "User" )
+	User function new(){}
 
 	/**
 	 * Get a new user by id
@@ -36,13 +38,13 @@ component accessors="true" singleton {
 	 */
 	User function retrieveUserById( required id ){
 		return populator.populateFromStruct(
-			target : new (),
+			target : new(),
 			memento: qb
 				.from( "users" )
 				.where( "id", arguments.id )
 				.first(),
 			ignoreTargetLists: true
-		);
+		)
 	}
 
 	/**
@@ -54,13 +56,13 @@ component accessors="true" singleton {
 	 */
 	User function retrieveUserByUsername( required username ){
 		return populator.populateFromStruct(
-			target : new (),
+			target : new(),
 			memento: qb
 				.from( "users" )
 				.where( "email", arguments.username )
 				.first(),
 			ignoreTargetLists: true
-		);
+		)
 	}
 
 	/**
@@ -73,9 +75,11 @@ component accessors="true" singleton {
 	 * @return true if valid, else false
 	 */
 	boolean function isValidCredentials( required username, required password ){
-		var oUser = retrieveUserByUsername( arguments.username );
+		var oUser = retrieveUserByUsername( arguments.username )
+
+		// If the user is not loaded or the user has not been verified, then we cannot log in
 		if ( !oUser.isLoaded() || !oUser.isEmailVerified() ) {
-			return false;
+			return false
 		}
 
 		return variables.bcrypt.checkPassword( hashSecurely( arguments.password ), oUser.getPassword() );

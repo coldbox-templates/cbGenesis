@@ -14,7 +14,7 @@
  *	* eventArguments : The struct of args to pass to the event
  *	* renderResults : Render back the results of the event
  *******************************************************************************/
-class extends="coldbox.system.testing.BaseTestCase" appMapping="/app" {
+class extends="tests.resources.BaseIntegrationSpec"{
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
 

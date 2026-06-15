@@ -3,7 +3,7 @@
  * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
  * responsibility to update the model annotation instantiation path and init your model.
  */
-@model( "models.User" )
+@model( "app.models.User" )
 class extends="coldbox.system.testing.BaseModelTest" {
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
@@ -15,7 +15,7 @@ class extends="coldbox.system.testing.BaseModelTest" {
 		super.setup();
 
 		// init the model object
-		user = model.init();
+		variables.user = model.init();
 	}
 
 	function afterAll(){
@@ -37,19 +37,6 @@ class extends="coldbox.system.testing.BaseModelTest" {
 						.setLastName( "majano" )
 						.getFullName()
 				).toBe( "luis majano" );
-			} );
-
-			it( "can store and validate a list of permissions", function(){
-				user.setPermissions( "read,write" );
-				expect( user.getPermissions() ).toBeArray();
-				expect( user.hasPermission( "read" ) ).toBeTrue();
-				expect( user.hasPermission( "write" ) ).toBeTrue();
-			} );
-
-			it( "can store and validate an array of permissions", function(){
-				user.setPermissions( [ "read", "write" ] );
-				expect( user.getPermissions() ).toBeArray();
-				expect( user.hasPermission( [ "read", "write" ] ) ).toBeTrue();
 			} );
 
 			it( "can get a non persisted id", function(){

@@ -28,6 +28,18 @@ class {
 	// Create testing mapping
 	this.mappings[ "/tests" ]   = _testsRoot
 
+	this.datasource = "cbGenesis"
+	this.datasources = {
+		"cbGenesis" = {
+			driver: getSystemSetting( "DB_DRIVER", "mysql" ),
+			host: getSystemSetting( "DB_HOST", "localhost" ),
+			port: getSystemSetting( "DB_PORT", 3306 ),
+			database: getSystemSetting( "DB_DATABASE", "cbGenesis" ),
+			username: getSystemSetting( "DB_USER", "" ),
+			password: getSystemSetting( "DB_PASSWORD", "" )
+		}
+	}
+
 	/**
 	 * Fires on every test request. It builds a Virtual ColdBox application for you
 	 *
