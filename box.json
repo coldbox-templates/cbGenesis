@@ -3,7 +3,7 @@
     "version":"1.0.0",
     "author":"You",
     "location":"forgeboxStorage",
-	"language":"BoxLang",
+    "language":"BoxLang",
     "slug":"cbgenesis",
     "createPackageDirectory":false,
     "type":"mvc",
@@ -16,7 +16,7 @@
     "shortDescription":"This starter template will give you all the basics you need to get started with ColdBox.",
     "contributors":[],
     "ignore":[],
-	"installPathConventions":{
+    "installPathConventions":{
         "modules":"lib/modules"
     },
     "devDependencies":{
@@ -30,7 +30,8 @@
         "cbmailservices":"^2",
         "cbsecurity":"^3",
         "cbvalidation":"^4",
-        "mementifier":"^3"
+        "mementifier":"^3",
+        "vite-helpers":"^2"
     },
     "installPaths":{
         "coldbox":"lib/coldbox/",
@@ -39,7 +40,8 @@
         "cbmailservices":"lib/modules/cbmailservices/",
         "cbsecurity":"lib/modules/cbsecurity/",
         "mementifier":"lib/modules/mementifier/",
-        "cbvalidation":"lib/modules/cbvalidation/"
+        "cbvalidation":"lib/modules/cbvalidation/",
+        "vite-helpers":"lib/modules/vite-helpers/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",

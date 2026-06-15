@@ -55,7 +55,17 @@ class{
 	 * ORM + Datasource Settings
 	 * --------------------------------------------------------------------------
 	 */
-	this.datasource = "coldbox"
+	this.datasource = "cbGenesis"
+	this.datasources = {
+		"cbGenesis" = {
+			driver: getSystemSetting( "DB_DRIVER", "mysql" ),
+			host: getSystemSetting( "DB_HOST", "localhost" ),
+			port: getSystemSetting( "DB_PORT", 3306 ),
+			database: getSystemSetting( "DB_DATABASE", "cbGenesis" ),
+			username: getSystemSetting( "DB_USER", "" ),
+			password: getSystemSetting( "DB_PASSWORD", "" )
+		}
+	}
 
 	/**
 	 * Fires when the application starts

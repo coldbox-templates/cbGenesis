@@ -2,6 +2,7 @@
     "name":"cbGenesis",
     "app":{
         "cfengine":"boxlang@1",
+        "serverHomeDirectory":"./.engine",
         "engineConfigFile":"./runtime/boxlang.json"
     },
     "jvm":{
@@ -10,6 +11,7 @@
         "args":"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8181"
     },
     "web":{
+        "directoryBrowsing":true,
         "webroot":"public",
         "rewrites":{
             "enable":true
@@ -20,6 +22,6 @@
         }
     },
     "scripts":{
-        "onServerInitialInstall":"install bx-esapi,bx-password-encrypt,bx-mail"
+        "onServerInitialInstall":"install bx-esapi,bx-password-encrypt,bx-mail,bx-mysql --noSave"
     }
 }

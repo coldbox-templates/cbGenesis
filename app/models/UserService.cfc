@@ -13,7 +13,6 @@ component accessors="true" singleton {
 	property name="wirebox"   inject="wirebox";
 	property name="log"       inject="logbox:logger:{this}";
 	property name="qb"        inject="QueryBuilder@qb";
-	property name="bcrypt"    inject="BCrypt@BCrypt";
 
 	/**
 	 * Constructor

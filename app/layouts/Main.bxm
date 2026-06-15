@@ -17,8 +17,7 @@
 </head>
 <body>
 	<div id="app">
-		<!--- Vue App --->
-		<Hello />
+		Hello World
 	</div>
 </body>
 </html>

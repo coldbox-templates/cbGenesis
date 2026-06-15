@@ -5,9 +5,10 @@
         "seedsDirectory": "resources/database/seeds/",
         "properties": {
             "defaultGrammar": "AutoDiscover@qb",
-            "schema": "${DB_DATABASE}",
-            "migrationsTable": "cfmigrations",
+            "schema": "${DB_SCHEMA}",
+            "migrationsTable": "migrations",
             "connectionInfo": {
+				"database" : "${DB_DATABASE}",
                 "password": "${DB_PASSWORD}",
                 "connectionString": "${DB_CONNECTIONSTRING}",
                 "class": "${DB_CLASS}",
