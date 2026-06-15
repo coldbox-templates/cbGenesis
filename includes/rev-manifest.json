@@ -1,7 +1,0 @@
-{
-  "includes/js/App.js": "/includes/js/App.js",
-  "includes/css/App.css": "/includes/css/App.css",
-  "includes/css/App.js": "/includes/css/App.js",
-  "includes/js/runtime.js": "/includes/js/runtime.js",
-  "includes/js/vendor.js": "/includes/js/vendor.js"
-}

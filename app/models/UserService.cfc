@@ -1,0 +1,167 @@
+/**
+ * This User Service provider connects to the database configured in your appliction.
+ */
+component accessors="true" singleton {
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Injections
+	 * --------------------------------------------------------------------------
+	 */
+
+	property name="populator" inject="wirebox:populator";
+	property name="wirebox"   inject="wirebox";
+	property name="log"       inject="logbox:logger:{this}";
+	property name="qb"        inject="QueryBuilder@qb";
+	property name="bcrypt"    inject="BCrypt@BCrypt";
+
+	/**
+	 * Constructor
+	 */
+	function init(){
+		return this;
+	}
+
+	/**
+	 * New User Dispenser
+	 */
+	User function new() provider="User"{
+	}
+
+	/**
+	 * Get a new user by id
+	 *
+	 * @id The id to get the user with
+	 *
+	 * @return The located user or a new un-loaded user object
+	 */
+	User function retrieveUserById( required id ){
+		return populator.populateFromStruct(
+			target : new (),
+			memento: qb
+				.from( "users" )
+				.where( "id", arguments.id )
+				.first(),
+			ignoreTargetLists: true
+		);
+	}
+
+	/**
+	 * Get a user by username
+	 *
+	 * @username The username to get the user with
+	 *
+	 * @return The valid user object representing the username or an empty user object
+	 */
+	User function retrieveUserByUsername( required username ){
+		return populator.populateFromStruct(
+			target : new (),
+			memento: qb
+				.from( "users" )
+				.where( "email", arguments.username )
+				.first(),
+			ignoreTargetLists: true
+		);
+	}
+
+	/**
+	 * Verify if the incoming username and password are valid credentials. The user must also have been verified
+	 * in order to log in.
+	 *
+	 * @username The username to test
+	 * @password The password to test
+	 *
+	 * @return true if valid, else false
+	 */
+	boolean function isValidCredentials( required username, required password ){
+		var oUser = retrieveUserByUsername( arguments.username );
+		if ( !oUser.isLoaded() || !oUser.isEmailVerified() ) {
+			return false;
+		}
+
+		return variables.bcrypt.checkPassword( hashSecurely( arguments.password ), oUser.getPassword() );
+	}
+
+	/**
+	 * Create a new user in the system.  The user is created but it is NOT verified.
+	 * The user must verify it's email first.
+	 *
+	 * @user The user to create
+	 */
+	User function create( required user ){
+		transaction {
+			// Save it first
+			save( arguments.user );
+			// Send Account Creation Email
+			sendNewUserEmail( arguments.user );
+		}
+		return arguments.user;
+	}
+
+	/**
+	 * This sends the user a new user confirmation email.
+	 *
+	 * @user The user to send the confirmation to
+	 */
+	function sendNewUserEmail( required user ){
+
+	}
+
+	/**
+	 * Save a user in the database
+	 *
+	 * @user           The user to save
+	 * @passwordChange Are we changing the user's password
+	 *
+	 * @return The persisted user
+	 */
+	function save( required user, boolean passwordChange = false ){
+		// bcrypt password if it's a new user or a password change
+		if ( !arguments.user.isLoaded() OR arguments.passwordChange ) {
+			arguments.user.setPassword( variables.bcrypt.hashPassword( arguments.user.getPassword() ) );
+		}
+
+		// Store it
+		var qResults = qb
+			.from( "users" )
+			.where( "id", arguments.user.getId() )
+			.updateOrInsert(
+				values = {
+					"id"          : arguments.user.getId(),
+					"createdDate" : {
+						value     : arguments.user.getCreatedDate(),
+						cfsqlType : "timestamp"
+					},
+					"modifiedDate" : {
+						value     : arguments.user.getModifiedDate(),
+						cfsqlType : "timestamp"
+					},
+					"isActive"    : arguments.user.getIsActive(),
+					"firstName"   : arguments.user.getName(),
+					"lastName"    : arguments.user.getName(),
+					"email"       : arguments.user.getEmail(),
+					"permissions" : arguments.user.getUsername(),
+					"password"    : bcrypt.hashPassword( arguments.user.getPassword() ),
+					"verifiedAt"  : {
+						value     : arguments.user.getVerifiedAt(),
+						cfsqlType : "timestamp"
+					}
+				}
+			);
+
+		// populate the id
+		arguments.user.setId( qResults.result.generatedKey );
+
+		return arguments.user;
+	}
+
+	/**
+	 * Hash the incoming target according to our hashing algorithm and settings
+	 *
+	 * @target The string target to hash
+	 */
+	private string function hashSecurely( required string target ){
+		return variables.bcrypt.hashPassword( arguments.target );
+	}
+
+}

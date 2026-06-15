@@ -1,8 +1,9 @@
 {
-    "name":"Genesis Starter Template",
+    "name":"CB Genesis Starter Template",
     "version":"1.0.0",
     "author":"You",
     "location":"forgeboxStorage",
+	"language":"BoxLang",
     "slug":"cbgenesis",
     "createPackageDirectory":false,
     "type":"mvc",
@@ -15,36 +16,39 @@
     "shortDescription":"This starter template will give you all the basics you need to get started with ColdBox.",
     "contributors":[],
     "ignore":[],
+	"installPathConventions":{
+        "modules":"lib/modules"
+    },
     "devDependencies":{
-        "testbox":"^4",
-        "commandbox-dotenv":"*",
-        "commandbox-cfconfig":"*",
-        "commandbox-cfformat":"*",
+        "testbox":"*",
+        "commandbox-boxlang":"*",
         "commandbox-migrations":"*"
     },
     "dependencies":{
-        "qb":"^8.10.0",
         "coldbox":"be",
-        "cbmailservices":"^2.5.1+90",
-        "BCrypt":"^3.1.0+4",
-        "cbsecurity":"be"
+        "qb":"^13",
+        "cbmailservices":"^2",
+        "cbsecurity":"^3",
+        "cbvalidation":"^4",
+        "mementifier":"^3"
     },
     "installPaths":{
-        "testbox":"testbox/",
-        "qb":"modules/qb/",
-        "coldbox":"coldbox/",
-        "cbmailservices":"modules/cbmailservices/",
-        "BCrypt":"modules/BCrypt/",
-        "cbsecurity":"modules/cbsecurity/"
+        "coldbox":"lib/coldbox/",
+        "testbox":"lib/testbox/",
+        "qb":"lib/modules/qb/",
+        "cbmailservices":"lib/modules/cbmailservices/",
+        "cbsecurity":"lib/modules/cbsecurity/",
+        "mementifier":"lib/modules/mementifier/",
+        "cbvalidation":"lib/modules/cbvalidation/"
     },
     "scripts":{
-        "postPublish":"!git push --follow-tags",
         "postInstall":"pathExists .env || cp .env.example .env",
-        "format":"cfformat run config/,handlers/,models/,modules_app/,tests/specs/,Application.cfc --overwrite",
-        "format:check":"cfformat check config/,handlers/,models/,modules_app/,tests/specs/,Application.cfc",
-        "format:watch":"cfformat watch path='config/,handlers/,models/,modules_app/,tests/specs/,Application.cfc' settingsPath='.cfformat.json'",
-        "build:docker":"!docker build --no-cache -t my-coldbox-app -f ./Dockerfile ./",
-        "run:docker":"!docker run -it -p 8080:8080 my-coldbox-app"
+        "format":"!boxlang format --source app/,tests/specs/,*.bx",
+        "format:check":"!boxlang format --check --source app/,tests/specs/,*.bx",
+        "docker:build":"!docker build --no-cache -t my-coldbox-app -f ./docker/Dockerfile ./",
+        "docker:run":"!docker run -it -p 8080:8080 my-coldbox-app",
+        "docker:bash":"!docker run -it my-coldbox-app /bin/bash",
+        "docker:stack":"!docker compose -f docker/docker-compose.yaml ${1}"
     },
     "testbox":{
         "runner":"/tests/runner.cfm"

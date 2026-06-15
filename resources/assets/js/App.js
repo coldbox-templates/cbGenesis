@@ -1,5 +1,4 @@
-import Alpine from 'alpinejs';
+import { createApp } from "vue";
+import Hello from "./components/Hello.vue";
 
-window.Alpine = Alpine;
-
-Alpine.start();
+createApp( Hello ).mount( "#app" );

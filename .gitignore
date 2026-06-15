@@ -2,15 +2,21 @@
 .DS_Store
 settings.xml
 WEB-INF
+build/**
 
 # Engines + Database + CBFS + Secrets
+.tmp/**
 .env
 .engine/**
-.db/**
 .cbfs/**
+docker/.db/**
+
+# Vite
+/public/includes/build/**
 
 # logs + tests
-logs/**
+app/logs/**
+runtime/logs/**
 tests/results/**
 
 # npm
@@ -19,7 +25,12 @@ npm-debug.log
 yarn-error.log
 
 ## Ignored Dependencies
-coldbox/*
-testbox/*
-modules/*
-modules/**/apidocs/**
+.devcontainer/.db/**
+effective-pom.xml
+
+## Global Libs
+lib/**
+!lib/java/
+!lib/java/.gitkeep
+!lib/modules/
+!lib/modules/.gitkeep

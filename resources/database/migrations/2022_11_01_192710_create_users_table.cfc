@@ -9,7 +9,7 @@ component {
 			table.string( "password" );
 			table.longText( "permissions" ).nullable();
 			table.datetime( "createdDate" ).withCurrent();
-			table.datetime( "updatedDate" ).withCurrent();
+			table.datetime( "modifiedDate" ).withCurrent();
 			table.boolean( "isActive" ).default( true );
 			table.datetime( "verifiedAt" ).nullable();
 			table.datetime( "lastLogin" ).nullable();
