@@ -29,6 +29,7 @@
         "qb":"^13",
         "cbmailservices":"^2",
         "cbsecurity":"^3",
+        "cbcsrf":"^2",
         "cbvalidation":"^4",
         "mementifier":"^3",
         "vite-helpers":"^2"
@@ -39,6 +40,7 @@
         "qb":"lib/modules/qb/",
         "cbmailservices":"lib/modules/cbmailservices/",
         "cbsecurity":"lib/modules/cbsecurity/",
+        "cbcsrf":"lib/modules/cbcsrf/",
         "mementifier":"lib/modules/mementifier/",
         "cbvalidation":"lib/modules/cbvalidation/",
         "vite-helpers":"lib/modules/vite-helpers/"

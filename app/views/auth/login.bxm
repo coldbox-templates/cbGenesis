@@ -14,7 +14,15 @@
         <p class="auth-subheading">Sign in to your account to continue</p>
     </div>
 
-    <!--- Server-side validation errors --->
+    <!--- General error (e.g. CSRF expiry) --->
+    <bx:if condition="prc.keyExists( 'error' )">
+        <div class="alert alert-danger" role="alert">
+            <i class="ph ph-warning-circle me-1" aria-hidden="true"></i>
+            #encodeForHTML( prc.error )#
+        </div>
+    </bx:if>
+
+    <!--- Server-side field validation errors --->
     <bx:if condition="prc.keyExists( 'errors' ) && !structIsEmpty( prc.errors )">
         <div class="alert alert-danger" role="alert">
             <i class="ph ph-warning-circle me-1" aria-hidden="true"></i>
@@ -75,6 +83,9 @@
                 </div>
             </div>
         </div>
+
+        <!--- CSRF token --->
+        <input type="hidden" name="_token" value="#csrfToken()#">
 
         <!--- Remember me --->
         <div class="mb-4 form-check">
