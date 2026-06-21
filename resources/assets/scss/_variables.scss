@@ -1,0 +1,78 @@
+// ============================================================
+// BoxLang Brand Palette
+// ============================================================
+
+// Cyan-blue signature gradient
+$bl-cyan:             #00D4F0;
+$bl-cyan-light:       #33DEFF;
+$bl-cyan-dark:        #00A8C0;
+$bl-blue:             #2563EB;
+$bl-blue-light:       #4F86F7;
+$bl-blue-dark:        #1D4ED8;
+
+// Dark surfaces — deep navy
+$bl-dark-950:         #070B18;
+$bl-dark-900:         #0D1225;
+$bl-dark-800:         #121B36;
+$bl-dark-700:         #192242;
+$bl-dark-600:         #1E2B52;
+$bl-dark-500:         #263562;
+$bl-dark-400:         #3D4F7E;
+
+// Light surfaces
+$bl-light-50:         #F7F9FF;
+$bl-light-100:        #EDF0FD;
+$bl-light-200:        #DFE4F8;
+$bl-light-300:        #C4CDED;
+
+// Text
+$bl-text-dark-primary:   #DEE8F8;
+$bl-text-dark-muted:     #7E93BF;
+$bl-text-light-primary:  #182040;
+$bl-text-light-muted:    #5C6E96;
+
+// Status
+$bl-success:          #10B981;
+$bl-warning:          #F59E0B;
+$bl-danger:           #EF4444;
+
+// ============================================================
+// Bootstrap Variable Overrides (must precede Bootstrap import)
+// ============================================================
+
+$primary:             $bl-cyan;
+$secondary:           $bl-blue;
+$success:             $bl-success;
+$warning:             $bl-warning;
+$danger:              $bl-danger;
+$dark:                $bl-dark-900;
+$light:               $bl-light-100;
+
+$body-bg:             $bl-light-50;
+$body-color:          $bl-text-light-primary;
+$body-bg-dark:        $bl-dark-900;
+$body-color-dark:     $bl-text-dark-primary;
+
+$link-color:          $bl-cyan-dark;
+$link-hover-color:    $bl-blue;
+
+$font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto,
+                          "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+$font-size-base:      0.9375rem;   // 15px
+$line-height-base:    1.6;
+
+$border-radius:       0.375rem;
+$border-radius-lg:    0.5rem;
+$border-radius-xl:    0.75rem;
+$border-radius-xxl:   1rem;
+
+$box-shadow-sm:       0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+$box-shadow:          0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+$box-shadow-lg:       0 10px 40px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+
+// Layout dimensions
+$sidebar-width:           260px;
+$sidebar-width-collapsed: 64px;
+$topbar-height:           60px;
+$sidebar-transition:      width 0.2s ease, transform 0.2s ease;
+$layout-transition:       margin-left 0.2s ease;

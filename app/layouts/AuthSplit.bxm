@@ -1,0 +1,116 @@
+<bx:output>
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
+    <meta name="description" content="Authentication">
+    <base href="#event.getHTMLBaseURL()#" />
+    <script>
+        (function(){
+            var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+            document.documentElement.setAttribute("data-bs-theme",t);
+        })();
+    </script>
+    #vite( [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ] )#
+</head>
+<body class="auth-body" x-data x-init="$store.theme.init()">
+
+    <div class="auth-split-wrapper">
+
+        <!--- ── Left panel: brand illustration ───────────────────── --->
+        <div class="auth-split-brand" aria-hidden="true">
+            <!--- Decorative glow orbs --->
+            <div class="auth-split-orb orb-cyan"></div>
+            <div class="auth-split-orb orb-blue"></div>
+
+            <div class="auth-split-brand-content">
+                <!--- Logo mark (large) --->
+                <div class="auth-split-brand-logo">
+                    <svg width="72" height="72" viewBox="0 0 72 72" fill="none"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <rect width="72" height="72" rx="16" fill="rgba(255,255,255,0.12)"/>
+                        <rect x="1" y="1" width="70" height="70" rx="15"
+                              stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+                        <path d="M20 36h32M36 20v32" stroke="white"
+                              stroke-width="3.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <h1 class="auth-split-brand-title">
+                    #getSetting( "appName" )#
+                </h1>
+                <p class="auth-split-brand-tagline">
+                    A modern ColdBox application built for speed,<br>
+                    powered by the BoxLang ecosystem.
+                </p>
+
+                <!--- Feature highlights --->
+                <ul class="auth-split-features">
+                    <li class="auth-split-feature">
+                        <span class="feature-icon"><i class="ph ph-lightning"></i></span>
+                        Fast and lightweight framework
+                    </li>
+                    <li class="auth-split-feature">
+                        <span class="feature-icon"><i class="ph ph-shield-check"></i></span>
+                        Secure by default with CSRF &amp; auth
+                    </li>
+                    <li class="auth-split-feature">
+                        <span class="feature-icon"><i class="ph ph-cloud"></i></span>
+                        Ready to deploy anywhere
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!--- ── /Left panel ──────────────────────────────────────── --->
+
+        <!--- ── Right panel: form ────────────────────────────────── --->
+        <div class="auth-split-form">
+            <div class="auth-split-form-inner">
+
+                <!--- Logo shown only on mobile (brand panel hidden) --->
+                <div class="auth-split-logo-mobile">
+                    <a href="/" class="auth-logo-link">
+                        <span class="auth-logo-mark">
+                            <svg width="36" height="36" viewBox="0 0 36 36" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <rect width="36" height="36" rx="8" fill="url(##splitLogoGrad)"/>
+                                <path d="M10 18h16M18 10v16" stroke="white"
+                                      stroke-width="2.5" stroke-linecap="round"/>
+                                <defs>
+                                    <linearGradient id="splitLogoGrad" x1="0" y1="0"
+                                                    x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%"   stop-color="##00D4F0"/>
+                                        <stop offset="100%" stop-color="##2563EB"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </span>
+                        <span class="auth-logo-name">#getSetting( "appName" )#</span>
+                    </a>
+                </div>
+
+                <!--- View content — inject the login/register form --->
+                #renderView()#
+
+                <!--- Footer: theme toggle --->
+                <div class="auth-split-footer">
+                    <button class="btn-theme-toggle"
+                            x-cloak
+                            @click="$store.theme.toggle()"
+                            :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+                        <i class="ph ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
+                        <i class="ph ph-moon" x-show="$store.theme.mode === 'light'"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        <!--- ── /Right panel ─────────────────────────────────────── --->
+
+    </div>
+
+</body>
+</html>
+</bx:output>

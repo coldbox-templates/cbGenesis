@@ -1,0 +1,74 @@
+<bx:output>
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
+    <meta name="description" content="Authentication">
+    <base href="#event.getHTMLBaseURL()#" />
+    <!---
+        Runs before CSS loads to prevent a dark→light flash.
+        Reads the saved preference (or system preference) and applies it.
+    --->
+    <script>
+        (function(){
+            var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+            document.documentElement.setAttribute("data-bs-theme",t);
+        })();
+    </script>
+    #vite( [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ] )#
+</head>
+<body class="auth-body" x-data x-init="$store.theme.init()">
+
+    <div class="auth-center-wrapper">
+
+        <!--- ── Card ─────────────────────────────────────────────── --->
+        <div class="auth-card">
+
+            <!--- Logo --->
+            <div class="auth-card-logo">
+                <a href="/" class="auth-logo-link">
+                    <span class="auth-logo-mark">
+                        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"
+                             xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <rect width="38" height="38" rx="9" fill="url(##cbLogoGrad)"/>
+                            <path d="M11 19h16M19 11v16" stroke="white"
+                                  stroke-width="2.5" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="cbLogoGrad" x1="0" y1="0"
+                                                x2="38" y2="38" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%"   stop-color="##00D4F0"/>
+                                    <stop offset="100%" stop-color="##2563EB"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </span>
+                    <span class="auth-logo-name">#getSetting( "appName" )#</span>
+                </a>
+            </div>
+
+            <!--- View content — inject the login/register/forgot-password form --->
+            <div class="auth-card-body">
+                #renderView()#
+            </div>
+
+        </div>
+        <!--- ── /Card ────────────────────────────────────────────── --->
+
+        <!--- Dark / light mode toggle --->
+        <div class="auth-footer">
+            <button class="btn-theme-toggle"
+                    x-cloak
+                    @click="$store.theme.toggle()"
+                    :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+                <i class="ph ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
+                <i class="ph ph-moon" x-show="$store.theme.mode === 'light'"></i>
+            </button>
+        </div>
+
+    </div>
+
+</body>
+</html>
+</bx:output>
