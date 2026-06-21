@@ -1,0 +1,104 @@
+<bx:output>
+<!--- Flash message from previous action (e.g. after password reset) --->
+<bx:if condition="prc.keyExists( 'flash' )">
+    <div class="alert alert-#( prc.flash.type )# alert-dismissible fade show mb-4" role="alert">
+        #encodeForHTML( prc.flash.message )#
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</bx:if>
+
+<div x-data="authForm">
+
+    <div class="text-center mb-4">
+        <h1 class="auth-heading">Welcome back</h1>
+        <p class="auth-subheading">Sign in to your account to continue</p>
+    </div>
+
+    <!--- Server-side validation errors --->
+    <bx:if condition="prc.keyExists( 'errors' ) && !structIsEmpty( prc.errors )">
+        <div class="alert alert-danger" role="alert">
+            <i class="ph ph-warning-circle me-1" aria-hidden="true"></i>
+            Please fix the errors below and try again.
+        </div>
+    </bx:if>
+
+    <form method="post"
+          action="#event.buildLink( 'auth/login' )#"
+          @submit="onSubmit"
+          novalidate>
+
+        <!--- Email --->
+        <div class="mb-3">
+            <label for="email" class="form-label">Email address</label>
+            <input type="email"
+                   id="email"
+                   name="email"
+                   class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'email' ) ) ? ' is-invalid' : '' )#"
+                   value="#encodeForHTMLAttribute( prc.keyExists( 'oldInput' ) ? ( prc.oldInput.email ?: '' ) : '' )#"
+                   placeholder="you@example.com"
+                   autocomplete="email"
+                   required>
+            <bx:if condition="prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'email' )">
+                <div class="invalid-feedback">#encodeForHTML( prc.errors.email )#</div>
+            </bx:if>
+        </div>
+
+        <!--- Password --->
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="password" class="form-label mb-0">Password</label>
+                <a href="#event.buildLink( 'auth/forgotPassword' )#" class="auth-link small">
+                    Forgot password?
+                </a>
+            </div>
+            <div x-data="passwordStrength">
+                <div class="input-group">
+                    <input :type="showPassword ? 'text' : 'password'"
+                           id="password"
+                           name="password"
+                           class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'password' ) ) ? ' is-invalid' : '' )#"
+                           x-model="password"
+                           placeholder="••••••••"
+                           autocomplete="current-password"
+                           required>
+                    <button class="btn btn-outline-secondary"
+                            type="button"
+                            @click="showPassword = !showPassword"
+                            :aria-label="showPassword ? 'Hide password' : 'Show password'">
+                        <i class="ph"
+                           :class="showPassword ? 'ph-eye-slash' : 'ph-eye'"
+                           aria-hidden="true"></i>
+                    </button>
+                    <bx:if condition="prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'password' )">
+                        <div class="invalid-feedback">#encodeForHTML( prc.errors.password )#</div>
+                    </bx:if>
+                </div>
+            </div>
+        </div>
+
+        <!--- Remember me --->
+        <div class="mb-4 form-check">
+            <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe" value="1">
+            <label class="form-check-label" for="rememberMe">Keep me signed in</label>
+        </div>
+
+        <!--- Submit --->
+        <button type="submit"
+                class="btn btn-primary w-100 mb-3"
+                :disabled="loading">
+            <span x-show="!loading">Sign in</span>
+            <span x-show="loading" x-cloak>
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Signing in…
+            </span>
+        </button>
+
+    </form>
+
+    <p class="text-center mb-0" style="font-size:0.9rem; color:var(--app-text-muted);">
+        Don't have an account?
+        <a href="#event.buildLink( 'auth/register' )#" class="auth-link">Create one</a>
+    </p>
+
+</div>
+</bx:output>

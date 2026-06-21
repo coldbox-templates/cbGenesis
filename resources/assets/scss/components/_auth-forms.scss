@@ -1,0 +1,218 @@
+// ============================================================
+// Auth Form Components
+// Applied inside .auth-card and .auth-split-form-inner
+// ============================================================
+
+// ---- Heading block ----
+
+.auth-heading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--app-text);
+    margin-bottom: 0.25rem;
+}
+
+.auth-subheading {
+    font-size: 0.9375rem;
+    color: var(--app-text-muted);
+    margin-bottom: 1.75rem;
+}
+
+.auth-link {
+    color: #{$bl-cyan-dark};
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover {
+        color: #{$bl-blue};
+        text-decoration: underline;
+    }
+}
+
+// ---- Form controls — theme-aware overrides ----
+
+.auth-card,
+.auth-split-form-inner {
+
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--app-text);
+        margin-bottom: 0.375rem;
+    }
+
+    .form-control,
+    .form-select {
+        background-color: var(--app-surface-raised);
+        border-color: var(--app-border);
+        color: var(--app-text);
+
+        &:focus {
+            background-color: var(--app-surface);
+            border-color: #{$bl-cyan};
+            box-shadow: 0 0 0 3px rgba(0, 212, 240, 0.15);
+            color: var(--app-text);
+        }
+
+        &::placeholder {
+            color: var(--app-text-muted);
+            opacity: 1;
+        }
+    }
+
+    .input-group {
+        // Password toggle button
+        .btn-outline-secondary {
+            border-color: var(--app-border);
+            background: var(--app-surface-raised);
+            color: var(--app-text-muted);
+
+            &:hover {
+                background: var(--app-surface);
+                color: var(--app-text);
+                border-color: var(--app-border);
+            }
+
+            &:focus {
+                box-shadow: 0 0 0 3px rgba(0, 212, 240, 0.15);
+                border-color: #{$bl-cyan};
+            }
+        }
+
+        // Ensure focus ring works across the combined control
+        &:focus-within .form-control {
+            border-color: #{$bl-cyan};
+        }
+    }
+
+    .form-check-input {
+        border-color: var(--app-border);
+        background-color: var(--app-surface-raised);
+
+        &:checked {
+            background-color: #{$bl-cyan-dark};
+            border-color: #{$bl-cyan-dark};
+        }
+
+        &:focus {
+            box-shadow: 0 0 0 3px rgba(0, 212, 240, 0.15);
+            border-color: #{$bl-cyan};
+        }
+    }
+
+    .form-check-label {
+        color: var(--app-text);
+    }
+
+    .btn-primary {
+        background: var(--bl-gradient);
+        border: none;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+
+        &:hover   { background: var(--bl-gradient); filter: brightness(1.08); }
+        &:active  { filter: brightness(0.96); }
+        &:focus   { box-shadow: 0 0 0 3px rgba(0, 212, 240, 0.3); }
+        &:disabled { opacity: 0.65; filter: none; }
+    }
+
+    .alert {
+        font-size: 0.875rem;
+    }
+}
+
+// ---- Alert overrides for dark mode ----
+
+[data-bs-theme="dark"] {
+    .alert-danger  { background-color: rgba($bl-danger,  0.12); border-color: rgba($bl-danger,  0.3); color: lighten($bl-danger,  20%); }
+    .alert-success { background-color: rgba($bl-success, 0.12); border-color: rgba($bl-success, 0.3); color: lighten($bl-success, 20%); }
+    .alert-info    { background-color: rgba($bl-cyan,    0.12); border-color: rgba($bl-cyan,    0.3); color: lighten($bl-cyan,    20%); }
+    .alert-warning { background-color: rgba($bl-warning, 0.12); border-color: rgba($bl-warning, 0.3); color: lighten($bl-warning, 15%); }
+}
+
+// ---- "Or" divider ----
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    color: var(--app-text-muted);
+    font-size: 0.8125rem;
+
+    &::before,
+    &::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--app-border);
+    }
+}
+
+// ============================================================
+// Password Strength Indicator
+// Used inside a `x-data="passwordStrength"` Alpine scope
+// ============================================================
+
+.password-strength {
+    margin-top: 0.5rem;
+}
+
+// Four coloured bar segments
+.password-strength-bars {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 0.5rem;
+}
+
+.password-strength-bar {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--app-border);
+    transition: background-color 0.2s ease;
+
+    &.active-1 { background-color: #{$bl-danger};  }
+    &.active-2 { background-color: #{$bl-warning}; }
+    &.active-3 { background-color: #{$bl-cyan-dark}; }
+    &.active-4 { background-color: #{$bl-success}; }
+}
+
+// Strength label (e.g. "Weak", "Strong")
+.password-strength-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    &.strength-weak   { color: #{$bl-danger}; }
+    &.strength-fair   { color: #{$bl-warning}; }
+    &.strength-good   { color: #{$bl-cyan-dark}; }
+    &.strength-strong { color: #{$bl-success}; }
+}
+
+// Requirements checklist
+.password-requirements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.25rem 1rem;
+    margin-top: 0.5rem;
+}
+
+.password-requirement {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--app-text-muted);
+    transition: color 0.15s ease;
+
+    .req-icon {
+        font-size: 0.875rem;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+
+    &.met {
+        color: #{$bl-success};
+    }
+}

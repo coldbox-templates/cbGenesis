@@ -1,0 +1,171 @@
+/**
+ * Authentication Handler
+ *
+ * Handles login, registration, password recovery, and logout flows.
+ * Uses session-based mock authentication until cbsecurity / cbauth are
+ * fully wired to a database. Replace the mock blocks with real service
+ * calls once the database layer is ready.
+ */
+class extends="coldbox.system.EventHandler" {
+
+	// ============================================================
+	// Login
+	// ============================================================
+
+	function login( event, rc, prc ){
+		prc.title = "Sign In";
+		event.setLayout( "AuthCenter" );
+
+		// Show flash message from a previous redirect (e.g. after password reset)
+		if ( structKeyExists( session, "flash" ) ) {
+			prc.flash = session.flash;
+			structDelete( session, "flash" );
+		}
+
+		if ( event.isPost() ) {
+			var errors = {};
+
+			if ( !len( trim( rc.email    ?: "" ) ) ) errors[ "email"    ] = "Email address is required.";
+			if ( !len( trim( rc.password ?: "" ) ) ) errors[ "password" ] = "Password is required.";
+
+			if ( !structIsEmpty( errors ) ) {
+				prc.errors   = errors;
+				prc.oldInput = rc;
+				return event.setView( "auth/login" );
+			}
+
+			// ── MOCK: accept any non-empty credentials ─────────────────────────
+			// Replace with: auth.authenticate( rc.email, rc.password )
+			session.currentUser = {
+				"id"       : createUUID(),
+				"firstName": "John",
+				"lastName" : "Doe",
+				"fullName" : "John Doe",
+				"email"    : rc.email,
+				"role"     : "Administrator",
+				"initials" : "J"
+			};
+			// ── END MOCK ───────────────────────────────────────────────────────
+
+			return relocate( "dashboard" );
+		}
+
+		event.setView( "auth/login" );
+	}
+
+	// ============================================================
+	// Register
+	// ============================================================
+
+	function register( event, rc, prc ){
+		prc.title = "Create Account";
+		event.setLayout( "AuthSplit" );
+
+		if ( event.isPost() ) {
+			var errors = {};
+
+			if ( !len( trim( rc.firstName       ?: "" ) ) ) errors[ "firstName"       ] = "First name is required.";
+			if ( !len( trim( rc.lastName        ?: "" ) ) ) errors[ "lastName"        ] = "Last name is required.";
+			if ( !len( trim( rc.email           ?: "" ) ) ) errors[ "email"           ] = "Email address is required.";
+			if ( len( rc.password ?: "" ) < 8              ) errors[ "password"        ] = "Password must be at least 8 characters.";
+			if ( ( rc.password ?: "" ) != ( rc.passwordConfirm ?: "" ) )
+				                                             errors[ "passwordConfirm" ] = "Passwords do not match.";
+
+			if ( !structIsEmpty( errors ) ) {
+				prc.errors   = errors;
+				prc.oldInput = rc;
+				return event.setView( "auth/register" );
+			}
+
+			// ── MOCK: create session user from form data ────────────────────────
+			// Replace with: UserService.create( populatedUserObject )
+			session.currentUser = {
+				"id"       : createUUID(),
+				"firstName": rc.firstName,
+				"lastName" : rc.lastName,
+				"fullName" : rc.firstName & " " & rc.lastName,
+				"email"    : rc.email,
+				"role"     : "User",
+				"initials" : uCase( left( rc.firstName, 1 ) )
+			};
+			// ── END MOCK ───────────────────────────────────────────────────────
+
+			return relocate( "dashboard" );
+		}
+
+		event.setView( "auth/register" );
+	}
+
+	// ============================================================
+	// Forgot Password
+	// ============================================================
+
+	function forgotPassword( event, rc, prc ){
+		prc.title = "Forgot Password";
+		event.setLayout( "AuthCenter" );
+
+		if ( event.isPost() ) {
+			if ( !len( trim( rc.email ?: "" ) ) ) {
+				prc.error = "Please enter your email address.";
+			} else {
+				// ── MOCK: simulate sending a reset email ──────────────────────
+				// Replace with: UserService.sendPasswordResetEmail( rc.email )
+				prc.success   = "If an account exists for that address, we've sent a password reset link.";
+				prc.emailSent = true;
+				// ── END MOCK ──────────────────────────────────────────────────
+			}
+		}
+
+		event.setView( "auth/forgotPassword" );
+	}
+
+	// ============================================================
+	// Reset Password
+	// ============================================================
+
+	function resetPassword( event, rc, prc ){
+		prc.title = "Set New Password";
+		prc.token = rc.token ?: "";          // Real impl: validate this token against DB
+		event.setLayout( "AuthCenter" );
+
+		if ( event.isPost() ) {
+			var errors = {};
+
+			if ( len( rc.password ?: "" ) < 8 )
+				errors[ "password" ] = "Password must be at least 8 characters.";
+			if ( ( rc.password ?: "" ) != ( rc.passwordConfirm ?: "" ) )
+				errors[ "passwordConfirm" ] = "Passwords do not match.";
+
+			if ( !structIsEmpty( errors ) ) {
+				prc.errors = errors;
+				return event.setView( "auth/resetPassword" );
+			}
+
+			// ── MOCK: password updated ─────────────────────────────────────────
+			// Replace with: UserService.resetPassword( prc.token, rc.password )
+			session.flash = {
+				"type"   : "success",
+				"message": "Your password has been reset. Please sign in."
+			};
+			// ── END MOCK ──────────────────────────────────────────────────────
+
+			return relocate( "auth/login" );
+		}
+
+		event.setView( "auth/resetPassword" );
+	}
+
+	// ============================================================
+	// Logout
+	// ============================================================
+
+	function logout( event, rc, prc ){
+		// ── MOCK: clear session ───────────────────────────────────────────────
+		// Replace with: auth.logout()
+		structDelete( session, "currentUser" );
+		// ── END MOCK ─────────────────────────────────────────────────────────
+
+		return relocate( "auth/login" );
+	}
+
+}

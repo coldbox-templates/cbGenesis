@@ -128,22 +128,22 @@
 
         <!--- ── Footer: user info ────────────────────────────────── --->
         <!---
-            Replace the placeholder values with values from prc set by your auth interceptor:
-                prc.currentUser.getFullName() / prc.currentUser.getRole()
-            For a dropdown, the sidebar has overflow:hidden; use data-bs-strategy="fixed" on
-            the .dropdown-menu or navigate to a dedicated profile page instead.
+            prc.authUser is a flat display struct populated by every protected handler:
+                { name, email, role, initials }
+            The sidebar has overflow:hidden so Bootstrap dropdowns clip — use a profile
+            page link here instead of a dropdown.
         --->
         <div class="sidebar-footer">
             <a href="/profile" class="sidebar-user text-decoration-none">
                 <span class="sidebar-user-avatar">
-                    #( prc.keyExists( "currentUser" ) ? left( prc.currentUser.getFullName(), 1 ) : "A" )#
+                    #( prc.keyExists( "authUser" ) ? prc.authUser.initials : "A" )#
                 </span>
                 <span class="sidebar-user-info">
                     <span class="sidebar-user-name">
-                        #( prc.keyExists( "currentUser" ) ? prc.currentUser.getFullName() : "Admin User" )#
+                        #( prc.keyExists( "authUser" ) ? prc.authUser.name : "Admin User" )#
                     </span>
                     <span class="sidebar-user-role">
-                        #( prc.keyExists( "currentUser" ) ? prc.currentUser.getRole() : "Administrator" )#
+                        #( prc.keyExists( "authUser" ) ? prc.authUser.role : "Administrator" )#
                     </span>
                 </span>
             </a>
@@ -208,10 +208,10 @@
                             data-bs-toggle="dropdown"
                             aria-expanded="false">
                         <span class="topbar-user-avatar">
-                            #( prc.keyExists( "currentUser" ) ? left( prc.currentUser.getFullName(), 1 ) : "A" )#
+                            #( prc.keyExists( "authUser" ) ? prc.authUser.initials : "A" )#
                         </span>
                         <span class="topbar-user-name">
-                            #( prc.keyExists( "currentUser" ) ? prc.currentUser.getFullName() : "Admin" )#
+                            #( prc.keyExists( "authUser" ) ? prc.authUser.name : "Admin" )#
                         </span>
                         <i class="ph ph-caret-down topbar-user-chevron" aria-hidden="true"></i>
                     </button>
@@ -219,7 +219,7 @@
                         aria-labelledby="topbarUserMenu">
                         <li>
                             <span class="dropdown-header">
-                                #( prc.keyExists( "currentUser" ) ? prc.currentUser.getEmail() : "admin@example.com" )#
+                                #( prc.keyExists( "authUser" ) ? prc.authUser.email : "admin@example.com" )#
                             </span>
                         </li>
                         <li><hr class="dropdown-divider"></li>
@@ -237,7 +237,7 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item text-danger" href="/logout">
+                            <a class="dropdown-item text-danger" href="/auth/logout">
                                 <i class="ph ph-sign-out" aria-hidden="true"></i>
                                 Sign out
                             </a>

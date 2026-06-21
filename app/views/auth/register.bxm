@@ -1,0 +1,184 @@
+<bx:output>
+<div x-data="authForm">
+
+    <div class="text-center mb-4">
+        <h1 class="auth-heading">Create your account</h1>
+        <p class="auth-subheading">Join us today — it only takes a minute</p>
+    </div>
+
+    <!--- Server-side validation errors --->
+    <bx:if condition="prc.keyExists( 'errors' ) && !structIsEmpty( prc.errors )">
+        <div class="alert alert-danger" role="alert">
+            <i class="ph ph-warning-circle me-1" aria-hidden="true"></i>
+            Please fix the errors below and try again.
+        </div>
+    </bx:if>
+
+    <form method="post"
+          action="#event.buildLink( 'auth/register' )#"
+          @submit="onSubmit"
+          novalidate>
+
+        <!--- First + Last name --->
+        <div class="row g-3 mb-3">
+            <div class="col-6">
+                <label for="firstName" class="form-label">First name</label>
+                <input type="text"
+                       id="firstName"
+                       name="firstName"
+                       class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'firstName' ) ) ? ' is-invalid' : '' )#"
+                       value="#encodeForHTMLAttribute( prc.keyExists( 'oldInput' ) ? ( prc.oldInput.firstName ?: '' ) : '' )#"
+                       autocomplete="given-name"
+                       placeholder="Jane"
+                       required>
+                <bx:if condition="prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'firstName' )">
+                    <div class="invalid-feedback">#encodeForHTML( prc.errors.firstName )#</div>
+                </bx:if>
+            </div>
+            <div class="col-6">
+                <label for="lastName" class="form-label">Last name</label>
+                <input type="text"
+                       id="lastName"
+                       name="lastName"
+                       class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'lastName' ) ) ? ' is-invalid' : '' )#"
+                       value="#encodeForHTMLAttribute( prc.keyExists( 'oldInput' ) ? ( prc.oldInput.lastName ?: '' ) : '' )#"
+                       autocomplete="family-name"
+                       placeholder="Smith"
+                       required>
+                <bx:if condition="prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'lastName' )">
+                    <div class="invalid-feedback">#encodeForHTML( prc.errors.lastName )#</div>
+                </bx:if>
+            </div>
+        </div>
+
+        <!--- Email --->
+        <div class="mb-3">
+            <label for="email" class="form-label">Email address</label>
+            <input type="email"
+                   id="email"
+                   name="email"
+                   class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'email' ) ) ? ' is-invalid' : '' )#"
+                   value="#encodeForHTMLAttribute( prc.keyExists( 'oldInput' ) ? ( prc.oldInput.email ?: '' ) : '' )#"
+                   autocomplete="email"
+                   placeholder="you@example.com"
+                   required>
+            <bx:if condition="prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'email' )">
+                <div class="invalid-feedback">#encodeForHTML( prc.errors.email )#</div>
+            </bx:if>
+        </div>
+
+        <!--- Password with strength indicator (nested Alpine scope) --->
+        <div class="mb-3" x-data="passwordStrength">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+                <input :type="showPassword ? 'text' : 'password'"
+                       id="password"
+                       name="password"
+                       class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'password' ) ) ? ' is-invalid' : '' )#"
+                       x-model="password"
+                       @input="$dispatch('password-changed', { value: password })"
+                       placeholder="Min. 8 characters"
+                       autocomplete="new-password"
+                       required>
+                <button class="btn btn-outline-secondary"
+                        type="button"
+                        @click="showPassword = !showPassword"
+                        :aria-label="showPassword ? 'Hide password' : 'Show password'">
+                    <i class="ph"
+                       :class="showPassword ? 'ph-eye-slash' : 'ph-eye'"
+                       aria-hidden="true"></i>
+                </button>
+                <bx:if condition="prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'password' )">
+                    <div class="invalid-feedback">#encodeForHTML( prc.errors.password )#</div>
+                </bx:if>
+            </div>
+
+            <!--- Strength bars --->
+            <div class="password-strength" x-show="password.length > 0" x-cloak>
+                <div class="password-strength-bars" role="meter" :aria-valuenow="score" aria-valuemin="0" aria-valuemax="4">
+                    <div class="password-strength-bar" :class="score >= 1 ? 'active-' + score : ''"></div>
+                    <div class="password-strength-bar" :class="score >= 2 ? 'active-' + score : ''"></div>
+                    <div class="password-strength-bar" :class="score >= 3 ? 'active-' + score : ''"></div>
+                    <div class="password-strength-bar" :class="score >= 4 ? 'active-' + score : ''"></div>
+                </div>
+                <span class="password-strength-label" :class="labelClass" x-text="label"></span>
+            </div>
+
+            <!--- Requirements checklist --->
+            <div class="password-requirements mt-2" x-show="password.length > 0" x-cloak>
+                <div class="password-requirement" :class="{ met: requirements.length }">
+                    <i class="ph req-icon" :class="requirements.length ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
+                    At least 8 characters
+                </div>
+                <div class="password-requirement" :class="{ met: requirements.uppercase }">
+                    <i class="ph req-icon" :class="requirements.uppercase ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
+                    Uppercase letter
+                </div>
+                <div class="password-requirement" :class="{ met: requirements.lowercase }">
+                    <i class="ph req-icon" :class="requirements.lowercase ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
+                    Lowercase letter
+                </div>
+                <div class="password-requirement" :class="{ met: requirements.number }">
+                    <i class="ph req-icon" :class="requirements.number ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
+                    Number
+                </div>
+                <div class="password-requirement" :class="{ met: requirements.special }">
+                    <i class="ph req-icon" :class="requirements.special ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
+                    Special character
+                </div>
+            </div>
+        </div>
+
+        <!--- Confirm password --->
+        <div class="mb-4">
+            <label for="passwordConfirm" class="form-label">Confirm password</label>
+            <div class="input-group">
+                <input :type="showConfirm ? 'text' : 'password'"
+                       id="passwordConfirm"
+                       name="passwordConfirm"
+                       class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'passwordConfirm' ) ) ? ' is-invalid' : '' )#"
+                       x-model="confirmValue"
+                       @input="checkConfirm"
+                       @blur="checkConfirm"
+                       @password-changed.window="passwordRef = $event.detail.value; checkConfirm()"
+                       placeholder="••••••••"
+                       autocomplete="new-password">
+                <button class="btn btn-outline-secondary"
+                        type="button"
+                        @click="showConfirm = !showConfirm"
+                        :aria-label="showConfirm ? 'Hide password' : 'Show password'">
+                    <i class="ph"
+                       :class="showConfirm ? 'ph-eye-slash' : 'ph-eye'"
+                       aria-hidden="true"></i>
+                </button>
+                <bx:if condition="prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'passwordConfirm' )">
+                    <div class="invalid-feedback">#encodeForHTML( prc.errors.passwordConfirm )#</div>
+                </bx:if>
+            </div>
+            <div class="invalid-feedback d-block"
+                 x-show="confirmError"
+                 x-cloak
+                 x-text="confirmError"
+                 role="alert"></div>
+        </div>
+
+        <!--- Submit --->
+        <button type="submit"
+                class="btn btn-primary w-100 mb-3"
+                :disabled="loading">
+            <span x-show="!loading">Create account</span>
+            <span x-show="loading" x-cloak>
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Creating account…
+            </span>
+        </button>
+
+    </form>
+
+    <p class="text-center mb-0" style="font-size:0.9rem; color:var(--app-text-muted);">
+        Already have an account?
+        <a href="#event.buildLink( 'auth/login' )#" class="auth-link">Sign in</a>
+    </p>
+
+</div>
+</bx:output>

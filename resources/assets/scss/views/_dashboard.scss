@@ -1,0 +1,214 @@
+// ============================================================
+// Dashboard View Styles
+// ============================================================
+
+// ---- Page header ----
+
+.page-header {
+    margin-bottom: 1.75rem;
+}
+
+.page-title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--app-text);
+    margin-bottom: 0.125rem;
+}
+
+.page-subtitle {
+    font-size: 0.9rem;
+    color: var(--app-text-muted);
+}
+
+// ---- Stat cards ----
+
+.stat-card {
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: $border-radius-xl;
+    padding: 1.25rem 1.375rem;
+    transition: box-shadow 0.15s ease;
+
+    &:hover {
+        box-shadow: $box-shadow-sm;
+    }
+}
+
+.stat-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 0.875rem;
+}
+
+.stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: $border-radius-lg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--app-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    color: var(--app-text);
+}
+
+.stat-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+
+    &.up   { color: #{$bl-success}; }
+    &.down { color: #{$bl-danger}; }
+}
+
+.stat-change-context {
+    color: var(--app-text-muted);
+    font-weight: 400;
+}
+
+// ---- Content card (generic panel) ----
+
+.content-card {
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: $border-radius-xl;
+    overflow: hidden;
+}
+
+.content-card-header {
+    padding: 1.125rem 1.375rem;
+    border-bottom: 1px solid var(--app-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.content-card-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--app-text);
+    margin: 0;
+}
+
+.content-card-body {
+    padding: 0;
+}
+
+// ---- Activity feed ----
+
+.activity-feed {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 0.875rem 1.375rem;
+    border-bottom: 1px solid var(--app-border-subtle);
+    transition: background-color 0.12s ease;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: var(--app-surface-raised);
+    }
+}
+
+.activity-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9375rem;
+    flex-shrink: 0;
+}
+
+.activity-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-text {
+    font-size: 0.875rem;
+    color: var(--app-text);
+    margin-bottom: 0.125rem;
+    line-height: 1.45;
+}
+
+.activity-time {
+    font-size: 0.75rem;
+    color: var(--app-text-muted);
+}
+
+// ---- Quick actions ----
+
+.quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.125rem 0.75rem;
+    border-radius: $border-radius-xl;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
+    color: var(--app-text);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-align: center;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+    width: 100%;
+
+    .quick-action-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: $border-radius-lg;
+        background: var(--bl-gradient-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: #{$bl-cyan-dark};
+    }
+
+    &:hover {
+        background: var(--app-surface-raised);
+        border-color: #{$bl-cyan};
+        box-shadow: 0 0 0 3px rgba(0, 212, 240, 0.1);
+        color: var(--app-text);
+        text-decoration: none;
+    }
+}
+
+[data-bs-theme="dark"] .quick-action-btn .quick-action-icon {
+    color: #{$bl-cyan-light};
+}
