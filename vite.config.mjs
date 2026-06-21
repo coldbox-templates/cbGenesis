@@ -1,11 +1,11 @@
 import { defineConfig } from "vite";
-import coldbox from "coldbox-vite-plugin";
+import coldbox, { appRefreshPaths } from "coldbox-vite-plugin";
 
 export default defineConfig({
 	plugins: [
 		coldbox({
 			input: [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ],
-			refresh: true,
+			refresh: appRefreshPaths,
 			publicDirectory: "public/includes"
 		})
 	],
