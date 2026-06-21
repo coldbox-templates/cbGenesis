@@ -11,7 +11,7 @@
         "tippy.js": "^6.3.7"
     },
     "devDependencies": {
-        "coldbox-vite-plugin": "file:vendor/coldbox-vite-plugin",
+        "coldbox-vite-plugin": "file:resources/coldbox-vite-plugin",
         "sass": "^1.101.0",
         "vite": "^6.3.6"
     }
