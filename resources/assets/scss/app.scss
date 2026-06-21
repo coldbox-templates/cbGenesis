@@ -19,6 +19,8 @@
 @import "layouts/admin";
 
 // 5. Components
+@import "components/logo";
+@import "components/messagebox";
 @import "components/sidebar";
 @import "components/topbar";
 @import "components/auth-forms";

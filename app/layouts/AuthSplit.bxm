@@ -7,13 +7,7 @@
     <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
     <meta name="description" content="Authentication">
     <base href="#event.getHTMLBaseURL()#" />
-    <script>
-        (function(){
-            var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
-            document.documentElement.setAttribute("data-bs-theme",t);
-        })();
-    </script>
-    #vite( [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ] )#
+    #view( "_partials/includes" )#
 </head>
 <body class="auth-body" x-data x-init="$store.theme.init()">
 

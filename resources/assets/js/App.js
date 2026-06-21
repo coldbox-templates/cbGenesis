@@ -6,6 +6,7 @@ import "@phosphor-icons/web/regular";
 
 import { passwordStrength } from "./components/PasswordStrength.js";
 import { authForm }         from "./components/AuthForm.js";
+import { messageBox }       from "./components/MessageBox.js";
 
 // ============================================================
 // Alpine Components
@@ -13,6 +14,7 @@ import { authForm }         from "./components/AuthForm.js";
 
 Alpine.data( "passwordStrength", passwordStrength );
 Alpine.data( "authForm",         authForm );
+Alpine.data( "messageBox",       messageBox );
 
 // ============================================================
 // Alpine Store: theme

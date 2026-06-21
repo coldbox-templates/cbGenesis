@@ -1,0 +1,56 @@
+// ============================================================
+// Brand Logo Component
+// Used by the _partials/logo.bxm partial.
+// ============================================================
+
+.brand-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    text-decoration: none;
+
+    &__mark {
+        flex-shrink: 0;
+        display: block;
+    }
+
+    &__name {
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: var(--app-text);
+        white-space: nowrap;
+    }
+
+    &--full &__name    { font-size: 1.0625rem; }
+    &--compact &__name { font-size: 0.9375rem; }
+
+    // Inherit sidebar text color without forcing white
+    .sidebar-header & {
+        color: var(--sidebar-text);
+        .brand-logo__name { color: var(--sidebar-text); }
+    }
+}
+
+// ============================================================
+// Theme-toggle morphing SVG (used in header partial)
+// ============================================================
+
+.icon-theme-toggle {
+    transform-origin: center;
+    overflow: visible;
+    transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+
+    clipPath path {
+        transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    // Light mode: push clip out of the way → full sun visible
+    &:not(.is-dark) clipPath path {
+        transform: translateX(-30px);
+    }
+
+    // Dark mode: clip in default position → crescent; tilt for moon angle
+    &.is-dark {
+        transform: rotate(40deg);
+    }
+}

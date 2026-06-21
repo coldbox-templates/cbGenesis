@@ -1,0 +1,19 @@
+<!---
+    Vite Asset Includes
+    Place inside <head> before closing </head>.
+    Outputs the FOUC-prevention script (must run before CSS) followed by
+    the Vite-managed stylesheet and JS module tags.
+
+    Usage:
+        #view( "_partials/includes" )#
+--->
+<bx:output>
+<script>
+    (function(){
+        var t = localStorage.getItem( "theme" ) ||
+                ( matchMedia( "(prefers-color-scheme: dark)" ).matches ? "dark" : "light" );
+        document.documentElement.setAttribute( "data-bs-theme", t );
+    })();
+</script>
+#vite( [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ] )#
+</bx:output>

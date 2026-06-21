@@ -6,13 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
     <base href="#event.getHTMLBaseURL()#" />
-    <script>
-        (function(){
-            var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
-            document.documentElement.setAttribute("data-bs-theme",t);
-        })();
-    </script>
-    #vite( [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ] )#
+    #view( "_partials/includes" )#
 </head>
 
 <!---
@@ -35,219 +29,17 @@
 
     <!--- ════════════════════════════════════════════════════════════
           SIDEBAR
-          Desktop: fixed left column, collapses to icon strip.
-          Mobile:  slide-in drawer (triggered by .sidebar-open class).
           ════════════════════════════════════════════════════════════ --->
-    <aside class="sidebar"
-           :class="{ 'sidebar-collapsed': $store.sidebar.collapsed,
-                     'sidebar-open':      $store.sidebar.open }"
-           aria-label="Main navigation">
-
-        <!--- ── Header: logo + app name ─────────────────────────── --->
-        <div class="sidebar-header">
-            <a href="/" class="sidebar-brand">
-                <span class="sidebar-brand-icon">
-                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none"
-                         xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <rect width="36" height="36" rx="8" fill="url(##adminLogoGrad)"/>
-                        <path d="M10 18h16M18 10v16" stroke="white"
-                              stroke-width="2.5" stroke-linecap="round"/>
-                        <defs>
-                            <linearGradient id="adminLogoGrad" x1="0" y1="0"
-                                            x2="36" y2="36" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%"   stop-color="##00D4F0"/>
-                                <stop offset="100%" stop-color="##2563EB"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                </span>
-                <span class="sidebar-brand-name">#getSetting( "appName" )#</span>
-            </a>
-        </div>
-
-        <!--- ── Navigation ───────────────────────────────────────── --->
-        <!---
-            To mark items active based on the current route:
-                <bx:set isHome = ( event.getCurrentHandler() EQ "Main" && event.getCurrentAction() EQ "index" ) />
-                class="sidebar-nav-item #( isHome ? 'active' : '' )#"
-        --->
-        <nav class="sidebar-nav">
-
-            <!--- Main section --->
-            <div class="sidebar-nav-section">
-                <span class="sidebar-nav-label">Main</span>
-                <ul class="sidebar-nav-list">
-                    <li>
-                        <a href="/" class="sidebar-nav-item active">
-                            <i class="ph ph-house sidebar-nav-icon" aria-hidden="true"></i>
-                            <span class="sidebar-nav-text">Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="##" class="sidebar-nav-item">
-                            <i class="ph ph-chart-line sidebar-nav-icon" aria-hidden="true"></i>
-                            <span class="sidebar-nav-text">Analytics</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="##" class="sidebar-nav-item">
-                            <i class="ph ph-files sidebar-nav-icon" aria-hidden="true"></i>
-                            <span class="sidebar-nav-text">Reports</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <!--- Management section --->
-            <div class="sidebar-nav-section">
-                <span class="sidebar-nav-label">Management</span>
-                <ul class="sidebar-nav-list">
-                    <li>
-                        <a href="##" class="sidebar-nav-item">
-                            <i class="ph ph-users sidebar-nav-icon" aria-hidden="true"></i>
-                            <span class="sidebar-nav-text">Users</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="##" class="sidebar-nav-item">
-                            <i class="ph ph-stack sidebar-nav-icon" aria-hidden="true"></i>
-                            <span class="sidebar-nav-text">Content</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="##" class="sidebar-nav-item">
-                            <i class="ph ph-gear sidebar-nav-icon" aria-hidden="true"></i>
-                            <span class="sidebar-nav-text">Settings</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-        </nav>
-        <!--- ── /Navigation ──────────────────────────────────────── --->
-
-        <!--- ── Footer: user info ────────────────────────────────── --->
-        <!---
-            prc.authUser is a flat display struct populated by every protected handler:
-                { name, email, role, initials }
-            The sidebar has overflow:hidden so Bootstrap dropdowns clip — use a profile
-            page link here instead of a dropdown.
-        --->
-        <div class="sidebar-footer">
-            <a href="/profile" class="sidebar-user text-decoration-none">
-                <span class="sidebar-user-avatar">
-                    #( prc.keyExists( "authUser" ) ? prc.authUser.initials : "A" )#
-                </span>
-                <span class="sidebar-user-info">
-                    <span class="sidebar-user-name">
-                        #( prc.keyExists( "authUser" ) ? prc.authUser.name : "Admin User" )#
-                    </span>
-                    <span class="sidebar-user-role">
-                        #( prc.keyExists( "authUser" ) ? prc.authUser.role : "Administrator" )#
-                    </span>
-                </span>
-            </a>
-        </div>
-
-    </aside>
-    <!--- ── /Sidebar ─────────────────────────────────────────────── --->
-
+    #view( "_partials/mainNav" )#
 
     <!--- ════════════════════════════════════════════════════════════
-          MAIN WRAPPER  (topbar + page content)
+          MAIN WRAPPER  (topbar + page content + footer)
           ════════════════════════════════════════════════════════════ --->
     <div class="main-wrapper"
          :class="{ 'sidebar-collapsed-ml': $store.sidebar.collapsed }">
 
         <!--- ── Topbar ───────────────────────────────────────────── --->
-        <header class="topbar">
-
-            <div class="topbar-left">
-                <!--- Sidebar toggle: collapses on desktop, opens drawer on mobile --->
-                <button class="topbar-toggle"
-                        @click="$store.sidebar.toggle()"
-                        :aria-label="$store.sidebar.collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
-                    <i class="ph ph-list" aria-hidden="true"></i>
-                </button>
-
-                <!--- Breadcrumb — populate via prc.breadcrumbs array in your handler --->
-                <nav aria-label="Breadcrumb">
-                    <ol class="topbar-breadcrumb">
-                        <li class="topbar-breadcrumb-item">
-                            <a href="/">Home</a>
-                        </li>
-                        <li class="topbar-breadcrumb-item active" aria-current="page">
-                            #( prc.keyExists( "title" ) ? prc.title : "Dashboard" )#
-                        </li>
-                    </ol>
-                </nav>
-            </div>
-
-            <div class="topbar-right">
-
-                <!--- Dark / light mode toggle --->
-                <button class="topbar-btn"
-                        x-cloak
-                        @click="$store.theme.toggle()"
-                        :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
-                    <i class="ph ph-sun"  x-show="$store.theme.mode === 'dark'"  aria-hidden="true"></i>
-                    <i class="ph ph-moon" x-show="$store.theme.mode === 'light'" aria-hidden="true"></i>
-                </button>
-
-                <!--- Notifications bell --->
-                <button class="topbar-btn" aria-label="Notifications">
-                    <i class="ph ph-bell" aria-hidden="true"></i>
-                </button>
-
-                <span class="topbar-divider" aria-hidden="true"></span>
-
-                <!--- User dropdown --->
-                <div class="dropdown">
-                    <button class="topbar-user-btn"
-                            id="topbarUserMenu"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                        <span class="topbar-user-avatar">
-                            #( prc.keyExists( "authUser" ) ? prc.authUser.initials : "A" )#
-                        </span>
-                        <span class="topbar-user-name">
-                            #( prc.keyExists( "authUser" ) ? prc.authUser.name : "Admin" )#
-                        </span>
-                        <i class="ph ph-caret-down topbar-user-chevron" aria-hidden="true"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end"
-                        aria-labelledby="topbarUserMenu">
-                        <li>
-                            <span class="dropdown-header">
-                                #( prc.keyExists( "authUser" ) ? prc.authUser.email : "admin@example.com" )#
-                            </span>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item" href="/profile">
-                                <i class="ph ph-user" aria-hidden="true"></i>
-                                Profile
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/settings">
-                                <i class="ph ph-gear" aria-hidden="true"></i>
-                                Settings
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item text-danger" href="/auth/logout">
-                                <i class="ph ph-sign-out" aria-hidden="true"></i>
-                                Sign out
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-            </div>
-        </header>
-        <!--- ── /Topbar ──────────────────────────────────────────── --->
+        #view( "_partials/header" )#
 
         <!--- ── Page content ─────────────────────────────────────── --->
         <main class="main-content" id="main-content" tabindex="-1">
@@ -255,6 +47,9 @@
                 #renderView()#
             </div>
         </main>
+
+        <!--- ── Footer ───────────────────────────────────────────── --->
+        #view( "_partials/footer" )#
 
     </div>
     <!--- ── /Main wrapper ────────────────────────────────────────── --->
