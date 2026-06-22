@@ -1,0 +1,27 @@
+class {
+
+    function up( schema, qb ) {
+		schema.create( "users", (table)=>{
+			table.uuid( "id" ).primaryKey()
+			table.boolean( "isActive" ).default( true )
+			table.timestamps()
+			// User specific fields
+			table.string( "firstName" )
+			table.string( "lastName" )
+			table.string( "email" )
+			table.string( "password" )
+			table.datetime( "verifiedAt" ).nullable()
+			table.datetime( "lastLogin" ).nullable()
+			// Indexes
+			table.index( "email", "idx_userEmail" )
+			table.index( "verifiedAt", "idx_userVerifiedAt" )
+			table.index( "isActive", "idx_userActive" )
+			table.index( [ "email", "isActive" ], "idx_userEmailActive" )
+		} );
+    }
+
+    function down( schema, qb ) {
+		schema.dropIfExists( "users" );
+    }
+
+}

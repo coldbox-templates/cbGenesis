@@ -13,12 +13,12 @@ class extends="BaseEntity" {
 	 * --------------------------------------------------------------------------
 	 */
 
-	property name="firstName";
-	property name="lastName";
-	property name="email";
-	property name="password";
-	property name="verifiedAt";
-	property name="lastLogin";
+	property name="firstName" default="";
+	property name="lastName" default="";
+	property name="email" default="";
+	property name="password" default="";
+	property name="verifiedAt" type="datetime";
+	property name="lastLogin" type="datetime";
 
 	/**
 	 * --------------------------------------------------------------------------

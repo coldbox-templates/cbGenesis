@@ -6,15 +6,14 @@
         "properties": {
             "defaultGrammar": "AutoDiscover@qb",
             "schema": "${DB_SCHEMA}",
-            "migrationsTable": "migrations",
+            "migrationsTable": "cbmigrations",
             "connectionInfo": {
-				"database" : "${DB_DATABASE}",
-                "password": "${DB_PASSWORD}",
-                "connectionString": "${DB_CONNECTIONSTRING}",
-                "class": "${DB_CLASS}",
+                "type": "${DB_DRIVER}",
+                "database": "${DB_DATABASE}",
+                "host": "${DB_HOST}",
+                "port": "${DB_PORT}",
                 "username": "${DB_USER}",
-                "bundleName": "${DB_BUNDLENAME}",
-                "bundleVersion": "${DB_BUNDLEVERSION}"
+                "password": "${DB_PASSWORD}"
             }
         }
     }
