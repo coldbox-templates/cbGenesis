@@ -20,7 +20,7 @@
         "modules":"lib/modules"
     },
     "devDependencies":{
-        "testbox":"*",
+        "testbox":"be",
         "commandbox-boxlang":"*",
         "commandbox-migrations":"*"
     },

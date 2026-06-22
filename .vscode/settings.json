@@ -2,5 +2,13 @@
 	"boxlang.mappings": {
 		"coldbox" : "./lib/coldbox",
 		"testbox" : "./lib/testbox"
-	}
+	},
+	"editor.formatOnSave": false,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"eslint.validate": [
+		"javascript",
+		"javascriptreact"
+	]
 }

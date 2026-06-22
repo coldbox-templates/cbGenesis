@@ -12,7 +12,7 @@ import { messageBox }       from "./components/MessageBox.js";
 // Alpine Components
 // ============================================================
 
-Alpine.data( "passwordStrength", passwordStrength );
+Alpine.data("passwordStrength", passwordStrength );
 Alpine.data( "authForm",         authForm );
 Alpine.data( "messageBox",       messageBox );
 
