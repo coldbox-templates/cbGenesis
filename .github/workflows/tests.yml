@@ -50,6 +50,17 @@ jobs:
         run: |
           box install
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+
+      - name: Build Frontend Assets
+        run: |
+          npm ci
+          npm run build
+
       - name: Start ${{ matrix.cfengine }} Server
         run: |
           box server set web.http.port=${{ env.WEB_PORT }}
