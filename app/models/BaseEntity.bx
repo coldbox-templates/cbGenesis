@@ -38,7 +38,6 @@ class threadSafe{
 	 * @entityName - The name of the entity, defaults to the class name
 	 */
 	function init( primaryKey="id", entityName ) {
-		variables.id = createUUID()
 		variables.isActive    = true
 		variables.createdDate = variables.modifiedDate = now()
 		variables.entityName = arguments.entityName ?: this.$bx.meta.name
