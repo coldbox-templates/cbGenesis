@@ -1,0 +1,111 @@
+/**
+ * Security Service - Session-based authentication management.
+ *
+ * Wraps the cbauth AuthenticationService and adds lastLogin tracking.
+ * This service is a singleton and thread-safe.
+ *
+ * @see https://coldbox-security.ortusbooks.com
+ */
+@singleton
+@threadSafe
+class {
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Injections
+	 * --------------------------------------------------------------------------
+	 */
+
+	property name="authenticationService" inject="authenticationService@cbauth";
+	property name="userService"          inject="UserService";
+	property name="qb"                  inject="QueryBuilder@qb";
+	property name="log"                 inject="logbox:logger:{this}";
+
+	/**
+	 * Constructor
+	 */
+	function init(){
+		return this
+	}
+
+	/**
+	 * Log in a user with username and password.
+	 * Validates credentials via UserService, then authenticates through cbauth.
+	 * Updates the user's lastLogin timestamp on success.
+	 *
+	 * @username The email/username to log in with
+	 * @password The password to verify
+	 *
+	 * @return The authenticated User object
+	 * @throws SecurityException if credentials are invalid
+	 */
+	User function login( required string username, required string password ){
+		// Validate credentials through UserService
+		if ( !userService.isValidCredentials( arguments.username, arguments.password ) ) {
+			log.warn( "Failed login attempt for user: #arguments.username#" );
+			throw(
+				message   : "Invalid credentials.",
+				detail    : "The username and password combination is not valid.",
+				type      : "SecurityException"
+			);
+		}
+
+		// Authenticate through cbauth (stores user in session + request)
+		var oUser = authenticationService.authenticate( arguments.username, arguments.password );
+
+		// Update lastLogin in the database
+		updateLastLogin( oUser.getId() );
+
+		log.info( "User logged in successfully: #arguments.username#" );
+
+		return oUser;
+	}
+
+	/**
+	 * Log out the currently logged in user.
+	 * Clears the session and request scope user data.
+	 */
+	function logout(){
+		try {
+			authenticationService.logout();
+			log.info( "User logged out successfully." );
+		} catch ( SecurityException e ) {
+			log.debug( "Logout attempted with no active session." );
+		}
+	}
+
+	/**
+	 * Check if a user is currently logged in.
+	 *
+	 * @return true if a user is logged in, false otherwise
+	 */
+	boolean function isLoggedIn(){
+		return authenticationService.isLoggedIn();
+	}
+
+	/**
+	 * Get the currently logged in user.
+	 *
+	 * @return The User object if logged in, null otherwise
+	 */
+	User function getCurrentUser(){
+		try {
+			return authenticationService.getUser();
+		} catch ( SecurityException e ) {
+			return null;
+		}
+	}
+
+	/**
+	 * Update the lastLogin timestamp for a user in the database.
+	 *
+	 * @id The user ID to update
+	 */
+	private function updateLastLogin( required string id ){
+		qb
+			.table( "users" )
+			.where( "id", arguments.id )
+			.update( { "lastLogin" : { value: now(), cfsqlType: "timestamp" } } );
+	}
+
+}
