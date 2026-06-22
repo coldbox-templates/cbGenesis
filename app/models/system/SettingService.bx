@@ -2,8 +2,7 @@
  * Copyright since 2020 by Ortus Solutions, Corp
  * www.ortussolutions.com
  * ---
- * Manages settings for timebox.
- * All Settings are cache in struct format in the distributed cache and loaded on demand.
+ * Manage the application system settings.
  */
 class extends="app.models.BaseService" {
 
@@ -352,38 +351,6 @@ class extends="app.models.BaseService" {
 
 
 	/**
-	 * Ensures data paths.
-	 */
-	SettingService function ensureDataPaths() {
-		var defaultDisk = cbfs.defaultDisk();
-		// Add another paths if do you need setting up it
-		var dirPaths = [ variables.timeboxPDFPath, variables.timeboxXLSPath ];
-		dirPaths.each( ( path ) => {
-			if ( !defaultDisk.directoryExists( path ) ) {
-				log.info( "Creating TimeBox Data Path: #path#" );
-				defaultDisk.createDirectory( path );
-			}
-		} );
-		return this;
-	}
-
-	/**
-	 * Clear data folders.
-	 */
-	SettingService function cleanDirectories() {
-		var defaultDisk = cbfs.defaultDisk();
-
-		var dirPaths = [ variables.timeboxPDFPath, variables.timeboxXLSPath ];
-
-		dirPaths.each( ( path ) => {
-			log.info( "Cleaning TimeBox Data Path: #path#" );
-			defaultDisk.cleanDirectory( path );
-		} );
-
-		return this;
-	}
-
-	/**
 	 * Overwrite settings for Coldbox modules
 	 */
 	SettingService function overwriteModuleSettings() {
@@ -403,22 +370,6 @@ class extends="app.models.BaseService" {
 				true
 			);
 		return this;
-	}
-
-	/**
-	 * Slugify a string for filename
-	 *
-	 * @str       Target to slugify
-	 */
-	function filenameToSlug( required str ) {
-		// Cleanup and slugify the string
-		var slug = lCase( trim( arguments.str ) );
-		slug = replaceList( slug, "#chr( 228 )#,#chr( 252 )#,#chr( 246 )#,#chr( 223 )#", "ae,ue,oe,ss" );
-		slug = reReplace( slug, "[^a-z0-9-.\s]", "", "all" );
-		slug = trim( reReplace( slug, "[\s-]+", " ", "all" ) );
-		slug = reReplace( slug, "\s", "_", "all" );
-
-		return slug;
 	}
 
 	/**
