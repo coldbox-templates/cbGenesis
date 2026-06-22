@@ -1,0 +1,117 @@
+<bx:output>
+<!--- ── Page header ────────────────────────────────────────────────── --->
+<div class="page-header">
+    <h2 class="page-title">Dashboard</h2>
+    <p class="page-subtitle">
+        Welcome back, #encodeForHTML( prc.authUser.name )# — here's what's happening today.
+    </p>
+</div>
+
+<!--- ── Stat cards ──────────────────────────────────────────────────── --->
+<div class="row g-3 mb-4">
+    <bx:loop array="#prc.stats#" item="stat">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-card-top">
+                    <div>
+                        <div class="stat-label">#encodeForHTML( stat.label )#</div>
+                        <div class="stat-value">#encodeForHTML( stat.value )#</div>
+                    </div>
+                    <div class="stat-icon #encodeForHTMLAttribute( stat.iconCss )#">
+                        <i class="ph #encodeForHTMLAttribute( stat.icon )#" aria-hidden="true"></i>
+                    </div>
+                </div>
+                <div>
+                    <span class="stat-change #( stat.up ? 'up' : 'down' )#">
+                        <i class="ph #( stat.up ? 'ph-trend-up' : 'ph-trend-down' )#" aria-hidden="true"></i>
+                        #encodeForHTML( stat.change )#
+                    </span>
+                    <span class="stat-change-context">vs. last month</span>
+                </div>
+            </div>
+        </div>
+    </bx:loop>
+</div>
+
+<!--- ── Bottom row: Activity + Quick actions ────────────────────────── --->
+<div class="row g-3">
+
+    <!--- Activity feed --->
+    <div class="col-12 col-lg-7">
+        <div class="content-card">
+            <div class="content-card-header">
+                <h3 class="content-card-title">Recent Activity</h3>
+                <a href="##" class="btn btn-sm btn-outline-secondary">
+                    View all
+                </a>
+            </div>
+            <div class="content-card-body">
+                <ul class="activity-feed" role="list">
+                    <bx:loop array="#prc.activities#" item="act">
+                        <li class="activity-item">
+                            <span class="activity-icon #encodeForHTMLAttribute( act.iconCss )#" aria-hidden="true">
+                                <i class="ph #encodeForHTMLAttribute( act.icon )#"></i>
+                            </span>
+                            <div class="activity-body">
+                                <p class="activity-text">#encodeForHTML( act.text )#</p>
+                                <time class="activity-time">#encodeForHTML( act.time )#</time>
+                            </div>
+                        </li>
+                    </bx:loop>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!--- Quick actions --->
+    <div class="col-12 col-lg-5">
+        <div class="content-card">
+            <div class="content-card-header">
+                <h3 class="content-card-title">Quick Actions</h3>
+            </div>
+            <div class="content-card-body p-3">
+                <div class="row g-2">
+                    <bx:loop array="#prc.quickActions#" item="qa">
+                        <div class="col-6">
+                            <a href="#encodeForHTMLAttribute( qa.href )#" class="quick-action-btn">
+                                <span class="quick-action-icon" aria-hidden="true">
+                                    <i class="ph #encodeForHTMLAttribute( qa.icon )#"></i>
+                                </span>
+                                #encodeForHTML( qa.label )#
+                            </a>
+                        </div>
+                    </bx:loop>
+                </div>
+            </div>
+        </div>
+
+        <!--- Mini welcome card --->
+        <div class="content-card mt-3">
+            <div class="content-card-body p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle"
+                         style="width:48px;height:48px;background:var(--bl-gradient);font-size:1.125rem;font-weight:700;color:#fff;">
+                        #encodeForHTML( prc.authUser.initials )#
+                    </div>
+                    <div class="min-width-0">
+                        <div style="font-weight:600;font-size:0.9375rem;color:var(--app-text);">
+                            #encodeForHTML( prc.authUser.name )#
+                        </div>
+                        <div style="font-size:0.8125rem;color:var(--app-text-muted);">
+                            #encodeForHTML( prc.authUser.role )#
+                            &mdash;
+                            #encodeForHTML( prc.authUser.email )#
+                        </div>
+                    </div>
+                </div>
+                <hr style="border-color:var(--app-border);margin:0.875rem 0;">
+                <a href="/auth/logout" class="btn btn-sm btn-outline-danger w-100">
+                    <i class="ph ph-sign-out me-1" aria-hidden="true"></i>
+                    Sign out
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+</bx:output>

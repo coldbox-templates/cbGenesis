@@ -1,0 +1,29 @@
+// ============================================================
+// Import order matters:
+//   1. Our variables   → override Bootstrap's defaults ($primary etc.)
+//   2. Bootstrap       → compiled with our overrides applied
+//   3. Our custom CSS  → layered on top (uses Bootstrap's compiled output)
+// ============================================================
+
+// 1. Brand tokens + Bootstrap variable overrides
+@import "variables";
+
+// 2. Bootstrap (picks up our variable overrides above)
+@import "bootstrap/scss/bootstrap";
+
+// 3. Base: CSS custom properties for light/dark theming + utilities
+@import "base";
+
+// 4. Layout shells
+@import "layouts/auth";
+@import "layouts/admin";
+
+// 5. Components
+@import "components/logo";
+@import "components/messagebox";
+@import "components/sidebar";
+@import "components/topbar";
+@import "components/auth-forms";
+
+// 6. View-specific styles
+@import "views/dashboard";

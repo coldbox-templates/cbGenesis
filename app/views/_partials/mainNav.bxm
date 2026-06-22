@@ -1,0 +1,130 @@
+<!---
+    Main Navigation Sidebar Partial
+    Renders the fixed sidebar with brand logo, nav sections, and user footer.
+    Alpine detects the active link from window.location.pathname (client-side).
+
+    Usage (from Admin layout):
+        #view( "_partials/mainNav" )#
+
+    Reads from prc (populated by protected handlers):
+        prc.authUser.initials — user avatar letter
+        prc.authUser.name     — display name
+        prc.authUser.role     — role label
+--->
+<bx:output>
+<aside class="sidebar"
+       :class="{ 'sidebar-collapsed': $store.sidebar.collapsed,
+                 'sidebar-open':      $store.sidebar.open }"
+       aria-label="Main navigation">
+
+    <!--- ── Brand ──────────────────────────────────────────── --->
+    <div class="sidebar-header">
+        <a href="/" class="sidebar-brand">
+            #view( view: "_partials/logo", args: { variant: "compact" } )#
+        </a>
+    </div>
+
+    <!--- ── Navigation ─────────────────────────────────────── --->
+    <!---
+        Alpine x-data tracks the current path so nav items can be marked active
+        without a round-trip to the server. Add :class="isActive('/path')" to
+        each anchor for automatic highlighting.
+    --->
+    <nav class="sidebar-nav"
+         x-data="{ path: window.location.pathname }"
+         aria-label="Main navigation">
+
+        <!--- Main --->
+        <div class="sidebar-nav-section">
+            <span class="sidebar-nav-label">Main</span>
+            <ul class="sidebar-nav-list">
+                <li>
+                    <a href="/"
+                       class="sidebar-nav-item"
+                       :class="path === '/' || path.startsWith('/dashboard') ? 'active' : ''"
+                       title="Dashboard">
+                        <i class="ph ph-house sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="sidebar-nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="##"
+                       class="sidebar-nav-item"
+                       :class="path.startsWith('/analytics') ? 'active' : ''"
+                       title="Analytics">
+                        <i class="ph ph-chart-line sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="sidebar-nav-text">Analytics</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="##"
+                       class="sidebar-nav-item"
+                       :class="path.startsWith('/reports') ? 'active' : ''"
+                       title="Reports">
+                        <i class="ph ph-files sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="sidebar-nav-text">Reports</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!--- Management --->
+        <div class="sidebar-nav-section">
+            <span class="sidebar-nav-label">Management</span>
+            <ul class="sidebar-nav-list">
+                <li>
+                    <a href="##"
+                       class="sidebar-nav-item"
+                       :class="path.startsWith('/users') ? 'active' : ''"
+                       title="Users">
+                        <i class="ph ph-users sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="sidebar-nav-text">Users</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="##"
+                       class="sidebar-nav-item"
+                       :class="path.startsWith('/content') ? 'active' : ''"
+                       title="Content">
+                        <i class="ph ph-stack sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="sidebar-nav-text">Content</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="##"
+                       class="sidebar-nav-item"
+                       :class="path.startsWith('/settings') ? 'active' : ''"
+                       title="Settings">
+                        <i class="ph ph-gear sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="sidebar-nav-text">Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+    </nav>
+    <!--- ── /Navigation ─────────────────────────────────────── --->
+
+    <!--- ── User footer ─────────────────────────────────────── --->
+    <!---
+        Sidebar has overflow:hidden for the collapse transition, so Bootstrap
+        dropdowns clip here. Use a link to a dedicated profile page instead.
+    --->
+    <div class="sidebar-footer">
+        <a href="/profile" class="sidebar-user text-decoration-none">
+            <span class="sidebar-user-avatar">
+                #( prc.keyExists( "authUser" ) ? prc.authUser.initials : "A" )#
+            </span>
+            <span class="sidebar-user-info">
+                <span class="sidebar-user-name">
+                    #( prc.keyExists( "authUser" ) ? prc.authUser.name : "Admin User" )#
+                </span>
+                <span class="sidebar-user-role">
+                    #( prc.keyExists( "authUser" ) ? prc.authUser.role : "Administrator" )#
+                </span>
+            </span>
+        </a>
+    </div>
+
+</aside>
+</bx:output>

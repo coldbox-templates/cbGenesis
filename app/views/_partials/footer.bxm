@@ -1,0 +1,24 @@
+<!---
+    Footer Partial
+    Simple app footer with auto-updating copyright year.
+
+    Usage:
+        #view( "_partials/footer" )#
+        #view( view: "_partials/footer", args: { classes: "mt-auto" } )#
+
+    Args:
+        classes : string — extra CSS classes on <footer> (default: "")
+--->
+<bx:param name="args.classes" default="" />
+
+<bx:output>
+<footer class="app-footer#( len( args.classes ) ? ' ' & args.classes : '' )#">
+    <span class="app-footer__copy">
+        &copy; #year( now() )# #encodeForHTML( getSetting( "appName" ) )#. All rights reserved.
+    </span>
+    <span class="app-footer__sep" aria-hidden="true">&middot;</span>
+    <a href="##" class="app-footer__link">Privacy</a>
+    <span class="app-footer__sep" aria-hidden="true">&middot;</span>
+    <a href="##" class="app-footer__link">Terms</a>
+</footer>
+</bx:output>

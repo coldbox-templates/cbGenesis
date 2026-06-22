@@ -1,0 +1,79 @@
+<!---
+    Messagebox Partial
+    Renders a themed, dismissible alert box. Powered by the messageBox Alpine component.
+
+    Usage:
+        #view( view: "_partials/messagebox", args: {
+            type    : "success",
+            message : "Your changes have been saved."
+        } )#
+
+        #view( view: "_partials/messagebox", args: {
+            type        : "warning",
+            title       : "Action required",
+            message     : "Your session expires in 5 minutes.",
+            autoDismiss : 8000
+        } )#
+
+    Args:
+        type        : info | success | warning | error   (default: "info")
+        message     : string — body text                 (required; renders nothing if empty)
+        title       : string — bold heading above text   (default: "" = no title)
+        dismissible : boolean — show ✕ button            (default: true)
+        autoDismiss : number  — ms until auto-hide       (default: 0 = never)
+        classes     : string  — extra CSS classes        (default: "")
+
+    Supported types and their icons:
+        info    → ph-info
+        success → ph-check-circle
+        warning → ph-warning
+        error   → ph-x-circle
+--->
+<bx:param name="args.type"        default="info" />
+<bx:param name="args.message"     default="" />
+<bx:param name="args.title"       default="" />
+<bx:param name="args.dismissible" default="true" />
+<bx:param name="args.autoDismiss" default="0" />
+<bx:param name="args.classes"     default="" />
+
+<bx:if len( trim( args.message ) )>
+
+    <bx:set localIcons = {
+        "info"    : "ph-info",
+        "success" : "ph-check-circle",
+        "warning" : "ph-warning",
+        "error"   : "ph-x-circle"
+    } />
+    <bx:set localType = listFind( "info,success,warning,error", args.type ) ? args.type : "info" />
+    <bx:set localIcon = localIcons[ localType ] />
+
+    <bx:output>
+    <div class="messagebox messagebox--#encodeForHTMLAttribute( localType )##( len( args.classes ) ? ' ' & args.classes : '' )#"
+         x-data="messageBox({ autoDismiss: #javaCast( 'int', val( args.autoDismiss ) )# })"
+         x-show="visible"
+         x-transition.opacity.duration.200ms
+         role="alert"
+         aria-live="polite">
+
+        <i class="ph #encodeForHTMLAttribute( localIcon )# messagebox__icon" aria-hidden="true"></i>
+
+        <div class="messagebox__body">
+            <bx:if len( trim( args.title ) )>
+                <p class="messagebox__title">#encodeForHTML( args.title )#</p>
+            </bx:if>
+            <p class="messagebox__text">#encodeForHTML( args.message )#</p>
+        </div>
+
+        <bx:if args.dismissible>
+            <button type="button"
+                    class="messagebox__dismiss"
+                    @click="dismiss()"
+                    aria-label="Dismiss">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </bx:if>
+
+    </div>
+    </bx:output>
+
+</bx:if>

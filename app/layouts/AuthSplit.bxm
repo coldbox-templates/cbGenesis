@@ -1,0 +1,95 @@
+<bx:output>
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
+    <meta name="description" content="Authentication">
+    <base href="#event.getHTMLBaseURL()#" />
+    #view( "_partials/includes" )#
+</head>
+<body class="auth-body" x-data x-init="$store.theme.init()">
+
+    <div class="auth-split-wrapper">
+
+        <!--- ── Left panel: brand illustration ───────────────────── --->
+        <div class="auth-split-brand" aria-hidden="true">
+            <!--- Decorative glow orbs --->
+            <div class="auth-split-orb orb-cyan"></div>
+            <div class="auth-split-orb orb-blue"></div>
+
+            <div class="auth-split-brand-content">
+                <!--- Logo mark (large) --->
+                <div class="auth-split-brand-logo">
+                    <svg width="72" height="72" viewBox="0 0 72 72" fill="none"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <rect width="72" height="72" rx="16" fill="rgba(255,255,255,0.12)"/>
+                        <rect x="1" y="1" width="70" height="70" rx="15"
+                              stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+                        <path d="M20 36h32M36 20v32" stroke="white"
+                              stroke-width="3.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <h1 class="auth-split-brand-title">
+                    #getSetting( "appName" )#
+                </h1>
+                <p class="auth-split-brand-tagline">
+                    A modern ColdBox application built for speed,<br>
+                    powered by the BoxLang ecosystem.
+                </p>
+
+                <!--- Feature highlights --->
+                <ul class="auth-split-features">
+                    <li class="auth-split-feature">
+                        <span class="feature-icon"><i class="ph ph-lightning"></i></span>
+                        Fast and lightweight framework
+                    </li>
+                    <li class="auth-split-feature">
+                        <span class="feature-icon"><i class="ph ph-shield-check"></i></span>
+                        Secure by default with CSRF &amp; auth
+                    </li>
+                    <li class="auth-split-feature">
+                        <span class="feature-icon"><i class="ph ph-cloud"></i></span>
+                        Ready to deploy anywhere
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!--- ── /Left panel ──────────────────────────────────────── --->
+
+        <!--- ── Right panel: form ────────────────────────────────── --->
+        <div class="auth-split-form">
+            <div class="auth-split-form-inner">
+
+                <!--- Logo shown only on mobile (brand panel hidden) --->
+                <div class="auth-split-logo-mobile">
+                    <a href="/" class="auth-logo-link">
+                        #view( view: "_partials/logo", args: { variant: "compact" } )#
+                    </a>
+                </div>
+
+                <!--- View content — inject the login/register form --->
+                #renderView()#
+
+                <!--- Footer: theme toggle --->
+                <div class="auth-split-footer">
+                    <button class="btn-theme-toggle"
+                            x-cloak
+                            @click="$store.theme.toggle()"
+                            :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+                        <i class="ph ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
+                        <i class="ph ph-moon" x-show="$store.theme.mode === 'light'"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        <!--- ── /Right panel ─────────────────────────────────────── --->
+
+    </div>
+
+</body>
+</html>
+</bx:output>

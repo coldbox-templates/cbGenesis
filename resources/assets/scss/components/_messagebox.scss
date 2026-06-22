@@ -1,0 +1,141 @@
+// ============================================================
+// Messagebox Component
+// Themed, dismissible alert messages powered by Alpine.
+// BEM: .messagebox, .messagebox--{type}
+//      .messagebox__icon  .messagebox__body  .messagebox__title
+//      .messagebox__text  .messagebox__dismiss
+// ============================================================
+
+.messagebox {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 1rem 1.25rem;
+    border-radius: $border-radius-xl;
+    border: 1px solid transparent;
+    border-left-width: 4px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+
+    // ---- Type variants ----
+
+    &--info {
+        background: rgba($bl-cyan, 0.07);
+        border-color: rgba($bl-cyan, 0.22);
+        border-left-color: $bl-cyan;
+
+        .messagebox__icon { color: $bl-cyan-dark; }
+    }
+
+    &--success {
+        background: rgba($bl-success, 0.07);
+        border-color: rgba($bl-success, 0.22);
+        border-left-color: $bl-success;
+
+        .messagebox__icon { color: $bl-success; }
+    }
+
+    &--warning {
+        background: rgba($bl-warning, 0.08);
+        border-color: rgba($bl-warning, 0.28);
+        border-left-color: $bl-warning;
+
+        .messagebox__icon { color: darken($bl-warning, 12%); }
+    }
+
+    &--error {
+        background: rgba($bl-danger, 0.07);
+        border-color: rgba($bl-danger, 0.22);
+        border-left-color: $bl-danger;
+
+        .messagebox__icon { color: $bl-danger; }
+    }
+
+    // ---- Parts ----
+
+    &__icon {
+        font-size: 1.25rem;
+        line-height: 1;
+        flex-shrink: 0;
+        margin-top: 0.0625rem; // optical alignment with first text line
+    }
+
+    &__body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin: 0 0 0.2rem;
+        color: var(--app-text);
+    }
+
+    &__text {
+        margin: 0;
+        color: var(--app-text);
+    }
+
+    &__dismiss {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        padding: 0.25rem;
+        margin: -0.25rem -0.375rem -0.25rem 0;
+        cursor: pointer;
+        color: var(--app-text-muted);
+        border-radius: $border-radius;
+        font-size: 1rem;
+        line-height: 1;
+        transition: color 0.15s ease, background-color 0.15s ease;
+
+        &:hover {
+            color: var(--app-text);
+            background: rgba(0, 0, 0, 0.06);
+        }
+    }
+
+    // Spacing when stacked
+    & + & {
+        margin-top: 0.625rem;
+    }
+}
+
+// ---- Dark mode ----
+
+[data-bs-theme="dark"] {
+    .messagebox {
+        &--info {
+            background: rgba($bl-cyan, 0.1);
+            border-color: rgba($bl-cyan, 0.3);
+            .messagebox__icon { color: lighten($bl-cyan, 5%); }
+        }
+
+        &--success {
+            background: rgba($bl-success, 0.1);
+            border-color: rgba($bl-success, 0.3);
+            .messagebox__icon { color: lighten($bl-success, 10%); }
+        }
+
+        &--warning {
+            background: rgba($bl-warning, 0.1);
+            border-color: rgba($bl-warning, 0.3);
+            .messagebox__icon { color: lighten($bl-warning, 5%); }
+        }
+
+        &--error {
+            background: rgba($bl-danger, 0.1);
+            border-color: rgba($bl-danger, 0.3);
+            .messagebox__icon { color: lighten($bl-danger, 10%); }
+        }
+
+        .messagebox__dismiss:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+    }
+}

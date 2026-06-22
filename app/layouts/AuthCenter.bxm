@@ -1,0 +1,49 @@
+<bx:output>
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
+    <meta name="description" content="Authentication">
+    <base href="#event.getHTMLBaseURL()#" />
+    #view( "_partials/includes" )#
+</head>
+<body class="auth-body" x-data x-init="$store.theme.init()">
+
+    <div class="auth-center-wrapper">
+
+        <!--- ── Card ─────────────────────────────────────────────── --->
+        <div class="auth-card">
+
+            <!--- Logo --->
+            <div class="auth-card-logo">
+                <a href="/" class="auth-logo-link">
+                    #view( "_partials/logo" )#
+                </a>
+            </div>
+
+            <!--- View content — inject the login/register/forgot-password form --->
+            <div class="auth-card-body">
+                #renderView()#
+            </div>
+
+        </div>
+        <!--- ── /Card ────────────────────────────────────────────── --->
+
+        <!--- Dark / light mode toggle --->
+        <div class="auth-footer">
+            <button class="btn-theme-toggle"
+                    x-cloak
+                    @click="$store.theme.toggle()"
+                    :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+                <i class="ph ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
+                <i class="ph ph-moon" x-show="$store.theme.mode === 'light'"></i>
+            </button>
+        </div>
+
+    </div>
+
+</body>
+</html>
+</bx:output>

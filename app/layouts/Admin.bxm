@@ -1,0 +1,59 @@
+<bx:output>
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
+    <base href="#event.getHTMLBaseURL()#" />
+    #view( "_partials/includes" )#
+</head>
+
+<!---
+    x-init initializes Alpine stores:
+      $store.theme.init()   — syncs Alpine's mode with the FOUC-prevention script
+      $store.sidebar.init() — restores collapse state from localStorage
+--->
+<body class="admin-body"
+      x-data
+      x-init="$store.theme.init(); $store.sidebar.init()">
+
+    <!--- ── Mobile sidebar backdrop ──────────────────────────────── --->
+    <div class="sidebar-overlay"
+         x-cloak
+         x-show="$store.sidebar.open"
+         x-transition.opacity
+         @click="$store.sidebar.close()"
+         aria-hidden="true">
+    </div>
+
+    <!--- ════════════════════════════════════════════════════════════
+          SIDEBAR
+          ════════════════════════════════════════════════════════════ --->
+    #view( "_partials/mainNav" )#
+
+    <!--- ════════════════════════════════════════════════════════════
+          MAIN WRAPPER  (topbar + page content + footer)
+          ════════════════════════════════════════════════════════════ --->
+    <div class="main-wrapper"
+         :class="{ 'sidebar-collapsed-ml': $store.sidebar.collapsed }">
+
+        <!--- ── Topbar ───────────────────────────────────────────── --->
+        #view( "_partials/header" )#
+
+        <!--- ── Page content ─────────────────────────────────────── --->
+        <main class="main-content" id="main-content" tabindex="-1">
+            <div class="container-fluid">
+                #renderView()#
+            </div>
+        </main>
+
+        <!--- ── Footer ───────────────────────────────────────────── --->
+        #view( "_partials/footer" )#
+
+    </div>
+    <!--- ── /Main wrapper ────────────────────────────────────────── --->
+
+</body>
+</html>
+</bx:output>
