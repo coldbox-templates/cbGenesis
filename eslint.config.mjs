@@ -1,4 +1,3 @@
-import prettier from "eslint-config-prettier";
 import globals from "globals";
 
 export default [
@@ -119,10 +118,5 @@ export default [
 				}
 			]
 		}
-	},
-
-	// ======================================================================
-	// Prettier – must be last to override stylistic rules
-	// ======================================================================
-	prettier
+	}
 ];

@@ -12,7 +12,7 @@ import { messageBox }       from "./components/MessageBox.js";
 // Alpine Components
 // ============================================================
 
-Alpine.data("passwordStrength", passwordStrength );
+Alpine.data( "passwordStrength", passwordStrength );
 Alpine.data( "authForm",         authForm );
 Alpine.data( "messageBox",       messageBox );
 
@@ -24,24 +24,24 @@ Alpine.data( "messageBox",       messageBox );
 // ============================================================
 
 Alpine.store( "theme", {
-    mode: "light",
+	mode : "light",
 
-    init() {
-        const saved      = localStorage.getItem( "theme" );
-        const prefersDark = window.matchMedia( "(prefers-color-scheme: dark)" ).matches;
-        this.mode = saved ?? ( prefersDark ? "dark" : "light" );
-        this._apply();
-    },
+	init() {
+		const saved      = localStorage.getItem( "theme" );
+		const prefersDark = window.matchMedia( "(prefers-color-scheme: dark)" ).matches;
+		this.mode = saved ?? ( prefersDark ? "dark" : "light" );
+		this._apply();
+	},
 
-    toggle() {
-        this.mode = this.mode === "dark" ? "light" : "dark";
-        localStorage.setItem( "theme", this.mode );
-        this._apply();
-    },
+	toggle() {
+		this.mode = this.mode === "dark" ? "light" : "dark";
+		localStorage.setItem( "theme", this.mode );
+		this._apply();
+	},
 
-    _apply() {
-        document.documentElement.setAttribute( "data-bs-theme", this.mode );
-    },
+	_apply() {
+		document.documentElement.setAttribute( "data-bs-theme", this.mode );
+	},
 } );
 
 // ============================================================
@@ -52,28 +52,28 @@ Alpine.store( "theme", {
 // ============================================================
 
 Alpine.store( "sidebar", {
-    collapsed: false,
-    open:      false,
+	collapsed : false,
+	open      : false,
 
-    init() {
-        const saved = localStorage.getItem( "sidebar-collapsed" );
-        if ( saved !== null ) {
-            this.collapsed = saved === "true";
-        }
-    },
+	init() {
+		const saved = localStorage.getItem( "sidebar-collapsed" );
+		if ( saved !== null ) {
+			this.collapsed = saved === "true";
+		}
+	},
 
-    toggle() {
-        if ( window.innerWidth >= 992 ) {
-            this.collapsed = !this.collapsed;
-            localStorage.setItem( "sidebar-collapsed", String( this.collapsed ) );
-        } else {
-            this.open = !this.open;
-        }
-    },
+	toggle() {
+		if ( window.innerWidth >= 992 ) {
+			this.collapsed = !this.collapsed;
+			localStorage.setItem( "sidebar-collapsed", String( this.collapsed ) );
+		} else {
+			this.open = !this.open;
+		}
+	},
 
-    close() {
-        this.open = false;
-    },
+	close() {
+		this.open = false;
+	},
 } );
 
 window.Alpine    = Alpine;
