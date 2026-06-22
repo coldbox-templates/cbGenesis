@@ -1,0 +1,47 @@
+﻿/**
+ * Copyright since 2020 by Ortus Solutions, Corp
+ * www.ortussolutions.com
+ * ---
+ * A global setting object
+ */
+class extends="BaseEntity"{
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Persisted Properties
+	 * --------------------------------------------------------------------------
+	 */
+
+	property name="name" notnull="true" unique="true";
+	property name="value" notnull="true" default="";
+	property name="isCore" type="boolean" default="true" notnull="true";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Validatation Constraints
+	 * --------------------------------------------------------------------------
+	 */
+	this.constraints = {
+		"name": { required: true, size: "1..255", validator: "UniqueValidator" },
+		"value": { required: true }
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Memento Configuration
+	 * --------------------------------------------------------------------------
+	 */
+	this.memento = { defaultIncludes: [ "name", "value", "isCore" ] }
+
+	/* *********************************************************************
+	 **							PUBLIC METHODS
+	 ********************************************************************* */
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		return super.init( "settingId" )
+	}
+
+}
