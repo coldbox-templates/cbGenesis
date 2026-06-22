@@ -17,7 +17,7 @@ class threadSafe{
 	 * Non-Persisted Properties
 	 * --------------------------------------------------------------------------
 	 */
-	property name="primaryKey" type="string" default="id";
+	property name="primaryKey" type="string";
 	property name="entityName" type="string";
 
 	/**
@@ -33,13 +33,16 @@ class threadSafe{
 
 	/**
 	 * Constructor
+	 *
+	 * @primaryKey - The primary key of the entity, defaults to "id"
+	 * @entityName - The name of the entity, defaults to the class name
 	 */
-	function init(){
+	function init( primaryKey="id", entityName ) {
 		variables.id = createUUID()
 		variables.isActive    = true
 		variables.createdDate = variables.modifiedDate = now()
-		variables.primaryKey = "id"
-		variables.entityName = this.$bx.meta.name
+		variables.entityName = arguments.entityName ?: this.$bx.meta.name
+		variables.primaryKey = arguments.primaryKey
 
 		// Incorporate default includes for the base class.
 		if ( !isNull( this.memento.defaultIncludes ) && isNull( this.memento.baseIncluded ) ) {
