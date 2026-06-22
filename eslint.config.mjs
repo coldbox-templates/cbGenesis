@@ -41,24 +41,24 @@ export default [
 			],
 			"array-bracket-newline" : [
 				"error",
-				{ multiline : true }
+				{ multiline: true }
 			],
 			"array-element-newline" : [
 				"error",
-				{ multiline : true, minItems : 2 }
+				{ multiline: true, minItems: 2 }
 			],
 			"camelcase" : [
 				"error",
-				{ properties : "always" }
+				{ properties: "always" }
 			],
 			"indent" : [
 				"error",
 				"tab",
-				{ ignoredNodes : [ "TemplateLiteral" ] }
+				{ ignoredNodes: [ "TemplateLiteral" ] }
 			],
 			"keyword-spacing" : [
 				"error",
-				{ after : true, before : true }
+				{ after: true, before: true }
 			],
 			"key-spacing" : [
 				"error",
@@ -88,7 +88,7 @@ export default [
 
 			"object-curly-newline" : [
 				"error",
-				{ multiline : true }
+				{ multiline: true }
 			],
 			"object-curly-spacing" : [
 				"error",
@@ -100,12 +100,18 @@ export default [
 			],
 			"object-property-newline" : [
 				"error",
-				{ allowAllPropertiesOnSameLine : true }
+				{ allowAllPropertiesOnSameLine: true }
 			],
 			"prefer-promise-reject-errors" : "off",
-			"quotes"                       : [ "error", "double" ],
-			"semi"                         : [ "error", "always" ],
-			"space-in-parens"              : [
+			"quotes"                       : [
+				"error",
+				"double"
+			],
+			"semi" : [
+				"error",
+				"always"
+			],
+			"space-in-parens" : [
 				"error",
 				"always"
 			],

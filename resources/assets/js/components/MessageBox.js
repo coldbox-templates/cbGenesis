@@ -7,23 +7,23 @@
  * Usage in BXM:
  *   x-data="messageBox({ autoDismiss: 5000 })"
  */
-export function messageBox({ autoDismiss = 0 } = {}) {
-    return {
-        visible: true,
-        _timer:  null,
+export function messageBox( { autoDismiss = 0 } = {} ) {
+	return {
+		visible : true,
+		_timer  : null,
 
-        init() {
-            if ( autoDismiss > 0 ) {
-                this._timer = setTimeout( () => { this.visible = false; }, autoDismiss );
-            }
-        },
+		init() {
+			if ( autoDismiss > 0 ) {
+				this._timer = setTimeout( () => { this.visible = false; }, autoDismiss );
+			}
+		},
 
-        destroy() {
-            if ( this._timer ) clearTimeout( this._timer );
-        },
+		destroy() {
+			if ( this._timer ) clearTimeout( this._timer );
+		},
 
-        dismiss() {
-            this.visible = false;
-        },
-    };
+		dismiss() {
+			this.visible = false;
+		},
+	};
 }
