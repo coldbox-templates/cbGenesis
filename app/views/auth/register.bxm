@@ -7,19 +7,11 @@
     </div>
 
     <!--- General error (e.g. CSRF expiry) --->
-    <bx:if condition="prc.keyExists( 'error' )">
-        <div class="alert alert-danger" role="alert">
-            <i class="ph ph-warning-circle me-1" aria-hidden="true"></i>
-            #encodeForHTML( prc.error )#
-        </div>
-    </bx:if>
+    #view( view: "_partials/messagebox", args: { type: "error", message: prc.error ?: "", dismissible: false } )#
 
     <!--- Server-side field validation errors --->
     <bx:if condition="prc.keyExists( 'errors' ) && !structIsEmpty( prc.errors )">
-        <div class="alert alert-danger" role="alert">
-            <i class="ph ph-warning-circle me-1" aria-hidden="true"></i>
-            Please fix the errors below and try again.
-        </div>
+        #view( view: "_partials/messagebox", args: { type: "error", message: "Please fix the errors below and try again.", dismissible: false } )#
     </bx:if>
 
     <form method="post"

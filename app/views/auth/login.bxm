@@ -1,10 +1,12 @@
 <bx:output>
 <!--- Flash message from previous action (e.g. after password reset) --->
 <bx:if condition="prc.keyExists( 'flash' )">
-    <div class="alert alert-#( prc.flash.type )# alert-dismissible fade show mb-4" role="alert">
-        #encodeForHTML( prc.flash.message )#
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    #view( view: "_partials/messagebox", args: {
+        type       : prc.flash.type,
+        message    : prc.flash.message,
+        dismissible: true,
+        classes    : "mb-4"
+    } )#
 </bx:if>
 
 <div x-data="authForm">
@@ -15,19 +17,11 @@
     </div>
 
     <!--- General error (e.g. CSRF expiry) --->
-    <bx:if condition="prc.keyExists( 'error' )">
-        <div class="alert alert-danger" role="alert">
-            <i class="ph ph-warning-circle me-1" aria-hidden="true"></i>
-            #encodeForHTML( prc.error )#
-        </div>
-    </bx:if>
+    #view( view: "_partials/messagebox", args: { type: "error", message: prc.error ?: "", dismissible: false } )#
 
     <!--- Server-side field validation errors --->
     <bx:if condition="prc.keyExists( 'errors' ) && !structIsEmpty( prc.errors )">
-        <div class="alert alert-danger" role="alert">
-            <i class="ph ph-warning-circle me-1" aria-hidden="true"></i>
-            Please fix the errors below and try again.
-        </div>
+        #view( view: "_partials/messagebox", args: { type: "error", message: "Please fix the errors below and try again.", dismissible: false } )#
     </bx:if>
 
     <form method="post"

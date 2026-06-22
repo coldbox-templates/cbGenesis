@@ -19,10 +19,9 @@ class extends="coldbox.system.EventHandler" {
 		prc.title = "Sign In";
 		event.setLayout( "AuthCenter" );
 
-		// Show flash message from a previous redirect (e.g. after password reset)
-		if ( structKeyExists( session, "flash" ) ) {
-			prc.flash = session.flash;
-			structDelete( session, "flash" );
+		// Flash message inflated automatically from ColdBox flash scope (inflateToRC: true)
+		if ( rc.keyExists( "flash" ) ) {
+			prc.flash = rc.flash;
 		}
 
 		if ( event.isPost() ) {
@@ -166,10 +165,10 @@ class extends="coldbox.system.EventHandler" {
 
 			// ── MOCK: password updated ─────────────────────────────────────────
 			// Replace with: UserService.resetPassword( prc.token, rc.password )
-			session.flash = {
+			flash.put( "flash", {
 				"type"   : "success",
 				"message": "Your password has been reset. Please sign in."
-			};
+			} );
 			// ── END MOCK ──────────────────────────────────────────────────────
 
 			return relocate( "auth/login" );
