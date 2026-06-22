@@ -14,28 +14,46 @@ class threadSafe{
 
 	/**
 	 * --------------------------------------------------------------------------
-	 * Properties
+	 * Non-Persisted Properties
+	 * --------------------------------------------------------------------------
+	 */
+	property name="primaryKey" type="string" default="id";
+	property name="entityName" type="string";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Persisted Properties
 	 * --------------------------------------------------------------------------
 	 */
 
-	/**
-	 * Every entity has an id, createdDate, modifiedDate and isActive property
-	 */
 	property name="id";
-	property name="entityName";
-	property name="createdDate";
-	property name="modifiedDate";
-	property
-		name   ="isActive"
-		type   ="boolean"
-		default="true";
+	property name="createdDate" type="date";
+	property name="modifiedDate" type="date";
+	property name="isActive" type="boolean" default="true";
 
 	/**
 	 * Constructor
 	 */
 	function init(){
+		variables.id = createUUID()
 		variables.isActive    = true
-		variables.id = variables.createdDate = variables.modifiedDate = ""
+		variables.createdDate = variables.modifiedDate = now()
+		variables.primaryKey = "id"
+		variables.entityName = this.$bx.meta.name
+
+		// Incorporate default includes for the base class.
+		if ( !isNull( this.memento.defaultIncludes ) && isNull( this.memento.baseIncluded ) ) {
+			this.memento.defaultIncludes.append(
+				[
+					variables.primaryKey,
+					"createdDate",
+					"modifiedDate",
+					"isActive"
+				],
+				true
+			)
+			this.memento.baseIncluded = true
+		}
 
 		return this
 	}
@@ -45,17 +63,6 @@ class threadSafe{
 	 */
 	boolean function isLoaded(){
 		return ( !isNull( variables.id ) && len( variables.id ) )
-	}
-
-	/**
-	 * Get the entity name. Used for logging and other purposes.
-	 * If the entityName property is not set, it will default to the class name.
-	 */
-	function getEntityName(){
-		if ( isNull( variables.entityName ) ) {
-			variables.entityName = this.$bx.meta.name
-		}
-		return variables.entityName
 	}
 
 	/***** Persistence Events : Modeled After ORM Events ******/
