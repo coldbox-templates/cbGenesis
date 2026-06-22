@@ -4,7 +4,7 @@
  * ---
  * A global setting object
  */
-class extends="BaseEntity"{
+class extends="app.models.BaseEntity"{
 
 	/**
 	 * --------------------------------------------------------------------------

@@ -15,7 +15,7 @@ class extends="coldbox.system.testing.BaseModelTest" {
 		super.setup()
 
 		// init the model object
-		variables.setting = getInstance( "Setting" )
+		variables.setting = getInstance( "system.Setting" )
 	}
 
 	function afterAll(){

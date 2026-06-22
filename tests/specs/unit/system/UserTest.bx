@@ -40,7 +40,7 @@ class extends="coldbox.system.testing.BaseModelTest" {
 			} );
 
 			it( "can get a non persisted id", function(){
-				expect( user.getId() ).toBeEmpty();
+				expect( user.getId() ).toBeNull();
 				expect( user.isLoaded() ).toBeFalse();
 			} );
 

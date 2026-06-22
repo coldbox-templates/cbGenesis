@@ -5,7 +5,7 @@
  * - cbsecurity.interfaces.jwt.IJwtSubject
  * - cbsecurity.interfaces.IAuthUser
  */
-class extends="BaseEntity" {
+class extends="app.models.BaseEntity" {
 
 	/**
 	 * --------------------------------------------------------------------------

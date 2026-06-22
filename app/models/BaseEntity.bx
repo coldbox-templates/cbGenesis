@@ -1,7 +1,7 @@
 /**
  * A cbgenesis basic entity which provides uniformity to all objects
  */
-class threadSafe{
+class{
 
 	/**
 	 * --------------------------------------------------------------------------
