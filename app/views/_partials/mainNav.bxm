@@ -19,7 +19,7 @@
 
     <!--- ── Brand ──────────────────────────────────────────── --->
     <div class="sidebar-header">
-        <a href="/" class="sidebar-brand">
+        <a href="/dashboard" class="sidebar-brand">
             #view( view: "_partials/logo", args: { variant: "compact" } )#
         </a>
     </div>
@@ -43,7 +43,7 @@
                        class="sidebar-nav-item"
                        :class="path === '/' || path.startsWith('/dashboard') ? 'active' : ''"
                        title="Dashboard">
-                        <i class="ph ph-house sidebar-nav-icon" aria-hidden="true"></i>
+                        <i class="ph-duotone ph-house sidebar-nav-icon" aria-hidden="true"></i>
                         <span class="sidebar-nav-text">Dashboard</span>
                     </a>
                 </li>
@@ -52,7 +52,7 @@
                        class="sidebar-nav-item"
                        :class="path.startsWith('/analytics') ? 'active' : ''"
                        title="Analytics">
-                        <i class="ph ph-chart-line sidebar-nav-icon" aria-hidden="true"></i>
+                        <i class="ph-duotone ph-chart-line sidebar-nav-icon" aria-hidden="true"></i>
                         <span class="sidebar-nav-text">Analytics</span>
                     </a>
                 </li>
@@ -61,7 +61,7 @@
                        class="sidebar-nav-item"
                        :class="path.startsWith('/reports') ? 'active' : ''"
                        title="Reports">
-                        <i class="ph ph-files sidebar-nav-icon" aria-hidden="true"></i>
+                        <i class="ph-duotone ph-files sidebar-nav-icon" aria-hidden="true"></i>
                         <span class="sidebar-nav-text">Reports</span>
                     </a>
                 </li>
@@ -77,7 +77,7 @@
                        class="sidebar-nav-item"
                        :class="path.startsWith('/users') ? 'active' : ''"
                        title="Users">
-                        <i class="ph ph-users sidebar-nav-icon" aria-hidden="true"></i>
+                        <i class="ph-duotone ph-users sidebar-nav-icon" aria-hidden="true"></i>
                         <span class="sidebar-nav-text">Users</span>
                     </a>
                 </li>
@@ -86,7 +86,7 @@
                        class="sidebar-nav-item"
                        :class="path.startsWith('/content') ? 'active' : ''"
                        title="Content">
-                        <i class="ph ph-stack sidebar-nav-icon" aria-hidden="true"></i>
+                        <i class="ph-duotone ph-stack sidebar-nav-icon" aria-hidden="true"></i>
                         <span class="sidebar-nav-text">Content</span>
                     </a>
                 </li>
@@ -95,7 +95,7 @@
                        class="sidebar-nav-item"
                        :class="path.startsWith('/settings') ? 'active' : ''"
                        title="Settings">
-                        <i class="ph ph-gear sidebar-nav-icon" aria-hidden="true"></i>
+                        <i class="ph-duotone ph-gear sidebar-nav-icon" aria-hidden="true"></i>
                         <span class="sidebar-nav-text">Settings</span>
                     </a>
                 </li>

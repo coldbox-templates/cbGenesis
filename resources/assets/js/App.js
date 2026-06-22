@@ -2,7 +2,7 @@ import Alpine from "alpinejs";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import * as bootstrap from "bootstrap";
-import "@phosphor-icons/web/regular";
+import "@phosphor-icons/web/duotone";
 
 import { passwordStrength } from "./components/PasswordStrength.js";
 import { authForm }         from "./components/AuthForm.js";

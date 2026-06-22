@@ -18,12 +18,12 @@
                         <div class="stat-value">#encodeForHTML( stat.value )#</div>
                     </div>
                     <div class="stat-icon #encodeForHTMLAttribute( stat.iconCss )#">
-                        <i class="ph #encodeForHTMLAttribute( stat.icon )#" aria-hidden="true"></i>
+                        <i class="ph-duotone #encodeForHTMLAttribute( stat.icon )#" aria-hidden="true"></i>
                     </div>
                 </div>
                 <div>
                     <span class="stat-change #( stat.up ? 'up' : 'down' )#">
-                        <i class="ph #( stat.up ? 'ph-trend-up' : 'ph-trend-down' )#" aria-hidden="true"></i>
+                        <i class="ph-duotone #( stat.up ? 'ph-trend-up' : 'ph-trend-down' )#" aria-hidden="true"></i>
                         #encodeForHTML( stat.change )#
                     </span>
                     <span class="stat-change-context">vs. last month</span>
@@ -50,7 +50,7 @@
                     <bx:loop array="#prc.activities#" item="act">
                         <li class="activity-item">
                             <span class="activity-icon #encodeForHTMLAttribute( act.iconCss )#" aria-hidden="true">
-                                <i class="ph #encodeForHTMLAttribute( act.icon )#"></i>
+                                <i class="ph-duotone #encodeForHTMLAttribute( act.icon )#"></i>
                             </span>
                             <div class="activity-body">
                                 <p class="activity-text">#encodeForHTML( act.text )#</p>
@@ -75,7 +75,7 @@
                         <div class="col-6">
                             <a href="#encodeForHTMLAttribute( qa.href )#" class="quick-action-btn">
                                 <span class="quick-action-icon" aria-hidden="true">
-                                    <i class="ph #encodeForHTMLAttribute( qa.icon )#"></i>
+                                    <i class="ph-duotone #encodeForHTMLAttribute( qa.icon )#"></i>
                                 </span>
                                 #encodeForHTML( qa.label )#
                             </a>
@@ -90,7 +90,7 @@
             <div class="content-card-body p-3">
                 <div class="d-flex align-items-center gap-3">
                     <div class="d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle"
-                         style="width:48px;height:48px;background:var(--bl-gradient);font-size:1.125rem;font-weight:700;color:#fff;">
+                         style="width:48px;height:48px;background:var(--bl-gradient);font-size:1.125rem;font-weight:700;color:##fff;">
                         #encodeForHTML( prc.authUser.initials )#
                     </div>
                     <div class="min-width-0">
@@ -106,7 +106,7 @@
                 </div>
                 <hr style="border-color:var(--app-border);margin:0.875rem 0;">
                 <a href="/auth/logout" class="btn btn-sm btn-outline-danger w-100">
-                    <i class="ph ph-sign-out me-1" aria-hidden="true"></i>
+                    <i class="ph-duotone ph-sign-out me-1" aria-hidden="true"></i>
                     Sign out
                 </a>
             </div>

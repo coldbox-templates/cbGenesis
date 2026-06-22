@@ -67,7 +67,7 @@
                             type="button"
                             @click="showPassword = !showPassword"
                             :aria-label="showPassword ? 'Hide password' : 'Show password'">
-                        <i class="ph"
+                        <i class="ph-duotone"
                            :class="showPassword ? 'ph-eye-slash' : 'ph-eye'"
                            aria-hidden="true"></i>
                     </button>

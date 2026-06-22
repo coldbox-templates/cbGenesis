@@ -97,6 +97,19 @@ body {
     display: none !important;
 }
 
+.ph,
+.ph-thin,
+.ph-light,
+.ph-bold,
+.ph-fill,
+.ph-duotone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: -0.125em;
+}
+
 // ============================================================
 // Utility Helpers
 // ============================================================

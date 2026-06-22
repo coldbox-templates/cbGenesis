@@ -43,15 +43,15 @@
                 <!--- Feature highlights --->
                 <ul class="auth-split-features">
                     <li class="auth-split-feature">
-                        <span class="feature-icon"><i class="ph ph-lightning"></i></span>
+                        <span class="feature-icon"><i class="ph-duotone ph-lightning"></i></span>
                         Fast and lightweight framework
                     </li>
                     <li class="auth-split-feature">
-                        <span class="feature-icon"><i class="ph ph-shield-check"></i></span>
+                        <span class="feature-icon"><i class="ph-duotone ph-shield-check"></i></span>
                         Secure by default with CSRF &amp; auth
                     </li>
                     <li class="auth-split-feature">
-                        <span class="feature-icon"><i class="ph ph-cloud"></i></span>
+                        <span class="feature-icon"><i class="ph-duotone ph-cloud"></i></span>
                         Ready to deploy anywhere
                     </li>
                 </ul>
@@ -79,8 +79,8 @@
                             x-cloak
                             @click="$store.theme.toggle()"
                             :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
-                        <i class="ph ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
-                        <i class="ph ph-moon" x-show="$store.theme.mode === 'light'"></i>
+                        <i class="ph-duotone ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
+                        <i class="ph-duotone ph-moon" x-show="$store.theme.mode === 'light'"></i>
                     </button>
                 </div>
 

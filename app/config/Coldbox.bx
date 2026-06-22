@@ -16,7 +16,7 @@ class {
 		 */
 		variables.coldbox = {
 			// Application Setup
-			appName                  : getSystemSetting( "APPNAME", "Your app name here" ),
+			appName                  : getSystemSetting( "APPNAME", "InternalApp" ),
 			eventName                : "event",
 			// Development Settings
 			reinitPassword           : "",
@@ -59,8 +59,20 @@ class {
 		 * --------------------------------------------------------------------------
 		 * Custom Settings
 		 * --------------------------------------------------------------------------
+		 * These settings control cbGenesis defaults
 		 */
-		variables.settings = {}
+		variables.settings = {
+			// The main logo path for the app, if empty it will use the default cbGenesis logo
+			appLogo : "/includes/images/cbgenesis-icon-full.svg",
+			// The main title for the app used in the sidebar
+			appTitle : "cbGenesis",
+			// Copyright notice
+			copyrightNotice: "&copy; #year()# cbGenesis. All rights reserved.",
+			// The default theme for the app, can be "light" or "dark"
+			defaultTheme: "dark",
+			// The login layout to use, can be "AuthCenter" or "AuthSplit" or your own custom layout.
+			loginLayout: "AuthSplit"
+		}
 
 		/**
 		 * --------------------------------------------------------------------------

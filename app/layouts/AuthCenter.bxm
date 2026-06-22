@@ -37,8 +37,8 @@
                     x-cloak
                     @click="$store.theme.toggle()"
                     :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
-                <i class="ph ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
-                <i class="ph ph-moon" x-show="$store.theme.mode === 'light'"></i>
+                <i class="ph-duotone ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
+                <i class="ph-duotone ph-moon" x-show="$store.theme.mode === 'light'"></i>
             </button>
         </div>
 

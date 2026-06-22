@@ -55,7 +55,7 @@
          role="alert"
          aria-live="polite">
 
-        <i class="ph #encodeForHTMLAttribute( localIcon )# messagebox__icon" aria-hidden="true"></i>
+        <i class="ph-duotone #encodeForHTMLAttribute( localIcon )# messagebox__icon" aria-hidden="true"></i>
 
         <div class="messagebox__body">
             <bx:if len( trim( args.title ) )>
@@ -69,7 +69,7 @@
                     class="messagebox__dismiss"
                     @click="dismiss()"
                     aria-label="Dismiss">
-                <i class="ph ph-x" aria-hidden="true"></i>
+                <i class="ph-duotone ph-x" aria-hidden="true"></i>
             </button>
         </bx:if>
 

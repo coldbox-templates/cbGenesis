@@ -10,20 +10,12 @@
 class extends="coldbox.system.EventHandler" {
 
 	function index( event, rc, prc ){
-		// ── MOCK auth guard ───────────────────────────────────────────────────
-		// Replace with cbsecurity annotation:  @secured  on the class or action,
-		// or call: secure() which redirects via cbsecurity rules.
-		if ( !structKeyExists( session, "currentUser" ) ) {
-			return relocate( "auth/login" );
-		}
-		// ── END MOCK ─────────────────────────────────────────────────────────
-
 		prc.title = "Dashboard";
 
 		// Populate display user for the Admin layout (prc.authUser).
 		// The Admin layout reads this struct — it does NOT call methods on a User object,
 		// so it works for both this mock and a real authenticated user.
-		var cu = session.currentUser;
+		var cu = new app.models.system.User()
 		prc.authUser = {
 			"name"    : cu.fullName  ?: ( cu.firstName ?: "Admin" ) & " " & ( cu.lastName ?: "" ),
 			"email"   : cu.email     ?: "",

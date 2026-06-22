@@ -14,7 +14,7 @@
     <button type="button"
             class="topbar-btn"
             aria-label="Notifications">
-        <i class="ph ph-bell" aria-hidden="true"></i>
+        <i class="ph-duotone ph-bell" aria-hidden="true"></i>
     </button>
 </li>
 </bx:output>
