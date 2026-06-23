@@ -4,7 +4,7 @@ class {
 	 * Configure the ColdBox App For Production
 	 * https://coldbox.ortusbooks.com/getting-started/configuration
 	 */
-	function configure(){
+	function configure() {
 		/**
 		 * --------------------------------------------------------------------------
 		 * ColdBox Directives
@@ -16,68 +16,68 @@ class {
 		 */
 		variables.coldbox = {
 			// Application Setup
-			appName                  : "",
-			eventName                : "event",
+			appName                 : "",
+			eventName               : "event",
 			// Development Settings
-			reinitPassword           : "",
-			reinitKey                : "fwreinit",
-			handlersIndexAutoReload  : true,
+			reinitPassword          : "",
+			reinitKey               : "fwreinit",
+			handlersIndexAutoReload : true,
 			// Implicit Events
-			defaultEvent             : "Auth.login",
-			requestStartHandler      : "Main.onRequestStart",
-			requestEndHandler        : "",
-			applicationStartHandler  : "Main.onAppInit",
-			applicationEndHandler    : "",
-			sessionStartHandler      : "",
-			sessionEndHandler        : "",
-			missingTemplateHandler   : "",
+			defaultEvent            : "Auth.login",
+			requestStartHandler     : "Main.onRequestStart",
+			requestEndHandler       : "",
+			applicationStartHandler : "Main.onAppInit",
+			applicationEndHandler   : "",
+			sessionStartHandler     : "",
+			sessionEndHandler       : "",
+			missingTemplateHandler  : "",
 			// Extension Points
-			applicationHelper        : "/app/helpers/ApplicationHelper.bxm",
-			viewsHelper              : "",
-			modulesExternalLocation  : [ "/modules" ],
-			viewsExternalLocation    : "",
-			layoutsExternalLocation  : "",
-			handlersExternalLocation : "",
-			requestContextDecorator  : "",
-			controllerDecorator      : "",
+			applicationHelper       : "/app/helpers/ApplicationHelper.bxm",
+			viewsHelper             : "",
+			modulesExternalLocation : [ "/modules"],
+			viewsExternalLocation   : "",
+			layoutsExternalLocation : "",
+			handlersExternalLocation: "",
+			requestContextDecorator : "",
+			controllerDecorator     : "",
 			// Error/Exception Handling
-			invalidHTTPMethodHandler : "",
-			exceptionHandler         : "main.onException",
-			invalidEventHandler      : "",
-			customErrorTemplate      : "",
+			invalidHTTPMethodHandler: "",
+			exceptionHandler        : "main.onException",
+			invalidEventHandler     : "",
+			customErrorTemplate     : "",
 			// Application Aspects
-			handlerCaching           : false,
-			eventCaching             : false,
-			viewCaching              : false,
+			handlerCaching          : false,
+			eventCaching            : false,
+			viewCaching             : false,
 			// Will automatically do a mapDirectory() on your `models` for you.
-			autoMapModels            : true,
+			autoMapModels           : true,
 			// Auto converts a json body payload into the RC
-			jsonPayloadToRC          : true
+			jsonPayloadToRC         : true
 		}
 
 		/**
 		 * --------------------------------------------------------------------------
-		 * Custom Settings
+		 * App Settings
 		 * --------------------------------------------------------------------------
-		 * These settings control cbGenesis defaults
+		 * Update as you see fit.
 		 */
 		variables.settings = {
 			// The main logo path for the app, if empty it will use the default cbGenesis logo
-			cbAppLogo : "/includes/images/cbgenesis-icon-full.svg",
+			cbAppLogo            : "/includes/images/cbgenesis-icon-full.svg",
 			// The main title for the app used in the sidebar
-			cbAppName : "cbGenesis",
+			cbAppName            : "cbGenesis",
 			// The tagline for the app used in the sidebar and login page
-			cbAppTagline : "A Modern ColdBox Application Starter Kit",
+			cbAppTagline         : "A Modern ColdBox Application Starter Kit",
 			// The tagline for the app used in the branding area of the sidebar
-			cbAppBrandTagline : "Starter Kit",
+			cbAppBrandTagline    : "Starter Kit",
 			// Copyright notice
-			cbCopyrightNotice: "&copy; #year()# cbGenesis. All rights reserved.",
+			cbCopyrightNotice    : "&copy; #year()# cbGenesis. All rights reserved.",
 			// The default theme for the app, can be "light" or "dark"
-			cbDefaultTheme: "dark",
+			cbDefaultTheme       : "dark",
 			// The login layout to use, can be "AuthCenter" or "AuthSplit" or your own custom layout.
-			cbLoginLayout: "AuthSplit",
+			cbLoginLayout        : "AuthSplit",
 			// Allow users to register themselves, if false, the register page will be disabled.
-			cbAllowRegistration: true,
+			cbAllowRegistration  : true,
 			// Allow users to reset their password, if false, the forgot password page will be disabled.
 			cbAllowForgotPassword: true
 		}
@@ -103,9 +103,9 @@ class {
 		 */
 		variables.modules = {
 			// An array of modules names to load, empty means all of them
-			include : [],
+			include: [],
 			// An array of modules names to NOT load, empty means none
-			exclude : []
+			exclude: []
 		}
 
 		/**
@@ -117,15 +117,17 @@ class {
 		 */
 		variables.logBox = {
 			// Define Appenders
-			appenders : { coldboxTracer : { class : "coldbox.system.logging.appenders.ConsoleAppender" } },
-			filelog    : {
-				class      : "coldbox.system.logging.appenders.RollingFileAppender",
-				properties : { filename : "app", filePath : "/app/logs" }
+			appenders: {
+				coldboxTracer: { class: "coldbox.system.logging.appenders.ConsoleAppender" }
+			},
+			filelog  : {
+				class     : "coldbox.system.logging.appenders.RollingFileAppender",
+				properties: { filename: "app", filePath: "/app/logs" }
 			},
 			// Root Logger
-			root      : { levelmax : "INFO", appenders : "*" },
+			root: { levelmax: "INFO", appenders: "*" },
 			// Implicit Level Categories
-			info      : [ "coldbox.system" ]
+			info: [ "coldbox.system" ]
 		}
 
 		/**
@@ -133,14 +135,14 @@ class {
 		 * Layout Settings
 		 * --------------------------------------------------------------------------
 		 */
-		variables.layoutSettings = { defaultLayout : "", defaultView : "" }
+		variables.layoutSettings = { defaultLayout: "", defaultView: "" }
 
 		/**
 		 * --------------------------------------------------------------------------
 		 * Custom Interception Points
 		 * --------------------------------------------------------------------------
 		 */
-		variables.interceptorSettings = { customInterceptionPoints : [] }
+		variables.interceptorSettings = { customInterceptionPoints: [] }
 
 		/**
 		 * --------------------------------------------------------------------------
@@ -172,12 +174,12 @@ class {
 		 * The available scopes are : session, client, cluster, ColdBoxCache, or a full instantiation CFC path
 		 */
 		variables.flash = {
-			scope        : "session",
-			properties   : {}, // constructor properties for the flash scope implementation
-			inflateToRC  : true, // automatically inflate flash data into the RC scope
-			inflateToPRC : false, // automatically inflate flash data into the PRC scope
-			autoPurge    : true, // automatically purge flash data for you
-			autoSave     : true // automatically save flash scopes at end of a request and on relocations.
+			scope       : "session",
+			properties  : {}, // constructor properties for the flash scope implementation
+			inflateToRC : true, // automatically inflate flash data into the RC scope
+			inflateToPRC: false, // automatically inflate flash data into the PRC scope
+			autoPurge   : true, // automatically purge flash data for you
+			autoSave    : true // automatically save flash scopes at end of a request and on relocations.
 		}
 
 		/**
@@ -186,20 +188,19 @@ class {
 		 * --------------------------------------------------------------------------
 		 */
 		variables.conventions = {
-			handlersLocation : "handlers",
-			viewsLocation    : "views",
-			layoutsLocation  : "layouts",
-			modelsLocation   : "models",
-			eventAction      : "index"
+			handlersLocation: "handlers",
+			viewsLocation   : "views",
+			layoutsLocation : "layouts",
+			modelsLocation  : "models",
+			eventAction     : "index"
 		}
 	}
 
 	/**
 	 * Development environment
 	 */
-	function development(){
+	function development() {
 		// coldbox.customErrorTemplate = "/coldbox/system/exceptions/BugReport.cfm"; // static bug reports
 		variables.coldbox.customErrorTemplate = "/coldbox/system/exceptions/Whoops.cfm"
 	}
-
 }

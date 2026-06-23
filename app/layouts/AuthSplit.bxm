@@ -2,39 +2,42 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="#getSetting( "cbDefaultTheme" )#">
 <head>
-    #view( view: "_components/app/includes", args: { title: "Authentication" } )#
+    #view(
+	view = "_components/app/includes",
+	args = { title: "Authentication" }
+)#
 </head>
 <body class="auth-body" x-data x-init="$store.theme.init()">
 
     <div class="auth-split-wrapper">
 
-        <!--- ── Left panel: brand illustration ───────────────────── --->
+        <!--- ── Left panel: brand illustration ───────────────────── --->  
         <div class="auth-split-brand" aria-hidden="true">
-            <!--- Decorative glow orbs --->
+            <!--- Decorative glow orbs --->  
             <div class="auth-split-orb orb-cyan"></div>
             <div class="auth-split-orb orb-blue"></div>
 
             <div class="auth-split-brand-content">
-                <!--- Logo mark (large) --->
+                <!--- Logo mark (large) --->  
                 <div class="auth-split-brand-logo">
                     #view(
-						view: "_components/ui/logo",
-						args: { variant: "full", size: 150 }
-					)#
+	view = "_components/ui/logo",
+	args = { variant: "full", size: 150 }
+)#
                 </div>
 
-				<!--- App name --->
+				<!--- App name --->  
                 <h1 class="auth-split-brand-title">
                     #getSetting( "appName" )#
                 </h1>
 
-				<!--- App tagline --->
+				<!--- App tagline --->  
                 <p class="auth-split-brand-tagline">
                     Start building your applications faster with
 					a modern, lightweight framework that is secure by default.
                 </p>
 
-                <!--- Feature highlights --->
+                <!--- Feature highlights --->  
                 <ul class="auth-split-features">
                     <li class="auth-split-feature">
                         <span class="feature-icon"><i class="ph-duotone ph-lightning"></i></span>
@@ -51,28 +54,31 @@
                 </ul>
             </div>
         </div>
-        <!--- ── /Left panel ──────────────────────────────────────── --->
+        <!--- ── /Left panel ──────────────────────────────────────── --->  
 
-        <!--- ── Right panel: form ────────────────────────────────── --->
+        <!--- ── Right panel: form ────────────────────────────────── --->  
         <div class="auth-split-form">
             <div class="auth-split-form-inner">
 
-                <!--- Logo shown only on mobile (brand panel hidden) --->
+                <!--- Logo shown only on mobile (brand panel hidden) --->  
                 <div class="auth-split-logo-mobile">
                     <a href="/" class="auth-logo-link">
-                        #view( view: "_components/ui/logo", args: { variant: "compact" } )#
+                        #view(
+	view = "_components/ui/logo",
+	args = { variant: "compact" }
+)#
                     </a>
                 </div>
 
-                <!--- View content — inject the login/register form --->
+                <!--- View content — inject the login/register form --->  
                 #renderView()#
 
-                <!--- Footer: theme toggle --->
-                #view( view: "_components/auth/footer", args: { split: true } )#
+                <!--- Footer: theme toggle --->  
+                #view( view = "_components/auth/footer", args = { split: true } )#
 
             </div>
         </div>
-        <!--- ── /Right panel ─────────────────────────────────────── --->
+        <!--- ── /Right panel ─────────────────────────────────────── --->  
 
     </div>
 

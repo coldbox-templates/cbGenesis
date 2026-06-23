@@ -9,18 +9,18 @@
  */
 class extends="coldbox.system.EventHandler" {
 
-	function index( event, rc, prc ){
+	function index( event, rc, prc ) {
 		prc.title = "Dashboard";
 
 		// Populate display user for the Admin layout (prc.authUser).
 		// The Admin layout reads this struct — it does NOT call methods on a User object,
 		// so it works for both this mock and a real authenticated user.
-		var cu = new app.models.system.User()
+		var cu = new app.models.system.User();
 		prc.authUser = {
-			"name"    : cu.fullName  ?: ( cu.firstName ?: "Admin" ) & " " & ( cu.lastName ?: "" ),
-			"email"   : cu.email     ?: "",
-			"role"    : cu.role      ?: "User",
-			"initials": cu.initials  ?: uCase( left( cu.firstName ?: "A", 1 ) )
+			"name"    : cu.fullName ?: ( cu.firstName ?: "Admin" ) & " " & ( cu.lastName ?: "" ),
+			"email"   : cu.email ?: "",
+			"role"    : cu.role ?: "User",
+			"initials": cu.initials ?: uCase( left( cu.firstName ?: "A", 1 ) )
 		};
 
 		// ── Mock data ─────────────────────────────────────────────────────────
@@ -94,10 +94,26 @@ class extends="coldbox.system.EventHandler" {
 		];
 
 		prc.quickActions = [
-			{ "label": "New User",      "icon": "ph-user-plus",    "href": "##" },
-			{ "label": "Generate Report","icon": "ph-chart-bar",   "href": "##" },
-			{ "label": "View Analytics","icon": "ph-trend-up",     "href": "##" },
-			{ "label": "Settings",      "icon": "ph-gear",         "href": "##" }
+			{
+				"label": "New User",
+				"icon" : "ph-user-plus",
+				"href" : "##"
+			},
+			{
+				"label": "Generate Report",
+				"icon" : "ph-chart-bar",
+				"href" : "##"
+			},
+			{
+				"label": "View Analytics",
+				"icon" : "ph-trend-up",
+				"href" : "##"
+			},
+			{
+				"label": "Settings",
+				"icon" : "ph-gear",
+				"href" : "##"
+			}
 		];
 
 		// ── END mock data ─────────────────────────────────────────────────────
@@ -105,5 +121,4 @@ class extends="coldbox.system.EventHandler" {
 		event.setLayout( "Admin" );
 		event.setView( "dashboard/index" );
 	}
-
 }

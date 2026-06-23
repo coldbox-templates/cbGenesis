@@ -6,32 +6,50 @@
         <p class="auth-subheading">Join us today — it only takes a minute</p>
     </div>
 
-    <!--- General error (e.g. CSRF expiry) --->
-    #view( view: "_components/ui/messagebox", args: { type: "error", message: prc.error ?: "", dismissible: false } )#
+    <!--- General error (e.g. CSRF expiry) --->  
+    #view(
+	view = "_components/ui/messagebox",
+	args = {
+		type       : "error",
+		message    : prc.error ?: "",
+		dismissible: false
+	}
+)#
 
-    <!--- Server-side field validation errors --->
-    <bx:if prc.keyExists( 'errors' ) && !structIsEmpty( prc.errors )>
-        #view( view: "_components/ui/messagebox", args: { type: "error", message: "Please fix the errors below and try again.", dismissible: false } )#
+    <!--- Server-side field validation errors --->  
+    <bx:if prc.keyExists( "errors" ) && !structIsEmpty( prc.errors )>
+        #view(
+	view = "_components/ui/messagebox",
+	args = {
+		type       : "error",
+		message    : "Please fix the errors below and try again.",
+		dismissible: false
+	}
+)#
     </bx:if>
 
     <form method="post"
-          action="#event.buildLink( 'auth/register' )#"
+          action="#event.buildLink( "auth/register" )#"
           @submit="onSubmit"
           novalidate>
 
-        <!--- First + Last name --->
+        <!--- First + Last name --->  
         <div class="row g-3 mb-3">
             <div class="col-6">
                 <label for="firstName" class="form-label">First name</label>
                 <input type="text"
                        id="firstName"
                        name="firstName"
-                       class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'firstName' ) ) ? ' is-invalid' : '' )#"
-                       value="#encodeForHTMLAttribute( prc.keyExists( 'oldInput' ) ? ( prc.oldInput.firstName ?: '' ) : '' )#"
+                       class="form-control#(
+	( prc.keyExists( "errors" ) && structKeyExists( prc.errors, "firstName" ) ) ? " is-invalid" : ""
+)#"
+                       value="#encodeForHTMLAttribute(
+	prc.keyExists( "oldInput" ) ? ( prc.oldInput.firstName ?: "" ) : ""
+)#"
                        autocomplete="given-name"
                        placeholder="Jane"
                        required>
-                <bx:if prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'firstName' )>
+                <bx:if prc.keyExists( "errors" ) && structKeyExists( prc.errors, "firstName" )>
                     <div class="invalid-feedback">#encodeForHTML( prc.errors.firstName )#</div>
                 </bx:if>
             </div>
@@ -40,51 +58,66 @@
                 <input type="text"
                        id="lastName"
                        name="lastName"
-                       class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'lastName' ) ) ? ' is-invalid' : '' )#"
-                       value="#encodeForHTMLAttribute( prc.keyExists( 'oldInput' ) ? ( prc.oldInput.lastName ?: '' ) : '' )#"
+                       class="form-control#(
+	( prc.keyExists( "errors" ) && structKeyExists( prc.errors, "lastName" ) ) ? " is-invalid" : ""
+)#"
+                       value="#encodeForHTMLAttribute(
+	prc.keyExists( "oldInput" ) ? ( prc.oldInput.lastName ?: "" ) : ""
+)#"
                        autocomplete="family-name"
                        placeholder="Smith"
                        required>
-                <bx:if prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'lastName' )>
+                <bx:if prc.keyExists( "errors" ) && structKeyExists( prc.errors, "lastName" )>
                     <div class="invalid-feedback">#encodeForHTML( prc.errors.lastName )#</div>
                 </bx:if>
             </div>
         </div>
 
-        <!--- Email --->
+        <!--- Email --->  
         <div class="mb-3">
             <label for="email" class="form-label">Email address</label>
             <input type="email"
                    id="email"
                    name="email"
-                   class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'email' ) ) ? ' is-invalid' : '' )#"
-                   value="#encodeForHTMLAttribute( prc.keyExists( 'oldInput' ) ? ( prc.oldInput.email ?: '' ) : '' )#"
+                   class="form-control#(
+	( prc.keyExists( "errors" ) && structKeyExists( prc.errors, "email" ) ) ? " is-invalid" : ""
+)#"
+                   value="#encodeForHTMLAttribute(
+	prc.keyExists( "oldInput" ) ? ( prc.oldInput.email ?: "" ) : ""
+)#"
                    autocomplete="email"
                    placeholder="you@example.com"
                    required>
-            <bx:if prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'email' )>
+            <bx:if prc.keyExists( "errors" ) && structKeyExists( prc.errors, "email" )>
                 <div class="invalid-feedback">#encodeForHTML( prc.errors.email )#</div>
             </bx:if>
         </div>
 
-        #view( view: "_components/ui/passwordMeter", args: {
-            id           : "password",
-            name         : "password",
-            label        : "Password",
-            classes      : "mb-3",
-            labelClass   : "form-label",
-            inputClasses : "form-control",
-            errorMessage : ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'password' ) ) ? prc.errors.password : ""
-        } )#
+        #view(
+	view = "_components/ui/passwordMeter",
+	args = {
+		id          : "password",
+		name        : "password",
+		label       : "Password",
+		classes     : "mb-3",
+		labelClass  : "form-label",
+		inputClasses: "form-control",
+		errorMessage: ( prc.keyExists( "errors" ) && structKeyExists( prc.errors, "password" ) )
+			? prc.errors.password
+			: ""
+	}
+)#
 
-        <!--- Confirm password --->
+        <!--- Confirm password --->  
         <div class="mb-4">
             <label for="passwordConfirm" class="form-label">Confirm password</label>
             <div class="input-group">
                 <input :type="showConfirm ? 'text' : 'password'"
                        id="passwordConfirm"
                        name="passwordConfirm"
-                       class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'passwordConfirm' ) ) ? ' is-invalid' : '' )#"
+                       class="form-control#(
+	( prc.keyExists( "errors" ) && structKeyExists( prc.errors, "passwordConfirm" ) ) ? " is-invalid" : ""
+)#"
                        x-model="confirmValue"
                        @input="checkConfirm"
                        @blur="checkConfirm"
@@ -99,7 +132,7 @@
                        :class="showConfirm ? 'ph-eye-slash' : 'ph-eye'"
                        aria-hidden="true"></i>
                 </button>
-                <bx:if prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'passwordConfirm' )>
+                <bx:if prc.keyExists( "errors" ) && structKeyExists( prc.errors, "passwordConfirm" )>
                     <div class="invalid-feedback">#encodeForHTML( prc.errors.passwordConfirm )#</div>
                 </bx:if>
             </div>
@@ -110,10 +143,10 @@
                  role="alert"></div>
         </div>
 
-        <!--- CSRF token --->
+        <!--- CSRF token --->  
         <input type="hidden" name="_token" value="#csrfToken()#">
 
-        <!--- Submit --->
+        <!--- Submit --->  
         <button type="submit"
                 class="btn btn-primary w-100 mb-3"
                 :disabled="loading">
@@ -128,7 +161,7 @@
 
     <p class="text-center mb-0" style="font-size:0.9rem; color:var(--app-text-muted);">
         Already have an account?
-        <a href="#event.buildLink( 'auth/login' )#" class="auth-link">Sign in</a>
+        <a href="#event.buildLink( "auth/login" )#" class="auth-link">Sign in</a>
     </p>
 
 </div>

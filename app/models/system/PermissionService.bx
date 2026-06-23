@@ -1,0 +1,208 @@
+/**
+ * Permission Service for managing system permissions
+ */
+
+@singleton
+@threadSafe
+class {
+	/**
+	 * --------------------------------------------------------------------------
+	 * Injections
+	 * --------------------------------------------------------------------------
+	 */
+
+	property name="populator" inject="wirebox:populator";
+
+	property name="wirebox" inject="wirebox";
+
+	property name="log" inject="logbox:logger:{this}";
+
+	property name="qb" inject="QueryBuilder@qb";
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		return this;
+	}
+
+	/**
+	 * New Permission Dispenser
+	 */
+	@provider( "Permission" )
+	Permission function new() {
+
+	}
+
+	/**
+	 * Get a permission by id
+	 *
+	 * @permissionId The id of the permission to retrieve
+	 *
+	 * @return The located permission or a new un-loaded permission object
+	 */
+	Permission function getById( required permissionId ) {
+		return populator.populateFromStruct(
+				target            = new(),
+				memento           = qb
+					.from( "permissions" )
+					.where( "permissionId", arguments.permissionId )
+					.first(),
+				ignoreTargetLists = true
+			);
+	}
+
+	/**
+	 * Get a permission by its permission name
+	 *
+	 * @permission The permission name to look up
+	 *
+	 * @return The located permission or a new un-loaded permission object
+	 */
+	Permission function getByName( required permission ) {
+		return populator.populateFromStruct(
+				target            = new(),
+				memento           = qb
+					.from( "permissions" )
+					.where( "permission", arguments.permission )
+					.first(),
+				ignoreTargetLists = true
+			);
+	}
+
+	/**
+	 * List all permissions
+	 *
+	 * @sortOrder The sort order for the listing
+	 * @asQuery   Return as a query object, defaults to array of Permission entities
+	 *
+	 * @return Array of Permission entities or a query object
+	 */
+	any function list(
+		string sortOrder = "permission",
+		boolean asQuery  = false
+	) {
+		var results = qb
+			.from( "permissions" )
+			.orderBy( arguments.sortOrder )
+			.get();
+
+		if ( arguments.asQuery ) {
+			return results;
+		}
+
+		return results.map(
+				( item ) => {
+					return populator.populateFromStruct(
+							target            = new(),
+							memento           = item,
+							ignoreTargetLists = true
+						);
+				}
+			);
+	}
+
+	/**
+	 * Save a permission in the database
+	 *
+	 * @permission The permission to save
+	 *
+	 * @return The persisted permission
+	 */
+	Permission function save( required permission ) {
+		var qResults = qb
+			.from( "permissions" )
+			.where( "permissionId", arguments.permission.getId() )
+			.updateOrInsert(
+				values = {
+					"permissionId": arguments.permission.getId(),
+					"createdDate" : {
+						value    : arguments.permission.getCreatedDate(),
+						cfsqlType: "timestamp"
+					},
+					"modifiedDate": {
+						value    : arguments.permission.getModifiedDate(),
+						cfsqlType: "timestamp"
+					},
+					"isActive"   : arguments.permission.getIsActive(),
+					"permission" : arguments.permission.getPermission(),
+					"description": arguments.permission.getDescription()
+				}
+			);
+
+		// populate the id if newly created
+		if ( !isNull( qResults.result?.generatedKey ) && len( qResults.result.generatedKey ) ) {
+			arguments.permission.setId( qResults.result.generatedKey );
+		}
+
+		return arguments.permission;
+	}
+
+	/**
+	 * Delete a permission (soft delete)
+	 *
+	 * @permissionId The id of the permission to delete
+	 *
+	 * @return true if deleted, false if not found
+	 */
+	boolean function delete( required permissionId ) {
+		var result = qb
+			.from( "permissions" )
+			.where( "permissionId", arguments.permissionId )
+			.update(
+				{
+					"isActive"    : false,
+					"modifiedDate": now()
+				}
+			);
+
+		return result > 0;
+	}
+
+	/**
+	 * Check if a permission exists by id
+	 *
+	 * @permissionId The id of the permission to check
+	 *
+	 * @return true if it exists, false otherwise
+	 */
+	boolean function exists( required permissionId ) {
+		return qb
+				.from( "permissions" )
+				.where( "permissionId", arguments.permissionId )
+				.where( "isActive", true )
+				.count() >
+			0;
+	}
+
+	/**
+	 * Get all roles that have this permission assigned
+	 *
+	 * @permissionId The id of the permission
+	 *
+	 * @return Array of Role entities
+	 */
+	array function getRolesForPermission( required permissionId ) {
+		var results = qb
+			.from( "roles" )
+			.join(
+				"role_permissions",
+				"roles.roleId",
+				"=",
+				"role_permissions.roleId"
+			)
+			.where( "role_permissions.permissionId", arguments.permissionId )
+			.where( "roles.isActive", true )
+			.get();
+
+		return results.map(
+				( item ) => {
+					return populator.populateFromStruct(
+							target            = wirebox.getInstance( "system.Role" ),
+							memento           = item,
+							ignoreTargetLists = true
+						);
+				}
+			);
+	}
+}

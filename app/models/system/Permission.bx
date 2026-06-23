@@ -1,0 +1,66 @@
+/**
+ * A system permission that can be assigned to roles.
+ */
+class extends="app.models.BaseEntity" {
+	/**
+	 * --------------------------------------------------------------------------
+	 * Properties
+	 * --------------------------------------------------------------------------
+	 */
+
+	property name="permission" default="";
+
+	property name="description" default="";
+	/**
+	 * --------------------------------------------------------------------------
+	 * Validation Constraints
+	 * --------------------------------------------------------------------------
+	 * https://coldbox-validation.ortusbooks.com/overview/valid-constraints
+	 */
+	this.constraints = {
+		permission: {
+			required: true,
+			size    : "1..255",
+			unique  : { table: "permissions", column: "permission" }
+		},
+		description: { required: false }
+	};
+	this.constraintProfiles = { "update": "permission,description" };
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Population Options
+	 * --------------------------------------------------------------------------
+	 */
+	this.population = { exclude: [ "permissionId", "isActive"] };
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Mementifier Options
+	 * --------------------------------------------------------------------------
+	 * https://forgebox.io/view/mementifier
+	 */
+	this.memento = {
+		defaultIncludes: [ "*"],
+		defaultExcludes: [],
+		neverInclude   : []
+	};
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		super.init( "permissionId" );
+		variables.permission = "";
+		variables.description = "";
+
+		return this;
+	}
+
+	/**
+	 * Get the permission slug (lowercased, trimmed) for lookups
+	 */
+	string function getPermissionSlug() {
+		return lcase( trim( variables.permission ) );
+	}
+}

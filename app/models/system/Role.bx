@@ -1,0 +1,66 @@
+/**
+ * A system role that groups permissions together.
+ */
+class extends="app.models.BaseEntity" {
+	/**
+	 * --------------------------------------------------------------------------
+	 * Properties
+	 * --------------------------------------------------------------------------
+	 */
+
+	property name="role" default="";
+
+	property name="description" default="";
+	/**
+	 * --------------------------------------------------------------------------
+	 * Validation Constraints
+	 * --------------------------------------------------------------------------
+	 * https://coldbox-validation.ortusbooks.com/overview/valid-constraints
+	 */
+	this.constraints = {
+		role: {
+			required: true,
+			size    : "1..255",
+			unique  : { table: "roles", column: "role" }
+		},
+		description: { required: false }
+	};
+	this.constraintProfiles = { "update": "role,description" };
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Population Options
+	 * --------------------------------------------------------------------------
+	 */
+	this.population = { exclude: [ "roleId", "isActive"] };
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Mementifier Options
+	 * --------------------------------------------------------------------------
+	 * https://forgebox.io/view/mementifier
+	 */
+	this.memento = {
+		defaultIncludes: [ "*"],
+		defaultExcludes: [],
+		neverInclude   : []
+	};
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		super.init( "roleId" );
+		variables.role = "";
+		variables.description = "";
+
+		return this;
+	}
+
+	/**
+	 * Get the role slug (lowercased, trimmed) for lookups
+	 */
+	string function getRoleSlug() {
+		return lcase( trim( variables.role ) );
+	}
+}

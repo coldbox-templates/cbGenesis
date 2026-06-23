@@ -1,5 +1,4 @@
-<!---
-    Auth Footer Partial
+<!--- Auth Footer Partial
 	Renders the footer for auth pages (login/register) with a theme toggle button.
 
     Usage:
@@ -7,12 +6,11 @@
 		#view( "_components/auth/footer", args: { split: false } )#
 
     Args:
-        split : boolean — whether to use the split layout (default: true)
---->
-<bx:param name="args.split" default="true" />
+        split : boolean — whether to use the split layout (default: true) --->  
+<bx:param name="args.split" default="true"/>
 
 <bx:output>
-<div class="auth-#( args.split ? 'split-' : '' )#footer">
+<div class="auth-#( args.split ? "split-" : "" )#footer">
 	<button class="btn-theme-toggle"
 			x-cloak
 			@click="$store.theme.toggle()"

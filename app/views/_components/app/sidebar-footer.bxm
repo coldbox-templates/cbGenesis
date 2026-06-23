@@ -1,5 +1,4 @@
-<!---
-    Sidebar Footer Component
+<!--- Sidebar Footer Component
 	Renders the user profile link in the sidebar footer. Uses prc.authUser data
 
 	Usage:
@@ -8,12 +7,11 @@
 	Reads from prc (populated by protected handlers):
 		prc.authUser.initials — user avatar letter
 		prc.authUser.name     — display name
-		prc.authUser.role     — role label
---->
+		prc.authUser.role     — role label --->  
 <bx:output>
 <div class="sidebar-footer" id="sidebar-footer">
 
-	<!--- User profile link --->
+	<!--- User profile link --->  
 	<a href="#event.route( "profile" )#" class="sidebar-user text-decoration-none" @click="$store.sidebar.close()">
 		<span class="sidebar-user-avatar">
 			#( prc.authUser.getInitials() ?: "A" )#

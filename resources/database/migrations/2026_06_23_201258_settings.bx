@@ -1,0 +1,23 @@
+class {
+
+    function up( schema, qb ) {
+		schema.create( "settings", (table)=>{
+			table.uuid( "settingId" ).primaryKey()
+			table.boolean( "isActive" ).default( true )
+			table.timestamps()
+
+			// Setting specific fields
+			table.string( "name" ).unique()
+			table.longText( "value" ).default( "" )
+			table.longText( "description" ).default( "" )
+
+			// Indexes
+			table.index( "isActive", "idx_settingActive" )
+		} )
+    }
+
+    function down( schema, qb ) {
+		schema.dropIfExists( "settings" )
+    }
+
+}

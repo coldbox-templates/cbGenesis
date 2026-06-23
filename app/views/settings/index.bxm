@@ -1,5 +1,5 @@
 <bx:output>
-<!--- Page Heading --->
+<!--- Page Heading --->  
 <div class="page-header admin-page-heading">
 	<div>
 		<p class="eyebrow">Settings</p>
@@ -29,12 +29,15 @@
 					<small>Let anyone create an account on the login page</small>
 				</div>
 				#view(
-					view: "_components/ui/switch",
-					args: {
-						name: "allowPublicRegistration",
-						value: prc.settings.registration.allowPublicRegistration
-					}
-				)#
+	view = "_components/ui/switch",
+	args = {
+		name : "allowPublicRegistration",
+		value: prc
+			.settings
+			.registration
+			.allowPublicRegistration
+	}
+)#
 			</div>
 			<div class="setting-row">
 				<div>
@@ -42,12 +45,15 @@
 					<small>Users must verify email before accessing the app</small>
 				</div>
 				#view(
-					view: "_components/ui/switch",
-					args: {
-						name: "requireEmailVerification",
-						value: prc.settings.registration.requireEmailVerification
-					}
-				)#
+	view = "_components/ui/switch",
+	args = {
+		name : "requireEmailVerification",
+		value: prc
+			.settings
+			.registration
+			.requireEmailVerification
+	}
+)#
 			</div>
 			<div class="setting-row">
 				<div>
@@ -55,7 +61,10 @@
 					<small>Role assigned on registration</small>
 				</div>
 				<select>
-					<option>#encodeForHTML( prc.settings.registration.defaultRole )#</option>
+					<option>#encodeForHTML( prc
+		.settings
+		.registration
+		.defaultRole )#</option>
 					<option>Developer</option>
 					<option>Admin</option>
 				</select>
@@ -72,26 +81,35 @@
 					<small>Force TOTP or Passkey for Admin+ roles</small>
 				</div>
 				#view(
-					view: "_components/ui/switch",
-					args: {
-						name: "require2FAForAdmins",
-						value: prc.settings.security.require2FAForAdmins
-					}
-				)#
+	view = "_components/ui/switch",
+	args = {
+		name : "require2FAForAdmins",
+		value: prc
+			.settings
+			.security
+			.require2FAForAdmins
+	}
+)#
 			</div>
 			<div class="setting-row">
 				<div>
 					<strong>Max Login Attempts</strong>
 					<small>Lock account after N failed attempts</small>
 				</div>
-				<input class="compact-input" type="number" value="#prc.settings.security.maxLoginAttempts#">
+				<input class="compact-input" type="number" value="#prc
+	.settings
+	.security
+	.maxLoginAttempts#">
 			</div>
 			<div class="setting-row">
 				<div>
 					<strong>Session Timeout (minutes)</strong>
 					<small>Automatically log out inactive users</small>
 				</div>
-				<input class="compact-input" type="number" value="#prc.settings.security.sessionTimeout#">
+				<input class="compact-input" type="number" value="#prc
+	.settings
+	.security
+	.sessionTimeout#">
 			</div>
 			<div class="setting-row">
 				<div>
@@ -99,12 +117,15 @@
 					<small>Block non-admin access to the app</small>
 				</div>
 				#view(
-					view: "_components/ui/switch",
-					args: {
-						name: "maintenanceMode",
-						value: prc.settings.security.maintenanceMode
-					}
-				)#
+	view = "_components/ui/switch",
+	args = {
+		name : "maintenanceMode",
+		value: prc
+			.settings
+			.security
+			.maintenanceMode
+	}
+)#
 			</div>
 		</div>
 	</section>
@@ -112,9 +133,18 @@
 	<section class="content-card settings-card">
 		<div class="content-card-header"><h3 class="content-card-title"><i class="ph-duotone ph-envelope-simple"></i> Email Configuration</h3></div>
 		<div class="form-grid">
-			<label>SMTP Host<input type="text" value="#encodeForHTMLAttribute( prc.settings.email.smtpHost )#"></label>
-			<label>SMTP Port<input type="number" value="#encodeForHTMLAttribute( prc.settings.email.smtpPort )#"></label>
-			<label class="span-2">From Address<input type="email" value="#encodeForHTMLAttribute( prc.settings.email.fromAddress )#"></label>
+			<label>SMTP Host<input type="text" value="#encodeForHTMLAttribute( prc
+		.settings
+		.email
+		.smtpHost )#"></label>
+			<label>SMTP Port<input type="number" value="#encodeForHTMLAttribute( prc
+		.settings
+		.email
+		.smtpPort )#"></label>
+			<label class="span-2">From Address<input type="email" value="#encodeForHTMLAttribute( prc
+		.settings
+		.email
+		.fromAddress )#"></label>
 			<div class="span-2"><button class="btn btn-outline-secondary"><i class="ph-duotone ph-paper-plane-tilt"></i> Send Test Email</button></div>
 		</div>
 	</section>

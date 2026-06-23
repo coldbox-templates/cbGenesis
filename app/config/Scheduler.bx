@@ -4,7 +4,7 @@ class {
 	 * Configure the ColdBox Scheduler
 	 * https://coldbox.ortusbooks.com/digging-deeper/scheduled-tasks
 	 */
-	function configure(){
+	function configure() {
 		/**
 		 * --------------------------------------------------------------------------
 		 * Configuration Methods
@@ -13,7 +13,6 @@ class {
 		 * - setTimezone( ) : change the timezone for ALL tasks
 		 * - setExecutor( executorObject ) : change the executor if needed
 		 */
-
 
 		/**
 		 * --------------------------------------------------------------------------
@@ -27,13 +26,15 @@ class {
 	/**
 	 * Called before the scheduler is going to be shutdown
 	 */
-	function onShutdown(){
+	function onShutdown() {
+
 	}
 
 	/**
 	 * Called after the scheduler has registered all schedules
 	 */
-	function onStartup(){
+	function onStartup() {
+
 	}
 
 	/**
@@ -42,7 +43,8 @@ class {
 	 * @task      The task that got executed
 	 * @exception The ColdFusion exception object
 	 */
-	function onAnyTaskError( required task, required exception ){
+	function onAnyTaskError( required task, required exception ) {
+
 	}
 
 	/**
@@ -51,7 +53,8 @@ class {
 	 * @task   The task that got executed
 	 * @result The result (if any) that the task produced
 	 */
-	function onAnyTaskSuccess( required task, result ){
+	function onAnyTaskSuccess( required task, result ) {
+
 	}
 
 	/**
@@ -59,7 +62,8 @@ class {
 	 *
 	 * @task The task about to be executed
 	 */
-	function beforeAnyTask( required task ){
+	function beforeAnyTask( required task ) {
+
 	}
 
 	/**
@@ -68,7 +72,7 @@ class {
 	 * @task   The task that got executed
 	 * @result The result (if any) that the task produced
 	 */
-	function afterAnyTask( required task, result ){
-	}
+	function afterAnyTask( required task, result ) {
 
+	}
 }

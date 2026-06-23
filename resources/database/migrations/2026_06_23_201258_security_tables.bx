@@ -1,0 +1,60 @@
+class {
+
+	function up( schema, qb ) {
+		// Permissions table
+		schema.create( "permissions", ( table ) => {
+			table.uuid( "permissionId" ).primaryKey()
+			table.boolean( "isActive" ).default( true )
+			table.timestamps()
+
+			table.string( "permission" ).unique()
+			table.longText( "description" ).default( "" )
+
+			// Indexes
+			table.index( "isActive", "idx_permissionIsActive" )
+			table.index( [ "permission", "isActive" ], "idx_permissionActive" )
+		} )
+
+		// Roles table
+		schema.create( "roles", ( table ) => {
+			table.uuid( "roleId" ).primaryKey()
+			table.boolean( "isActive" ).default( true )
+			table.timestamps()
+
+			table.string( "role" ).unique()
+			table.longText( "description" ).default( "" )
+
+			// Indexes
+			table.index( "isActive", "idx_roleIsActive" )
+			table.index( [ "role", "isActive" ], "idx_roleActive" )
+		} )
+
+		// Role-Permissions join table
+		schema.create( "role_permissions", ( table ) => {
+			table.uuid( "FK_roleId" )
+			table.uuid( "FK_permissionId" )
+
+			// Constraints
+			table.primaryKey( [ "FK_roleId", "FK_permissionId" ], "pk_role_permissions" )
+
+			// References
+			table
+				.foreignKey( "FK_permissionId" )
+				.references( "permissionId" )
+				.onTable( "permissions" )
+				.onDelete( "CASCADE" )
+			table
+				.foreignKey( "FK_roleId" )
+				.references( "roleId" )
+				.onTable( "roles" )
+				.onDelete( "CASCADE" )
+		} )
+	}
+
+	function down( schema, qb ) {
+		schema.dropIfExists( "role_permissions" )
+		schema.dropIfExists( "roles" )
+		schema.dropIfExists( "permissions" )
+	}
+
+}

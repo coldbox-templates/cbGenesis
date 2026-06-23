@@ -3,12 +3,19 @@
  */
 class extends="coldbox.system.EventHandler" {
 
-	function index( event, rc, prc ){
-		prc.title    = "Roles";
+	function index( event, rc, prc ) {
+		prc.title = "Roles";
 		prc.authUser = getMockAuthUser();
 
-		prc.permissionModules = [ "Users", "Roles", "Permissions", "Settings", "Audit Log", "API Tokens" ];
-		prc.permissionActions = [ "read", "write", "delete", "admin" ];
+		prc.permissionModules = [
+			"Users",
+			"Roles",
+			"Permissions",
+			"Settings",
+			"Audit Log",
+			"API Tokens"
+		];
+		prc.permissionActions = [ "read", "write", "delete", "admin"];
 		prc.roles = [
 			{
 				"roleId"     : "role-super-admin",
@@ -16,7 +23,15 @@ class extends="coldbox.system.EventHandler" {
 				"description": "Full system access. Cannot be modified.",
 				"users"      : 1,
 				"system"     : true,
-				"permissions": [ "Users:*", "Roles:*", "Permissions:*", "Settings:*", "Audit Log:read", "Audit Log:admin", "API Tokens:*" ]
+				"permissions": [
+					"Users:*",
+					"Roles:*",
+					"Permissions:*",
+					"Settings:*",
+					"Audit Log:read",
+					"Audit Log:admin",
+					"API Tokens:*"
+				]
 			},
 			{
 				"roleId"     : "role-admin",
@@ -24,7 +39,14 @@ class extends="coldbox.system.EventHandler" {
 				"description": "Operational administrator for day-to-day access work.",
 				"users"      : 3,
 				"system"     : false,
-				"permissions": [ "Users:read", "Users:write", "Roles:read", "Permissions:read", "Settings:read", "Audit Log:read" ]
+				"permissions": [
+					"Users:read",
+					"Users:write",
+					"Roles:read",
+					"Permissions:read",
+					"Settings:read",
+					"Audit Log:read"
+				]
 			},
 			{
 				"roleId"     : "role-developer",
@@ -32,7 +54,7 @@ class extends="coldbox.system.EventHandler" {
 				"description": "Technical access to API tokens and deploy-adjacent diagnostics.",
 				"users"      : 12,
 				"system"     : false,
-				"permissions": [ "Users:read", "API Tokens:read", "API Tokens:write", "Audit Log:read" ]
+				"permissions": [ "Users:read", "API Tokens:read", "API Tokens:write", "Audit Log:read"]
 			},
 			{
 				"roleId"     : "role-viewer",
@@ -40,7 +62,7 @@ class extends="coldbox.system.EventHandler" {
 				"description": "Read-only access to common administration screens.",
 				"users"      : 203,
 				"system"     : false,
-				"permissions": [ "Users:read", "Roles:read", "Settings:read" ]
+				"permissions": [ "Users:read", "Roles:read", "Settings:read"]
 			}
 		];
 
@@ -48,8 +70,12 @@ class extends="coldbox.system.EventHandler" {
 		event.setView( "roles/index" );
 	}
 
-	private struct function getMockAuthUser(){
-		return { "name": "Luis Majano", "email": "luis@ortussolutions.com", "role": "Super Admin", "initials": "LM" };
+	private struct function getMockAuthUser() {
+		return {
+			"name"    : "Luis Majano",
+			"email"   : "luis@ortussolutions.com",
+			"role"    : "Super Admin",
+			"initials": "LM"
+		};
 	}
-
 }

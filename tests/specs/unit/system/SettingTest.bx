@@ -3,98 +3,138 @@
  * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
  * responsibility to update the model annotation instantiation path and init your model.
  */
+
 @model( "app.models.Setting" )
 class extends="coldbox.system.testing.BaseModelTest" {
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
-	function beforeAll(){
-		super.beforeAll()
+	function beforeAll() {
+		super.beforeAll();
 
 		// setup the model
-		super.setup()
+		super.setup();
 
 		// init the model object
-		variables.setting = getInstance( "system.Setting" )
+		variables.setting = getInstance( "system.Setting" );
 	}
 
-	function afterAll(){
-		super.afterAll()
+	function afterAll() {
+		super.afterAll();
 	}
 
 	/*********************************** BDD SUITES ***********************************/
 
-	function run(){
-		describe( "A Setting", function(){
+	function run() {
+		describe(
+			"A Setting",
+			function() {
+				it(
+					"can be created",
+					function() {
+						expect( variables.setting ).toBeComponent();
+					}
+				);
 
-			it( "can be created", function(){
-				expect( variables.setting ).toBeComponent()
-			} )
+				it(
+					"has default values on creation",
+					function() {
+						expect( variables.setting.getIsActive() ).toBeTrue();
+						expect( variables.setting.getIsCore() ).toBeTrue();
+						expect( variables.setting.getValue() ).toBe( "" );
+						expect( variables.setting.isLoaded() ).toBeFalse();
+					}
+				);
 
-			it( "has default values on creation", function(){
-				expect( variables.setting.getIsActive() ).toBeTrue()
-				expect( variables.setting.getIsCore() ).toBeTrue()
-				expect( variables.setting.getValue() ).toBe( "" )
-				expect( variables.setting.isLoaded() ).toBeFalse()
-			} )
+				it(
+					"has a non-persisted id before persistence",
+					function() {
+						expect( variables.setting.getId() ).toBeNull();
+						expect( variables.setting.isLoaded() ).toBeFalse();
+					}
+				);
 
-			it( "has a non-persisted id before persistence", function(){
-				expect( variables.setting.getId() ).toBeNull()
-				expect( variables.setting.isLoaded() ).toBeFalse()
-			} )
+				it(
+					"can get a persisted id after setting it",
+					function() {
+						variables.setting.setId( createUUID() );
+						expect( variables.setting.getId() ).notToBeEmpty();
+						expect( variables.setting.isLoaded() ).toBeTrue();
+					}
+				);
 
-			it( "can get a persisted id after setting it", function(){
-				variables.setting.setId( createUUID() )
-				expect( variables.setting.getId() ).notToBeEmpty()
-				expect( variables.setting.isLoaded() ).toBeTrue()
-			} )
+				it(
+					"can set and get name",
+					function() {
+						variables.setting.setName( "site_name" );
+						expect( variables.setting.getName() ).toBe( "site_name" );
+					}
+				);
 
-			it( "can set and get name", function(){
-				variables.setting.setName( "site_name" )
-				expect( variables.setting.getName() ).toBe( "site_name" )
-			} )
+				it(
+					"can set and get value",
+					function() {
+						variables.setting.setValue( "My Site" );
+						expect( variables.setting.getValue() ).toBe( "My Site" );
+					}
+				);
 
-			it( "can set and get value", function(){
-				variables.setting.setValue( "My Site" )
-				expect( variables.setting.getValue() ).toBe( "My Site" )
-			} )
+				it(
+					"can set and get isCore flag",
+					function() {
+						variables.setting.setIsCore( false );
+						expect( variables.setting.getIsCore() ).toBeFalse();
 
-			it( "can set and get isCore flag", function(){
-				variables.setting.setIsCore( false )
-				expect( variables.setting.getIsCore() ).toBeFalse()
+						variables.setting.setIsCore( true );
+						expect( variables.setting.getIsCore() ).toBeTrue();
+					}
+				);
 
-				variables.setting.setIsCore( true )
-				expect( variables.setting.getIsCore() ).toBeTrue()
-			} )
+				it(
+					"has memento configuration with default includes",
+					function() {
+						expect( variables.setting ).toHaveKey( "memento" );
+						expect( variables
+								.setting
+								.memento
+								.defaultIncludes ).toInclude( "name" );
+						expect( variables
+								.setting
+								.memento
+								.defaultIncludes ).toInclude( "value" );
+						expect( variables
+								.setting
+								.memento
+								.defaultIncludes ).toInclude( "isCore" );
+					}
+				);
 
-			it( "has memento configuration with default includes", function(){
-				expect( variables.setting ).toHaveKey( "memento" )
-				expect( variables.setting.memento.defaultIncludes ).toInclude( "name" )
-				expect( variables.setting.memento.defaultIncludes ).toInclude( "value" )
-				expect( variables.setting.memento.defaultIncludes ).toInclude( "isCore" )
-			} )
+				it(
+					"has validation constraints",
+					function() {
+						expect( variables.setting ).toHaveKey( "constraints" );
+						expect( variables.setting.constraints ).toHaveKey( "name" );
+						expect( variables.setting.constraints ).toHaveKey( "value" );
+					}
+				);
 
-			it( "has validation constraints", function(){
-				expect( variables.setting ).toHaveKey( "constraints" )
-				expect( variables.setting.constraints ).toHaveKey( "name" )
-				expect( variables.setting.constraints ).toHaveKey( "value" )
-			} )
+				it(
+					"can produce a memento struct",
+					function() {
+						variables.setting.setName( "app_title" );
+						variables.setting.setValue( "cbGenesis" );
+						variables.setting.setIsCore( true );
 
-			it( "can produce a memento struct", function(){
-				variables.setting.setName( "app_title" )
-				variables.setting.setValue( "cbGenesis" )
-				variables.setting.setIsCore( true )
-
-				var memento = variables.setting.getMemento()
-				expect( memento ).toHaveKey( "name" )
-				expect( memento ).toHaveKey( "value" )
-				expect( memento ).toHaveKey( "isCore" )
-				expect( memento.name ).toBe( "app_title" )
-				expect( memento.value ).toBe( "cbGenesis" )
-				expect( memento.isCore ).toBeTrue()
-			} )
-
-		} )
+						var memento = variables.setting.getMemento();
+						expect( memento ).toHaveKey( "name" );
+						expect( memento ).toHaveKey( "value" );
+						expect( memento ).toHaveKey( "isCore" );
+						expect( memento.name ).toBe( "app_title" );
+						expect( memento.value ).toBe( "cbGenesis" );
+						expect( memento.isCore ).toBeTrue();
+					}
+				);
+			}
+		);
 	}
-
 }

@@ -1,10 +1,10 @@
 /**
  * This User Service provider connects to the database configured in your appliction.
  */
+
 @singleton
 @threadSafe
 class {
-
 	/**
 	 * --------------------------------------------------------------------------
 	 * Injections
@@ -12,22 +12,27 @@ class {
 	 */
 
 	property name="populator" inject="wirebox:populator";
-	property name="wirebox"   inject="wirebox";
-	property name="log"       inject="logbox:logger:{this}";
-	property name="qb"        inject="QueryBuilder@qb";
+
+	property name="wirebox" inject="wirebox";
+
+	property name="log" inject="logbox:logger:{this}";
+
+	property name="qb" inject="QueryBuilder@qb";
 
 	/**
 	 * Constructor
 	 */
-	function init(){
-		return this
+	function init() {
+		return this;
 	}
 
 	/**
 	 * New User Dispenser
 	 */
 	@provider( "User" )
-	User function new(){}
+	User function new() {
+
+	}
 
 	/**
 	 * Get a new user by id
@@ -36,15 +41,15 @@ class {
 	 *
 	 * @return The located user or a new un-loaded user object
 	 */
-	User function retrieveUserById( required id ){
+	User function retrieveUserById( required id ) {
 		return populator.populateFromStruct(
-			target : new(),
-			memento: qb
-				.from( "users" )
-				.where( "id", arguments.id )
-				.first(),
-			ignoreTargetLists: true
-		)
+				target            = new(),
+				memento           = qb
+					.from( "users" )
+					.where( "id", arguments.id )
+					.first(),
+				ignoreTargetLists = true
+			);
 	}
 
 	/**
@@ -54,15 +59,15 @@ class {
 	 *
 	 * @return The valid user object representing the username or an empty user object
 	 */
-	User function retrieveUserByUsername( required username ){
+	User function retrieveUserByUsername( required username ) {
 		return populator.populateFromStruct(
-			target : new(),
-			memento: qb
-				.from( "users" )
-				.where( "email", arguments.username )
-				.first(),
-			ignoreTargetLists: true
-		)
+				target            = new(),
+				memento           = qb
+					.from( "users" )
+					.where( "email", arguments.username )
+					.first(),
+				ignoreTargetLists = true
+			);
 	}
 
 	/**
@@ -74,12 +79,12 @@ class {
 	 *
 	 * @return true if valid, else false
 	 */
-	boolean function isValidCredentials( required username, required password ){
-		var oUser = retrieveUserByUsername( arguments.username )
+	boolean function isValidCredentials( required username, required password ) {
+		var oUser = retrieveUserByUsername( arguments.username );
 
 		// If the user is not loaded or the user has not been verified, then we cannot log in
 		if ( !oUser.isLoaded() || !oUser.isEmailVerified() ) {
-			return false
+			return false;
 		}
 
 		return variables.bcrypt.checkPassword( hashSecurely( arguments.password ), oUser.getPassword() );
@@ -91,7 +96,7 @@ class {
 	 *
 	 * @user The user to create
 	 */
-	User function create( required user ){
+	User function create( required user ) {
 		transaction {
 			// Save it first
 			save( arguments.user );
@@ -106,7 +111,7 @@ class {
 	 *
 	 * @user The user to send the confirmation to
 	 */
-	function sendNewUserEmail( required user ){
+	function sendNewUserEmail( required user ) {
 
 	}
 
@@ -118,9 +123,9 @@ class {
 	 *
 	 * @return The persisted user
 	 */
-	function save( required user, boolean passwordChange = false ){
+	function save( required user, boolean passwordChange = false ) {
 		// bcrypt password if it's a new user or a password change
-		if ( !arguments.user.isLoaded() OR arguments.passwordChange ) {
+		if ( !arguments.user.isLoaded() || arguments.passwordChange ) {
 			arguments.user.setPassword( variables.bcrypt.hashPassword( arguments.user.getPassword() ) );
 		}
 
@@ -130,24 +135,24 @@ class {
 			.where( "id", arguments.user.getId() )
 			.updateOrInsert(
 				values = {
-					"id"          : arguments.user.getId(),
-					"createdDate" : {
-						value     : arguments.user.getCreatedDate(),
-						cfsqlType : "timestamp"
+					"id"         : arguments.user.getId(),
+					"createdDate": {
+						value    : arguments.user.getCreatedDate(),
+						cfsqlType: "timestamp"
 					},
-					"modifiedDate" : {
-						value     : arguments.user.getModifiedDate(),
-						cfsqlType : "timestamp"
+					"modifiedDate": {
+						value    : arguments.user.getModifiedDate(),
+						cfsqlType: "timestamp"
 					},
-					"isActive"    : arguments.user.getIsActive(),
-					"firstName"   : arguments.user.getName(),
-					"lastName"    : arguments.user.getName(),
-					"email"       : arguments.user.getEmail(),
-					"permissions" : arguments.user.getUsername(),
-					"password"    : bcrypt.hashPassword( arguments.user.getPassword() ),
-					"verifiedAt"  : {
-						value     : arguments.user.getVerifiedAt(),
-						cfsqlType : "timestamp"
+					"isActive"   : arguments.user.getIsActive(),
+					"firstName"  : arguments.user.getName(),
+					"lastName"   : arguments.user.getName(),
+					"email"      : arguments.user.getEmail(),
+					"permissions": arguments.user.getUsername(),
+					"password"   : bcrypt.hashPassword( arguments.user.getPassword() ),
+					"verifiedAt" : {
+						value    : arguments.user.getVerifiedAt(),
+						cfsqlType: "timestamp"
 					}
 				}
 			);
@@ -163,8 +168,7 @@ class {
 	 *
 	 * @target The string target to hash
 	 */
-	private string function hashSecurely( required string target ){
+	private string function hashSecurely( required string target ) {
 		return variables.bcrypt.hashPassword( arguments.target );
 	}
-
 }

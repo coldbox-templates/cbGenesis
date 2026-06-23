@@ -2,31 +2,34 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="#getSetting( "cbDefaultTheme" )#">
 <head>
-    #view( view: "_components/app/includes", args: { title: "Authentication" } )#
+    #view(
+	view = "_components/app/includes",
+	args = { title: "Authentication" }
+)#
 </head>
 <body class="auth-body" x-data x-init="$store.theme.init()">
 
     <div class="auth-center-wrapper">
 
-        <!--- ── Card ─────────────────────────────────────────────── --->
+        <!--- ── Card ─────────────────────────────────────────────── --->  
         <div class="auth-card">
 
-            <!--- Logo --->
+            <!--- Logo --->  
             <div class="auth-card-logo">
                 <a href="/" class="auth-logo-link">
                     #view( "_components/ui/logo" )#
                 </a>
             </div>
 
-            <!--- View content — inject the login/register/forgot-password form --->
+            <!--- View content — inject the login/register/forgot-password form --->  
             <div class="auth-card-body">
                 #renderView()#
             </div>
 
         </div>
-        <!--- ── /Card ────────────────────────────────────────────── --->
+        <!--- ── /Card ────────────────────────────────────────────── --->  
 
-        <!--- Dark / light mode toggle --->
+        <!--- Dark / light mode toggle --->  
         #view( "_components/auth/footer" )#
 
     </div>

@@ -1,10 +1,10 @@
-﻿/**
+/**
  * Copyright since 2020 by Ortus Solutions, Corp
  * www.ortussolutions.com
  * ---
  * A global setting object
  */
-class extends="app.models.BaseEntity"{
+class extends="app.models.BaseEntity" {
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -13,8 +13,10 @@ class extends="app.models.BaseEntity"{
 	 */
 
 	property name="name" notnull="true" unique="true";
+
 	property name="value" notnull="true" default="";
-	property name="isCore" type="boolean" default="true" notnull="true";
+
+	property name="description" default="";
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -22,7 +24,11 @@ class extends="app.models.BaseEntity"{
 	 * --------------------------------------------------------------------------
 	 */
 	this.constraints = {
-		"name": { required: true, size: "1..255", validator: "UniqueValidator" },
+		"name": {
+			required : true,
+			size     : "1..255",
+			validator: "UniqueValidator"
+		},
 		"value": { required: true }
 	}
 
@@ -31,11 +37,18 @@ class extends="app.models.BaseEntity"{
 	 * Memento Configuration
 	 * --------------------------------------------------------------------------
 	 */
-	this.memento = { defaultIncludes: [ "name", "value", "isCore" ] }
+	this.memento = {
+		// Default properties to serialize
+		defaultIncludes: [ "*"],
+		// Default Exclusions
+		defaultExcludes: [],
+		// Never Include
+		neverInclude   : []
+	}
 
-	/* *********************************************************************
-	 **							PUBLIC METHODS
-	 ********************************************************************* */
+	/**********************************************************************
+	 * **							PUBLIC METHODS
+	 **********************************************************************/
 
 	/**
 	 * Constructor
@@ -43,5 +56,4 @@ class extends="app.models.BaseEntity"{
 	function init() {
 		return super.init( "settingId" )
 	}
-
 }

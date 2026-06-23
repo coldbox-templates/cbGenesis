@@ -6,10 +6,10 @@
  *
  * @see https://coldbox-security.ortusbooks.com
  */
+
 @singleton
 @threadSafe
 class {
-
 	/**
 	 * --------------------------------------------------------------------------
 	 * Injections
@@ -17,15 +17,18 @@ class {
 	 */
 
 	property name="authenticationService" inject="authenticationService@cbauth";
-	property name="userService"          inject="UserService";
-	property name="qb"                  inject="QueryBuilder@qb";
-	property name="log"                 inject="logbox:logger:{this}";
+
+	property name="userService" inject="UserService";
+
+	property name="qb" inject="QueryBuilder@qb";
+
+	property name="log" inject="logbox:logger:{this}";
 
 	/**
 	 * Constructor
 	 */
-	function init(){
-		return this
+	function init() {
+		return this;
 	}
 
 	/**
@@ -39,14 +42,17 @@ class {
 	 * @return The authenticated User object
 	 * @throws SecurityException if credentials are invalid
 	 */
-	User function login( required string username, required string password ){
+	User function login(
+		required string username,
+		required string password
+	) {
 		// Validate credentials through UserService
 		if ( !userService.isValidCredentials( arguments.username, arguments.password ) ) {
 			log.warn( "Failed login attempt for user: #arguments.username#" );
 			throw(
-				message   : "Invalid credentials.",
-				detail    : "The username and password combination is not valid.",
-				type      : "SecurityException"
+				message = "Invalid credentials.",
+				detail  = "The username and password combination is not valid.",
+				type    = "SecurityException"
 			);
 		}
 
@@ -65,11 +71,11 @@ class {
 	 * Log out the currently logged in user.
 	 * Clears the session and request scope user data.
 	 */
-	function logout(){
+	function logout() {
 		try {
 			authenticationService.logout();
 			log.info( "User logged out successfully." );
-		} catch ( SecurityException e ) {
+		} catch (SecurityException e) {
 			log.debug( "Logout attempted with no active session." );
 		}
 	}
@@ -79,7 +85,7 @@ class {
 	 *
 	 * @return true if a user is logged in, false otherwise
 	 */
-	boolean function isLoggedIn(){
+	boolean function isLoggedIn() {
 		return authenticationService.isLoggedIn();
 	}
 
@@ -88,10 +94,10 @@ class {
 	 *
 	 * @return The User object if logged in, null otherwise
 	 */
-	User function getCurrentUser(){
+	User function getCurrentUser() {
 		try {
 			return authenticationService.getUser();
-		} catch ( SecurityException e ) {
+		} catch (SecurityException e) {
 			return null;
 		}
 	}
@@ -101,11 +107,10 @@ class {
 	 *
 	 * @id The user ID to update
 	 */
-	private function updateLastLogin( required string id ){
+	private function updateLastLogin( required string id ) {
 		qb
 			.table( "users" )
 			.where( "id", arguments.id )
-			.update( { "lastLogin" : { value: now(), cfsqlType: "timestamp" } } );
+			.update( { "lastLogin": { value: now(), cfsqlType: "timestamp" } } );
 	}
-
 }

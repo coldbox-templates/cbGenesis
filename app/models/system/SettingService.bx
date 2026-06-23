@@ -14,6 +14,41 @@ class extends="app.models.BaseService" {
 
 	static{
 		DEFAULTS = {
+			// The main logo path for the app, if empty it will use the default cbGenesis logo
+			cbAppLogo : "/includes/images/cbgenesis-icon-full.svg",
+			// The main title for the app used in the sidebar
+			cbAppName : "cbGenesis",
+			// The tagline for the app used in the sidebar and login page
+			cbAppTagline : "A Modern ColdBox Application Starter Kit",
+			// The tagline for the app used in the branding area of the sidebar
+			cbAppBrandTagline : "Starter Kit",
+			// Copyright notice
+			cbCopyrightNotice: "&copy; #year()# cbGenesis. All rights reserved.",
+			// The default theme for the app, can be "light" or "dark"
+			cbDefaultTheme: "dark",
+			// The login layout to use, can be "AuthCenter" or "AuthSplit" or your own custom layout.
+			cbLoginLayout: "AuthSplit",
+			// Allow users to register themselves, if false, the register page will be disabled.
+			cbAllowRegistration: true,
+			// Allow users to reset their password, if false, the forgot password page will be disabled.
+			cbAllowForgotPassword: true,
+			// Encryption secret key for the application, if empty it will use the default cbGenesis key
+			cbEncryptionKey: generateSecretKey( "AES", 256 ),
+			// Salting key for security usage
+			cbSaltingKey: generateSecretKey( "AES", 256 ),
+			// The default email address to use for sending emails, if empty it will use the default cbGenesis email address
+			cbDefaultEmail: "no-reply@cbgenesis.com",
+			// Minimum password length for user accounts
+			cbMinPasswordLength: 8,
+			// Password reset expiration time in minutes,
+			cbPasswordResetExpiration: 60,
+			// Mail Settings
+			cbMailHost: "smtp.mailtrap.io",
+			cbMailPort: 25,
+			cbMailUsername: "",
+			cbMailPassword: "",
+			cbMailTLS: false,
+			cbMailSSL: false
 		}
 	}
 

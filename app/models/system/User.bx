@@ -6,7 +6,6 @@
  * - cbsecurity.interfaces.IAuthUser
  */
 class extends="app.models.BaseEntity" {
-
 	/**
 	 * --------------------------------------------------------------------------
 	 * Properties
@@ -14,13 +13,25 @@ class extends="app.models.BaseEntity" {
 	 */
 
 	property name="firstName" default="";
+
 	property name="lastName" default="";
+
 	property name="email" default="";
+
 	property name="password" default="";
+
 	property name="biography" default="";
+
 	property name="verifiedAt" type="datetime";
+
 	property name="lastLogin" type="datetime";
+
 	property name="preferences";
+	/**
+	 * --------------------------------------------------------------------------
+	 * Relationships
+	 * --------------------------------------------------------------------------
+	 */
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -29,25 +40,23 @@ class extends="app.models.BaseEntity" {
 	 * https://coldbox-validation.ortusbooks.com/overview/valid-constraints
 	 */
 	this.constraints = {
-		firstName : { required : true },
-		lastName  : { required : true },
-		email     : {
-			required : true,
-			unique   : { table : "users", column : "email" }
+		firstName: { required: true },
+		lastName : { required: true },
+		email    : {
+			required: true,
+			unique  : { table: "users", column: "email" }
 		},
-		password : { required : true }
+		password: { required: true }
 	};
 	// https://coldbox-validation.ortusbooks.com/overview/validating-constraints/validating-with-profiles
-	this.constraintProfiles = { "update" : "firstName,lastName,email,biography" };
+	this.constraintProfiles = { "update": "firstName,lastName,email,biography" };
 
 	/**
 	 * --------------------------------------------------------------------------
 	 * Population Options
 	 * --------------------------------------------------------------------------
 	 */
-	this.population = {
-		exclude : [ "id", "lastLogin", "verifiedAt", "isActive" ]
-	}
+	this.population = { exclude: [ "id", "lastLogin", "verifiedAt", "isActive"] };
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -57,86 +66,85 @@ class extends="app.models.BaseEntity" {
 	 */
 	this.memento = {
 		// Default properties to serialize
-		defaultIncludes : [ "*" ],
+		defaultIncludes: [ "*"],
 		// Default Exclusions
-		defaultExcludes : [],
+		defaultExcludes: [],
 		// Never Include
-		neverInclude    : [ "password" ]
+		neverInclude   : [ "password"]
 	};
 
 	/**
 	 * Constructor
 	 */
-	function init(){
-		super.init()
-		variables.firstName  = ""
-		variables.lastName   = ""
-		variables.email      = ""
-		variables.password   = ""
-		variables.lastLogin  = ""
-		variables.verifiedAt = ""
-		variables.biography  = ""
-		variables.preferences = {}
+	function init() {
+		super.init();
+		variables.firstName = "";
+		variables.lastName = "";
+		variables.email = "";
+		variables.password = "";
+		variables.lastLogin = "";
+		variables.verifiedAt = "";
+		variables.biography = "";
+		variables.preferences = {};
 
-		return this
+		return this;
 	}
 
 	/**
 	 * Has the user been verified via email or not
 	 */
-	boolean function isEmailVerified(){
+	boolean function isEmailVerified() {
 		return len( variables.verifiedAt ) && isDate( variables.verifiedAt );
 	}
 
 	/**
 	 * Retrieve the user's full name
 	 */
-	string function getFullName(){
+	string function getFullName() {
 		return getFirstName() & " " & getLastName();
 	}
 
 	/**
 	 * Get the user's initials
 	 */
-	string function getInitials(){
-		var initials = ""
-		if( len( variables.firstName ) ){
-			initials &= left( variables.firstName, 1 )
+	string function getInitials() {
+		var initials = "";
+		if ( len( variables.firstName ) ) {
+			initials &= left( variables.firstName, 1 );
 		}
-		if( len( variables.lastName ) ){
-			initials &= left( variables.lastName, 1 )
+		if ( len( variables.lastName ) ) {
+			initials &= left( variables.lastName, 1 );
 		}
-		return initials
+		return initials;
 	}
 
 	/**
 	 * Set the user's preferences as a struct
 	 */
-	User function setPreferences( struct preferences ){
-		variables.preferences = jsonSerialize( preferences )
-		return this
+	User function setPreferences( struct preferences ) {
+		variables.preferences = jsonSerialize( preferences );
+		return this;
 	}
 
 	/**
 	 * Set the user's preferences as a raw JSON string
 	 */
-	User function setPreferencesRaw( string preferences ){
-		variables.preferences = arguments.preferences
-		return this
+	User function setPreferencesRaw( string preferences ) {
+		variables.preferences = arguments.preferences;
+		return this;
 	}
 
 	/**
 	 * Get the user's preferences as a struct
 	 */
-	struct function getPreferences(){
-		return jsonDeserialize( getPreferencesRaw() )
+	struct function getPreferences() {
+		return jsonDeserialize( getPreferencesRaw() );
 	}
 
 	/**
 	 * Get the user's preferences as a raw JSON string
 	 */
-	string function getPreferencesRaw(){
-		return variables.preferences ?: "{}"
+	string function getPreferencesRaw() {
+		return variables.preferences ?: "{}";
 	}
-
 }

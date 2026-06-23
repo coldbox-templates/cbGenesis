@@ -1,0 +1,93 @@
+class {
+
+    function up( schema, qb ) {
+		schema.create( "users", (table)=>{
+			// Base Fields
+			table.uuid( "userId" ).primaryKey()
+			table.boolean( "isActive" ).default( true )
+			table.timestamps()
+
+			// User specific fields
+			table.string( "firstName" )
+			table.string( "lastName" )
+			table.string( "email" ).unique()
+			table.string( "password" )
+			table.text( "biography" ).default( "" )
+			table.datetime( "verifiedAt" ).nullable()
+			table.datetime( "lastLogin" ).nullable()
+			table.json( "preferences" ).default( "{}" )
+			table.boolean( "isPasswordReset" ).default( false )
+			table.boolean( "is2FactorAuth" ).default( false )
+
+			// Indexes
+			table.index( "verifiedAt", "idx_userVerifiedAt" )
+			table.index( "isActive", "idx_userActive" )
+			table.index( [ "isPasswordReset"], "idx_passwordReset" );
+			table.index( [ "is2FactorAuth"], "idx_2factorauth" );
+			table.index( [ "email", "isActive" ], "idx_login" );
+		} )
+
+		// User Roles
+		schema.create( "user_roles", ( table ) => {
+			table.uuid( "FK_userId" )
+			table.uuid( "FK_roleId" )
+
+			// Composite primary key
+			table.primaryKey( [ "FK_userId", "FK_roleId" ], "pk_user_roles" )
+			// References
+			table.foreignKey( "FK_userId" )
+				.references( "userId" )
+				.onTable( "users" )
+				.onDelete( "CASCADE" )
+			table.foreignKey( "FK_roleId" )
+				.references( "roleId" )
+				.onTable( "roles" )
+				.onDelete( "CASCADE" )
+		} )
+
+		// User a-la-carte Permissions
+		schema.create( "user_permissions", ( table ) => {
+			table.uuid( "FK_userId" )
+			table.uuid( "FK_permissionId" )
+
+			// Composite primary key
+			table.primaryKey( [ "FK_userId", "FK_permissionId" ], "pk_user_permissions" )
+
+			// References
+			table.foreignKey( "FK_userId" )
+				.references( "userId" )
+				.onTable( "users" )
+				.onDelete( "CASCADE" )
+			table.foreignKey( "FK_permissionId" )
+				.references( "permissionId" )
+				.onTable( "permissions" )
+				.onDelete( "CASCADE" )
+		} )
+
+		schema.create( "user_password_resets", ( table ) => {
+			// Fields
+			table.uuid( "resetId" ).primaryKey()
+			table.uuid( "FK_userId" )
+			table.string( "token" ).unique()
+			table.datetime( "createdDate" ).withCurrent()
+			table.datetime( "expiresDate" )
+
+			table.foreignKey( "FK_userId" )
+				.references( "userId" )
+				.onTable( "users" )
+				.onDelete( "CASCADE" )
+
+			table.index( "FK_userId", "idx_passwordResetUser" )
+			table.index( "token", "idx_passwordResetToken" )
+			table.index( "expiresDate", "idx_passwordResetExpires" )
+		} )
+    }
+
+    function down( schema, qb ) {
+		schema.dropIfExists( "users" )
+		schema.dropIfExists( "user_roles" )
+		schema.dropIfExists( "user_permissions" )
+		schema.dropIfExists( "user_password_resets" )
+    }
+
+}

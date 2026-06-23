@@ -1,0 +1,26 @@
+class{
+
+	function configure(){
+		return {
+			// The default token Marker Symbol
+			tokenMarker     : "@",
+			// Default protocol to use, it must be defined in the mailers configuration
+			defaultProtocol : "default",
+			// Here you can register one or many mailers by name
+			mailers         : {
+				"default" : { class : "BXMail" },
+				"files" : { class:"File", properties : { filePath : "/app/logs" } }
+			},
+			// The defaults for all mail config payloads and protocols
+			defaults        : {
+				from : "info@mydomain.com"
+			},
+			// Whether the scheduled task is running or not
+			runQueueTask	: true
+		}
+	}
+
+	function development( settings ){
+		settings.defaultProtocol = "files"
+	}
+}

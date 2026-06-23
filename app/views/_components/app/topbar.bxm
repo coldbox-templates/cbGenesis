@@ -1,5 +1,4 @@
-<!---
-    Admin Header / Topbar Component
+<!--- Admin Header / Topbar Component
     Renders the sticky top bar: sidebar toggle, breadcrumb, theme toggle,
     notifications, and user dropdown.
 
@@ -10,12 +9,11 @@
         prc.title               — page title shown in breadcrumb (default: "Dashboard")
         prc.authUser.initials   — avatar letter in user button
         prc.authUser.name       — display name in dropdown
-        prc.authUser.email      — email shown below name in dropdown
---->
+        prc.authUser.email      — email shown below name in dropdown --->  
 <bx:output>
 <header class="topbar" id="topbar">
 
-    <!--- ── Left: sidebar toggle + breadcrumb ──────────────── --->
+    <!--- ── Left: sidebar toggle + breadcrumb ──────────────── --->  
     <div class="topbar-left" id="topbar-left">
         <button class="topbar-toggle"
                 @click="$store.sidebar.toggle()"
@@ -24,18 +22,16 @@
             <i class="ph-duotone ph-sidebar" aria-hidden="true"></i>
         </button>
 
-		<!--- Breadcrumbs --->
+		<!--- Breadcrumbs --->  
         #view( "_components/app/topbar-breadcrumbs" )#
     </div>
 
-    <!--- ── Right: action buttons + user dropdown ───────────── --->
-    <!---
-        Using <ul>/<li> so sub-components (notificationBell etc.) can each
-        return a <li> and slot in without breaking the flex layout.
-    --->
+    <!--- ── Right: action buttons + user dropdown ───────────── --->  
+    <!--- Using <ul>/<li> so sub-components (notificationBell etc.) can each
+        return a <li> and slot in without breaking the flex layout. --->  
     <ul class="topbar-right" id="topbar-right">
 
-        <!--- Theme toggle --->
+        <!--- Theme toggle --->  
         <li>
             <button class="topbar-btn"
                     x-cloak
@@ -47,16 +43,16 @@
             </button>
         </li>
 
-        <!--- Vertical divider --->
+        <!--- Vertical divider --->  
         <li class="topbar-divider-item" role="separator" aria-hidden="true">
             <span class="topbar-divider"></span>
         </li>
 
-        <!--- User dropdown --->
+        <!--- User dropdown --->  
         <li>
             <div class="dropdown">
 
-				<!--- User button --->
+				<!--- User button --->  
                 <button class="topbar-user-btn"
                         id="topbarUserMenu"
                         data-bs-toggle="dropdown"
@@ -69,11 +65,11 @@
                     <i class="ph-duotone ph-caret-down topbar-user-chevron" aria-hidden="true"></i>
                 </button>
 
-				<!--- User dropdown menu --->
+				<!--- User dropdown menu --->  
                 <ul class="dropdown-menu dropdown-menu-end"
                     aria-labelledby="topbarUserMenu">
 
-					<!--- Preview User Info --->
+					<!--- Preview User Info --->  
                     <li>
                         <span class="dropdown-header">
                             #( prc.authUser.getEmail() ?: "admin@example.com" )#
@@ -82,7 +78,7 @@
 
                     <li><hr class="dropdown-divider"></li>
 
-					<!--- Profile Link --->
+					<!--- Profile Link --->  
                     <li>
                         <a class="dropdown-item" href="#event.route( "profile" )#">
                             <i class="ph-duotone ph-user" aria-hidden="true"></i>
@@ -92,7 +88,7 @@
 
 					<li><hr class="dropdown-divider"></li>
 
-					<!--- Logout Link --->
+					<!--- Logout Link --->  
 					<li>
                         <form method="POST" action="#event.route( "logout" )#" style="display:contents">
                             <button type="submit" class="dropdown-item text-danger">

@@ -4,12 +4,13 @@
  * Tests the SecurityService login/logout/isLoggedIn functionality
  * using mocked dependencies.
  */
+
 @model( "app.models.SecurityService" )
 class extends="coldbox.system.testing.BaseModelTest" {
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
-	function beforeAll(){
+	function beforeAll() {
 		super.beforeAll();
 
 		// setup the model
@@ -19,276 +20,327 @@ class extends="coldbox.system.testing.BaseModelTest" {
 		model.init();
 	}
 
-	function afterAll(){
+	function afterAll() {
 		super.afterAll();
 	}
 
 	/*********************************** BDD SUITES ***********************************/
 
-	function run(){
-		describe( "SecurityService", function(){
+	function run() {
+		describe(
+			"SecurityService",
+			function() {
+				it(
+					"can be created",
+					function() {
+						expect( model ).toBeComponent();
+					}
+				);
 
-			it( "can be created", function(){
-				expect( model ).toBeComponent();
-			} );
+				it(
+					"is a singleton",
+					function() {
+						var s1 = model;
+						var s2 = wirebox.getInstance( "SecurityService" );
+						expect( s1 ).toBe( s2 );
+					}
+				);
 
-			it( "is a singleton", function(){
-				var s1 = model;
-				var s2 = wirebox.getInstance( "SecurityService" );
-				expect( s1 ).toBe( s2 );
-			} );
+				it(
+					"has login method",
+					function() {
+						expect( model ).toHaveMethod( "login" );
+					}
+				);
 
-			it( "has login method", function(){
-				expect( model ).toHaveMethod( "login" );
-			} );
+				it(
+					"has logout method",
+					function() {
+						expect( model ).toHaveMethod( "logout" );
+					}
+				);
 
-			it( "has logout method", function(){
-				expect( model ).toHaveMethod( "logout" );
-			} );
+				it(
+					"has isLoggedIn method",
+					function() {
+						expect( model ).toHaveMethod( "isLoggedIn" );
+					}
+				);
 
-			it( "has isLoggedIn method", function(){
-				expect( model ).toHaveMethod( "isLoggedIn" );
-			} );
+				it(
+					"has getCurrentUser method",
+					function() {
+						expect( model ).toHaveMethod( "getCurrentUser" );
+					}
+				);
 
-			it( "has getCurrentUser method", function(){
-				expect( model ).toHaveMethod( "getCurrentUser" );
-			} );
+				describe(
+					"login()",
+					function() {
+						it(
+							"throws SecurityException on invalid credentials",
+							function() {
+								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
+								mockAuthService
+									.$( "isLoggedIn" )
+									.$( "getUser" )
+									.$( "authenticate" )
+									.$( "login" )
+									.$( "logout" )
+									.$( "getUserService" )
+									.$( "getUserId" );
 
-			describe( "login()", function(){
+								var mockUserService = createMock( "app.models.UserService" );
+								mockUserService.$( "isValidCredentials" ).$returns( false );
+								mockUserService.$( "retrieveUserByUsername" ).$returns( {} );
 
-				it( "throws SecurityException on invalid credentials", function(){
-					var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
-					mockAuthService
-						.$( "isLoggedIn" )
-						.$( "getUser" )
-						.$( "authenticate" )
-						.$( "login" )
-						.$( "logout" )
-						.$( "getUserService" )
-						.$( "getUserId" );
+								// Inject mocks
+								model.$( "getAuthenticationService" ).$returns( mockAuthService );
+								model.$( "getUserService" ).$returns( mockUserService );
 
-					var mockUserService = createMock( "app.models.UserService" );
-					mockUserService.$( "isValidCredentials" ).$returns( false );
-					mockUserService.$( "retrieveUserByUsername" ).$returns( {} );
+								var exception = createMock( "coldbox.system.web.context.ExceptionBean" );
 
-					// Inject mocks
-					model.$( "getAuthenticationService" ).$returns( mockAuthService );
-					model.$( "getUserService" ).$returns( mockUserService );
+								expect(
+									function() {
+										model.login( "test@example.com", "wrongpassword" );
+									}
+								).toThrow( "SecurityException" );
+							}
+						);
 
-					var exception = createMock( "coldbox.system.web.context.ExceptionBean" );
+						it(
+							"calls userService.isValidCredentials before authentication",
+							function() {
+								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
+								mockAuthService
+									.$( "isLoggedIn" )
+									.$( "getUser" )
+									.$( "authenticate" )
+									.$( "login" )
+									.$( "logout" )
+									.$( "getUserService" )
+									.$( "getUserId" );
 
-					expect( function(){ model.login( "test@example.com", "wrongpassword" ); } )
-						.toThrow( "SecurityException" );
-				} );
+								var mockUserService = createMock( "app.models.UserService" );
+								mockUserService.$( "isValidCredentials" ).$returns( true );
 
-				it( "calls userService.isValidCredentials before authentication", function(){
-					var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
-					mockAuthService
-						.$( "isLoggedIn" )
-						.$( "getUser" )
-						.$( "authenticate" )
-						.$( "login" )
-						.$( "logout" )
-						.$( "getUserService" )
-						.$( "getUserId" );
+								var mockUser = createMock( "app.models.User" );
+								mockUser.$( "getId" ).$returns( "test-user-id" );
+								mockUser.$( "getEmail" ).$returns( "test@example.com" );
 
-					var mockUserService = createMock( "app.models.UserService" );
-					mockUserService.$( "isValidCredentials" ).$returns( true );
+								mockAuthService.$( "authenticate" ).$returns( mockUser );
 
-					var mockUser = createMock( "app.models.User" );
-					mockUser.$( "getId" ).$returns( "test-user-id" );
-					mockUser.$( "getEmail" ).$returns( "test@example.com" );
+								var mockQB = createMock( "qb.models.QueryBuilder" );
+								var mockQuery = createMock( "qb\Query" );
+								mockQB.$( "table" ).$returns( mockQuery );
+								mockQuery.$( "where" ).$returns( mockQuery );
+								mockQuery.$( "update" ).$returns( { result: { generatedKey: "" } } );
 
-					mockAuthService.$( "authenticate" ).$returns( mockUser );
+								model.$( "getAuthenticationService" ).$returns( mockAuthService );
+								model.$( "getUserService" ).$returns( mockUserService );
+								model.$( "getQB" ).$returns( mockQB );
 
-					var mockQB = createMock( "qb.models.QueryBuilder" );
-					var mockQuery = createMock( "qb\Query" );
-					mockQB.$( "table" ).$returns( mockQuery );
-					mockQuery.$( "where" ).$returns( mockQuery );
-					mockQuery.$( "update" ).$returns( { result: { generatedKey: "" } } );
+								// Should not throw - valid credentials
+								var result = model.login( "test@example.com", "correctpassword" );
+								expect( result ).toBeComponent( "app.models.User" );
+							}
+						);
 
-					model.$( "getAuthenticationService" ).$returns( mockAuthService );
-					model.$( "getUserService" ).$returns( mockUserService );
-					model.$( "getQB" ).$returns( mockQB );
+						it(
+							"updates lastLogin on successful login",
+							function() {
+								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
+								mockAuthService
+									.$( "isLoggedIn" )
+									.$( "getUser" )
+									.$( "authenticate" )
+									.$( "login" )
+									.$( "logout" )
+									.$( "getUserService" )
+									.$( "getUserId" );
 
-					// Should not throw - valid credentials
-					var result = model.login( "test@example.com", "correctpassword" );
-					expect( result ).toBeComponent( "app.models.User" );
-				} );
+								var mockUserService = createMock( "app.models.UserService" );
+								mockUserService.$( "isValidCredentials" ).$returns( true );
 
-				it( "updates lastLogin on successful login", function(){
-					var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
-					mockAuthService
-						.$( "isLoggedIn" )
-						.$( "getUser" )
-						.$( "authenticate" )
-						.$( "login" )
-						.$( "logout" )
-						.$( "getUserService" )
-						.$( "getUserId" );
+								var mockUser = createMock( "app.models.User" );
+								mockUser.$( "getId" ).$returns( "user-123" );
+								mockUser.$( "getEmail" ).$returns( "test@example.com" );
 
-					var mockUserService = createMock( "app.models.UserService" );
-					mockUserService.$( "isValidCredentials" ).$returns( true );
+								mockAuthService.$( "authenticate" ).$returns( mockUser );
 
-					var mockUser = createMock( "app.models.User" );
-					mockUser.$( "getId" ).$returns( "user-123" );
-					mockUser.$( "getEmail" ).$returns( "test@example.com" );
+								var mockQB = createMock( "qb.models.QueryBuilder" );
+								var mockQuery = createMock( "qb\Query" );
+								mockQB.$( "table" ).$returns( mockQuery );
+								mockQuery.$( "where" ).$returns( mockQuery );
+								mockQuery.$( "update" ).$returns( { result: { generatedKey: "" } } );
 
-					mockAuthService.$( "authenticate" ).$returns( mockUser );
+								model.$( "getAuthenticationService" ).$returns( mockAuthService );
+								model.$( "getUserService" ).$returns( mockUserService );
+								model.$( "getQB" ).$returns( mockQB );
 
-					var mockQB = createMock( "qb.models.QueryBuilder" );
-					var mockQuery = createMock( "qb\Query" );
-					mockQB.$( "table" ).$returns( mockQuery );
-					mockQuery.$( "where" ).$returns( mockQuery );
-					mockQuery.$( "update" ).$returns( { result: { generatedKey: "" } } );
+								// This should call update internally
+								model.login( "test@example.com", "correctpassword" );
 
-					model.$( "getAuthenticationService" ).$returns( mockAuthService );
-					model.$( "getUserService" ).$returns( mockUserService );
-					model.$( "getQB" ).$returns( mockQB );
+								// Verify the update was called (lastLogin update)
+								expect( mockQuery.$callLog().where ).toInclude( "id" );
+							}
+						);
+					}
+				);
 
-					// This should call update internally
-					model.login( "test@example.com", "correctpassword" );
+				describe(
+					"logout()",
+					function() {
+						it(
+							"calls authenticationService.logout()",
+							function() {
+								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
+								mockAuthService
+									.$( "isLoggedIn" )
+									.$( "getUser" )
+									.$( "authenticate" )
+									.$( "login" )
+									.$( "logout" )
+									.$( "getUserService" )
+									.$( "getUserId" );
 
-					// Verify the update was called (lastLogin update)
-					expect( mockQuery.$callLog().where ).toInclude( "id" );
-				} );
+								model.$( "getAuthenticationService" ).$returns( mockAuthService );
 
-			} );
+								// Should not throw
+								model.logout();
 
-			describe( "logout()", function(){
+								// Verify logout was called
+								expect( mockAuthService.$callLog().logout ).notToBeEmpty();
+							}
+						);
 
-				it( "calls authenticationService.logout()", function(){
-					var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
-					mockAuthService
-						.$( "isLoggedIn" )
-						.$( "getUser" )
-						.$( "authenticate" )
-						.$( "login" )
-						.$( "logout" )
-						.$( "getUserService" )
-						.$( "getUserId" );
+						it(
+							"handles logout when not logged in silently",
+							function() {
+								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
+								mockAuthService
+									.$( "isLoggedIn" )
+									.$( "getUser" )
+									.$( "authenticate" )
+									.$( "login" )
+									.$( "logout" )
+									.$( "getUserService" )
+									.$( "getUserId" );
 
-					model.$( "getAuthenticationService" ).$returns( mockAuthService );
+								model.$( "getAuthenticationService" ).$returns( mockAuthService );
 
-					// Should not throw
-					model.logout();
+								// Should not throw even when not logged in
+								model.logout();
+							}
+						);
+					}
+				);
 
-					// Verify logout was called
-					expect( mockAuthService.$callLog().logout ).notToBeEmpty();
-				} );
+				describe(
+					"isLoggedIn()",
+					function() {
+						it(
+							"returns true when user is logged in",
+							function() {
+								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
+								mockAuthService
+									.$( "isLoggedIn" )
+									.$( "getUser" )
+									.$( "authenticate" )
+									.$( "login" )
+									.$( "logout" )
+									.$( "getUserService" )
+									.$( "getUserId" );
 
-				it( "handles logout when not logged in silently", function(){
-					var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
-					mockAuthService
-						.$( "isLoggedIn" )
-						.$( "getUser" )
-						.$( "authenticate" )
-						.$( "login" )
-						.$( "logout" )
-						.$( "getUserService" )
-						.$( "getUserId" );
+								mockAuthService.$( "isLoggedIn" ).$returns( true );
 
-					model.$( "getAuthenticationService" ).$returns( mockAuthService );
+								model.$( "getAuthenticationService" ).$returns( mockAuthService );
 
-					// Should not throw even when not logged in
-					model.logout();
-				} );
+								expect( model.isLoggedIn() ).toBeTrue();
+							}
+						);
 
-			} );
+						it(
+							"returns false when user is not logged in",
+							function() {
+								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
+								mockAuthService
+									.$( "isLoggedIn" )
+									.$( "getUser" )
+									.$( "authenticate" )
+									.$( "login" )
+									.$( "logout" )
+									.$( "getUserService" )
+									.$( "getUserId" );
 
-			describe( "isLoggedIn()", function(){
+								mockAuthService.$( "isLoggedIn" ).$returns( false );
 
-				it( "returns true when user is logged in", function(){
-					var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
-					mockAuthService
-						.$( "isLoggedIn" )
-						.$( "getUser" )
-						.$( "authenticate" )
-						.$( "login" )
-						.$( "logout" )
-						.$( "getUserService" )
-						.$( "getUserId" );
+								model.$( "getAuthenticationService" ).$returns( mockAuthService );
 
-					mockAuthService.$( "isLoggedIn" ).$returns( true );
+								expect( model.isLoggedIn() ).toBeFalse();
+							}
+						);
+					}
+				);
 
-					model.$( "getAuthenticationService" ).$returns( mockAuthService );
+				describe(
+					"getCurrentUser()",
+					function() {
+						it(
+							"returns user when logged in",
+							function() {
+								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
+								mockAuthService
+									.$( "isLoggedIn" )
+									.$( "getUser" )
+									.$( "authenticate" )
+									.$( "login" )
+									.$( "logout" )
+									.$( "getUserService" )
+									.$( "getUserId" );
 
-					expect( model.isLoggedIn() ).toBeTrue();
-				} );
+								var mockUser = createMock( "app.models.User" );
+								mockUser.$( "getId" ).$returns( "user-456" );
+								mockUser.$( "getEmail" ).$returns( "test@example.com" );
 
-				it( "returns false when user is not logged in", function(){
-					var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
-					mockAuthService
-						.$( "isLoggedIn" )
-						.$( "getUser" )
-						.$( "authenticate" )
-						.$( "login" )
-						.$( "logout" )
-						.$( "getUserService" )
-						.$( "getUserId" );
+								mockAuthService.$( "getUser" ).$returns( mockUser );
 
-					mockAuthService.$( "isLoggedIn" ).$returns( false );
+								model.$( "getAuthenticationService" ).$returns( mockAuthService );
 
-					model.$( "getAuthenticationService" ).$returns( mockAuthService );
+								var user = model.getCurrentUser();
+								expect( user ).notToBeEmpty();
+								expect( user.getId() ).toBe( "user-456" );
+							}
+						);
 
-					expect( model.isLoggedIn() ).toBeFalse();
-				} );
+						it(
+							"returns null when not logged in",
+							function() {
+								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
+								mockAuthService
+									.$( "isLoggedIn" )
+									.$( "getUser" )
+									.$( "authenticate" )
+									.$( "login" )
+									.$( "logout" )
+									.$( "getUserService" )
+									.$( "getUserId" );
 
-			} );
+								// Simulate NoUserLoggedIn exception by throwing SecurityException
+								mockAuthService.$( "getUser" ).$throws(
+										excType    = "SecurityException",
+										excMessage = "No user is logged in.",
+										excDetail  = "There is no authenticated user."
+									);
 
-			describe( "getCurrentUser()", function(){
+								model.$( "getAuthenticationService" ).$returns( mockAuthService );
 
-				it( "returns user when logged in", function(){
-					var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
-					mockAuthService
-						.$( "isLoggedIn" )
-						.$( "getUser" )
-						.$( "authenticate" )
-						.$( "login" )
-						.$( "logout" )
-						.$( "getUserService" )
-						.$( "getUserId" );
-
-					var mockUser = createMock( "app.models.User" );
-					mockUser.$( "getId" ).$returns( "user-456" );
-					mockUser.$( "getEmail" ).$returns( "test@example.com" );
-
-					mockAuthService.$( "getUser" ).$returns( mockUser );
-
-					model.$( "getAuthenticationService" ).$returns( mockAuthService );
-
-					var user = model.getCurrentUser();
-					expect( user ).notToBeEmpty();
-					expect( user.getId() ).toBe( "user-456" );
-				} );
-
-				it( "returns null when not logged in", function(){
-					var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
-					mockAuthService
-						.$( "isLoggedIn" )
-						.$( "getUser" )
-						.$( "authenticate" )
-						.$( "login" )
-						.$( "logout" )
-						.$( "getUserService" )
-						.$( "getUserId" );
-
-					// Simulate NoUserLoggedIn exception by throwing SecurityException
-					mockAuthService.$( "getUser" ).$throws(
-						excType     : "SecurityException",
-						excMessage  : "No user is logged in.",
-						excDetail   : "There is no authenticated user."
-					);
-
-					model.$( "getAuthenticationService" ).$returns( mockAuthService );
-
-					expect( model.getCurrentUser() ).toBeEmpty();
-				} );
-
-			} );
-
-		} );
-
+								expect( model.getCurrentUser() ).toBeEmpty();
+							}
+						);
+					}
+				);
+			}
+		);
 	}
-
 }

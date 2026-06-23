@@ -45,8 +45,8 @@
 		<section class="content-card form-card" x-show="tab === 'profile'">
 			<div class="content-card-header"><h3 class="content-card-title">Personal Information</h3></div>
 			<div class="form-grid">
-				<label>First Name<input type="text" value="#encodeForHTMLAttribute( listFirst( prc.selectedUser.name, ' ' ) )#"></label>
-				<label>Last Name<input type="text" value="#encodeForHTMLAttribute( listLast( prc.selectedUser.name, ' ' ) )#"></label>
+				<label>First Name<input type="text" value="#encodeForHTMLAttribute( listFirst( prc.selectedUser.name, " " ) )#"></label>
+				<label>Last Name<input type="text" value="#encodeForHTMLAttribute( listLast( prc.selectedUser.name, " " ) )#"></label>
 				<label class="span-2">Email Address<input type="email" value="#encodeForHTMLAttribute( prc.selectedUser.email )#"></label>
 				<label>Role<select><bx:loop array="#prc.roles#" item="role"><option>#encodeForHTML( role.role )#</option></bx:loop></select></label>
 				<label>Status<select><option>#encodeForHTML( prc.selectedUser.status )#</option><option>Active</option><option>Pending</option><option>Locked</option></select></label>

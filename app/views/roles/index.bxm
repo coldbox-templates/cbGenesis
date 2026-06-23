@@ -16,7 +16,7 @@
 				<button type="button" class="role-list-item" :class="selected === #roleIndex# ? 'active' : ''" @click="selected = #roleIndex#">
 					<strong>#encodeForHTML( role.role )#</strong>
 					<span>#encodeForHTML( role.users )# users &middot; #arrayLen( role.permissions )# permissions</span>
-					<bx:if condition="#role.system#"><em>System</em></bx:if>
+					<bx:if condition = "#role.system#"><em>System</em></bx:if>
 				</button>
 			</bx:loop>
 		</div>
@@ -24,10 +24,10 @@
 
 	<section class="content-card permission-matrix-panel">
 		<bx:loop array="#prc.roles#" item="role" index="roleIndex">
-			<div x-show="selected === #roleIndex#" <bx:if condition="#roleIndex != 1#">x-cloak</bx:if>>
+			<div x-show="selected === #roleIndex#" <bx:if condition = "#roleIndex != 1#">x-cloak</bx:if>>
 				<div class="content-card-header matrix-heading">
 					<div><h3 class="content-card-title">#encodeForHTML( role.role )# &mdash; Permission Matrix</h3><p>#encodeForHTML( role.description )#</p></div>
-					<bx:if condition="#role.system#"><span class="chip chip-success">System Role</span></bx:if>
+					<bx:if condition = "#role.system#"><span class="chip chip-success">System Role</span></bx:if>
 				</div>
 				<div class="responsive-table-wrap">
 					<table class="admin-table permission-matrix">
@@ -37,7 +37,8 @@
 								<tr>
 									<td><strong>#encodeForHTML( moduleName )#</strong></td>
 									<bx:loop array="#prc.permissionActions#" item="action">
-										<td><label class="matrix-check"><input type="checkbox" <bx:if condition="#role.permissions.findNoCase( moduleName & ':' & action ) || role.permissions.findNoCase( moduleName & ':*' )#">checked</bx:if> <bx:if condition="#role.system#">disabled</bx:if>><span></span></label></td>
+										<td><label class="matrix-check"><input type="checkbox" <bx:if condition = "#role.permissions.findNoCase( moduleName & ":" & action ) ||
+	role.permissions.findNoCase( moduleName & ":*" )#">checked</bx:if> <bx:if condition = "#role.system#">disabled</bx:if>><span></span></label></td>
 									</bx:loop>
 								</tr>
 							</bx:loop>

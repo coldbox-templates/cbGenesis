@@ -16,6 +16,7 @@ docker/.db/**
 
 # logs + tests
 app/logs/**
+!app/logs/.gitkeep
 runtime/logs/**
 tests/results/**
 

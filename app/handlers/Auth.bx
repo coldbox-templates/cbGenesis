@@ -15,45 +15,44 @@ class extends="coldbox.system.EventHandler" {
 	// Login
 	// ============================================================
 
-	function login( event, rc, prc ){
-		prc.title = "Sign In"
-		event.setView( layout: "AuthSplit", view: "auth/login" )
+	function login( event, rc, prc ) {
+		prc.title = "Sign In";
+		event.setView( layout = "AuthSplit", view = "auth/login" );
 	}
 
 	// ============================================================
 	// Register
 	// ============================================================
 
-	function register( event, rc, prc ){
-		prc.title = "Create Account"
-		event.setView( layout: "AuthSplit", view: "auth/register" )
+	function register( event, rc, prc ) {
+		prc.title = "Create Account";
+		event.setView( layout = "AuthSplit", view = "auth/register" );
 	}
 
 	// ============================================================
 	// Forgot Password
 	// ============================================================
 
-	function forgotPassword( event, rc, prc ){
-		prc.title = "Forgot Password"
-		event.setView( layout: "AuthCenter", view: "auth/forgotPassword" )
+	function forgotPassword( event, rc, prc ) {
+		prc.title = "Forgot Password";
+		event.setView( layout = "AuthCenter", view = "auth/forgotPassword" );
 	}
 
 	// ============================================================
 	// Reset Password
 	// ============================================================
 
-	function resetPassword( event, rc, prc ){
+	function resetPassword( event, rc, prc ) {
 		prc.title = "Set New Password";
-		prc.token = rc.token ?: "";          // Real impl: validate this token against DB
-		event.setView( layout: "AuthCenter", view: "auth/resetPassword" )
+		prc.token = rc.token ?: ""; // Real impl: validate this token against DB
+		event.setView( layout = "AuthCenter", view = "auth/resetPassword" );
 	}
 
 	// ============================================================
 	// Logout
 	// ============================================================
 
-	function logout( event, rc, prc ){
-		return relocate( "auth/login" )
+	function logout( event, rc, prc ) {
+		return relocate( "auth/login" );
 	}
-
 }

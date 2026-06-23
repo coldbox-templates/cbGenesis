@@ -1,5 +1,4 @@
-<!---
-    Messagebox Component
+<!--- Messagebox Component
     Renders a themed, dismissible alert box. Powered by the messageBox Alpine component.
 
     Usage:
@@ -27,29 +26,30 @@
         info    → ph-info
         success → ph-check-circle
         warning → ph-warning
-        error   → ph-x-circle
---->
-<bx:param name="args.type"        default="info" />
-<bx:param name="args.message"     default="" />
-<bx:param name="args.title"       default="" />
-<bx:param name="args.dismissible" default="true" />
-<bx:param name="args.autoDismiss" default="0" />
-<bx:param name="args.classes"     default="" />
+        error   → ph-x-circle --->  
+<bx:param name="args.type" default="info"/>
+<bx:param name="args.message" default=""/>
+<bx:param name="args.title" default=""/>
+<bx:param name="args.dismissible" default="true"/>
+<bx:param name="args.autoDismiss" default="0"/>
+<bx:param name="args.classes" default=""/>
 
 <bx:if len( trim( args.message ) )>
 
     <bx:set localIcons = {
-        "info"    : "ph-info",
-        "success" : "ph-check-circle",
-        "warning" : "ph-warning",
-        "error"   : "ph-x-circle"
-    } />
-    <bx:set localType = listFind( "info,success,warning,error", args.type ) ? args.type : "info" />
-    <bx:set localIcon = localIcons[ localType ] />
+	"info"   : "ph-info",
+	"success": "ph-check-circle",
+	"warning": "ph-warning",
+	"error"  : "ph-x-circle"
+}>
+    <bx:set localType = listFind( "info,success,warning,error", args.type ) ? args.type : "info">
+    <bx:set localIcon = localIcons[ localType ]>
 
     <bx:output>
-    <div class="messagebox messagebox--#encodeForHTMLAttribute( localType )##( len( args.classes ) ? ' ' & args.classes : '' )#"
-         x-data="messageBox({ autoDismiss: #javaCast( 'int', val( args.autoDismiss ) )# })"
+    <div class="messagebox messagebox--#encodeForHTMLAttribute( localType )##(
+	len( args.classes ) ? " " & args.classes : ""
+)#"
+         x-data="messageBox({ autoDismiss: #javaCast( "int", val( args.autoDismiss ) )# })"
          x-show="visible"
          x-transition.opacity.duration.200ms
          role="alert"

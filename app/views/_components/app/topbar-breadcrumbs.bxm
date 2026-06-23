@@ -1,11 +1,8 @@
-<!---
-	Top Bar Breadcrumbs Component
+<!--- Top Bar Breadcrumbs Component
 	This component renders the breadcrumb navigation in the top bar of the application.
 
 	Usage (from within the top bar component):
-		#view( "_components/app/topbar-breadcrumbs" )#
-
---->
+		#view( "_components/app/topbar-breadcrumbs" )# --->  
 <bx:output>
 <nav aria-label="Breadcrumb">
 	<ol class="topbar-breadcrumb">

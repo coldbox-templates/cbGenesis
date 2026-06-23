@@ -1,5 +1,4 @@
-<!---
-    Boolean Switch Components
+<!--- Boolean Switch Components
 	This includes a visual representation of a boolean value and a hidden
 	form field so the current state is submitted with the parent form.
 
@@ -12,21 +11,20 @@
 		model : string — alias for name (default: "")
 		trueValue : string — submitted value when enabled (default: "true")
 		falseValue : string — submitted value when disabled (default: "false")
-		classes : string — extra CSS classes (default: "")
---->
-<bx:param name="args.value" default="false" />
-<bx:param name="args.name" default="" />
-<bx:param name="args.model" default="" />
-<bx:param name="args.trueValue" default="true" />
-<bx:param name="args.falseValue" default="false" />
-<bx:param name="args.classes" default="" />
+		classes : string — extra CSS classes (default: "") --->  
+<bx:param name="args.value" default="false"/>
+<bx:param name="args.name" default=""/>
+<bx:param name="args.model" default=""/>
+<bx:param name="args.trueValue" default="true"/>
+<bx:param name="args.falseValue" default="false"/>
+<bx:param name="args.classes" default=""/>
 
 <bx:set localIsTrue = !!args.value>
-<bx:set localName = len( trim( args.name ?: "" ) ) ? trim( args.name ) : trim( args.model ?: "")>
+<bx:set localName = len( trim( args.name ?: "" ) ) ? trim( args.name ) : trim( args.model ?: "" )>
 
 <bx:output>
 <div
-	class="switch#args.classes.len() ? ' ' & args.classes : ''#"
+	class="switch#args.classes.len() ? " " & args.classes : ""#"
 	x-data="switchComponent( {
 		checked: #localIsTrue#,
 		name: '#encodeForHTMLAttribute( localName )#',

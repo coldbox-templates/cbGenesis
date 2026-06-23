@@ -1,15 +1,16 @@
 /**
  * A cbgenesis basic entity which provides uniformity to all objects
  */
-class{
-
+class {
 	/**
 	 * --------------------------------------------------------------------------
 	 * DI
 	 * --------------------------------------------------------------------------
 	 */
 	property name="log" inject="logbox:logger:{this}";
+
 	property name="populator" inject="wirebox:populator";
+
 	property name="validationManager" inject="ValidationManager@cbvalidation";
 
 	/**
@@ -18,6 +19,7 @@ class{
 	 * --------------------------------------------------------------------------
 	 */
 	property name="primaryKey" type="string";
+
 	property name="entityName" type="string";
 
 	/**
@@ -27,8 +29,11 @@ class{
 	 */
 
 	property name="id";
+
 	property name="createdDate" type="date";
+
 	property name="modifiedDate" type="date";
+
 	property name="isActive" type="boolean" default="true";
 
 	/**
@@ -37,34 +42,36 @@ class{
 	 * @primaryKey - The primary key of the entity, defaults to "id"
 	 * @entityName - The name of the entity, defaults to the class name
 	 */
-	function init( primaryKey="id", entityName ) {
-		variables.isActive    = true
-		variables.createdDate = variables.modifiedDate = now()
-		variables.entityName = arguments.entityName ?: this.$bx.meta.name
-		variables.primaryKey = arguments.primaryKey
+	function init( primaryKey = "id", entityName ) {
+		variables.isActive = true;
+		variables.createdDate = variables.modifiedDate = now();
+		variables.entityName = arguments.entityName ?:
+			this
+				.$bx
+				.meta
+				.name;
+		variables.primaryKey = arguments.primaryKey;
 
 		// Incorporate default includes for the base class.
 		if ( !isNull( this.memento.defaultIncludes ) && isNull( this.memento.baseIncluded ) ) {
-			this.memento.defaultIncludes.append(
-				[
-					variables.primaryKey,
-					"createdDate",
-					"modifiedDate",
-					"isActive"
-				],
-				true
-			)
-			this.memento.baseIncluded = true
+			this
+				.memento
+				.defaultIncludes
+				.append(
+					[ variables.primaryKey, "createdDate", "modifiedDate", "isActive"],
+					true
+				);
+			this.memento.baseIncluded = true;
 		}
 
-		return this
+		return this;
 	}
 
 	/**
 	 * Do we have a new or loaded entity
 	 */
-	boolean function isLoaded(){
-		return ( !isNull( variables.id ) && len( variables.id ) )
+	boolean function isLoaded() {
+		return ( !isNull( variables.id ) && len( variables.id ) );
 	}
 
 	/***** Persistence Events : Modeled After ORM Events ******/
@@ -72,47 +79,49 @@ class{
 	/**
 	 * Called before an entity is inserted
 	 */
-	function preInsert( entity ){
-		var rightNow = now()
+	function preInsert( entity ) {
+		var rightNow = now();
 		// prevent override of explicit stamps from imports
 		if ( isNull( variables.createdDate ) ) {
-			variables.createdDate = rightNow
+			variables.createdDate = rightNow;
 		}
 		if ( isNull( variables.modifiedDate ) ) {
-			variables.modifiedDate = rightNow
+			variables.modifiedDate = rightNow;
 		}
 	}
 
 	/**
 	 * Called after an entity is inserted
 	 */
-	function postInsert( entity ){
+	function postInsert( entity ) {
+
 	}
 
 	/**
 	 * Called before an entity is updated
 	 */
-	function preUpdate( entity ){
-		variables.modifiedDate = now()
+	function preUpdate( entity ) {
+		variables.modifiedDate = now();
 	}
 
 	/**
 	 * Called after an entity is updated
 	 */
-	function postUpdate( entity ){
+	function postUpdate( entity ) {
+
 	}
 
 	/**
 	 * Called before an entity is deleted
 	 */
-	function preDelete( entity ){
+	function preDelete( entity ) {
+
 	}
 
 	/**
 	 * Called after an entity is deleted
 	 */
-	function postDelete( entity ){
+	function postDelete( entity ) {
+
 	}
-
-
 }

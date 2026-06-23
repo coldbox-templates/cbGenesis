@@ -5,7 +5,7 @@
  */
 class {
 
-	function configure(){
+	function configure() {
 		/**
 		 * --------------------------------------------------------------------------
 		 * App Routes
@@ -15,26 +15,27 @@ class {
 		 */
 
 		// A nice healthcheck route example
-		route( "/healthcheck", function( event, rc, prc ){
-			return "Ok!"
-		} )
+		route(
+			"/healthcheck",
+			function( event, rc, prc ) {
+				return "Ok!";
+			}
+		);
 
 		// App Routes
-		route( pattern: "dashboard", target: "Dashboard.index" )
-		route( pattern: "profile", target: "Profile.index" )
-		route( pattern: "settings", target: "Settings.index" )
-		route( pattern: "users", target: "Users.index" )
-		route( pattern: "roles", target: "Roles.index" )
-		route( pattern: "permissions", target: "Permissions.index" )
+		route( pattern = "dashboard", target = "Dashboard.index" );
+		route( pattern = "profile", target = "Profile.index" );
+		route( pattern = "settings", target = "Settings.index" );
+		route( pattern = "users", target = "Users.index" );
+		route( pattern = "roles", target = "Roles.index" );
+		route( pattern = "permissions", target = "Permissions.index" );
 
 		// Auth Routes
-		post( pattern: "logout", target: "Auth.logout" )
-
+		post( pattern = "logout", target = "Auth.logout" );
 
 		// @app_routes@
 
 		// Conventions-Based Routing
-		route( ":handler/:action?" ).end()
+		route( ":handler/:action?" ).end();
 	}
-
 }

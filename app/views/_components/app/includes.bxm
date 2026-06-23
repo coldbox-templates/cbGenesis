@@ -1,5 +1,4 @@
-<!---
-    This view is used to include the necessary meta tags, CSS, and JS for the application.
+<!--- This view is used to include the necessary meta tags, CSS, and JS for the application.
     Place inside <head> before closing </head>.
     Outputs the FOUC-prevention script (must run before CSS) followed by
     the Vite-managed stylesheet and JS module tags.
@@ -9,22 +8,18 @@
 		#view( view: "_components/app/includes", args: { title: "Page Title" } )#
 
 	Args:
-		title : string — optional page title (default: "App Name")
---->
-<bx:param
-	name="args.title"
-	default="#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#"
-/>
+		title : string — optional page title (default: "App Name") --->  
+<bx:param name="args.title" default="#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#"/>
 
 <bx:output>
 <meta charset="utf-8">
-<!--- ViewPorts --->
+<!--- ViewPorts --->  
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<!--- Page Title --->
+<!--- Page Title --->  
 <title>#args.title#</title>
-<!--- SES URL Base --->
+<!--- SES URL Base --->  
 <base href="#event.getHTMLBaseURL()#" />
-<!--- Vite CSS + JS --->
+<!--- Vite CSS + JS --->  
 <script>
     (() => {
 		// Prevent FOUC (Flash of Unstyled Content) by setting the theme and sidebar collapsed state before CSS loads
@@ -37,5 +32,7 @@
         document.documentElement.setAttribute( "data-sidebar-collapsed", collapsed ? "true" : "false" );
     })();
 </script>
-#vite( [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ] )#
+#vite(
+	[ "resources/assets/scss/app.scss", "resources/assets/js/App.js"]
+)#
 </bx:output>

@@ -1,0 +1,130 @@
+/**
+ * The base model test case will use the 'model' annotation as the instantiation path
+ * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
+ * responsibility to update the model annotation instantiation path and init your model.
+ */
+
+@model( "app.models.Permission" )
+class extends="coldbox.system.testing.BaseModelTest" {
+
+	/*********************************** LIFE CYCLE Methods ***********************************/
+
+	function beforeAll() {
+		super.beforeAll();
+
+		// setup the model
+		super.setup();
+
+		// init the model object
+		variables.permission = getInstance( "system.Permission" );
+	}
+
+	function afterAll() {
+		super.afterAll();
+	}
+
+	/*********************************** BDD SUITES ***********************************/
+
+	function run() {
+		describe(
+			"A Permission",
+			function() {
+				it(
+					"can be created",
+					function() {
+						expect( variables.permission ).toBeComponent();
+					}
+				);
+
+				it(
+					"has default values on creation",
+					function() {
+						expect( variables.permission.getIsActive() ).toBeTrue();
+						expect( variables.permission.getPermission() ).toBe( "" );
+						expect( variables.permission.getDescription() ).toBe( "" );
+						expect( variables.permission.isLoaded() ).toBeFalse();
+					}
+				);
+
+				it(
+					"has a non-persisted id before persistence",
+					function() {
+						expect( variables.permission.getId() ).toBeNull();
+						expect( variables.permission.isLoaded() ).toBeFalse();
+					}
+				);
+
+				it(
+					"can get a persisted id after setting it",
+					function() {
+						variables.permission.setId( createUUID() );
+						expect( variables.permission.getId() ).notToBeEmpty();
+						expect( variables.permission.isLoaded() ).toBeTrue();
+					}
+				);
+
+				it(
+					"can set and get permission",
+					function() {
+						variables.permission.setPermission( "users.manage" );
+						expect( variables.permission.getPermission() ).toBe( "users.manage" );
+					}
+				);
+
+				it(
+					"can set and get description",
+					function() {
+						variables.permission.setDescription( "Manage users" );
+						expect( variables.permission.getDescription() ).toBe( "Manage users" );
+					}
+				);
+
+				it(
+					"has memento configuration with default includes",
+					function() {
+						expect( variables.permission ).toHaveKey( "memento" );
+						expect( variables
+								.permission
+								.memento
+								.defaultIncludes ).toInclude( "permission" );
+						expect( variables
+								.permission
+								.memento
+								.defaultIncludes ).toInclude( "description" );
+					}
+				);
+
+				it(
+					"has validation constraints",
+					function() {
+						expect( variables.permission ).toHaveKey( "constraints" );
+						expect( variables.permission.constraints ).toHaveKey( "permission" );
+						expect( variables.permission.constraints ).toHaveKey( "description" );
+					}
+				);
+
+				it(
+					"can produce a memento struct",
+					function() {
+						variables.permission.setPermission( "users.read" );
+						variables.permission.setDescription( "Read users" );
+
+						var memento = variables.permission.getMemento();
+						expect( memento ).toHaveKey( "permission" );
+						expect( memento ).toHaveKey( "description" );
+						expect( memento.permission ).toBe( "users.read" );
+						expect( memento.description ).toBe( "Read users" );
+					}
+				);
+
+				it(
+					"can get a permission slug",
+					function() {
+						variables.permission.setPermission( "  Users.Manage  " );
+						expect( variables.permission.getPermissionSlug() ).toBe( "users.manage" );
+					}
+				);
+			}
+		);
+	}
+}

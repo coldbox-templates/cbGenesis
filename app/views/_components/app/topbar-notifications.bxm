@@ -1,5 +1,4 @@
-<!---
-    Top Bar Notifications Component
+<!--- Top Bar Notifications Component
     Renders a bell button in the header's action list.
     Extend with a real notifications store / dropdown once your
     notification service is wired up.
@@ -7,8 +6,7 @@
     Usage (from within a <ul> in the header):
         #view( "_components/app/top-bar-notifications" )#
 
-    Returns a <li> element.
---->
+    Returns a <li> element. --->  
 <bx:output>
 #view( "_components/app/notificationBell" )#
 </bx:output>

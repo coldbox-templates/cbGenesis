@@ -3,12 +3,13 @@
  * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
  * responsibility to update the model annotation instantiation path and init your model.
  */
+
 @model( "app.models.User" )
 class extends="coldbox.system.testing.BaseModelTest" {
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
-	function beforeAll(){
+	function beforeAll() {
 		super.beforeAll();
 
 		// setup the model
@@ -18,44 +19,59 @@ class extends="coldbox.system.testing.BaseModelTest" {
 		variables.user = model.init();
 	}
 
-	function afterAll(){
+	function afterAll() {
 		super.afterAll();
 	}
 
 	/*********************************** BDD SUITES ***********************************/
 
-	function run(){
-		describe( "A User", function(){
-			it( "can be created", function(){
-				expect( user ).toBeComponent();
-			} );
+	function run() {
+		describe(
+			"A User",
+			function() {
+				it(
+					"can be created",
+					function() {
+						expect( user ).toBeComponent();
+					}
+				);
 
-			it( "can get a user's full name", function(){
-				expect(
-					user
-						.setFirstname( "luis" )
-						.setLastName( "majano" )
-						.getFullName()
-				).toBe( "luis majano" );
-			} );
+				it(
+					"can get a user's full name",
+					function() {
+						expect( user
+								.setFirstname( "luis" )
+								.setLastName( "majano" )
+								.getFullName() ).toBe( "luis majano" );
+					}
+				);
 
-			it( "can get a non persisted id", function(){
-				expect( user.getId() ).toBeNull();
-				expect( user.isLoaded() ).toBeFalse();
-			} );
+				it(
+					"can get a non persisted id",
+					function() {
+						expect( user.getId() ).toBeNull();
+						expect( user.isLoaded() ).toBeFalse();
+					}
+				);
 
-			it( "can get a persisted id", function(){
-				user.setId( createUUID() );
-				expect( user.getId() ).notToBeEmpty();
-				expect( user.isLoaded() ).toBeTrue();
-			} );
+				it(
+					"can get a persisted id",
+					function() {
+						user.setId( createUUID() );
+						expect( user.getId() ).notToBeEmpty();
+						expect( user.isLoaded() ).toBeTrue();
+					}
+				);
 
-			it( "can determine if a user has been verified or not", function(){
-				expect( user.isEmailVerified() ).toBeFalse();
-				user.setVerifiedAt( now() );
-				expect( user.isEmailVerified() ).toBeTrue();
-			} );
-		} );
+				it(
+					"can determine if a user has been verified or not",
+					function() {
+						expect( user.isEmailVerified() ).toBeFalse();
+						user.setVerifiedAt( now() );
+						expect( user.isEmailVerified() ).toBeTrue();
+					}
+				);
+			}
+		);
 	}
-
 }

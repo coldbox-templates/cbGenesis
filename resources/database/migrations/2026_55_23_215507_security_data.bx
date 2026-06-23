@@ -1,0 +1,148 @@
+class {
+
+	function up( schema, qb ) {
+
+		var adminRoleId = "00000000-0000-0000-0000-000000000001"
+		var permissions = [
+			{
+				id          : "00000000-0000-0000-0000-000000000101",
+				permission  : "roles:read",
+				description : "Read roles"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000102",
+				permission  : "roles:write",
+				description : "Create and update roles"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000103",
+				permission  : "roles:delete",
+				description : "Delete roles"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000104",
+				permission  : "roles:admin",
+				description : "Full role administration"
+			},
+
+			{
+				id          : "00000000-0000-0000-0000-000000000201",
+				permission  : "users:read",
+				description : "Read users"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000202",
+				permission  : "users:write",
+				description : "Create and update users"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000203",
+				permission  : "users:delete",
+				description : "Delete users"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000204",
+				permission  : "users:admin",
+				description : "Full user administration"
+			},
+
+			{
+				id          : "00000000-0000-0000-0000-000000000301",
+				permission  : "permissions:read",
+				description : "Read permissions"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000302",
+				permission  : "permissions:write",
+				description : "Create and update permissions"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000303",
+				permission  : "permissions:delete",
+				description : "Delete permissions"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000304",
+				permission  : "permissions:admin",
+				description : "Full permission administration"
+			},
+
+			{
+				id          : "00000000-0000-0000-0000-000000000401",
+				permission  : "settings:read",
+				description : "Read settings"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000402",
+				permission  : "settings:write",
+				description : "Create and update settings"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000403",
+				permission  : "settings:delete",
+				description : "Delete settings"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000404",
+				permission  : "settings:admin",
+				description : "Full settings administration"
+			}
+		]
+
+		// Create Admin role
+		qb.from( "roles" ).insert( {
+			roleId      : adminRoleId,
+			role        : "Admin",
+			description : "System Administrator",
+			isActive    : true
+		} )
+
+		// Create permissions and assign all to Admin
+		permissions.each( ( permission ) => {
+
+			qb.newquery().from( "permissions" ).insert( {
+				permissionId : permission.id,
+				permission   : permission.permission,
+				description  : permission.description,
+				isActive     : true
+			} )
+
+			qb.newquery().from( "role_permissions" ).insert( {
+				FK_roleId       : adminRoleId,
+				FK_permissionId : permission.id
+			} )
+
+		} )
+
+	}
+
+	function down( schema, qb ) {
+		var permissionNames = [
+			"roles:read",
+			"roles:write",
+			"roles:delete",
+			"roles:admin",
+
+			"users:read",
+			"users:write",
+			"users:delete",
+			"users:admin",
+
+			"permissions:read",
+			"permissions:write",
+			"permissions:delete",
+			"permissions:admin",
+
+			"settings:read",
+			"settings:write",
+			"settings:delete",
+			"settings:admin"
+		]
+
+		qb.from( "role_permissions" ).delete()
+		qb.from( "user_permissions" ).delete()
+		qb.from( "roles" ).delete()
+		qb.from( "permissions" ).delete()
+	}
+
+}
