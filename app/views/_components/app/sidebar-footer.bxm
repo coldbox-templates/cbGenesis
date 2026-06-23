@@ -14,7 +14,7 @@
 <div class="sidebar-footer" id="sidebar-footer">
 
 	<!--- User profile link --->
-	<a href="#event.route( "profile" )#" class="sidebar-user text-decoration-none">
+	<a href="#event.route( "profile" )#" class="sidebar-user text-decoration-none" @click="$store.sidebar.close()">
 		<span class="sidebar-user-avatar">
 			#( prc.authUser.getInitials() ?: "A" )#
 		</span>

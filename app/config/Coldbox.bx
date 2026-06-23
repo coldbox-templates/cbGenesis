@@ -75,7 +75,11 @@ class {
 			// The default theme for the app, can be "light" or "dark"
 			cbDefaultTheme: "dark",
 			// The login layout to use, can be "AuthCenter" or "AuthSplit" or your own custom layout.
-			cbLoginLayout: "AuthSplit"
+			cbLoginLayout: "AuthSplit",
+			// Allow users to register themselves, if false, the register page will be disabled.
+			cbAllowRegistration: true,
+			// Allow users to reset their password, if false, the forgot password page will be disabled.
+			cbAllowForgotPassword: true
 		}
 		variables.coldbox.appName = variables.settings.cbAppName
 

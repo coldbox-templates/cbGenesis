@@ -1,20 +1,30 @@
 import Alpine from "alpinejs";
 
+function getSavedCollapsedState() {
+	try {
+		return localStorage.getItem( "sidebar-collapsed" ) === "true";
+	} catch ( error ) {
+		return false;
+	}
+}
+
+function syncCollapsedState( collapsed ) {
+	document.documentElement.setAttribute( "data-sidebar-collapsed", collapsed ? "true" : "false" );
+}
+
 Alpine.store( "sidebar", {
-	collapsed : false,
+	collapsed : getSavedCollapsedState(),
 	open      : false,
 
 	init() {
-		const saved = localStorage.getItem( "sidebar-collapsed" );
-		if ( saved !== null ) {
-			this.collapsed = saved === "true";
-		}
+		syncCollapsedState( this.collapsed );
 	},
 
 	toggle() {
 		if ( window.innerWidth >= 992 ) {
 			this.collapsed = !this.collapsed;
 			localStorage.setItem( "sidebar-collapsed", String( this.collapsed ) );
+			syncCollapsedState( this.collapsed );
 		} else {
 			this.open = !this.open;
 		}

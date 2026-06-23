@@ -43,6 +43,7 @@
                 <li>
                     <a href="#event.route( "dashboard" )#"
                        class="sidebar-nav-item"
+                       @click="$store.sidebar.close()"
                        :class="path === '/' || #event.routeIs( "dashboard" )# ? 'active' : ''"
                        title="Dashboard"
 					>
@@ -60,6 +61,7 @@
                 <li>
                     <a href="#event.route( "users" )#"
                        class="sidebar-nav-item"
+                       @click="$store.sidebar.close()"
                        :class="#event.routeIs( "users" )# ? 'active' : ''"
                        title="Users">
                         <i class="ph-duotone ph-users sidebar-nav-icon" aria-hidden="true"></i>
@@ -69,6 +71,7 @@
                 <li>
                     <a href="#event.route( "roles" )#"
                        class="sidebar-nav-item"
+                       @click="$store.sidebar.close()"
                        :class="#event.routeIs( "roles" )# ? 'active' : ''"
                        title="Roles">
                         <i class="ph-duotone ph-identification-badge sidebar-nav-icon" aria-hidden="true"></i>
@@ -78,6 +81,7 @@
                 <li>
                     <a href="#event.route( "permissions" )#"
                        class="sidebar-nav-item"
+                       @click="$store.sidebar.close()"
                        :class="#event.routeIs( "permissions" )# ? 'active' : ''"
                        title="Permissions">
                         <i class="ph-duotone ph-key sidebar-nav-icon" aria-hidden="true"></i>
@@ -87,6 +91,7 @@
                 <li>
                     <a href="#event.route( "settings" )#"
                        class="sidebar-nav-item"
+                       @click="$store.sidebar.close()"
                        :class="#event.routeIs( "settings" )# ? 'active' : ''"
                        title="Settings">
                         <i class="ph-duotone ph-gear sidebar-nav-icon" aria-hidden="true"></i>

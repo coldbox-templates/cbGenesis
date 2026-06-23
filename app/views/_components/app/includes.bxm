@@ -25,13 +25,17 @@
 <!--- SES URL Base --->
 <base href="#event.getHTMLBaseURL()#" />
 <!--- Vite CSS + JS --->
-#vite( [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ] )#
-<!--- Theme --->
 <script>
     (() => {
+		// Prevent FOUC (Flash of Unstyled Content) by setting the theme and sidebar collapsed state before CSS loads
         var t = localStorage.getItem( "theme" ) ||
                 ( matchMedia( "(prefers-color-scheme: dark)" ).matches ? "dark" : "light" );
         document.documentElement.setAttribute( "data-bs-theme", t );
+
+		// Set sidebar collapsed state from localStorage
+		var collapsed = localStorage.getItem( "sidebar-collapsed" ) === "true";
+        document.documentElement.setAttribute( "data-sidebar-collapsed", collapsed ? "true" : "false" );
     })();
 </script>
+#vite( [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ] )#
 </bx:output>
