@@ -1,7 +1,7 @@
 <bx:output>
 <!--- Flash message from previous action (e.g. after password reset) --->
 <bx:if prc.keyExists( 'flash' )>
-    #view( view: "_partials/messagebox", args: {
+    #view( view: "_components/ui/messagebox", args: {
         type       : prc.flash.type,
         message    : prc.flash.message,
         dismissible: true,
@@ -17,11 +17,11 @@
     </div>
 
     <!--- General error (e.g. CSRF expiry) --->
-    #view( view: "_partials/messagebox", args: { type: "error", message: prc.error ?: "", dismissible: false } )#
+    #view( view: "_components/ui/messagebox", args: { type: "error", message: prc.error ?: "", dismissible: false } )#
 
     <!--- Server-side field validation errors --->
     <bx:if prc.keyExists( 'errors' ) && !structIsEmpty( prc.errors )>
-        #view( view: "_partials/messagebox", args: { type: "error", message: "Please fix the errors below and try again.", dismissible: false } )#
+        #view( view: "_components/ui/messagebox", args: { type: "error", message: "Please fix the errors below and try again.", dismissible: false } )#
     </bx:if>
 
     <form method="post"

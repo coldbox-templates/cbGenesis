@@ -1,12 +1,8 @@
 <bx:output>
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en" data-bs-theme="#getSetting( "cbDefaultTheme" )#">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
-    <base href="#event.getHTMLBaseURL()#" />
-    #view( "_partials/includes" )#
+    #view( "_components/app/includes" )#
 </head>
 
 <!---
@@ -15,7 +11,7 @@
       $store.sidebar.init() — restores collapse state from localStorage
 --->
 <body class="admin-body"
-      x-data
+      x-data="adminBody( {} )"
       x-init="$store.theme.init(); $store.sidebar.init()">
 
     <!--- ── Mobile sidebar backdrop ──────────────────────────────── --->
@@ -30,16 +26,18 @@
     <!--- ════════════════════════════════════════════════════════════
           SIDEBAR
           ════════════════════════════════════════════════════════════ --->
-    #view( "_partials/mainNav" )#
+    #view( "_components/app/sidebar" )#
 
     <!--- ════════════════════════════════════════════════════════════
           MAIN WRAPPER  (topbar + page content + footer)
           ════════════════════════════════════════════════════════════ --->
-    <div class="main-wrapper"
-         :class="{ 'sidebar-collapsed-ml': $store.sidebar.collapsed }">
+    <div
+		class="main-wrapper"
+		id="main-wrapper"
+        :class="{ 'sidebar-collapsed-ml': $store.sidebar.collapsed }">
 
         <!--- ── Topbar ───────────────────────────────────────────── --->
-        #view( "_partials/header" )#
+        #view( "_components/app/topbar" )#
 
         <!--- ── Page content ─────────────────────────────────────── --->
         <main class="main-content" id="main-content" tabindex="-1">
@@ -49,7 +47,7 @@
         </main>
 
         <!--- ── Footer ───────────────────────────────────────────── --->
-        #view( "_partials/footer" )#
+        #view( "_components/app/footer" )#
 
     </div>
     <!--- ── /Main wrapper ────────────────────────────────────────── --->

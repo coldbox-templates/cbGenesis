@@ -16,7 +16,7 @@ class {
 		 */
 		variables.coldbox = {
 			// Application Setup
-			appName                  : getSystemSetting( "APPNAME", "InternalApp" ),
+			appName                  : "",
 			eventName                : "event",
 			// Development Settings
 			reinitPassword           : "",
@@ -63,16 +63,21 @@ class {
 		 */
 		variables.settings = {
 			// The main logo path for the app, if empty it will use the default cbGenesis logo
-			appLogo : "/includes/images/cbgenesis-icon-full.svg",
+			cbAppLogo : "/includes/images/cbgenesis-icon-full.svg",
 			// The main title for the app used in the sidebar
-			appTitle : "cbGenesis",
+			cbAppName : "cbGenesis",
+			// The tagline for the app used in the sidebar and login page
+			cbAppTagline : "A Modern ColdBox Application Starter Kit",
+			// The tagline for the app used in the branding area of the sidebar
+			cbAppBrandTagline : "Starter Kit",
 			// Copyright notice
-			copyrightNotice: "&copy; #year()# cbGenesis. All rights reserved.",
+			cbCopyrightNotice: "&copy; #year()# cbGenesis. All rights reserved.",
 			// The default theme for the app, can be "light" or "dark"
-			defaultTheme: "dark",
+			cbDefaultTheme: "dark",
 			// The login layout to use, can be "AuthCenter" or "AuthSplit" or your own custom layout.
-			loginLayout: "AuthSplit"
+			cbLoginLayout: "AuthSplit"
 		}
+		variables.coldbox.appName = variables.settings.cbAppName
 
 		/**
 		 * --------------------------------------------------------------------------

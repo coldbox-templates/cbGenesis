@@ -1,0 +1,37 @@
+<!---
+    This view is used to include the necessary meta tags, CSS, and JS for the application.
+    Place inside <head> before closing </head>.
+    Outputs the FOUC-prevention script (must run before CSS) followed by
+    the Vite-managed stylesheet and JS module tags.
+
+    Usage:
+        #view( "_components/app/includes" )#
+		#view( view: "_components/app/includes", args: { title: "Page Title" } )#
+
+	Args:
+		title : string — optional page title (default: "App Name")
+--->
+<bx:param
+	name="args.title"
+	default="#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#"
+/>
+
+<bx:output>
+<meta charset="utf-8">
+<!--- ViewPorts --->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!--- Page Title --->
+<title>#args.title#</title>
+<!--- SES URL Base --->
+<base href="#event.getHTMLBaseURL()#" />
+<!--- Vite CSS + JS --->
+#vite( [ "resources/assets/scss/app.scss", "resources/assets/js/App.js" ] )#
+<!--- Theme --->
+<script>
+    (() => {
+        var t = localStorage.getItem( "theme" ) ||
+                ( matchMedia( "(prefers-color-scheme: dark)" ).matches ? "dark" : "light" );
+        document.documentElement.setAttribute( "data-bs-theme", t );
+    })();
+</script>
+</bx:output>

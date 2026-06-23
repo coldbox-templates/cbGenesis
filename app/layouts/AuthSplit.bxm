@@ -1,13 +1,8 @@
 <bx:output>
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en" data-bs-theme="#getSetting( "cbDefaultTheme" )#">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
-    <meta name="description" content="Authentication">
-    <base href="#event.getHTMLBaseURL()#" />
-    #view( "_partials/includes" )#
+    #view( view: "_components/app/includes", args: { title: "Authentication" } )#
 </head>
 <body class="auth-body" x-data x-init="$store.theme.init()">
 
@@ -22,33 +17,32 @@
             <div class="auth-split-brand-content">
                 <!--- Logo mark (large) --->
                 <div class="auth-split-brand-logo">
-                    <svg width="72" height="72" viewBox="0 0 72 72" fill="none"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <rect width="72" height="72" rx="16" fill="rgba(255,255,255,0.12)"/>
-                        <rect x="1" y="1" width="70" height="70" rx="15"
-                              stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
-                        <path d="M20 36h32M36 20v32" stroke="white"
-                              stroke-width="3.5" stroke-linecap="round"/>
-                    </svg>
+                    #view(
+						view: "_components/ui/logo",
+						args: { variant: "full", size: 150 }
+					)#
                 </div>
 
+				<!--- App name --->
                 <h1 class="auth-split-brand-title">
                     #getSetting( "appName" )#
                 </h1>
+
+				<!--- App tagline --->
                 <p class="auth-split-brand-tagline">
-                    A modern ColdBox application built for speed,<br>
-                    powered by the BoxLang ecosystem.
+                    Start building your applications faster with
+					a modern, lightweight framework that is secure by default.
                 </p>
 
                 <!--- Feature highlights --->
                 <ul class="auth-split-features">
                     <li class="auth-split-feature">
                         <span class="feature-icon"><i class="ph-duotone ph-lightning"></i></span>
-                        Fast and lightweight framework
+                        Fast and lightweight
                     </li>
                     <li class="auth-split-feature">
                         <span class="feature-icon"><i class="ph-duotone ph-shield-check"></i></span>
-                        Secure by default with CSRF &amp; auth
+                        Secure by default
                     </li>
                     <li class="auth-split-feature">
                         <span class="feature-icon"><i class="ph-duotone ph-cloud"></i></span>
@@ -66,7 +60,7 @@
                 <!--- Logo shown only on mobile (brand panel hidden) --->
                 <div class="auth-split-logo-mobile">
                     <a href="/" class="auth-logo-link">
-                        #view( view: "_partials/logo", args: { variant: "compact" } )#
+                        #view( view: "_components/ui/logo", args: { variant: "compact" } )#
                     </a>
                 </div>
 
@@ -74,15 +68,7 @@
                 #renderView()#
 
                 <!--- Footer: theme toggle --->
-                <div class="auth-split-footer">
-                    <button class="btn-theme-toggle"
-                            x-cloak
-                            @click="$store.theme.toggle()"
-                            :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
-                        <i class="ph-duotone ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
-                        <i class="ph-duotone ph-moon" x-show="$store.theme.mode === 'light'"></i>
-                    </button>
-                </div>
+                #view( view: "_components/auth/footer", args: { split: true } )#
 
             </div>
         </div>

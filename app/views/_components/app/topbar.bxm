@@ -1,10 +1,10 @@
 <!---
-    Admin Header / Topbar Partial
+    Admin Header / Topbar Component
     Renders the sticky top bar: sidebar toggle, breadcrumb, theme toggle,
     notifications, and user dropdown.
 
     Usage (from Admin layout, inside .main-wrapper):
-        #view( "_partials/header" )#
+        #view( "_components/app/topbar" )#
 
     Reads from prc (populated by protected handlers):
         prc.title               — page title shown in breadcrumb (default: "Dashboard")
@@ -13,10 +13,10 @@
         prc.authUser.email      — email shown below name in dropdown
 --->
 <bx:output>
-<header class="topbar">
+<header class="topbar" id="topbar">
 
     <!--- ── Left: sidebar toggle + breadcrumb ──────────────── --->
-    <div class="topbar-left">
+    <div class="topbar-left" id="topbar-left">
         <button class="topbar-toggle"
                 @click="$store.sidebar.toggle()"
                 :aria-label="$store.sidebar.collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
@@ -38,10 +38,10 @@
 
     <!--- ── Right: action buttons + user dropdown ───────────── --->
     <!---
-        Using <ul>/<li> so sub-partials (notificationBell etc.) can each
+        Using <ul>/<li> so sub-components (notificationBell etc.) can each
         return a <li> and slot in without breaking the flex layout.
     --->
-    <ul class="topbar-right">
+    <ul class="topbar-right" id="topbar-right">
 
         <!--- Theme toggle --->
         <li>

@@ -1,0 +1,21 @@
+<!---
+    Sidebar Brand Component
+    App-specific sidebar brand wrapper. Uses the reusable UI logo primitive and
+    owns the sidebar link/name behavior.
+
+    Usage:
+        #view( "_components/app/sidebar-brand" )#
+
+    Args:
+        href    : string — brand link target (default: "/dashboard")
+        variant : string — logo variant passed to ui/logo (default: "compact")
+--->
+<bx:param name="args.href" default="/dashboard" />
+<bx:param name="args.variant" default="compact" />
+
+<bx:output>
+<a href="#encodeForHTMLAttribute( args.href )#" class="sidebar-brand" aria-label="#encodeForHTMLAttribute( getSetting( 'appName' ) )# dashboard">
+	#view( view: "_components/ui/logo", args: { variant: args.variant, classes: "sidebar-brand-logo" } )#
+	<span class="sidebar-brand-name">#encodeForHTML( getSetting( "appName" ) )#</span>
+</a>
+</bx:output>

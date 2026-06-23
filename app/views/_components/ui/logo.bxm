@@ -1,0 +1,36 @@
+<!---
+    Logo Component
+    Renders only the application logo mark. Brand labels and links belong in
+    app-level components such as _components/app/sidebar-brand.
+
+    Usage:
+        #view( "_components/ui/logo" )#
+        #view( view: "_components/ui/logo", args: { variant: "compact" } )#
+        #view( view: "_components/ui/logo", args: { variant: "icon-only", size: 28 } )#
+
+    Args:
+        variant  : full | compact | icon-only   (default: "full")
+                   full      — 50px logo mark
+                   compact   — 36px logo mark
+                   icon-only — 28px logo mark
+        size     : number — override mark pixel size (default: derived from variant)
+        classes  : string — extra CSS classes on root <span> (default: "")
+--->
+<bx:param name="args.variant" default="full" />
+<bx:param name="args.classes" default="" />
+<bx:param name="args.alt" default="#getSetting( 'appName' )# logo" />
+
+<bx:set localSizes = { "full": 50, "compact": 36, "icon-only": 28 } />
+<bx:set localSize  = structKeyExists( localSizes, args.variant ) ? localSizes[ args.variant ] : 40 />
+<bx:param name="args.size" default="#localSize#" />
+
+<bx:output>
+<span class="brand-logo brand-logo--#encodeForHTMLAttribute( args.variant )##( len( args.classes ) ? ' ' & args.classes : '' )#"
+      aria-label="#encodeForHTMLAttribute( getSetting( 'appName' ) )#">
+	<img class="brand-logo__mark"
+		 src="#getSetting( 'cbAppLogo' )#"
+		 width="#encodeForHTMLAttribute( args.size )#"
+		 height="#encodeForHTMLAttribute( args.size )#"
+		 alt="#encodeForHTMLAttribute( args.alt )#" />
+</span>
+</bx:output>

@@ -17,7 +17,7 @@ class extends="coldbox.system.EventHandler" {
 
 	function login( event, rc, prc ){
 		prc.title = "Sign In"
-		event.setView( layout: "AuthCenter", view: "auth/login" )
+		event.setView( layout: "AuthSplit", view: "auth/login" )
 	}
 
 	// ============================================================

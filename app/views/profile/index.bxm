@@ -1,0 +1,61 @@
+<bx:output>
+<div class="page-header admin-page-heading">
+	<div>
+		<p class="eyebrow">My Profile</p>
+		<h2 class="page-title">Account Settings</h2>
+		<p class="page-subtitle">Mock profile settings, auth sessions, and API tokens.</p>
+	</div>
+	<button class="btn btn-primary"><i class="ph-duotone ph-check"></i> Save Changes</button>
+</div>
+
+<div class="profile-layout" x-data="{ tab: 'profile' }">
+	<div class="segmented-control mb-3">
+		<button type="button" :class="tab === 'profile' ? 'active' : ''" @click="tab = 'profile'">Profile</button>
+		<button type="button" :class="tab === 'password' ? 'active' : ''" @click="tab = 'password'">Password</button>
+		<button type="button" :class="tab === 'sessions' ? 'active' : ''" @click="tab = 'sessions'">Sessions</button>
+		<button type="button" :class="tab === 'tokens' ? 'active' : ''" @click="tab = 'tokens'">API Tokens</button>
+	</div>
+
+	<section class="content-card profile-hero">
+		<div class="profile-hero-cover"></div>
+		<div class="profile-hero-body">
+			<div class="profile-orb small">#encodeForHTML( prc.authUser.initials )#</div>
+			<h3>#encodeForHTML( prc.authUser.name )#</h3>
+			<p>#encodeForHTML( prc.authUser.role )# &middot; Ortus Solutions</p>
+		</div>
+	</section>
+
+	<section class="content-card form-card" x-show="tab === 'profile'">
+		<div class="content-card-header"><h3 class="content-card-title">Personal Information</h3></div>
+		<div class="form-grid">
+			<label>First Name<input type="text" value="#encodeForHTMLAttribute( prc.profile.firstName )#"></label>
+			<label>Last Name<input type="text" value="#encodeForHTMLAttribute( prc.profile.lastName )#"></label>
+			<label class="span-2">Email Address<input type="email" value="#encodeForHTMLAttribute( prc.profile.email )#"></label>
+			<label class="span-2">Bio<textarea rows="4">#encodeForHTML( prc.profile.bio )#</textarea></label>
+		</div>
+	</section>
+
+	<section class="content-card form-card" x-show="tab === 'password'" x-cloak>
+		<div class="content-card-header"><h3 class="content-card-title">Password & Two-Factor Auth</h3></div>
+		<div class="form-grid">
+			<label>Current Password<input type="password"></label>
+			<label>New Password<input type="password"></label>
+			<div class="setting-row span-2"><div><strong>Passkey Enabled</strong><small>Use platform passkeys for faster sign-in.</small></div><label class="switch"><input type="checkbox" checked><span></span></label></div>
+		</div>
+	</section>
+
+	<section class="content-card form-card" x-show="tab === 'sessions'" x-cloak>
+		<div class="content-card-header"><h3 class="content-card-title">Active Sessions</h3></div>
+		<ul class="permission-list">
+			<bx:loop array="#prc.profile.sessions#" item="session"><li><span class="permission-icon"><i class="ph-duotone ph-monitor"></i></span><span><strong>#encodeForHTML( session.device )#</strong><small>#encodeForHTML( session.location )# &middot; #encodeForHTML( session.lastSeen )#</small></span><button class="btn btn-sm btn-outline-danger">Revoke</button></li></bx:loop>
+		</ul>
+	</section>
+
+	<section class="content-card form-card" x-show="tab === 'tokens'" x-cloak>
+		<div class="content-card-header"><h3 class="content-card-title">API Tokens</h3><button class="btn btn-sm btn-outline-secondary">Create Token</button></div>
+		<ul class="permission-list">
+			<bx:loop array="#prc.profile.tokens#" item="token"><li><span class="permission-icon"><i class="ph-duotone ph-code"></i></span><span><strong>#encodeForHTML( token.name )#</strong><small>#encodeForHTML( token.scope )# &middot; Last used #encodeForHTML( token.lastUsed )#</small></span><button class="btn btn-sm btn-outline-danger">Delete</button></li></bx:loop>
+		</ul>
+	</section>
+</div>
+</bx:output>

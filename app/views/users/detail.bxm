@@ -1,0 +1,75 @@
+<bx:output>
+<div class="page-header admin-page-heading">
+	<div>
+		<p class="eyebrow">Users / #encodeForHTML( prc.selectedUser.name )#</p>
+		<h2 class="page-title">User Detail</h2>
+		<p class="page-subtitle">Mock profile, role membership, and direct permission overrides.</p>
+	</div>
+	<div class="page-actions">
+		<button class="btn btn-outline-danger"><i class="ph-duotone ph-lock"></i> Lock Account</button>
+		<button class="btn btn-primary"><i class="ph-duotone ph-check"></i> Save Changes</button>
+	</div>
+</div>
+
+<div class="admin-detail-grid">
+	<aside class="detail-sidebar">
+		<section class="content-card profile-summary-card">
+			<div class="profile-orb">#encodeForHTML( prc.selectedUser.initials )#</div>
+			<h3>#encodeForHTML( prc.selectedUser.name )#</h3>
+			<p>#encodeForHTML( prc.selectedUser.email )#</p>
+			<div class="chip-row justify-content-center">
+				<bx:loop array="#prc.selectedUser.roles#" item="role"><span class="chip chip-info">#encodeForHTML( role )#</span></bx:loop>
+				<span class="chip chip-#lCase( prc.selectedUser.status )#">#encodeForHTML( prc.selectedUser.status )#</span>
+				<span class="chip chip-cyan">#encodeForHTML( prc.selectedUser.authMethod )#</span>
+			</div>
+		</section>
+
+		<section class="content-card info-list-card">
+			<h3>Account Info</h3>
+			<dl>
+				<div><dt>Member since</dt><dd>Mar 1, 2024</dd></div>
+				<div><dt>Last login</dt><dd>#encodeForHTML( prc.selectedUser.lastLogin )#</dd></div>
+				<div><dt>Login count</dt><dd>1,247</dd></div>
+				<div><dt>IP Address</dt><dd>192.168.1.10</dd></div>
+			</dl>
+		</section>
+	</aside>
+
+	<section class="detail-main" x-data="{ tab: 'profile' }">
+		<div class="segmented-control mb-3">
+			<button type="button" :class="tab === 'profile' ? 'active' : ''" @click="tab = 'profile'">Profile</button>
+			<button type="button" :class="tab === 'security' ? 'active' : ''" @click="tab = 'security'">Security</button>
+			<button type="button" :class="tab === 'permissions' ? 'active' : ''" @click="tab = 'permissions'">Permissions</button>
+		</div>
+
+		<section class="content-card form-card" x-show="tab === 'profile'">
+			<div class="content-card-header"><h3 class="content-card-title">Personal Information</h3></div>
+			<div class="form-grid">
+				<label>First Name<input type="text" value="#encodeForHTMLAttribute( listFirst( prc.selectedUser.name, ' ' ) )#"></label>
+				<label>Last Name<input type="text" value="#encodeForHTMLAttribute( listLast( prc.selectedUser.name, ' ' ) )#"></label>
+				<label class="span-2">Email Address<input type="email" value="#encodeForHTMLAttribute( prc.selectedUser.email )#"></label>
+				<label>Role<select><bx:loop array="#prc.roles#" item="role"><option>#encodeForHTML( role.role )#</option></bx:loop></select></label>
+				<label>Status<select><option>#encodeForHTML( prc.selectedUser.status )#</option><option>Active</option><option>Pending</option><option>Locked</option></select></label>
+			</div>
+		</section>
+
+		<section class="content-card form-card" x-show="tab === 'security'" x-cloak>
+			<div class="content-card-header"><h3 class="content-card-title">Authentication</h3></div>
+			<div class="settings-list">
+				<div class="setting-row"><div><strong>Require Passkey</strong><small>Enforce phishing-resistant auth for this user.</small></div><label class="switch"><input type="checkbox" checked><span></span></label></div>
+				<div class="setting-row"><div><strong>Reset TOTP</strong><small>Clear existing authenticator app enrollment.</small></div><button class="btn btn-outline-secondary btn-sm">Reset</button></div>
+				<div class="setting-row"><div><strong>Force Password Reset</strong><small>User must set a new password on next login.</small></div><label class="switch"><input type="checkbox"><span></span></label></div>
+			</div>
+		</section>
+
+		<section class="content-card form-card" x-show="tab === 'permissions'" x-cloak>
+			<div class="content-card-header"><h3 class="content-card-title">A-la-carte Permissions</h3><button class="btn btn-sm btn-outline-secondary">+ Add</button></div>
+			<div class="permission-callout"><i class="ph-duotone ph-info"></i> These override the role's default permissions for this user only.</div>
+			<div class="chip-row p-3">
+				<bx:loop array="#prc.selectedUser.permissions#" item="permission"><span class="chip">#encodeForHTML( permission )# <i class="ph-duotone ph-x"></i></span></bx:loop>
+				<span class="chip chip-success">+ Add permission</span>
+			</div>
+		</section>
+	</section>
+</div>
+</bx:output>

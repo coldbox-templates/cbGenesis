@@ -1,33 +1,18 @@
 // ============================================================
 // Brand Logo Component
-// Used by the _partials/logo.bxm partial.
+// Reusable logo mark. App-specific brand labels live in app components.
 // ============================================================
 
 .brand-logo {
     display: inline-flex;
     align-items: center;
-    gap: 0.625rem;
+    justify-content: center;
     text-decoration: none;
+    line-height: 1;
 
     &__mark {
         flex-shrink: 0;
         display: block;
-    }
-
-    &__name {
-        font-weight: 700;
-        letter-spacing: -0.025em;
-        color: var(--app-text);
-        white-space: nowrap;
-    }
-
-    &--full &__name    { font-size: 1.0625rem; }
-    &--compact &__name { font-size: 0.9375rem; }
-
-    // Inherit sidebar text color without forcing white
-    .sidebar-header & {
-        color: var(--sidebar-text);
-        .brand-logo__name { color: var(--sidebar-text); }
     }
 }
 

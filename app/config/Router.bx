@@ -16,13 +16,21 @@ class {
 
 		// A nice healthcheck route example
 		route( "/healthcheck", function( event, rc, prc ){
-			return "Ok!";
-		} );
+			return "Ok!"
+		} )
+
+		route( pattern: "dashboard", target: "Dashboard.index" )
+		route( pattern: "profile", target: "Profile.index" )
+		route( pattern: "settings", target: "Settings.index" )
+		route( pattern: "users", target: "Users.index" )
+		route( pattern: "roles", target: "Roles.index" )
+		route( pattern: "permissions", target: "Permissions.index" )
+
 
 		// @app_routes@
 
 		// Conventions-Based Routing
-		route( ":handler/:action?" ).end();
+		route( ":handler/:action?" ).end()
 	}
 
 }

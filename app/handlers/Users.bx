@@ -1,0 +1,102 @@
+/**
+ * Mock user management handler.
+ */
+class extends="coldbox.system.EventHandler" {
+
+	function index( event, rc, prc ){
+		prc.title    = "Users";
+		prc.authUser = getMockAuthUser();
+		setMockSecurityData( prc );
+
+		event.setLayout( "Admin" );
+		event.setView( "users/index" );
+	}
+
+	function detail( event, rc, prc ){
+		prc.title    = "User Detail";
+		prc.authUser = getMockAuthUser();
+		setMockSecurityData( prc );
+
+		var selectedUserIndex = prc.users.find( ( user ) => user.userId == ( rc.id ?: "usr-brad" ) );
+		prc.selectedUser     = selectedUserIndex ? prc.users[ selectedUserIndex ] : prc.users[ 2 ];
+
+		event.setLayout( "Admin" );
+		event.setView( "users/detail" );
+	}
+
+	private void function setMockSecurityData( prc ){
+
+		prc.roles = [
+			{ "roleId": "role-super-admin", "role": "Super Admin", "description": "Full system access" },
+			{ "roleId": "role-admin", "role": "Admin", "description": "Manages users, content, and settings" },
+			{ "roleId": "role-developer", "role": "Developer", "description": "Build and deployment access" },
+			{ "roleId": "role-viewer", "role": "Viewer", "description": "Read-only access" }
+		];
+
+		prc.permissions = [
+			{ "permissionId": "perm-users-read", "permission": "users:read", "description": "View users" },
+			{ "permissionId": "perm-users-write", "permission": "users:write", "description": "Create and update users" },
+			{ "permissionId": "perm-roles-read", "permission": "roles:read", "description": "View roles" },
+			{ "permissionId": "perm-settings-read", "permission": "settings:read", "description": "View global settings" },
+			{ "permissionId": "perm-audit-read", "permission": "audit:read", "description": "View audit events" },
+			{ "permissionId": "perm-reports-export", "permission": "reports:export", "description": "Export reports" }
+		];
+
+		prc.users = [
+			{
+				"userId"     : "usr-luis",
+				"name"       : "Luis Majano",
+				"email"      : "luis@ortussolutions.com",
+				"initials"   : "LM",
+				"status"     : "Active",
+				"authMethod" : "Passkey",
+				"lastLogin"  : "Just now",
+				"roles"      : [ "Super Admin" ],
+				"permissions": [ "users:read", "users:write", "settings:read", "audit:read", "reports:export" ]
+			},
+			{
+				"userId"     : "usr-brad",
+				"name"       : "Brad Wood",
+				"email"      : "brad@ortussolutions.com",
+				"initials"   : "BW",
+				"status"     : "Active",
+				"authMethod" : "TOTP",
+				"lastLogin"  : "2 min ago",
+				"roles"      : [ "Admin" ],
+				"permissions": [ "reports:export", "apitokens" ]
+			},
+			{
+				"userId"     : "usr-jacob",
+				"name"       : "Jacob Beers",
+				"email"      : "jacob@ortussolutions.com",
+				"initials"   : "JB",
+				"status"     : "Pending",
+				"authMethod" : "None",
+				"lastLogin"  : "Never",
+				"roles"      : [ "Developer" ],
+				"permissions": []
+			},
+			{
+				"userId"     : "usr-unknown",
+				"name"       : "Unknown User",
+				"email"      : "bad@actor.io",
+				"initials"   : "XX",
+				"status"     : "Locked",
+				"authMethod" : "None",
+				"lastLogin"  : "5 failed attempts",
+				"roles"      : [],
+				"permissions": []
+			}
+		];
+	}
+
+	private struct function getMockAuthUser(){
+		return {
+			"name"    : "Luis Majano",
+			"email"   : "luis@ortussolutions.com",
+			"role"    : "Super Admin",
+			"initials": "LM"
+		};
+	}
+
+}

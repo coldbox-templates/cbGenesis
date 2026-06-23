@@ -1,14 +1,14 @@
 <!---
-    Messagebox Partial
+    Messagebox Component
     Renders a themed, dismissible alert box. Powered by the messageBox Alpine component.
 
     Usage:
-        #view( view: "_partials/messagebox", args: {
+        #view( view: "_components/ui/messagebox", args: {
             type    : "success",
             message : "Your changes have been saved."
         } )#
 
-        #view( view: "_partials/messagebox", args: {
+        #view( view: "_components/ui/messagebox", args: {
             type        : "warning",
             title       : "Action required",
             message     : "Your session expires in 5 minutes.",

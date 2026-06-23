@@ -18,6 +18,7 @@ class extends="coldbox.system.EventHandler" {
 	}
 
 	function onRequestStart( event, rc, prc ){
+		prc.authUser = new app.models.system.User()
 	}
 
 	function onRequestEnd( event, rc, prc ){

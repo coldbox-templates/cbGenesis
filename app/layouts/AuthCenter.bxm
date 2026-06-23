@@ -1,13 +1,8 @@
 <bx:output>
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en" data-bs-theme="#getSetting( "cbDefaultTheme" )#">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
-    <meta name="description" content="Authentication">
-    <base href="#event.getHTMLBaseURL()#" />
-    #view( "_partials/includes" )#
+    #view( view: "_components/app/includes", args: { title: "Authentication" } )#
 </head>
 <body class="auth-body" x-data x-init="$store.theme.init()">
 
@@ -19,7 +14,7 @@
             <!--- Logo --->
             <div class="auth-card-logo">
                 <a href="/" class="auth-logo-link">
-                    #view( "_partials/logo" )#
+                    #view( "_components/ui/logo" )#
                 </a>
             </div>
 
@@ -32,15 +27,7 @@
         <!--- ── /Card ────────────────────────────────────────────── --->
 
         <!--- Dark / light mode toggle --->
-        <div class="auth-footer">
-            <button class="btn-theme-toggle"
-                    x-cloak
-                    @click="$store.theme.toggle()"
-                    :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
-                <i class="ph-duotone ph-sun"  x-show="$store.theme.mode === 'dark'"></i>
-                <i class="ph-duotone ph-moon" x-show="$store.theme.mode === 'light'"></i>
-            </button>
-        </div>
+        #view( "_components/auth/footer" )#
 
     </div>
 

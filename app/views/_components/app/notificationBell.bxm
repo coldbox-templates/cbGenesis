@@ -1,0 +1,20 @@
+<!---
+    Notification Bell Component
+    Renders a bell button in the header's action list.
+    Extend with a real notifications store / dropdown once your
+    notification service is wired up.
+
+    Usage (from within a <ul> in the header):
+        #view( "_components/app/notificationBell" )#
+
+    Returns a <li> element.
+--->
+<bx:output>
+<li>
+    <button type="button"
+            class="topbar-btn"
+            aria-label="Notifications">
+        <i class="ph-duotone ph-bell" aria-hidden="true"></i>
+    </button>
+</li>
+</bx:output>

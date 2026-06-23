@@ -7,7 +7,7 @@
     <title>#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#</title>
     <meta name="description" content="#getSetting( "appName" )#">
     <base href="#event.getHTMLBaseURL()#" />
-    #view( "_partials/includes" )#
+    #view( "_components/app/includes" )#
 </head>
 <body x-data x-init="$store.theme.init()">
 
