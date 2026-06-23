@@ -1,0 +1,22 @@
+<!---
+	Top Bar Breadcrumbs Component
+	This component renders the breadcrumb navigation in the top bar of the application.
+
+	Usage (from within the top bar component):
+		#view( "_components/app/topbar-breadcrumbs" )#
+
+--->
+<bx:output>
+<nav aria-label="Breadcrumb">
+	<ol class="topbar-breadcrumb">
+
+		<li class="topbar-breadcrumb-item">
+			<a href="#event.route( "dashboard" )#">
+				<!--- Add a phosphor icon chevron --->
+				<i class="ph-duotone ph-caret-right" aria-hidden="true"></i>
+				Dashboard
+			</a>
+		</li>
+	</ol>
+</nav>
+</bx:output>

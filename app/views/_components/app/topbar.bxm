@@ -24,16 +24,8 @@
             <i class="ph-duotone ph-list" aria-hidden="true"></i>
         </button>
 
-        <nav aria-label="Breadcrumb">
-            <ol class="topbar-breadcrumb">
-                <li class="topbar-breadcrumb-item">
-                    <a href="/dashboard">Home</a>
-                </li>
-                <li class="topbar-breadcrumb-item active" aria-current="page">
-                    #( prc.keyExists( "title" ) ? prc.title : "Dashboard" )#
-                </li>
-            </ol>
-        </nav>
+		<!--- Breadcrumbs --->
+        #view( "_components/app/topbar-breadcrumbs" )#
     </div>
 
     <!--- ── Right: action buttons + user dropdown ───────────── --->
@@ -63,38 +55,51 @@
         <!--- User dropdown --->
         <li>
             <div class="dropdown">
+
+				<!--- User button --->
                 <button class="topbar-user-btn"
                         id="topbarUserMenu"
                         data-bs-toggle="dropdown"
                         aria-expanded="false">
+
                     <span class="topbar-user-avatar">
-                        #( prc.keyExists( "authUser" ) ? prc.authUser.initials : "A" )#
+                        #( prc.authUser.getInitials() ?: "LF" )#
                     </span>
-                    <span class="topbar-user-name">
-                        #( prc.keyExists( "authUser" ) ? prc.authUser.name : "Admin" )#
-                    </span>
+
                     <i class="ph-duotone ph-caret-down topbar-user-chevron" aria-hidden="true"></i>
                 </button>
+
+				<!--- User dropdown menu --->
                 <ul class="dropdown-menu dropdown-menu-end"
                     aria-labelledby="topbarUserMenu">
+
+					<!--- Preview User Info --->
                     <li>
                         <span class="dropdown-header">
-                            #( prc.keyExists( "authUser" ) ? prc.authUser.email : "admin@example.com" )#
+                            #( prc.authUser.getEmail() ?: "admin@example.com" )#
                         </span>
                     </li>
+
                     <li><hr class="dropdown-divider"></li>
+
+					<!--- Profile Link --->
                     <li>
-                        <a class="dropdown-item" href="/profile">
+                        <a class="dropdown-item" href="#event.route( "profile" )#">
                             <i class="ph-duotone ph-user" aria-hidden="true"></i>
                             Profile
                         </a>
                     </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item text-danger" href="/auth/logout">
-                            <i class="ph-duotone ph-sign-out" aria-hidden="true"></i>
-                            Sign out
-                        </a>
+
+					<li><hr class="dropdown-divider"></li>
+
+					<!--- Logout Link --->
+					<li>
+                        <form method="POST" action="#event.route( "logout" )#" style="display:contents">
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="ph-duotone ph-sign-out" aria-hidden="true"></i>
+                                Sign out
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </div>

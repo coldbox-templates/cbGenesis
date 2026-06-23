@@ -42,8 +42,15 @@
     padding: 0 1rem;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     flex-shrink: 0;
     border-bottom: 1px solid var(--sidebar-border);
+    transition: padding 0.15s ease;
+}
+
+.sidebar-collapsed .sidebar-header {
+    padding: 0 0.625rem;
+    justify-content: center;
 }
 
 .sidebar-brand {
@@ -54,6 +61,12 @@
     overflow: hidden;
     white-space: nowrap;
     width: 100%;
+    transition: justify-content 0.15s ease;
+}
+
+.sidebar-collapsed .sidebar-brand {
+    justify-content: center;
+    width: auto;
 }
 
 .sidebar-brand-icon {
@@ -209,7 +222,8 @@
 
     .sidebar-nav-item {
         justify-content: center;
-        padding: 0.5rem;
+        padding: 0.625rem;
+        gap: 0;
     }
 }
 

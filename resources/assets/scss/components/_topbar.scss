@@ -80,6 +80,17 @@
     display: block;
 }
 
+// ---- Left container: toggle + breadcrumb ----
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex: 1;
+    overflow: hidden;
+    min-width: 0;
+}
+
 // ---- Breadcrumb trail ----
 
 .topbar-breadcrumb {
@@ -88,6 +99,8 @@
     gap: 0;
     font-size: 0.875rem;
     overflow: hidden;
+    min-width: 0;
+	margin-top: 18px;
 }
 
 .topbar-breadcrumb-item {
