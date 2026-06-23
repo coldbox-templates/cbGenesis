@@ -36,7 +36,7 @@
         x-data="{ path: window.location.pathname }"
         aria-label="Main navigation">
 
-        <!--- Main --->
+        <!--- Main Items --->
         <div class="sidebar-nav-section">
             <span class="sidebar-nav-label">Main</span>
             <ul class="sidebar-nav-list">
@@ -53,7 +53,7 @@
             </ul>
         </div>
 
-        <!--- Management --->
+        <!--- Management Items --->
         <div class="sidebar-nav-section">
             <span class="sidebar-nav-label">Management</span>
             <ul class="sidebar-nav-list">
@@ -104,24 +104,7 @@
         Sidebar has overflow:hidden for the collapse transition, so Bootstrap
         dropdowns clip here. Use a link to a dedicated profile page instead.
     --->
-    <div class="sidebar-footer" id="sidebar-footer">
-
-		<!--- User profile link --->
-        <a href="#event.route( "profile" )#" class="sidebar-user text-decoration-none">
-            <span class="sidebar-user-avatar">
-                #( prc.authUser.getInitials() ?: "A" )#
-            </span>
-            <span class="sidebar-user-info">
-                <span class="sidebar-user-name">
-                    #( prc.authUser.getFullName() ?: "Admin User" )#
-                </span>
-                <span class="sidebar-user-role">
-                    #( prc.authUser.getRole() ?: "Administrator" )#
-                </span>
-            </span>
-        </a>
-
-    </div>
+    #view( "_components/app/sidebar-footer" )#
 
 </aside>
 </bx:output>
