@@ -5,13 +5,17 @@ class {
 			table.uuid( "id" ).primaryKey()
 			table.boolean( "isActive" ).default( true )
 			table.timestamps()
+
 			// User specific fields
 			table.string( "firstName" )
 			table.string( "lastName" )
 			table.string( "email" )
 			table.string( "password" )
+			table.text( "biography" ).default( "" )
 			table.datetime( "verifiedAt" ).nullable()
 			table.datetime( "lastLogin" ).nullable()
+			table.json( "preferences" ).default( "{}" )
+
 			// Indexes
 			table.index( "email", "idx_userEmail" )
 			table.index( "verifiedAt", "idx_userVerifiedAt" )

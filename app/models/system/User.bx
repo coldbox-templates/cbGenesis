@@ -17,8 +17,10 @@ class extends="app.models.BaseEntity" {
 	property name="lastName" default="";
 	property name="email" default="";
 	property name="password" default="";
+	property name="biography" default="";
 	property name="verifiedAt" type="datetime";
 	property name="lastLogin" type="datetime";
+	property name="preferences";
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -36,7 +38,7 @@ class extends="app.models.BaseEntity" {
 		password : { required : true }
 	};
 	// https://coldbox-validation.ortusbooks.com/overview/validating-constraints/validating-with-profiles
-	this.constraintProfiles = { "update" : "firstName,lastName,email" };
+	this.constraintProfiles = { "update" : "firstName,lastName,email,biography" };
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -73,6 +75,8 @@ class extends="app.models.BaseEntity" {
 		variables.password   = ""
 		variables.lastLogin  = ""
 		variables.verifiedAt = ""
+		variables.biography  = ""
+		variables.preferences = {}
 
 		return this
 	}
@@ -89,6 +93,50 @@ class extends="app.models.BaseEntity" {
 	 */
 	string function getFullName(){
 		return getFirstName() & " " & getLastName();
+	}
+
+	/**
+	 * Get the user's initials
+	 */
+	string function getInitials(){
+		var initials = ""
+		if( len( variables.firstName ) ){
+			initials &= left( variables.firstName, 1 )
+		}
+		if( len( variables.lastName ) ){
+			initials &= left( variables.lastName, 1 )
+		}
+		return initials
+	}
+
+	/**
+	 * Set the user's preferences as a struct
+	 */
+	User function setPreferences( struct preferences ){
+		variables.preferences = jsonSerialize( preferences )
+		return this
+	}
+
+	/**
+	 * Set the user's preferences as a raw JSON string
+	 */
+	User function setPreferencesRaw( string preferences ){
+		variables.preferences = arguments.preferences
+		return this
+	}
+
+	/**
+	 * Get the user's preferences as a struct
+	 */
+	struct function getPreferences(){
+		return jsonDeserialize( getPreferencesRaw() )
+	}
+
+	/**
+	 * Get the user's preferences as a raw JSON string
+	 */
+	string function getPreferencesRaw(){
+		return variables.preferences ?: "{}"
 	}
 
 }

@@ -30,8 +30,10 @@ Alpine.data( "authForm", authForm );
 
 // UI Components
 import { messageBox }       from "./components/ui/MessageBox.js";
+import { passwordMeter }    from "./components/ui/PasswordMeter.js";
 import { switchComponent }  from "./components/ui/Switch.js";
 Alpine.data( "messageBox", messageBox );
+Alpine.data( "passwordMeter", passwordMeter );
 Alpine.data( "switchComponent", switchComponent );
 
 // ============================================================

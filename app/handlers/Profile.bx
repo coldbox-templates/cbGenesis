@@ -4,8 +4,8 @@
 class extends="coldbox.system.EventHandler" {
 
 	function index( event, rc, prc ){
-		prc.title    = "My Profile";
-		prc.authUser = getMockAuthUser();
+		prc.title    = "My Profile"
+		prc.authUser = getMockAuthUser()
 		prc.profile  = {
 			"firstName"  : "Luis",
 			"lastName"   : "Majano",
@@ -21,14 +21,26 @@ class extends="coldbox.system.EventHandler" {
 				{ "name": "CLI Automation", "scope": "reports:export", "lastUsed": "4 hours ago" },
 				{ "name": "Local Dev", "scope": "users:read", "lastUsed": "2 days ago" }
 			]
-		};
+		}
 
-		event.setLayout( "Admin" );
-		event.setView( "profile/index" );
+		event.setLayout( "Admin" )
+		event.setView( "profile/index" )
+	}
+
+	function update( event, rc, prc ){
+		return relocate( "profile" )
+	}
+
+	function password( event, rc, prc ){
+		return relocate( "profile" )
+	}
+
+	function tokens( event, rc, prc ){
+		return relocate( "profile" )
 	}
 
 	private struct function getMockAuthUser(){
-		return { "name": "Luis Majano", "email": "luis@ortussolutions.com", "role": "Super Admin", "initials": "LM" };
+		return { "name": "Luis Majano", "email": "luis@ortussolutions.com", "role": "Super Admin", "initials": "LM" }
 	}
 
 }

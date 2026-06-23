@@ -67,67 +67,15 @@
             </bx:if>
         </div>
 
-        <!--- Password with strength indicator (nested Alpine scope) --->
-        <div class="mb-3" x-data="passwordStrength">
-            <label for="password" class="form-label">Password</label>
-            <div class="input-group">
-                <input :type="showPassword ? 'text' : 'password'"
-                       id="password"
-                       name="password"
-                       class="form-control#( ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'password' ) ) ? ' is-invalid' : '' )#"
-                       x-model="password"
-                       @input="$dispatch('password-changed', { value: password })"
-                       placeholder="Min. 8 characters"
-                       autocomplete="new-password"
-                       required>
-                <button class="btn btn-outline-secondary"
-                        type="button"
-                        @click="showPassword = !showPassword"
-                        :aria-label="showPassword ? 'Hide password' : 'Show password'">
-                    <i class="ph-duotone"
-                       :class="showPassword ? 'ph-eye-slash' : 'ph-eye'"
-                       aria-hidden="true"></i>
-                </button>
-                <bx:if prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'password' )>
-                    <div class="invalid-feedback">#encodeForHTML( prc.errors.password )#</div>
-                </bx:if>
-            </div>
-
-            <!--- Strength bars --->
-            <div class="password-strength" x-show="password.length > 0" x-cloak>
-                <div class="password-strength-bars" role="meter" :aria-valuenow="score" aria-valuemin="0" aria-valuemax="4">
-                    <div class="password-strength-bar" :class="score >= 1 ? 'active-' + score : ''"></div>
-                    <div class="password-strength-bar" :class="score >= 2 ? 'active-' + score : ''"></div>
-                    <div class="password-strength-bar" :class="score >= 3 ? 'active-' + score : ''"></div>
-                    <div class="password-strength-bar" :class="score >= 4 ? 'active-' + score : ''"></div>
-                </div>
-                <span class="password-strength-label" :class="labelClass" x-text="label"></span>
-            </div>
-
-            <!--- Requirements checklist --->
-            <div class="password-requirements mt-2" x-show="password.length > 0" x-cloak>
-                <div class="password-requirement" :class="{ met: requirements.length }">
-                    <i class="ph-duotone req-icon" :class="requirements.length ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
-                    At least 8 characters
-                </div>
-                <div class="password-requirement" :class="{ met: requirements.uppercase }">
-                    <i class="ph-duotone req-icon" :class="requirements.uppercase ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
-                    Uppercase letter
-                </div>
-                <div class="password-requirement" :class="{ met: requirements.lowercase }">
-                    <i class="ph-duotone req-icon" :class="requirements.lowercase ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
-                    Lowercase letter
-                </div>
-                <div class="password-requirement" :class="{ met: requirements.number }">
-                    <i class="ph-duotone req-icon" :class="requirements.number ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
-                    Number
-                </div>
-                <div class="password-requirement" :class="{ met: requirements.special }">
-                    <i class="ph-duotone req-icon" :class="requirements.special ? 'ph-check-circle' : 'ph-circle'" aria-hidden="true"></i>
-                    Special character
-                </div>
-            </div>
-        </div>
+        #view( view: "_components/ui/passwordMeter", args: {
+            id           : "password",
+            name         : "password",
+            label        : "Password",
+            classes      : "mb-3",
+            labelClass   : "form-label",
+            inputClasses : "form-control",
+            errorMessage : ( prc.keyExists( 'errors' ) && structKeyExists( prc.errors, 'password' ) ) ? prc.errors.password : ""
+        } )#
 
         <!--- Confirm password --->
         <div class="mb-4">
