@@ -30,7 +30,9 @@ Alpine.data( "authForm", authForm );
 
 // UI Components
 import { messageBox }       from "./components/ui/MessageBox.js";
+import { switchComponent }  from "./components/ui/Switch.js";
 Alpine.data( "messageBox", messageBox );
+Alpine.data( "switchComponent", switchComponent );
 
 // ============================================================
 // Global Alpine Initialization

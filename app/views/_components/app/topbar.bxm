@@ -21,7 +21,7 @@
                 @click="$store.sidebar.toggle()"
                 :aria-label="$store.sidebar.collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
                 :title="$store.sidebar.collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
-            <i class="ph-duotone ph-list" aria-hidden="true"></i>
+            <i class="ph-duotone ph-sidebar" aria-hidden="true"></i>
         </button>
 
 		<!--- Breadcrumbs --->

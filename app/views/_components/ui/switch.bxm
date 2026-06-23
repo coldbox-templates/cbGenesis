@@ -1,0 +1,57 @@
+<!---
+    Boolean Switch Components
+	This includes a visual representation of a boolean value and a hidden
+	form field so the current state is submitted with the parent form.
+
+    Usage:
+
+
+	Args:
+		value : boolean — initial value (default: false)
+		name : string — form field name (default: "")
+		model : string — alias for name (default: "")
+		trueValue : string — submitted value when enabled (default: "true")
+		falseValue : string — submitted value when disabled (default: "false")
+		classes : string — extra CSS classes (default: "")
+--->
+<bx:param name="args.value" default="false" />
+<bx:param name="args.name" default="" />
+<bx:param name="args.model" default="" />
+<bx:param name="args.trueValue" default="true" />
+<bx:param name="args.falseValue" default="false" />
+<bx:param name="args.classes" default="" />
+
+<bx:set localIsTrue = !!args.value>
+<bx:set localName = len( trim( args.name ?: "" ) ) ? trim( args.name ) : trim( args.model ?: "")>
+
+<bx:output>
+<div
+	class="switch#args.classes.len() ? ' ' & args.classes : ''#"
+	x-data="switchComponent( {
+		checked: #localIsTrue#,
+		name: '#encodeForHTMLAttribute( localName )#',
+		trueValue: '#encodeForHTMLAttribute( args.trueValue )#',
+		falseValue: '#encodeForHTMLAttribute( args.falseValue )#'
+	} )"
+	:class="checked ? 'switch--true' : 'switch--false'"
+>
+	<bx:if len( localName )>
+		<input
+			type="hidden"
+			name="#encodeForHTMLAttribute( localName )#"
+			:value="submittedValue">
+	</bx:if>
+
+	<button
+		type="button"
+		class="switch__button"
+		@click="toggle()"
+		:aria-label="ariaLabel"
+		:aria-pressed="checked ? 'true' : 'false'"
+	>
+		<span class="switch__track" aria-hidden="true">
+			<span class="switch__knob"></span>
+		</span>
+	</button>
+</div>
+</bx:output>

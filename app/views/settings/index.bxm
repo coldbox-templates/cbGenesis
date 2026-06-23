@@ -1,4 +1,5 @@
 <bx:output>
+<!--- Page Heading --->
 <div class="page-header admin-page-heading">
 	<div>
 		<p class="eyebrow">Settings</p>
@@ -8,23 +9,103 @@
 	<button class="btn btn-primary"><i class="ph-duotone ph-check"></i> Save All</button>
 </div>
 
-<div class="settings-stack" x-data="{ publicRegistration: #prc.settings.registration.allowPublicRegistration#, emailVerification: #prc.settings.registration.requireEmailVerification#, require2FA: #prc.settings.security.require2FAForAdmins#, maintenance: #prc.settings.security.maintenanceMode# }">
+<div
+	class="settings-stack"
+	x-data="{}"
+>
+
 	<section class="content-card settings-card">
-		<div class="content-card-header"><h3 class="content-card-title"><i class="ph-duotone ph-user-plus"></i> Registration</h3></div>
+
+		<div class="content-card-header">
+			<h3 class="content-card-title">
+				<i class="ph-duotone ph-user-plus"></i> Registration
+			</h3>
+		</div>
+
 		<div class="settings-list">
-			<div class="setting-row"><div><strong>Allow Public Registration</strong><small>Let anyone create an account on the login page</small></div><label class="switch"><input x-model="publicRegistration" type="checkbox"><span></span></label></div>
-			<div class="setting-row"><div><strong>Require Email Verification</strong><small>Users must verify email before accessing the app</small></div><label class="switch"><input x-model="emailVerification" type="checkbox"><span></span></label></div>
-			<div class="setting-row"><div><strong>Default Role for New Users</strong><small>Role assigned on registration</small></div><select><option>#encodeForHTML( prc.settings.registration.defaultRole )#</option><option>Developer</option><option>Admin</option></select></div>
+			<div class="setting-row">
+				<div>
+					<strong>Allow Public Registration</strong>
+					<small>Let anyone create an account on the login page</small>
+				</div>
+				#view(
+					view: "_components/ui/switch",
+					args: {
+						name: "allowPublicRegistration",
+						value: prc.settings.registration.allowPublicRegistration
+					}
+				)#
+			</div>
+			<div class="setting-row">
+				<div>
+					<strong>Require Email Verification</strong>
+					<small>Users must verify email before accessing the app</small>
+				</div>
+				#view(
+					view: "_components/ui/switch",
+					args: {
+						name: "requireEmailVerification",
+						value: prc.settings.registration.requireEmailVerification
+					}
+				)#
+			</div>
+			<div class="setting-row">
+				<div>
+					<strong>Default Role for New Users</strong>
+					<small>Role assigned on registration</small>
+				</div>
+				<select>
+					<option>#encodeForHTML( prc.settings.registration.defaultRole )#</option>
+					<option>Developer</option>
+					<option>Admin</option>
+				</select>
+			</div>
 		</div>
 	</section>
 
 	<section class="content-card settings-card">
 		<div class="content-card-header"><h3 class="content-card-title"><i class="ph-duotone ph-shield-check"></i> Security Policy</h3></div>
 		<div class="settings-list">
-			<div class="setting-row"><div><strong>Require 2FA for Admins</strong><small>Force TOTP or Passkey for Admin+ roles</small></div><label class="switch"><input x-model="require2FA" type="checkbox"><span></span></label></div>
-			<div class="setting-row"><div><strong>Max Login Attempts</strong><small>Lock account after N failed attempts</small></div><input class="compact-input" type="number" value="#prc.settings.security.maxLoginAttempts#"></div>
-			<div class="setting-row"><div><strong>Session Timeout (minutes)</strong><small>Automatically log out inactive users</small></div><input class="compact-input" type="number" value="#prc.settings.security.sessionTimeout#"></div>
-			<div class="setting-row"><div><strong>Maintenance Mode</strong><small>Block non-admin access to the app</small></div><label class="switch"><input x-model="maintenance" type="checkbox"><span></span></label></div>
+			<div class="setting-row">
+				<div>
+					<strong>Require 2FA for Admins</strong>
+					<small>Force TOTP or Passkey for Admin+ roles</small>
+				</div>
+				#view(
+					view: "_components/ui/switch",
+					args: {
+						name: "require2FAForAdmins",
+						value: prc.settings.security.require2FAForAdmins
+					}
+				)#
+			</div>
+			<div class="setting-row">
+				<div>
+					<strong>Max Login Attempts</strong>
+					<small>Lock account after N failed attempts</small>
+				</div>
+				<input class="compact-input" type="number" value="#prc.settings.security.maxLoginAttempts#">
+			</div>
+			<div class="setting-row">
+				<div>
+					<strong>Session Timeout (minutes)</strong>
+					<small>Automatically log out inactive users</small>
+				</div>
+				<input class="compact-input" type="number" value="#prc.settings.security.sessionTimeout#">
+			</div>
+			<div class="setting-row">
+				<div>
+					<strong>Maintenance Mode</strong>
+					<small>Block non-admin access to the app</small>
+				</div>
+				#view(
+					view: "_components/ui/switch",
+					args: {
+						name: "maintenanceMode",
+						value: prc.settings.security.maintenanceMode
+					}
+				)#
+			</div>
 		</div>
 	</section>
 

@@ -12,8 +12,6 @@
 
 		<li class="topbar-breadcrumb-item">
 			<a href="#event.route( "dashboard" )#">
-				<!--- Add a phosphor icon chevron --->
-				<i class="ph-duotone ph-caret-right" aria-hidden="true"></i>
 				Dashboard
 			</a>
 		</li>
