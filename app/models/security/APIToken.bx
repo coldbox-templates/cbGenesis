@@ -1,0 +1,164 @@
+/**
+ * API Token entity for user-authenticated API access.
+ *
+ * Tokens are stored as SHA-256 hashes. The raw token value is returned
+ * only at creation time via APITokenService.createToken().
+ */
+class extends="app.models.BaseEntity" {
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Injections
+	 * --------------------------------------------------------------------------
+	 */
+	@inject( "UserService" )
+	property name="userService";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Properties
+	 * --------------------------------------------------------------------------
+	 */
+
+	 /**
+	  * The primary key (UUID) for this token.
+	  */
+	property name="tokenId" type="uuid" default="";
+
+	/**
+	 * The label for this token, provided by the user.
+	 */
+	property name="label" default="";
+
+	/**
+	 * The SHA-256 hash of the token value. The raw token value is never stored.
+	 */
+	property name="token";
+
+	/**
+	 * The expiration date for this token, if any. Null means no expiration.
+	 */
+	property name="expiration" type="date";
+
+	/**
+	 * The last time this token was used, if any. Null means never used.
+	 */
+	property name="lastUsed" type="date";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Relationships
+	 * --------------------------------------------------------------------------
+	 */
+
+	property name="FK_userId" type="uuid";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Validation Constraints
+	 * --------------------------------------------------------------------------
+	 * https://coldbox-validation.ortusbooks.com/overview/valid-constraints
+	 */
+	this.constraints = {
+		"label": { required: true, size: "1..255" },
+		"token": {
+			required: true,
+			unique: { table: "user_api_tokens", column: "token" }
+		}
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Population
+	 * --------------------------------------------------------------------------
+	 * Fields to exclude when populating the entity.
+	 * https://coldbox.ortusbooks.com/the-basics/event-handlers/model-integration/model-data-binding#mass-population-control-this.population
+	 */
+	this.population = {}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Serialization
+	 * --------------------------------------------------------------------------
+	 * NEVER expose the hashed token.
+	 */
+	this.memento = {
+		defaultIncludes: [ "*" ],
+		defaultExcludes: [],
+		neverInclude   : [ "token" ]
+	}
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		super.init( "tokenId" )
+		variables.label       = ""
+		variables.token       = ""
+		variables.expiration  = null
+		variables.lastUsed    = null
+		return this
+	}
+
+	/**
+	 * Returns true if the token has an expiration date.
+	 */
+	boolean function hasExpiration() {
+		return !isNull( variables.expiration )
+	}
+
+	/**
+	 * Returns true if the token has an expiration date and it has passed.
+	 */
+	boolean function isExpired() {
+		if ( isNull( variables.expiration ) ) {
+			return false
+		}
+		return dateCompare( variables.expiration, now(), "s" ) < 0
+	}
+
+	/**
+	 * Returns true if the token will expire within the given number of days.
+	 *
+	 * @days Number of days to check within. Defaults to 7.
+	 *
+	 * @return Boolean indicating if the token is expiring soon.
+	 */
+	boolean function isExpiringSoon( numeric days = 7 ) {
+		if ( isNull( variables.expiration ) ) {
+			return false
+		}
+		var threshold = dateAdd( "d", arguments.days, now() )
+		return dateCompare( variables.expiration, threshold, "s" ) <= 0
+			&& !this.isExpired()
+	}
+
+	/**
+	 * Get the user associated with this token.
+	 *
+	 * @return The User entity associated with this token, or null if not found.
+	 */
+	User function getUser() {
+		if( !isNull( variables.FK_userId ) ) {
+			if( isNull( variables.user ) ) {
+				variables.user = userService.getById( variables.FK_userId )
+			}
+			return variables.user
+		}
+		return null
+	}
+
+	/**
+	 * Set the user associated with this token.
+	 *
+	 * @user The User entity to associate with this token.
+	 *
+	 * @return The APIToken entity for method chaining.
+	 */
+	APIToken function setUser( required User user ) {
+		variables.user = user
+		variables.FK_userId = user.getId()
+		return this
+	}
+
+}

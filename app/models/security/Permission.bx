@@ -2,15 +2,28 @@
  * A system permission that can be assigned to roles.
  */
 class extends="app.models.BaseEntity" {
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Properties
 	 * --------------------------------------------------------------------------
 	 */
 
+	/**
+	 * The unique identifier for the permission.
+	 */
+	property name="permissionId" default="";
+
+	/**
+	 * The unique permission string (slug) that identifies the permission.
+	 */
 	property name="permission" default="";
 
+	/**
+	 * A brief description of the permission.
+	 */
 	property name="description" default="";
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Validation Constraints
@@ -24,15 +37,15 @@ class extends="app.models.BaseEntity" {
 			unique  : { table: "permissions", column: "permission" }
 		},
 		description: { required: false }
-	};
-	this.constraintProfiles = { "update": "permission,description" };
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
-	 * Population Options
+	 * Population Control Options
 	 * --------------------------------------------------------------------------
+	 * https://coldbox.ortusbooks.com/the-basics/event-handlers/model-integration/model-data-binding#mass-population-control-this.population
 	 */
-	this.population = { exclude: [ "permissionId", "isActive"] };
+	this.population = {}
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -44,7 +57,7 @@ class extends="app.models.BaseEntity" {
 		defaultIncludes: [ "*"],
 		defaultExcludes: [],
 		neverInclude   : []
-	};
+	}
 
 	/**
 	 * Constructor
@@ -58,9 +71,16 @@ class extends="app.models.BaseEntity" {
 	}
 
 	/**
-	 * Get the permission slug (lowercased, trimmed) for lookups
+	 * Gets the prefix of the permission string (the part before the first :).
+	 * Example: For permission "user:create", this method returns "user".
+	 * If the permission string does not contain a colon, it returns an empty string.
+	 *
+	 * @return The prefix of the permission string, or an empty string if none exists.
 	 */
-	string function getPermissionSlug() {
-		return lcase( trim( variables.permission ) );
+	string function getPrefix(){
+		if( variables.permission.contains( ":" ) ){
+			return variables.permission.getToken( 1, ":" )
+		}
+		return ""
 	}
 }

@@ -5,9 +5,10 @@
 @singleton
 @threadSafe
 class {
+
 	/**
 	 * --------------------------------------------------------------------------
-	 * DI
+	 * Injections
 	 * --------------------------------------------------------------------------
 	 */
 	property name="qb" inject="provider:QueryBuilder@qb";
@@ -24,5 +25,20 @@ class {
 
 	property name="log" inject="logbox:logger:{this}";
 
+
+	/**
+	 * Ensure the sort order is valid.
+	 *
+	 * @orderDirection The order direction, either "asc" or "desc".
+	 *
+	 * @return The validated order direction.
+	 */
+	private string function ensureSortOrder( required orderDirection ) {
+		var order = lcase( arguments.orderDirection )
+		if ( listFindNoCase( "asc,desc", order ) == 0 ) {
+			order = "desc"
+		}
+		return order
+	}
 
 }

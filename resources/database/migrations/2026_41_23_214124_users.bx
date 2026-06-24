@@ -83,13 +83,37 @@ class {
 			table.index( "token", "idx_passwordResetToken" )
 			table.index( "expiresDate", "idx_passwordResetExpires" )
 		} )
+
+		// User API Tokens
+		schema.create( "user_api_tokens", ( table ) => {
+			// Fields
+			table.uuid( "tokenId" ).primaryKey()
+			table.uuid( "FK_userId" )
+			table.string( "label" )
+			table.string( "token", 64 ).unique()
+			table.datetime( "createdDate" ).withCurrent()
+			table.datetime( "modifiedDate" )
+			table.boolean( "isActive" ).default( true )
+			table.datetime( "expiration" ).nullable()
+			table.datetime( "lastUsed" ).nullable()
+
+			table.foreignKey( "FK_userId" )
+				.references( "userId" )
+				.onTable( "users" )
+				.onDelete( "CASCADE" )
+
+			table.index( "FK_userId", "idx_tokenUser" )
+			table.index( "isActive", "idx_tokenActive" )
+			table.index( "expiration", "idx_tokenExpiration" )
+		} )
     }
 
     function down( schema, qb ) {
-		schema.dropIfExists( "users" )
+		schema.dropIfExists( "user_api_tokens" )
 		schema.dropIfExists( "user_roles" )
 		schema.dropIfExists( "user_permissions" )
 		schema.dropIfExists( "user_password_resets" )
+		schema.dropIfExists( "users" )
     }
 
 }

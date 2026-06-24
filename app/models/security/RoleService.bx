@@ -2,22 +2,7 @@
  * Role Service for managing system roles and their permissions
  */
 
-@singleton
-@threadSafe
 class {
-	/**
-	 * --------------------------------------------------------------------------
-	 * Injections
-	 * --------------------------------------------------------------------------
-	 */
-
-	property name="populator" inject="wirebox:populator";
-
-	property name="wirebox" inject="wirebox";
-
-	property name="log" inject="logbox:logger:{this}";
-
-	property name="qb" inject="QueryBuilder@qb";
 
 	/**
 	 * Constructor
@@ -49,7 +34,7 @@ class {
 					.where( "roleId", arguments.roleId )
 					.first(),
 				ignoreTargetLists = true
-			);
+			)
 	}
 
 	/**
@@ -67,39 +52,36 @@ class {
 					.where( "role", arguments.role )
 					.first(),
 				ignoreTargetLists = true
-			);
+			)
 	}
 
 	/**
 	 * List all roles
 	 *
 	 * @sortOrder The sort order for the listing
-	 * @asQuery   Return as a query object, defaults to array of Role entities
+	 * @sortDirection The sort direction for the listing
 	 *
-	 * @return Array of Role entities or a query object
+	 * @return Array of Role entities
 	 */
 	any function list(
 		string sortOrder = "role",
-		boolean asQuery  = false
+		string sortDirection = "asc"
 	) {
-		var results = qb
+		arguments.sortDirection = ensureSortOrder( arguments.sortDirection )
+
+		return qb
 			.from( "roles" )
 			.orderBy( arguments.sortOrder )
-			.get();
-
-		if ( arguments.asQuery ) {
-			return results;
-		}
-
-		return results.map(
+			.get()
+			.map(
 				( item ) => {
 					return populator.populateFromStruct(
-							target            = new(),
-							memento           = item,
-							ignoreTargetLists = true
-						);
+						target            = new(),
+						memento           = item,
+						ignoreTargetLists = true
+					)
 				}
-			);
+			)
 	}
 
 	/**
@@ -116,47 +98,44 @@ class {
 			.updateOrInsert(
 				values = {
 					"roleId"     : arguments.role.getId(),
-					"createdDate": {
-						value    : arguments.role.getCreatedDate(),
-						cfsqlType: "timestamp"
-					},
-					"modifiedDate": {
-						value    : arguments.role.getModifiedDate(),
-						cfsqlType: "timestamp"
-					},
 					"isActive"   : arguments.role.getIsActive(),
 					"role"       : arguments.role.getRole(),
 					"description": arguments.role.getDescription()
 				}
-			);
+			)
 
 		// populate the id if newly created
-		if ( !isNull( qResults.result?.generatedKey ) && len( qResults.result.generatedKey ) ) {
-			arguments.role.setId( qResults.result.generatedKey );
+		if ( !arguments.role.isLoaded() ) {
+			arguments.role.setId( qResults.result.generatedKey )
 		}
 
-		return arguments.role;
+		return arguments.role
 	}
 
 	/**
-	 * Delete a role (soft delete)
+	 * Delete a role
+	 *
+	 * @role The role to delete
+	 *
+	 * @return true if deleted, false if not found
+	 */
+	boolean function delete( required role ) {
+		return this.deleteById( arguments.role.getId() )
+	}
+
+	/**
+	 * Delete a role
 	 *
 	 * @roleId The id of the role to delete
 	 *
 	 * @return true if deleted, false if not found
 	 */
-	boolean function delete( required roleId ) {
+	boolean function deleteById( required roleId ) {
 		var result = qb
 			.from( "roles" )
 			.where( "roleId", arguments.roleId )
-			.update(
-				{
-					"isActive"    : false,
-					"modifiedDate": now()
-				}
-			);
-
-		return result > 0;
+			.delete()
+		return result > 0
 	}
 
 	/**
@@ -171,8 +150,7 @@ class {
 				.from( "roles" )
 				.where( "roleId", arguments.roleId )
 				.where( "isActive", true )
-				.count() >
-			0;
+				.exists()
 	}
 
 	/**
@@ -193,17 +171,17 @@ class {
 			)
 			.where( "role_permissions.roleId", arguments.roleId )
 			.where( "permissions.isActive", true )
-			.get();
+			.get()
 
 		return results.map(
 				( item ) => {
 					return populator.populateFromStruct(
-							target            = wirebox.getInstance( "system.Permission" ),
+							target            = wirebox.getInstance( "Permission" ),
 							memento           = item,
 							ignoreTargetLists = true
-						);
+						)
 				}
-			);
+			)
 	}
 
 	/**

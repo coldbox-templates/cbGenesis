@@ -1,23 +1,7 @@
 /**
  * Permission Service for managing system permissions
  */
-
-@singleton
-@threadSafe
-class {
-	/**
-	 * --------------------------------------------------------------------------
-	 * Injections
-	 * --------------------------------------------------------------------------
-	 */
-
-	property name="populator" inject="wirebox:populator";
-
-	property name="wirebox" inject="wirebox";
-
-	property name="log" inject="logbox:logger:{this}";
-
-	property name="qb" inject="QueryBuilder@qb";
+class extends="app.models.BaseService" {
 
 	/**
 	 * Constructor
@@ -31,7 +15,6 @@ class {
 	 */
 	@provider( "Permission" )
 	Permission function new() {
-
 	}
 
 	/**
@@ -49,7 +32,7 @@ class {
 					.where( "permissionId", arguments.permissionId )
 					.first(),
 				ignoreTargetLists = true
-			);
+			)
 	}
 
 	/**
@@ -67,39 +50,36 @@ class {
 					.where( "permission", arguments.permission )
 					.first(),
 				ignoreTargetLists = true
-			);
+			)
 	}
 
 	/**
 	 * List all permissions
 	 *
 	 * @sortOrder The sort order for the listing
-	 * @asQuery   Return as a query object, defaults to array of Permission entities
+	 * @sortDirection The sort direction for the listing
 	 *
-	 * @return Array of Permission entities or a query object
+	 * @return Array of Permission entities
 	 */
 	any function list(
 		string sortOrder = "permission",
-		boolean asQuery  = false
+		string sortDirection = "asc"
 	) {
-		var results = qb
+		arguments.sortDirection = ensureSortOrder( arguments.sortDirection )
+
+		return qb
 			.from( "permissions" )
 			.orderBy( arguments.sortOrder )
-			.get();
-
-		if ( arguments.asQuery ) {
-			return results;
-		}
-
-		return results.map(
+			.get()
+			.map(
 				( item ) => {
 					return populator.populateFromStruct(
-							target            = new(),
-							memento           = item,
-							ignoreTargetLists = true
-						);
+						target            = new(),
+						memento           = item,
+						ignoreTargetLists = true
+					)
 				}
-			);
+			)
 	}
 
 	/**
@@ -114,49 +94,46 @@ class {
 			.from( "permissions" )
 			.where( "permissionId", arguments.permission.getId() )
 			.updateOrInsert(
-				values = {
+				{
 					"permissionId": arguments.permission.getId(),
-					"createdDate" : {
-						value    : arguments.permission.getCreatedDate(),
-						cfsqlType: "timestamp"
-					},
-					"modifiedDate": {
-						value    : arguments.permission.getModifiedDate(),
-						cfsqlType: "timestamp"
-					},
 					"isActive"   : arguments.permission.getIsActive(),
 					"permission" : arguments.permission.getPermission(),
 					"description": arguments.permission.getDescription()
 				}
-			);
+			)
 
 		// populate the id if newly created
-		if ( !isNull( qResults.result?.generatedKey ) && len( qResults.result.generatedKey ) ) {
-			arguments.permission.setId( qResults.result.generatedKey );
+		if ( !arguments.permission.isLoaded() ) {
+			arguments.permission.setId( qResults.result.generatedKey )
 		}
 
-		return arguments.permission;
+		return arguments.permission
 	}
 
 	/**
-	 * Delete a permission (soft delete)
+	 * Delete a permission
+	 *
+	 * @permission The permission to delete
+	 *
+	 * @return true if deleted, false if not found
+	 */
+	boolean function delete( required permission ) {
+		return this.deleteById( arguments.permission.getId() )
+	}
+
+	/**
+	 * Delete a permission
 	 *
 	 * @permissionId The id of the permission to delete
 	 *
 	 * @return true if deleted, false if not found
 	 */
-	boolean function delete( required permissionId ) {
+	boolean function deleteById( required permissionId ) {
 		var result = qb
 			.from( "permissions" )
 			.where( "permissionId", arguments.permissionId )
-			.update(
-				{
-					"isActive"    : false,
-					"modifiedDate": now()
-				}
-			);
-
-		return result > 0;
+			.delete()
+		return result > 0
 	}
 
 	/**
@@ -171,8 +148,7 @@ class {
 				.from( "permissions" )
 				.where( "permissionId", arguments.permissionId )
 				.where( "isActive", true )
-				.count() >
-			0;
+				.exists()
 	}
 
 	/**
@@ -193,16 +169,16 @@ class {
 			)
 			.where( "role_permissions.permissionId", arguments.permissionId )
 			.where( "roles.isActive", true )
-			.get();
+			.get()
 
 		return results.map(
 				( item ) => {
 					return populator.populateFromStruct(
-							target            = wirebox.getInstance( "system.Role" ),
+							target            = wirebox.getInstance( "Role" ),
 							memento           = item,
 							ignoreTargetLists = true
-						);
+						)
 				}
-			);
+			)
 	}
 }

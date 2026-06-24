@@ -28,8 +28,6 @@ class {
 	 * --------------------------------------------------------------------------
 	 */
 
-	property name="id";
-
 	property name="createdDate" type="date";
 
 	property name="modifiedDate" type="date";
@@ -43,14 +41,10 @@ class {
 	 * @entityName - The name of the entity, defaults to the class name
 	 */
 	function init( primaryKey = "id", entityName ) {
-		variables.isActive = true;
-		variables.createdDate = variables.modifiedDate = now();
-		variables.entityName = arguments.entityName ?:
-			this
-				.$bx
-				.meta
-				.name;
-		variables.primaryKey = arguments.primaryKey;
+		variables.isActive = true
+		variables.createdDate = variables.modifiedDate = now()
+		variables.entityName = arguments.entityName ?: this.$bx.meta.name
+		variables.primaryKey = arguments.primaryKey
 
 		// Incorporate default includes for the base class.
 		if ( !isNull( this.memento.defaultIncludes ) && isNull( this.memento.baseIncluded ) ) {
@@ -60,18 +54,25 @@ class {
 				.append(
 					[ variables.primaryKey, "createdDate", "modifiedDate", "isActive"],
 					true
-				);
-			this.memento.baseIncluded = true;
+				)
+			this.memento.baseIncluded = true
 		}
 
-		return this;
+		return this
+	}
+
+	/**
+	 * Returns the primary key value of the entity
+	 */
+	string function getId(){
+		return variables[ variables.primaryKey ]
 	}
 
 	/**
 	 * Do we have a new or loaded entity
 	 */
 	boolean function isLoaded() {
-		return ( !isNull( variables.id ) && len( variables.id ) );
+		return ( !isNull( variables[ variables.primaryKey ] ) && len( variables[ variables.primaryKey ] ) )
 	}
 
 	/***** Persistence Events : Modeled After ORM Events ******/

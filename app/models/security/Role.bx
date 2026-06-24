@@ -8,9 +8,21 @@ class extends="app.models.BaseEntity" {
 	 * --------------------------------------------------------------------------
 	 */
 
+	/**
+	 * The role ID (UUID) for this role.
+	 */
+	property name="roleId" type="uuid" default="";
+
+	/**
+	 * The role name for this role.
+	 */
 	property name="role" default="";
 
+	/**
+	 * The description for this role.
+	 */
 	property name="description" default="";
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Validation Constraints
@@ -24,15 +36,14 @@ class extends="app.models.BaseEntity" {
 			unique  : { table: "roles", column: "role" }
 		},
 		description: { required: false }
-	};
-	this.constraintProfiles = { "update": "role,description" };
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
 	 * Population Options
 	 * --------------------------------------------------------------------------
 	 */
-	this.population = { exclude: [ "roleId", "isActive"] };
+	this.population = {}
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -44,23 +55,17 @@ class extends="app.models.BaseEntity" {
 		defaultIncludes: [ "*"],
 		defaultExcludes: [],
 		neverInclude   : []
-	};
+	}
 
 	/**
 	 * Constructor
 	 */
 	function init() {
-		super.init( "roleId" );
-		variables.role = "";
-		variables.description = "";
+		super.init( "roleId" )
+		variables.role = ""
+		variables.description = ""
 
 		return this;
 	}
 
-	/**
-	 * Get the role slug (lowercased, trimmed) for lookups
-	 */
-	string function getRoleSlug() {
-		return lcase( trim( variables.role ) );
-	}
 }
