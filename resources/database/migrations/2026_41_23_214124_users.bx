@@ -1,6 +1,7 @@
 class {
 
     function up( schema, qb ) {
+		// Main Users table
 		schema.create( "users", (table)=>{
 			// Base Fields
 			table.uuid( "userId" ).primaryKey()
@@ -64,6 +65,7 @@ class {
 				.onDelete( "CASCADE" )
 		} )
 
+		// User Password Resets
 		schema.create( "user_password_resets", ( table ) => {
 			// Fields
 			table.uuid( "resetId" ).primaryKey()

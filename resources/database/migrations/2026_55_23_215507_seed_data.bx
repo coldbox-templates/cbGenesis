@@ -1,5 +1,9 @@
 class {
 
+	static{
+		test_bcrypt = "$2a$10$nIfWUb9y5BtKWWNinHxtkOo9QIg.AaoVh.7MbukPrg5uLX9BNVC42"
+	}
+
 	function up( schema, qb ) {
 
 		var adminRoleId = "00000000-0000-0000-0000-000000000001"
@@ -7,7 +11,7 @@ class {
 			{
 				id          : "00000000-0000-0000-0000-000000000101",
 				permission  : "roles:read",
-				description : "Read roles"
+				description : "View roles"
 			},
 			{
 				id          : "00000000-0000-0000-0000-000000000102",
@@ -28,7 +32,7 @@ class {
 			{
 				id          : "00000000-0000-0000-0000-000000000201",
 				permission  : "users:read",
-				description : "Read users"
+				description : "View users"
 			},
 			{
 				id          : "00000000-0000-0000-0000-000000000202",
@@ -49,7 +53,7 @@ class {
 			{
 				id          : "00000000-0000-0000-0000-000000000301",
 				permission  : "permissions:read",
-				description : "Read permissions"
+				description : "View permissions"
 			},
 			{
 				id          : "00000000-0000-0000-0000-000000000302",
@@ -114,35 +118,31 @@ class {
 
 		} )
 
+		// Create Admin user and assign Admin role
+		var adminUserId = "00000000-0000-0000-0000-000000000001"
+		qb.from( "users" ).insert( {
+			userId    : adminUserId,
+			isActive  : true,
+			firstName : "Admin",
+			lastName  : "User",
+			email     : "admin@cbgenesis.com",
+			password  : static.test_bcrypt,
+			biography  : "I am a wonderful CBGenesis Admin"
+		} )
+		// Add the admin role to the admin user
+		qb.from( "user_roles" ).insert( {
+			FK_userId : adminUserId,
+			FK_roleId : adminRoleId
+		} )
+
 	}
 
 	function down( schema, qb ) {
-		var permissionNames = [
-			"roles:read",
-			"roles:write",
-			"roles:delete",
-			"roles:admin",
-
-			"users:read",
-			"users:write",
-			"users:delete",
-			"users:admin",
-
-			"permissions:read",
-			"permissions:write",
-			"permissions:delete",
-			"permissions:admin",
-
-			"settings:read",
-			"settings:write",
-			"settings:delete",
-			"settings:admin"
-		]
-
 		qb.from( "role_permissions" ).delete()
 		qb.from( "user_permissions" ).delete()
 		qb.from( "roles" ).delete()
 		qb.from( "permissions" ).delete()
+		qb.from( "users" ).delete()
 	}
 
 }

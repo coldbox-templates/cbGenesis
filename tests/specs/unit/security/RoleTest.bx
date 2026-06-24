@@ -4,7 +4,7 @@
  * responsibility to update the model annotation instantiation path and init your model.
  */
 
-@model( "app.models.Role" )
+@model( "app.models.security.Role" )
 class extends="coldbox.system.testing.BaseModelTest" {
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
@@ -16,7 +16,7 @@ class extends="coldbox.system.testing.BaseModelTest" {
 		super.setup();
 
 		// init the model object
-		variables.role = getInstance( "system.Role" );
+		variables.role = getInstance( "app.models.security.Role" );
 	}
 
 	function afterAll() {

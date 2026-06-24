@@ -5,7 +5,7 @@
  * using mocked dependencies.
  */
 
-@model( "app.models.SecurityService" )
+@model( "app.models.security.SecurityService" )
 class extends="coldbox.system.testing.BaseModelTest" {
 
 	/*********************************** LIFE CYCLE Methods ***********************************/

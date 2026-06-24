@@ -4,7 +4,7 @@
  * responsibility to update the model annotation instantiation path and init your model.
  */
 
-@model( "app.models.RoleService" )
+@model( "app.models.security.RoleService" )
 class extends="coldbox.system.testing.BaseModelTest" {
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
