@@ -1,0 +1,41 @@
+// ============================================================
+// Footer Component
+// Appears at the bottom of the main content area in the admin layout.
+// BEM: .app-footer, .app-footer__copy, .app-footer__sep, .app-footer__link
+// ============================================================
+
+.app-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.75rem;
+    font-size: 0.8125rem;
+    color: var(--app-text-muted);
+    border-top: 1px solid var(--app-border);
+    flex-shrink: 0;
+
+    @media (max-width: 767.98px) {
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+    }
+
+    &__copy {
+        flex: 1;
+        white-space: nowrap;
+    }
+
+    &__sep {
+        color: var(--app-border);
+    }
+
+    &__link {
+        color: var(--app-text-muted);
+        text-decoration: none;
+
+        &:hover {
+            color: var(--app-text);
+            text-decoration: underline;
+        }
+    }
+}

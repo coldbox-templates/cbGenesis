@@ -45,45 +45,7 @@
     }
 }
 
-// ---- Topbar ----
-
-.topbar {
-    position: sticky;
-    top: 0;
-    height: $topbar-height;
-    background: var(--topbar-bg);
-    border-bottom: 1px solid var(--topbar-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 1.1rem;
-    z-index: 100;
-    flex-shrink: 0;
-    gap: 1rem;
-}
-
-.topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex: 1;
-    overflow: hidden;
-}
-
-.topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    flex-shrink: 0;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-
-    > li {
-        display: flex;
-        align-items: center;
-    }
-}
+// ---- Topbar (shell defined in components/_topbar.scss, placed here by layout) -
 
 // ---- Page content area ----
 
@@ -96,40 +58,5 @@
     }
 }
 
-// ---- App footer ----
+// ---- App footer (styles in components/_footer.scss, placed here by layout) ----
 
-.app-footer {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.875rem 1.75rem;
-    font-size: 0.8125rem;
-    color: var(--app-text-muted);
-    border-top: 1px solid var(--app-border);
-    flex-shrink: 0;
-
-    @media (max-width: 767.98px) {
-        padding: 0.75rem 1rem;
-        flex-wrap: wrap;
-        gap: 0.375rem;
-    }
-
-    &__copy {
-        flex: 1;
-        white-space: nowrap;
-    }
-
-    &__sep {
-        color: var(--app-border);
-    }
-
-    &__link {
-        color: var(--app-text-muted);
-        text-decoration: none;
-
-        &:hover {
-            color: var(--app-text);
-            text-decoration: underline;
-        }
-    }
-}
