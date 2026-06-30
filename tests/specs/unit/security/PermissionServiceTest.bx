@@ -1,27 +1,54 @@
 /**
- * The base model test case will use the 'model' annotation as the instantiation path
- * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
- * responsibility to update the model annotation instantiation path and init your model.
+ * Comprehensive tests for PermissionService CRUD operations.
+ *
+ * Uses mocked qb and populator to test all service methods without
+ * hitting a real database. The wrapInTransaction from BaseServiceTest
+ * provides transactional rollback as an extra safety net.
  */
 
 @model( "app.models.security.PermissionService" )
-class extends="coldbox.system.testing.BaseModelTest" {
+class extends="tests.resources.BaseServiceTest" {
+
+	/*********************************** FIXTURES ***********************************/
+
+	variables.testPermissionId = "";
+	variables.testPermission   = {};
+	variables.mockQbResult     = {};
+
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
 	function beforeAll() {
 		super.beforeAll();
 
-		// setup the model
-		super.setup();
+		// Replace injected qb and populator with mocks
+		variables.mockQb         = createMock( "app.models.security.PermissionService" );
+		variables.mockQbBuilder  = createMock( "qb.models.QueryBuilder" );
+		variables.mockQbFrom     = createMock( "qb.objects.From" );
+		variables.mockPopulator  = createMock( "wirebox.system.di.Populator" );
 
-		// init the model object
+		// Wire the qb mock: model.qb => chain of from()/where()/orderBy()/get()/first()/exists()/delete()/updateOrInsert()
+		model.$( "getQb" ).$returns( mockQb );
+
+		// Wire populator mock
+		model.$( "getPopulator" ).$returns( mockPopulator );
+
 		model.init();
+
+		// Set up a test permission struct for reuse
+		variables.testPermissionId = "perm-001";
+		variables.testPermission = {
+			permissionId : "perm-001",
+			permission   : "user:create",
+			description  : "Create users",
+			isActive     : true
+		};
 	}
 
 	function afterAll() {
 		super.afterAll();
 	}
+
 
 	/*********************************** BDD SUITES ***********************************/
 
@@ -29,6 +56,7 @@ class extends="coldbox.system.testing.BaseModelTest" {
 		describe(
 			"PermissionService",
 			function() {
+
 				it(
 					"can be created",
 					function() {
@@ -44,6 +72,8 @@ class extends="coldbox.system.testing.BaseModelTest" {
 						expect( perm.isLoaded() ).toBeFalse();
 					}
 				);
+
+				// -- CRUD method existence --
 
 				it(
 					"has a list() method",
@@ -63,6 +93,13 @@ class extends="coldbox.system.testing.BaseModelTest" {
 					"has a delete() method",
 					function() {
 						expect( model ).toHaveKey( "delete" );
+					}
+				);
+
+				it(
+					"has a deleteById() method",
+					function() {
+						expect( model ).toHaveKey( "deleteById" );
 					}
 				);
 
@@ -93,6 +130,484 @@ class extends="coldbox.system.testing.BaseModelTest" {
 						expect( model ).toHaveKey( "getRolesForPermission" );
 					}
 				);
+
+				// -- getById() --
+
+				it(
+					"getById() returns populated permission when found",
+					function() {
+						// Mock: qb.from("permissions").where("permissionId", "perm-001").first() => testPermission struct
+						var mockFrom  = createMock( "qb.objects.From" );
+						var mockWhere = createMock( "qb.objects.Where" );
+						var mockFirst = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere );
+						mockWhere.where( "permissionId", "perm-001" ).$returns( mockFirst );
+						mockFirst.first().$returns( variables.testPermission );
+
+						// Mock populator.populateFromStruct => returns a Permission entity with values set
+						var mockEntity = createMock( "app.models.security.Permission" );
+						mockEntity.getId().$returns( "perm-001" );
+						mockEntity.getPermission().$returns( "user:create" );
+						mockEntity.getDescription().$returns( "Create users" );
+						mockEntity.getIsActive().$returns( true );
+						mockEntity.isLoaded().$returns( true );
+
+						mockPopulator.populateFromStruct(
+								target            = mockEntity,
+								memento           = variables.testPermission,
+								ignoreTargetLists = true
+							)
+							.$returns( mockEntity );
+
+						// Replace the qb chain on the model
+						model.qb = mockFrom;
+
+						var result = model.getById( "perm-001" );
+
+						expect( result ).toBeComponent();
+						expect( result.isLoaded() ).toBeTrue();
+					}
+				);
+
+				it(
+					"getById() returns unloaded permission when not found",
+					function() {
+						var mockFrom  = createMock( "qb.objects.From" );
+						var mockWhere = createMock( "qb.objects.Where" );
+						var mockFirst = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere );
+						mockWhere.where( "permissionId", "nonexistent" ).$returns( mockFirst );
+						mockFirst.first().$returns( {} );
+
+						var mockEntity  = createMock( "app.models.security.Permission" );
+						mockEntity.getId().$returns( "" );
+						mockEntity.isLoaded().$returns( false );
+
+						mockPopulator.populateFromStruct(
+								target            = mockEntity,
+								memento           = {},
+								ignoreTargetLists = true
+							)
+							.$returns( mockEntity );
+
+						model.qb = mockFrom;
+
+						var result = model.getById( "nonexistent" );
+
+						expect( result ).toBeComponent();
+						expect( result.isLoaded() ).toBeFalse();
+					}
+				);
+
+				// -- getByName() --
+
+				it(
+					"getByName() returns populated permission when found",
+					function() {
+						var mockFrom  = createMock( "qb.objects.From" );
+						var mockWhere = createMock( "qb.objects.Where" );
+						var mockFirst = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere );
+						mockWhere.where( "permission", "user:create" ).$returns( mockFirst );
+						mockFirst.first().$returns( variables.testPermission );
+
+						var mockEntity = createMock( "app.models.security.Permission" );
+						mockEntity.getId().$returns( "perm-001" );
+						mockEntity.getPermission().$returns( "user:create" );
+						mockEntity.isLoaded().$returns( true );
+
+						mockPopulator.populateFromStruct(
+								target            = mockEntity,
+								memento           = variables.testPermission,
+								ignoreTargetLists = true
+							)
+							.$returns( mockEntity );
+
+						model.qb = mockFrom;
+
+						var result = model.getByName( "user:create" );
+
+						expect( result ).toBeComponent();
+						expect( result.isLoaded() ).toBeTrue();
+					}
+				);
+
+				it(
+					"getByName() returns unloaded permission when not found",
+					function() {
+						var mockFrom  = createMock( "qb.objects.From" );
+						var mockWhere = createMock( "qb.objects.Where" );
+						var mockFirst = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere );
+						mockWhere.where( "permission", "nonexistent" ).$returns( mockFirst );
+						mockFirst.first().$returns( {} );
+
+						var mockEntity  = createMock( "app.models.security.Permission" );
+						mockEntity.isLoaded().$returns( false );
+
+						mockPopulator.populateFromStruct(
+								target            = mockEntity,
+								memento           = {},
+								ignoreTargetLists = true
+							)
+							.$returns( mockEntity );
+
+						model.qb = mockFrom;
+
+						var result = model.getByName( "nonexistent" );
+
+						expect( result ).toBeComponent();
+						expect( result.isLoaded() ).toBeFalse();
+					}
+				);
+
+				// -- list() --
+
+				it(
+					"list() returns array of populated permissions",
+					function() {
+						var mockFrom    = createMock( "qb.objects.From" );
+						var mockOrderBy = createMock( "qb.objects.OrderBy" );
+						var mockGet     = createMock( "qb.objects.QueryBuilder" );
+
+						var listResult = [
+							{ permissionId = "perm-001", permission = "user:create", description = "Create users", isActive = true },
+							{ permissionId = "perm-002", permission = "user:delete", description = "Delete users", isActive = true }
+						];
+
+						mockFrom.from( "permissions" ).$returns( mockOrderBy );
+						mockOrderBy.orderBy( "permission" ).$returns( mockGet );
+						mockGet.get().$returns( listResult );
+
+						// Map iterates over the array
+						var mockEntity1 = createMock( "app.models.security.Permission" );
+						mockEntity1.isLoaded().$returns( true );
+
+						var mockEntity2 = createMock( "app.models.security.Permission" );
+						mockEntity2.isLoaded().$returns( true );
+
+						mockPopulator.populateFromStruct(
+								target            = mockEntity1,
+								memento           = listResult[1],
+								ignoreTargetLists = true
+							)
+							.$returns( mockEntity1 );
+
+						mockPopulator.populateFromStruct(
+								target            = mockEntity2,
+								memento           = listResult[2],
+								ignoreTargetLists = true
+							)
+							.$returns( mockEntity2 );
+
+						model.qb = mockFrom;
+
+						var result = model.list();
+
+						expect( result ).toBeArray();
+						expect( result.len() ).toBe( 2 );
+					}
+				);
+
+				it(
+					"list() accepts custom sortOrder and sortDirection",
+					function() {
+						var mockFrom    = createMock( "qb.objects.From" );
+						var mockOrderBy = createMock( "qb.objects.OrderBy" );
+						var mockGet     = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "permissions" ).$returns( mockOrderBy );
+						mockOrderBy.orderBy( "description", "desc" ).$returns( mockGet );
+						mockGet.get().$returns( [] );
+
+						model.qb = mockFrom;
+
+						var result = model.list( sortOrder = "description", sortDirection = "desc" );
+
+						expect( result ).toBeArray();
+					}
+				);
+
+				// -- save() --
+
+				it(
+					"save() inserts a new permission and sets the generated id",
+					function() {
+						// Build a new (unloaded) permission entity
+						var mockPerm    = createMock( "app.models.security.Permission" );
+						var mockFrom    = createMock( "qb.objects.From" );
+						var mockWhere   = createMock( "qb.objects.Where" );
+						var mockUpdate  = createMock( "qb.objects.UpdateOrInsert" );
+						var mockResult  = { generatedKey = "perm-new" };
+
+						mockPerm.getId().$returns( "" );
+						mockPerm.getPermission().$returns( "role:admin" );
+						mockPerm.getDescription().$returns( "Admin role" );
+						mockPerm.getIsActive().$returns( true );
+						mockPerm.isLoaded().$returns( false );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere );
+						mockWhere.where( "permissionId", "" ).$returns( mockUpdate );
+						mockUpdate.updateOrInsert(
+								{
+									permissionId : "",
+									permission   : "role:admin",
+									description  : "Admin role",
+									isActive     : true
+								}
+							)
+							.$returns( { result = mockResult } );
+
+						// The save() method calls setId on the permission after insert
+						mockPerm.setId( "perm-new" );
+
+						model.qb = mockFrom;
+
+						var result = model.save( mockPerm );
+
+						expect( result ).toBeComponent();
+						expect( result.getId() ).toBe( "perm-new" );
+					}
+				);
+
+				it(
+					"save() updates an existing permission",
+					function() {
+						var mockPerm    = createMock( "app.models.security.Permission" );
+						var mockFrom    = createMock( "qb.objects.From" );
+						var mockWhere   = createMock( "qb.objects.Where" );
+						var mockUpdate  = createMock( "qb.objects.UpdateOrInsert" );
+
+						mockPerm.getId().$returns( "perm-001" );
+						mockPerm.getPermission().$returns( "user:update" );
+						mockPerm.getDescription().$returns( "Update users" );
+						mockPerm.getIsActive().$returns( true );
+						mockPerm.isLoaded().$returns( true );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere );
+						mockWhere.where( "permissionId", "perm-001" ).$returns( mockUpdate );
+						mockUpdate.updateOrInsert(
+								{
+									permissionId : "perm-001",
+									permission   : "user:update",
+									description  : "Update users",
+									isActive     : true
+								}
+							)
+							.$returns( { result = {} } );
+
+						model.qb = mockFrom;
+
+						var result = model.save( mockPerm );
+
+						expect( result ).toBeComponent();
+						expect( result.getId() ).toBe( "perm-001" );
+					}
+				);
+
+				// -- deleteById() --
+
+				it(
+					"deleteById() returns true when permission exists",
+					function() {
+						var mockFrom  = createMock( "qb.objects.From" );
+						var mockWhere = createMock( "qb.objects.Where" );
+						var mockDel   = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere );
+						mockWhere.where( "permissionId", "perm-001" ).$returns( mockDel );
+						mockDel.delete().$returns( 1 );
+
+						model.qb = mockFrom;
+
+						var result = model.deleteById( "perm-001" );
+
+						expect( result ).toBeTrue();
+					}
+				);
+
+				it(
+					"deleteById() returns false when permission not found",
+					function() {
+						var mockFrom  = createMock( "qb.objects.From" );
+						var mockWhere = createMock( "qb.objects.Where" );
+						var mockDel   = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere );
+						mockWhere.where( "permissionId", "nonexistent" ).$returns( mockDel );
+						mockDel.delete().$returns( 0 );
+
+						model.qb = mockFrom;
+
+						var result = model.deleteById( "nonexistent" );
+
+						expect( result ).toBeFalse();
+					}
+				);
+
+				// -- delete() --
+
+				it(
+					"delete() delegates to deleteById()",
+					function() {
+						var mockPerm  = createMock( "app.models.security.Permission" );
+						var mockFrom  = createMock( "qb.objects.From" );
+						var mockWhere = createMock( "qb.objects.Where" );
+						var mockDel   = createMock( "qb.objects.QueryBuilder" );
+
+						mockPerm.getId().$returns( "perm-001" );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere );
+						mockWhere.where( "permissionId", "perm-001" ).$returns( mockDel );
+						mockDel.delete().$returns( 1 );
+
+						model.qb = mockFrom;
+
+						var result = model.delete( mockPerm );
+
+						expect( result ).toBeTrue();
+					}
+				);
+
+				// -- exists() --
+
+				it(
+					"exists() returns true for active permission",
+					function() {
+						var mockFrom  = createMock( "qb.objects.From" );
+						var mockWhere1 = createMock( "qb.objects.Where" );
+						var mockWhere2 = createMock( "qb.objects.Where" );
+						var mockEx    = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere1 );
+						mockWhere1.where( "permissionId", "perm-001" ).$returns( mockWhere2 );
+						mockWhere2.where( "isActive", true ).$returns( mockEx );
+						mockEx.exists().$returns( true );
+
+						model.qb = mockFrom;
+
+						var result = model.exists( "perm-001" );
+
+						expect( result ).toBeTrue();
+					}
+				);
+
+				it(
+					"exists() returns false for inactive or missing permission",
+					function() {
+						var mockFrom  = createMock( "qb.objects.From" );
+						var mockWhere1 = createMock( "qb.objects.Where" );
+						var mockWhere2 = createMock( "qb.objects.Where" );
+						var mockEx    = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "permissions" ).$returns( mockWhere1 );
+						mockWhere1.where( "permissionId", "nonexistent" ).$returns( mockWhere2 );
+						mockWhere2.where( "isActive", true ).$returns( mockEx );
+						mockEx.exists().$returns( false );
+
+						model.qb = mockFrom;
+
+						var result = model.exists( "nonexistent" );
+
+						expect( result ).toBeFalse();
+					}
+				);
+
+				// -- getRolesForPermission() --
+
+				it(
+					"getRolesForPermission() returns array of roles with the permission",
+					function() {
+						var mockFrom     = createMock( "qb.objects.From" );
+						var mockJoin     = createMock( "qb.objects.Join" );
+						var mockWhere1   = createMock( "qb.objects.Where" );
+						var mockWhere2   = createMock( "qb.objects.Where" );
+						var mockGet      = createMock( "qb.objects.QueryBuilder" );
+
+						var roleResults = [
+							{ roleId = "role-1", role = "admin", isActive = true },
+							{ roleId = "role-2", role = "editor", isActive = true }
+						];
+
+						mockFrom
+							.from( "roles" )
+							.$returns( mockJoin );
+
+						mockJoin
+							.join( "role_permissions", "roles.roleId", "=", "role_permissions.roleId" )
+							.$returns( mockWhere1 );
+
+						mockWhere1
+							.where( "role_permissions.permissionId", "perm-001" )
+							.$returns( mockWhere2 );
+
+						mockWhere2
+							.where( "roles.isActive", true )
+							.$returns( mockGet );
+
+						mockGet.get().$returns( roleResults );
+
+						// Wire wirebox.getInstance for Role
+						model.$( "getWirebox" ).$returns( createMock( "wirebox.system.di.Injector" ) );
+
+						var mockRoleInjector = createMock( "wirebox.system.di.Injector" );
+						var mockRoleEntity1 = createMock( "app.models.security.Role" );
+						var mockRoleEntity2 = createMock( "app.models.security.Role" );
+
+						mockRoleEntity1.isLoaded().$returns( true );
+						mockRoleEntity2.isLoaded().$returns( true );
+
+						mockPopulator.populateFromStruct(
+								target            = mockRoleEntity1,
+								memento           = roleResults[1],
+								ignoreTargetLists = true
+							)
+							.$returns( mockRoleEntity1 );
+
+						mockPopulator.populateFromStruct(
+								target            = mockRoleEntity2,
+								memento           = roleResults[2],
+								ignoreTargetLists = true
+							)
+							.$returns( mockRoleEntity2 );
+
+						model.qb = mockFrom;
+
+						var result = model.getRolesForPermission( "perm-001" );
+
+						expect( result ).toBeArray();
+						expect( result.len() ).toBe( 2 );
+					}
+				);
+
+				it(
+					"getRolesForPermission() returns empty array when no roles have the permission",
+					function() {
+						var mockFrom    = createMock( "qb.objects.From" );
+						var mockJoin    = createMock( "qb.objects.Join" );
+						var mockWhere1  = createMock( "qb.objects.Where" );
+						var mockWhere2  = createMock( "qb.objects.Where" );
+						var mockGet     = createMock( "qb.objects.QueryBuilder" );
+
+						mockFrom.from( "roles" ).$returns( mockJoin );
+						mockJoin.join( "role_permissions", "roles.roleId", "=", "role_permissions.roleId" ).$returns( mockWhere1 );
+						mockWhere1.where( "role_permissions.permissionId", "perm-999" ).$returns( mockWhere2 );
+						mockWhere2.where( "roles.isActive", true ).$returns( mockGet );
+						mockGet.get().$returns( [] );
+
+						model.qb = mockFrom;
+
+						var result = model.getRolesForPermission( "perm-999" );
+
+						expect( result ).toBeArray();
+						expect( result.len() ).toBe( 0 );
+					}
+				);
+
 			}
 		);
 	}
