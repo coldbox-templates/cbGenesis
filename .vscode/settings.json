@@ -10,5 +10,6 @@
 	"eslint.validate": [
 		"javascript",
 		"javascriptreact"
-	]
+    ],
+    "boxlang.debugger.moduleVersion": "1.1.1+2"
 }
