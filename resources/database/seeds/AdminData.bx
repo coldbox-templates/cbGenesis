@@ -1,10 +1,15 @@
+/**
+ * Seeds the database with the initial admin role, permissions, and admin user.
+ *
+ * Run with: migrate seed run
+ */
 class {
 
-	static{
+	static {
 		test_bcrypt = "$2a$10$nIfWUb9y5BtKWWNinHxtkOo9QIg.AaoVh.7MbukPrg5uLX9BNVC42"
 	}
 
-	function up( schema, qb ) {
+	function run( qb, mockdata ) {
 
 		var adminRoleId = "00000000-0000-0000-0000-000000000001"
 		var permissions = [
@@ -127,7 +132,7 @@ class {
 			lastName  : "User",
 			email     : "admin@cbgenesis.com",
 			password  : static.test_bcrypt,
-			biography  : "I am a wonderful CBGenesis Admin"
+			biography : "I am a wonderful CBGenesis Admin"
 		} )
 		// Add the admin role to the admin user
 		qb.from( "user_roles" ).insert( {
@@ -135,14 +140,6 @@ class {
 			FK_roleId : adminRoleId
 		} )
 
-	}
-
-	function down( schema, qb ) {
-		qb.from( "role_permissions" ).delete()
-		qb.from( "user_permissions" ).delete()
-		qb.from( "roles" ).delete()
-		qb.from( "permissions" ).delete()
-		qb.from( "users" ).delete()
 	}
 
 }
