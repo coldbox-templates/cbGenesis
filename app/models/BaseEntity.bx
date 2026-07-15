@@ -1,17 +1,8 @@
 /**
- * A cbgenesis basic entity which provides uniformity to all objects
+ * A cbgenesis basic entity which provides uniformity to all persistent objects
  */
-class {
-	/**
-	 * --------------------------------------------------------------------------
-	 * DI
-	 * --------------------------------------------------------------------------
-	 */
-	property name="log" inject="logbox:logger:{this}";
-
-	property name="populator" inject="wirebox:populator";
-
-	property name="validationManager" inject="ValidationManager@cbvalidation";
+@mappedsuperclass( true )
+class extends="cborm.models.ActiveEntity" {
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -28,23 +19,39 @@ class {
 	 * --------------------------------------------------------------------------
 	 */
 
-	property name="createdDate" type="date";
+	@ormtype( "timestamp" )
+	@notnull( "true" )
+	@update( "false" )
+	property
+		name="createdDate"
+		type="date";
 
-	property name="modifiedDate" type="date";
+	@ormtype( "timestamp" )
+	@notnull( "true" )
+	property
+		name="modifiedDate"
+		type="date";
 
-	property name="isActive" type="boolean" default="true";
+	@ormtype( "boolean" )
+	@sqltype( "boolean" )
+	@notnull( "true" )
+	property
+		name="isActive"
+		default="true";
 
 	/**
 	 * Constructor
 	 *
-	 * @primaryKey - The primary key of the entity, defaults to "id"
+	 * @primaryKey - The primary key of the entity, defaults to id
 	 * @entityName - The name of the entity, defaults to the class name
+	 *
 	 */
-	function init( primaryKey = "id", entityName ) {
+	function init( primaryKey = "id", entityName) {
 		variables.isActive = true
-		variables.createdDate = variables.modifiedDate = now()
-		variables.entityName = arguments.entityName ?: this.$bx.meta.name
+		variables.createdDate = now()
+		variables.modifiedDate = now()
 		variables.primaryKey = arguments.primaryKey
+		variables.entityName = arguments.entityName ?: this.$bx.meta.name
 
 		// Incorporate default includes for the base class.
 		if ( !isNull( this.memento.defaultIncludes ) && isNull( this.memento.baseIncluded ) ) {
@@ -52,7 +59,7 @@ class {
 				.memento
 				.defaultIncludes
 				.append(
-					[ variables.primaryKey, "createdDate", "modifiedDate", "isActive"],
+					[ variables.primaryKey, "createdDate", "modifiedDate", "isActive" ],
 					true
 				)
 			this.memento.baseIncluded = true
@@ -75,12 +82,24 @@ class {
 		return ( !isNull( variables[ variables.primaryKey ] ) && len( variables[ variables.primaryKey ] ) )
 	}
 
+	/**
+	 * This method appends items to a memento list, the "defaultIncludes" is the default target
+	 *
+	 * @collection The array to append
+	 * @target     The target to append to: defaultIncludes, defaultExcludes, neverInclude, defaults, etc.
+	 */
+	function appendToMemento( required collection, target = "defaultIncludes" ) {
+		var filtered = arguments.collection.filter( ( item ) => !this.memento[ target ].containsNoCase( item ) )
+		this.memento[ arguments.target ].append( filtered, true )
+		return this
+	}
+
 	/***** Persistence Events : Modeled After ORM Events ******/
 
 	/**
 	 * Called before an entity is inserted
 	 */
-	function preInsert( entity ) {
+	function preInsert() {
 		var rightNow = now();
 		// prevent override of explicit stamps from imports
 		if ( isNull( variables.createdDate ) ) {
@@ -92,37 +111,10 @@ class {
 	}
 
 	/**
-	 * Called after an entity is inserted
-	 */
-	function postInsert( entity ) {
-
-	}
-
-	/**
 	 * Called before an entity is updated
 	 */
-	function preUpdate( entity ) {
+	function preUpdate( struct oldData ) {
 		variables.modifiedDate = now();
 	}
 
-	/**
-	 * Called after an entity is updated
-	 */
-	function postUpdate( entity ) {
-
-	}
-
-	/**
-	 * Called before an entity is deleted
-	 */
-	function preDelete( entity ) {
-
-	}
-
-	/**
-	 * Called after an entity is deleted
-	 */
-	function postDelete( entity ) {
-
-	}
 }

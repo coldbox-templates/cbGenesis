@@ -4,34 +4,48 @@
 
 @singleton
 @threadSafe
-class {
+class extends="app.models.BaseService" {
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Injections
 	 * --------------------------------------------------------------------------
 	 */
 
-	property name="populator" inject="wirebox:populator";
 
-	property name="wirebox" inject="wirebox";
+	@inject( "provider:mailService@cbmailServices" )
+	property name="mailService";
 
-	property name="log" inject="logbox:logger:{this}";
+	@inject( "provider:SecurityService" )
+	property name="securityService";
 
-	property name="qb" inject="QueryBuilder@qb";
+	@inject( "provider:settingService" )
+	property name="settingService";
+
+	@inject( "wirebox" )
+	property name="wirebox";
+
+	@inject( "logbox:logger:{this}" )
+	property name="log";
+
+	@inject( "QueryBuilder@qb" )
+	property name="qb";
+
+	@inject( "coldbox:RequestService" )
+	property name="requestService";
+
+	@inject( "coldbox:renderer" )
+	property name="renderer";
+
+	@inject( "@cbSecurity" )
+	property name="cbSecurity";
 
 	/**
 	 * Constructor
 	 */
 	function init() {
+		super.init( entityName: "User" )
 		return this;
-	}
-
-	/**
-	 * New User Dispenser
-	 */
-	@provider( "User" )
-	User function new() {
-
 	}
 
 	/**
@@ -42,14 +56,10 @@ class {
 	 * @return The located user or a new un-loaded user object
 	 */
 	User function retrieveUserById( required id ) {
-		return populator.populateFromStruct(
-				target            = new(),
-				memento           = qb
-					.from( "users" )
-					.where( "id", arguments.id )
-					.first(),
-				ignoreTargetLists = true
-			);
+		return newCriteria()
+			.eq( "userId", arguments.id )
+			.isTrue( "isActive" )
+			.get() ?: throw( type = "EntityNotFound", message = "User not found" )
 	}
 
 	/**
@@ -60,14 +70,10 @@ class {
 	 * @return The valid user object representing the username or an empty user object
 	 */
 	User function retrieveUserByUsername( required username ) {
-		return populator.populateFromStruct(
-				target            = new(),
-				memento           = qb
-					.from( "users" )
-					.where( "email", arguments.username )
-					.first(),
-				ignoreTargetLists = true
-			);
+		return newCriteria()
+			.eq( "username", arguments.username )
+			.isTrue( "isActive" )
+			.get() ?: throw( type = "EntityNotFound", message = "User not found" )
 	}
 
 	/**
@@ -80,14 +86,30 @@ class {
 	 * @return true if valid, else false
 	 */
 	boolean function isValidCredentials( required username, required password ) {
-		var oUser = retrieveUserByUsername( arguments.username );
+		var oUser = retrieveUserByUsername( arguments.username )
 
 		// If the user is not loaded or the user has not been verified, then we cannot log in
 		if ( !oUser.isLoaded() || !oUser.isEmailVerified() ) {
-			return false;
+			return false
 		}
 
-		return variables.bcrypt.checkPassword( hashSecurely( arguments.password ), oUser.getPassword() );
+		// https://boxlang.ortusbooks.com/boxlang-framework/modularity/password-encryption#bcrypt-hashing
+		return BCryptVerify( arguments.password, oUser.getPassword() );
+	}
+
+	/**
+	 * Verify if an email address is in use
+	 *
+	 * @email The email target
+	 * @id    The user id, optional
+	 *
+	 * @return Boolean
+	 */
+	boolean function isEmailInUse( required email, String id = "" ) {
+		var c = newCriteria()
+		c.eq( "email", arguments.email )
+			.when( len( arguments.id ), ( c ) => c.ne( "userId", id ) )
+		return ( c.count() > 0 )
 	}
 
 	/**
@@ -95,24 +117,16 @@ class {
 	 * The user must verify it's email first.
 	 *
 	 * @user The user to create
+	 *
+	 * @return Mail results: { error: boolean, errorArray: array }
 	 */
-	User function create( required user ) {
+	struct function create( required user ) {
 		transaction {
 			// Save it first
-			save( arguments.user );
+			save( arguments.user )
 			// Send Account Creation Email
-			sendNewUserEmail( arguments.user );
+			return sendNewUserEmail( arguments.user )
 		}
-		return arguments.user;
-	}
-
-	/**
-	 * This sends the user a new user confirmation email.
-	 *
-	 * @user The user to send the confirmation to
-	 */
-	function sendNewUserEmail( required user ) {
-
 	}
 
 	/**
@@ -123,52 +137,224 @@ class {
 	 *
 	 * @return The persisted user
 	 */
-	function save( required user, boolean passwordChange = false ) {
-		// bcrypt password if it's a new user or a password change
+	User function save(
+		required user,
+		boolean passwordChange = false
+	) {
+		// bcrypt the password if new user or change requested
 		if ( !arguments.user.isLoaded() || arguments.passwordChange ) {
-			arguments.user.setPassword( variables.bcrypt.hashPassword( arguments.user.getPassword() ) );
+			arguments.user.setPassword( BCryptHash( arguments.user.getPassword() ) )
 		}
 
-		// Store it
-		var qResults = qb
-			.from( "users" )
-			.where( "id", arguments.user.getId() )
-			.updateOrInsert(
-				values = {
-					"id"         : arguments.user.getId(),
-					"createdDate": {
-						value    : arguments.user.getCreatedDate(),
-						cfsqlType: "timestamp"
-					},
-					"modifiedDate": {
-						value    : arguments.user.getModifiedDate(),
-						cfsqlType: "timestamp"
-					},
-					"isActive"   : arguments.user.getIsActive(),
-					"firstName"  : arguments.user.getName(),
-					"lastName"   : arguments.user.getName(),
-					"email"      : arguments.user.getEmail(),
-					"permissions": arguments.user.getUsername(),
-					"password"   : bcrypt.hashPassword( arguments.user.getPassword() ),
-					"verifiedAt" : {
-						value    : arguments.user.getVerifiedAt(),
-						cfsqlType: "timestamp"
-					}
-				}
-			);
+		arguments.entity = arguments.user
 
-		// populate the id
-		arguments.user.setId( qResults.result.generatedKey );
-
-		return arguments.user;
+		// save the user and return it
+		return super.save( argumentCollection: arguments )
 	}
 
 	/**
-	 * Hash the incoming target according to our hashing algorithm and settings
+	 * Search users across different criteria with pagination
 	 *
-	 * @target The string target to hash
+	 * @searchTerm The search term to look for in: firstName, lastName, email
+	 * @offset     The offset pagination
+	 * @max        The max records to return, defaults to 10
+	 * @isActive   If passed, active, inactive or all users
+	 * @isVerified If passed, verified or unverified users
+	 * @roleId     If passed, the role Id to filter the users on
+	 * @sortOrder  The sort ordering to do. Defaults to sort by name
+	 * @propertyList The list of properties to include in the results as a projection instead of ORM Objects
+	 *
+	 * @return     struct of { count:numeric, records:array }
 	 */
-	private string function hashSecurely( required string target ) {
-		return variables.bcrypt.hashPassword( arguments.target );
+	struct function search(
+		searchTerm = "",
+		numeric offset = 0,
+		numeric max = 25,
+		boolean isActive,
+		boolean isVerified,
+		roleId,
+		sortOrder = "lname",
+		propertyList = ""
+	) {
+		var results = { "count": 0, "records": [] }
+
+		var c = newCriteria()
+			// Search Terms
+			.when( len( arguments.searchTerm ), ( c ) => {
+				c.or(
+					c.restrictions.like( "firstName", "%#searchTerm#%" ),
+					c.restrictions.like( "lastName", "%#searchTerm#%" ),
+					c.restrictions.like( "email", "%#searchTerm#%" )
+				)
+			} )
+			// Is Active
+			.when( !isNull( arguments.isActive ), ( c ) => c.eq( "isActive", isActive castAs "Boolean" ) )
+			// Verified
+			.when( !isNull( arguments.isVerified ), ( c ) => isVerified ? c.isNotNull( "verifiedAt" ) : c.isNull( "verifiedAt" )  )
+			// Role Filters
+			.when( !isNull( arguments.roleId ) && len( arguments.roleId ), ( c ) => c.eq( "role.roleId", roleId ) )
+
+		// Run Results
+		results.count = c.count( "userId" )
+
+		// If we have a property list, then we will use projections to return a struct instead of ORM objects
+		if ( len( arguments.propertyList ) ) {
+			c.withProjections( property = arguments.propertyList )
+				.asStruct()
+		}
+
+		results.records = c.list( offset: arguments.offset, max: arguments.max, sortOrder: arguments.sortOrder )
+
+		return results
 	}
+
+	/**
+	 * Delete a user from  the system
+	 *
+	 * @user The user to delete
+	 */
+	function delete( required user ) {
+		transaction {
+			// Any manual cleanup of relationships??
+
+			// Delete the user with cascade
+			super.delete( arguments.user )
+		}
+	}
+
+	/**
+	 * Sends a new user their reminder to reset their password and log in to their account
+	 * This also generates the reset token
+	 *
+	 * @user The new user to send the welcome email to
+	 *
+	 * @return error:boolean,errorArray
+	 */
+	struct function sendNewUserEmail( required user ) {
+		var token = variables.securityService.generatePasswordResetToken( arguments.user );
+		var settings = variables.settingService.getAllSettings()
+		var event = variables.requestService.getContext()
+
+		// Prepare replacement tokens
+		var bodyTokens = {
+			name: arguments.user.getFullName(),
+			email: arguments.user.getEmail(),
+			appName: settings.cbAppName,
+			linkTimeout: settings.cbPasswordResetExpiration,
+			linkToken: event.buildLink( "/resetPassword?token=#token#" ),
+			forgotLink: event.buildLink( "/forgotPassword" ),
+			issuedBy: "",
+			issuedEmail: ""
+		}
+
+		// Build email out
+		return variables.mailservice
+			.newMail()
+			.configure(
+				to: arguments.user.getEmail(),
+				from: settings.cbDefaultEmail,
+				subject: "A " & settings.cbAppName & " Account was created for you",
+				bodyTokens: bodyTokens,
+				type: "html"
+			)
+			.setBody(
+				variables.renderer.externalView( "/app/email_templates/user_welcome" )
+			)
+			.send()
+			.getResults()
+	}
+
+	/**
+	 * Send a password reminder email to a user
+	 *
+	 * @user        The user
+	 * @issuer      The admin user that issued the reset
+	 *
+	 * @return error:boolean,errorArray
+	 */
+	struct function sendPasswordReminder( required user, issuer ) {
+		var token = variables.securityService.generatePasswordResetToken( arguments.user )
+		var settings = variables.settingService.getAllSettings()
+		var event = variables.requestService.getContext()
+
+		// Prepare replacement tokens
+		var bodyTokens = {
+			name: arguments.user.getFullName(),
+			email: arguments.user.getEmail(),
+			appName: settings.cbAppName,
+			linkTimeout: settings.cbPasswordResetExpiration,
+			ip: variables.cbSecurity.getRealIP(),
+			linkToken: event.buildLink( "/resetPassword?token=#token#" ),
+			issuedBy: isNull( arguments.issuer ) ? "" : arguments.issuer.getFullName(),
+			issuedEmail: isNull( arguments.issuer ) ? "" : arguments.issuer.getEmail()
+		};
+
+		// Build email out
+		return variables.mailservice
+			.newMail()
+			.configure(
+				to: arguments.user.getEmail(),
+				from: settings.cbDefaultEmail,
+				subject: "A " & settings.cbAppName & " Password Reset Verification",
+				bodyTokens: bodyTokens,
+				type: "html"
+			)
+			.setBody( variables.renderer.externalView( "/app/email_templates/password_verification" ) )
+			.send()
+			.getResults()
+	}
+
+	/**
+	 * Resets a user's password.
+	 *
+	 * @token    Security token
+	 * @user     The user you are reseting the password for
+	 * @password The password you have chosen to reset with
+	 *
+	 * @return {error:boolean, errorArray:array}
+	 */
+	struct function resetPassword( required token, required user, required password ) {
+		var settings = variables.settingService.getAllSettings()
+		var event = variables.requestService.getContext()
+
+		transaction {
+			// set it in the user and save reset password
+			arguments.user
+				.setPassword( arguments.password )
+				.setIsPasswordReset( false )
+				.save( passwordChange = true )
+
+			// Remove token now that we have the data and it has been validated
+			variables.securityService.clearPasswordResetToken( arguments.token );
+
+			// get mail payload
+			var bodyTokens = {
+				name: arguments.user.getFullName(),
+				email: arguments.user.getEmail(),
+				company: settings.timebox_company,
+				companyEmail: settings.timebox_outgoingEmail,
+				ip: getRealIP(),
+				linkLogin: settings.timebox_ui_url & "/login"
+			};
+
+			var mail = variables.mailservice.newMail();
+
+			mail.configure(
+				to = arguments.user.getEmail(),
+				from = settings.timebox_outgoingEmail,
+				subject = "TimeBox Password Reset Completed",
+				bodyTokens = bodyTokens,
+				type = "html"
+			);
+
+			mail.setBody( variables.renderer.externalView( "/timebox/models/email_templates/password_reset" ) );
+
+			// send it out
+			return mail
+				.send()
+				.getResults();
+		}
+		// end of transaction
+	}
+
 }

@@ -5,33 +5,106 @@
  * - cbsecurity.interfaces.jwt.IJwtSubject
  * - cbsecurity.interfaces.IAuthUser
  */
+@persistent( true )
+@table( "users" )
 class extends="app.models.BaseEntity" {
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Injections
+	 * --------------------------------------------------------------------------
+	 */
+	@inject( "UserService" )
+	property name="userService";
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Properties
 	 * --------------------------------------------------------------------------
 	 */
 
+	@fieldType( "id" )
+	@generator( "uuid" )
+	property
+		name="userId"
+		setter="false";
+
+	@notNull( true )
 	property name="firstName" default="";
 
+	@notNull( true )
 	property name="lastName" default="";
 
+	@notNull( true )
+	@unique( true )
 	property name="email" default="";
 
+	@notNull( true )
 	property name="password" default="";
 
+	@ormType( "text" )
 	property name="biography" default="";
 
-	property name="verifiedAt" type="datetime";
+	@ormType( "dateTime" )
+	property name="verifiedAt" type="date";
 
-	property name="lastLogin" type="datetime";
+	@ormType( "dateTime" )
+	property name="lastLogin" type="date";
 
-	property name="preferences";
+	@ormType( "text" )
+	property name="preferences" default="{}";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Non Persisted Properties
+	 * --------------------------------------------------------------------------
+	 */
+
+	@persistent( false )
+	property
+		name="loggedIn"
+		default="false"
+		type="boolean";
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Relationships
 	 * --------------------------------------------------------------------------
 	 */
+
+	property
+		name="roles"
+		fieldtype="many-to-many"
+		type="array"
+		lazy="extra"
+		cascade="save-update"
+		cfc="app.models.security.Role"
+		fkcolumn="FK_userId"
+		linktable="user_roles"
+		inversejoincolumn="FK_roleId";
+
+	property
+		name="permissions"
+		fieldtype="many-to-many"
+		type="array"
+		lazy="extra"
+		cascade="save-update"
+		cfc="app.models.security.Permission"
+		fkcolumn="FK_userId"
+		linktable="user_permissions"
+		inversejoincolumn="FK_permissionId";
+
+    property
+        name="apiTokens"
+        fieldtype="one-to-many"
+        type="array"
+		inverse="true"
+        lazy="extra"
+        class="app.models.security.APIToken"
+        fkcolumn="FK_userId"
+        cascade="all-delete-orphan"
+		batchsize="25"
+		orderby="label asc";
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -44,19 +117,24 @@ class extends="app.models.BaseEntity" {
 		lastName : { required: true },
 		email    : {
 			required: true,
-			unique  : { table: "users", column: "email" }
+			size: "1..255",
+			type: "email",
+			validator: "UniqueValidator@cborm"
 		},
+		"preferences": { required: false, size: "0..8000" },
+		"biography": { required: false, size: "0..8000" },
+		"password": { required: true, size: "8..255" },
 		password: { required: true }
 	};
 	// https://coldbox-validation.ortusbooks.com/overview/validating-constraints/validating-with-profiles
-	this.constraintProfiles = { "update": "firstName,lastName,email,biography" };
+	this.constraintProfiles = { "update": "firstName,lastName,email,biography" }
 
 	/**
 	 * --------------------------------------------------------------------------
 	 * Population Options
 	 * --------------------------------------------------------------------------
 	 */
-	this.population = { exclude: [ "id", "lastLogin", "verifiedAt", "isActive"] };
+	this.population = { exclude: [ "id", "lastLogin", "verifiedAt", "isActive"] }
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -70,24 +148,26 @@ class extends="app.models.BaseEntity" {
 		// Default Exclusions
 		defaultExcludes: [],
 		// Never Include
-		neverInclude   : [ "password"]
+		neverInclude   : [ "password" ]
 	};
 
 	/**
 	 * Constructor
 	 */
 	function init() {
-		super.init();
-		variables.firstName = "";
-		variables.lastName = "";
-		variables.email = "";
-		variables.password = "";
-		variables.lastLogin = "";
-		variables.verifiedAt = "";
-		variables.biography = "";
-		variables.preferences = {};
+		super.init( "userId" )
+		variables.loggedIn = false
+		variables.firstName = ""
+		variables.lastName = ""
+		variables.email = ""
+		variables.password = ""
+		variables.lastLogin = ""
+		variables.verifiedAt = ""
+		variables.biography = ""
 
-		return this;
+		setPreferences( {} )
+
+		return this
 	}
 
 	/**
@@ -118,33 +198,86 @@ class extends="app.models.BaseEntity" {
 		return initials;
 	}
 
-	/**
-	 * Set the user's preferences as a struct
-	 */
-	User function setPreferences( struct preferences ) {
-		variables.preferences = jsonSerialize( preferences );
-		return this;
-	}
+	/*************************** Preference Functions *****************************/
 
 	/**
-	 * Set the user's preferences as a raw JSON string
+	 * Set the user's preferences
+	 *
+	 * @preferences A struct or json string of preferences to set
+	 *
+	 * @return User
 	 */
-	User function setPreferencesRaw( string preferences ) {
-		variables.preferences = arguments.preferences;
-		return this;
+	User function setPreferences( struct preferences ) {
+		if( isStruct( arguments.preferences ) ) {
+			variables.preferences = jsonSerialize( arguments.preferences )
+		} else if( isSimpleValue( arguments.preferences ) ) {
+			variables.preferences = arguments.preferences
+		} else {
+			throw( type="InvalidArgumentException", message="Preferences must be a struct or JSON string" )
+		}
+		return this
 	}
 
 	/**
 	 * Get the user's preferences as a struct
 	 */
-	struct function getPreferences() {
-		return jsonDeserialize( getPreferencesRaw() );
+	struct function getAllPreferences() {
+		return jsonDeserialize( getPreferences() ?: "{}" )
 	}
 
 	/**
-	 * Get the user's preferences as a raw JSON string
+	 * Get a preference, you can pass a default value if preference does not exist
+	 *
+	 * @name         The preference to get
+	 * @defaultValue The default value if not found
+	 *
+	 * @throws UserPreferenceNotFound
 	 */
-	string function getPreferencesRaw() {
-		return variables.preferences ?: "{}";
+	any function getPreference( required name, defaultValue ) {
+		var allPreferences = getAllPreferences()
+		if ( structKeyExists( allPreferences, arguments.name ) ) {
+			return allPreferences[ arguments.name ]
+		}
+
+		// default values
+		if ( !isNull( arguments.defaultValue ) ) {
+			return arguments.defaultValue
+		}
+
+		// exception
+		throw(
+			message = "The preference you requested (#arguments.name#) does not exist",
+			type = "UserPreferenceNotFound",
+			detail = "Valid preferences are #structKeyList( allPreferences )#"
+		)
+	}
+
+	/**
+	 * Set a preference in the user preferences
+	 *
+	 * @name  The name of the preference
+	 * @value The value of the preference
+	 */
+	User function setPreference( required name, required value ) {
+		var allPreferences = getAllPreferences()
+		allPreferences[ arguments.name ] = arguments.value
+		setPreferences( allPreferences )
+		return this
+	}
+
+	/*************************** Utility Functions *****************************/
+
+	/**
+	 * Save the user using more logic like bcrypting and logging
+	 */
+	User function save( boolean passwordChange = false ) {
+		return variables.userService.save( this, arguments.passwordChange )
+	}
+
+	/**
+	 * Validate if a user is logged in or not
+	 */
+	boolean function isLoggedIn() {
+		return variables.loggedIn;
 	}
 }

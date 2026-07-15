@@ -28,6 +28,11 @@ class {
 	// Create testing mapping
 	this.mappings[ "/tests" ]   = _testsRoot
 
+	/**
+	 * --------------------------------------------------------------------------
+	 * ORM + Datasource Settings
+	 * --------------------------------------------------------------------------
+	 */
 	this.datasource = "cbGenesis"
 	this.datasources = {
 		"cbGenesis" = {
@@ -38,6 +43,20 @@ class {
 			username: getSystemSetting( "DB_USER", "" ),
 			password: getSystemSetting( "DB_PASSWORD", "" )
 		}
+	}
+	// ORM SETTINGS
+	this.ormEnabled = true;
+	this.ormSettings = {
+		cfclocation: [ "/app/models" ],
+		dbcreate: "none",
+		savemapping: false,
+		secondarycacheenabled: false,
+		logSQL: false,
+		flushAtRequestEnd: false,
+		autoManageSession: false,
+		eventHandling: true,
+		EventHandler: "cborm.models.BxEventHandler",
+		ignoreParseErrors: true
 	}
 
 	/**

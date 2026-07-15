@@ -76,6 +76,7 @@
 		"/coldbox" :  {"path": "${user-dir}/lib/coldbox", "external": false },
 		"/coldbox/system/exceptions" :  {"path": "${user-dir}/lib/coldbox/system/exceptions", "external": true },
 		"/modules" :  {"path": "${user-dir}/lib/modules", "external": true },
+		"/cborm" :  {"path": "${user-dir}/lib/modules/cborm", "external": false },
 		"/testbox" :  "${user-dir}/lib/testbox",
 		"/tests" : "${user-dir}/tests"
 	},

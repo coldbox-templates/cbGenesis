@@ -4,15 +4,9 @@
  * Tokens are stored as SHA-256 hashes. The raw token value is returned
  * only at creation time via APITokenService.createToken().
  */
+@persistent( true )
+@table( "user_api_tokens" )
 class extends="app.models.BaseEntity" {
-
-	/**
-	 * --------------------------------------------------------------------------
-	 * Injections
-	 * --------------------------------------------------------------------------
-	 */
-	@inject( "UserService" )
-	property name="userService";
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -20,14 +14,19 @@ class extends="app.models.BaseEntity" {
 	 * --------------------------------------------------------------------------
 	 */
 
-	 /**
-	  * The primary key (UUID) for this token.
-	  */
-	property name="tokenId" type="uuid" default="";
+	/**
+	 * The primary key (UUID) for this token.
+	 */
+	@fieldType( "id" )
+	@generator( "uuid" )
+	property
+		name="tokenId"
+		setter="false";
 
 	/**
 	 * The label for this token, provided by the user.
 	 */
+	@notNull( true )
 	property name="label" default="";
 
 	/**
@@ -51,7 +50,13 @@ class extends="app.models.BaseEntity" {
 	 * --------------------------------------------------------------------------
 	 */
 
-	property name="FK_userId" type="uuid";
+	property
+		name="user"
+		notnull="false"
+		fieldtype="many-to-one"
+		cfc="app.models.system.User"
+		fkcolumn="FK_userId"
+		lazy="proxy";
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -63,9 +68,9 @@ class extends="app.models.BaseEntity" {
 		"label": { required: true, size: "1..255" },
 		"token": {
 			required: true,
-			unique: { table: "user_api_tokens", column: "token" }
+			unique  : { table: "user_api_tokens", column: "token" }
 		}
-	}
+	};
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -74,7 +79,7 @@ class extends="app.models.BaseEntity" {
 	 * Fields to exclude when populating the entity.
 	 * https://coldbox.ortusbooks.com/the-basics/event-handlers/model-integration/model-data-binding#mass-population-control-this.population
 	 */
-	this.population = {}
+	this.population = {};
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -83,28 +88,28 @@ class extends="app.models.BaseEntity" {
 	 * NEVER expose the hashed token.
 	 */
 	this.memento = {
-		defaultIncludes: [ "*" ],
+		defaultIncludes: [ "*"],
 		defaultExcludes: [],
-		neverInclude   : [ "token" ]
-	}
+		neverInclude   : [ "token"]
+	};
 
 	/**
 	 * Constructor
 	 */
 	function init() {
-		super.init( "tokenId" )
-		variables.label       = ""
-		variables.token       = ""
-		variables.expiration  = null
-		variables.lastUsed    = null
-		return this
+		super.init( "tokenId" );
+		variables.label = "";
+		variables.token = "";
+		variables.expiration = null;
+		variables.lastUsed = null;
+		return this;
 	}
 
 	/**
 	 * Returns true if the token has an expiration date.
 	 */
 	boolean function hasExpiration() {
-		return !isNull( variables.expiration )
+		return !isNull( variables.expiration );
 	}
 
 	/**
@@ -112,9 +117,14 @@ class extends="app.models.BaseEntity" {
 	 */
 	boolean function isExpired() {
 		if ( isNull( variables.expiration ) ) {
-			return false
+			return false;
 		}
-		return dateCompare( variables.expiration, now(), "s" ) < 0
+		return dateCompare(
+				variables.expiration,
+				now(),
+				"s"
+			) <
+			0;
 	}
 
 	/**
@@ -126,39 +136,20 @@ class extends="app.models.BaseEntity" {
 	 */
 	boolean function isExpiringSoon( numeric days = 7 ) {
 		if ( isNull( variables.expiration ) ) {
-			return false
+			return false;
 		}
-		var threshold = dateAdd( "d", arguments.days, now() )
-		return dateCompare( variables.expiration, threshold, "s" ) <= 0
-			&& !this.isExpired()
-	}
-
-	/**
-	 * Get the user associated with this token.
-	 *
-	 * @return The User entity associated with this token, or null if not found.
-	 */
-	User function getUser() {
-		if( !isNull( variables.FK_userId ) ) {
-			if( isNull( variables.user ) ) {
-				variables.user = userService.getById( variables.FK_userId )
-			}
-			return variables.user
-		}
-		return null
-	}
-
-	/**
-	 * Set the user associated with this token.
-	 *
-	 * @user The User entity to associate with this token.
-	 *
-	 * @return The APIToken entity for method chaining.
-	 */
-	APIToken function setUser( required User user ) {
-		variables.user = user
-		variables.FK_userId = user.getId()
-		return this
+		var threshold = dateAdd(
+			"d",
+			arguments.days,
+			now()
+		);
+		return dateCompare(
+					variables.expiration,
+					threshold,
+					"s"
+				) <=
+				0 &&
+			!this.isExpired();
 	}
 
 }

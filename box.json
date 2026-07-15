@@ -29,9 +29,8 @@
         "qb":"^13",
         "cbmailservices":"^2",
         "cbsecurity":"^3",
-        "cbvalidation":"^4",
-        "mementifier":"^3",
-        "vite-helpers":"^2"
+        "vite-helpers":"^2",
+        "cborm":"^4.12.1+10"
     },
     "installPaths":{
         "coldbox":"lib/coldbox/",
@@ -39,9 +38,8 @@
         "qb":"lib/modules/qb/",
         "cbmailservices":"lib/modules/cbmailservices/",
         "cbsecurity":"lib/modules/cbsecurity/",
-        "mementifier":"lib/modules/mementifier/",
-        "cbvalidation":"lib/modules/cbvalidation/",
-        "vite-helpers":"lib/modules/vite-helpers/"
+        "vite-helpers":"lib/modules/vite-helpers/",
+        "cborm":"lib/modules/cborm/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",

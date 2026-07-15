@@ -1,7 +1,10 @@
 /**
  * A system role that groups permissions together.
  */
+@persistent( true )
+@table( "roles" )
 class extends="app.models.BaseEntity" {
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Properties
@@ -11,17 +14,54 @@ class extends="app.models.BaseEntity" {
 	/**
 	 * The role ID (UUID) for this role.
 	 */
-	property name="roleId" type="uuid" default="";
+	@fieldType( "id" )
+	@generator( "uuid" )
+	property
+		name="roleId"
+		setter="false";
 
 	/**
 	 * The role name for this role.
 	 */
+	@notNull( true )
+	@unique( true )
 	property name="role" default="";
 
 	/**
 	 * The description for this role.
 	 */
+	@ormType( "text" )
 	property name="description" default="";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Relationships
+	 * --------------------------------------------------------------------------
+	 */
+
+	property
+		name="permissions"
+		fieldtype="many-to-many"
+		type="array"
+		lazy="extra"
+		orderby="permission"
+		cascade="save-update"
+		class="app.models.security.Permission"
+		fkcolumn="FK_roleId"
+		linktable="role_permissions"
+		inversejoincolumn="FK_permissionId";
+
+	property
+		name="users"
+		fieldtype="many-to-many"
+		type="array"
+		lazy="extra"
+		orderby="email"
+		cascade="save-update"
+		class="app.models.system.User"
+		fkcolumn="FK_roleId"
+		linktable="user_roles"
+		inversejoincolumn="FK_userId";
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -64,6 +104,8 @@ class extends="app.models.BaseEntity" {
 		super.init( "roleId" )
 		variables.role = ""
 		variables.description = ""
+		variables.permissions = []
+		variables.users = []
 
 		return this;
 	}

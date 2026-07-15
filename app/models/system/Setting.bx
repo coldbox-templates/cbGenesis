@@ -4,6 +4,8 @@
  * ---
  * A global setting object
  */
+@persistent( true )
+@table( "settings" )
 class extends="app.models.BaseEntity" {
 
 	/**
@@ -12,15 +14,26 @@ class extends="app.models.BaseEntity" {
 	 * --------------------------------------------------------------------------
 	 */
 
-	property name="name" notnull="true" unique="true";
+	@fieldType( "id" )
+	@generator( "uuid" )
+	property
+		name="settingId"
+		setter="false";
 
-	property name="value" notnull="true" default="";
+	@notNull( true )
+	@unique( true )
+	property name="name" default="";
 
+	@ormType( "text" )
+	@notNull( true )
+	property name="value" default="";
+
+	@ormType( "text" )
 	property name="description" default="";
 
 	/**
 	 * --------------------------------------------------------------------------
-	 * Validatation Constraints
+	 * Validation Constraints
 	 * --------------------------------------------------------------------------
 	 */
 	this.constraints = {
@@ -54,6 +67,7 @@ class extends="app.models.BaseEntity" {
 	 * Constructor
 	 */
 	function init() {
-		return super.init( "settingId" )
+		super.init( "settingId" )
+		return this
 	}
 }

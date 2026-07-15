@@ -5,58 +5,57 @@
  * Manage the application system settings.
  */
 class extends="app.models.BaseService" {
-
 	/**
 	 * --------------------------------------------------------------------------
 	 * Static Defaults
 	 * --------------------------------------------------------------------------
 	 */
 
-	static{
+	static {
 		DEFAULTS = {
 			// The main logo path for the app, if empty it will use the default cbGenesis logo
-			cbAppLogo : "/includes/images/cbgenesis-icon-full.svg",
+			cbAppLogo                : "/includes/images/cbgenesis-icon-full.svg",
 			// The main title for the app used in the sidebar
-			cbAppName : "cbGenesis",
+			cbAppName                : "cbGenesis",
 			// The tagline for the app used in the sidebar and login page
-			cbAppTagline : "A Modern ColdBox Application Starter Kit",
+			cbAppTagline             : "A Modern ColdBox Application Starter Kit",
 			// The tagline for the app used in the branding area of the sidebar
-			cbAppBrandTagline : "Starter Kit",
+			cbAppBrandTagline        : "Starter Kit",
 			// Copyright notice
-			cbCopyrightNotice: "&copy; #year()# cbGenesis. All rights reserved.",
+			cbCopyrightNotice        : "&copy; #year()# cbGenesis. All rights reserved.",
 			// The default theme for the app, can be "light" or "dark"
-			cbDefaultTheme: "dark",
+			cbDefaultTheme           : "dark",
 			// The login layout to use, can be "AuthCenter" or "AuthSplit" or your own custom layout.
-			cbLoginLayout: "AuthSplit",
+			cbLoginLayout            : "AuthSplit",
 			// Allow users to register themselves, if false, the register page will be disabled.
-			cbAllowRegistration: true,
+			cbAllowRegistration      : true,
 			// Allow users to reset their password, if false, the forgot password page will be disabled.
-			cbAllowForgotPassword: true,
+			cbAllowForgotPassword    : true,
 			// Encryption secret key for the application, if empty it will use the default cbGenesis key
-			cbEncryptionKey: generateSecretKey( "AES", 256 ),
+			cbEncryptionKey          : generateSecretKey( "AES", 256 ),
 			// Salting key for security usage
-			cbSaltingKey: generateSecretKey( "AES", 256 ),
+			cbSaltingKey             : generateSecretKey( "AES", 256 ),
 			// The default email address to use for sending emails, if empty it will use the default cbGenesis email address
-			cbDefaultEmail: "no-reply@cbgenesis.com",
+			cbDefaultEmail           : "no-reply@cbgenesis.com",
 			// Minimum password length for user accounts
-			cbMinPasswordLength: 8,
+			cbMinPasswordLength      : 8,
 			// Password reset expiration time in minutes,
 			cbPasswordResetExpiration: 60,
 			// Mail Settings
-			cbMailHost: "smtp.mailtrap.io",
-			cbMailPort: 25,
-			cbMailUsername: "",
-			cbMailPassword: "",
-			cbMailTLS: false,
-			cbMailSSL: false
-		}
+			cbMailHost               : "smtp.mailtrap.io",
+			cbMailPort               : 25,
+			cbMailUsername           : "",
+			cbMailPassword           : "",
+			cbMailTLS                : false,
+			cbMailSSL                : false
+		};
 	}
 
 	/**
 	 * Constructor
 	 */
 	SettingService function init() {
-		return this
+		return this;
 	}
 
 	/**
@@ -64,21 +63,27 @@ class extends="app.models.BaseService" {
 	 * If they are, we will create the core settings with the appropriate defaults: this.DEFAULTS
 	 */
 	SettingService function preFlightCheck() {
-		var missingSettings = false
-		var loadedSettings = getAllSettings( force = true )
+		var missingSettings = false;
+		var loadedSettings = getAllSettings( force = true );
 
 		transaction {
-			this.DEFAULTS
+			this
+				.DEFAULTS
+				.filter(
+					function( key, value ) {
+						return !loadedSettings.keyExists( key );
+					}
+				)
 				// only load defaults that do not exist
-				.filter( function( key, value ) {
-					return !loadedSettings.keyExists( key );
-				} )
+
 				// Create the missing setting
-				.each( function( key, value ) {
-					log.info( "Missing setting in pre-flight: #key#, adding it!" );
-					missingSettings = true;
-					save( new ( { name: key, value: trim( value ), isCore: true } ) );
-				} );
+				.each(
+					function( key, value ) {
+						log.info( "Missing setting in pre-flight: #key#, adding it!" );
+						missingSettings = true;
+						save( new( { name: key, value: trim( value ), isCore: true } ) );
+					}
+				);
 		}
 
 		// if we added new ones, flush caches
@@ -114,8 +119,8 @@ class extends="app.models.BaseService" {
 		}
 		throw(
 			message = "Setting #arguments.name# not found in settings collection",
-			detail = "Registered settings are: #structKeyList( allSettings )#",
-			type = "SettingService.SettingNotFound"
+			detail  = "Registered settings are: #structKeyList( allSettings )#",
+			type    = "SettingService.SettingNotFound"
 		);
 	}
 
@@ -134,16 +139,19 @@ class extends="app.models.BaseService" {
 		}
 
 		return cache.getOrSet(
-			getSettingsCacheKey(),
-			function() {
-				log.info( "Settings not cached, rebuilding from DB!" );
-				return list( sorOrder = "name", asQuery = false ).reduce( function( result, item ) {
-					result[ item.getName() ] = item.getValue();
-					return result;
-				}, {} )
-			},
-			7200
-		);
+				getSettingsCacheKey(),
+				function() {
+					log.info( "Settings not cached, rebuilding from DB!" );
+					return list( sorOrder = "name", asQuery = false ).reduce(
+							function( result, item ) {
+								result[ item.getName() ] = item.getValue();
+								return result;
+							},
+							{}
+						);
+				},
+				7200
+			);
 	}
 
 	/**
@@ -152,11 +160,15 @@ class extends="app.models.BaseService" {
 	 */
 	SettingService function storeSettings( struct settings ) {
 		// cache them for 5 days, usually app timeout
-		cache.set( getSettingsCacheKey(), arguments.settings, 7200 );
+		cache.set(
+				getSettingsCacheKey(),
+				arguments.settings,
+				7200
+			);
 		return this;
 	}
 
-	/**timebox_invoice_terms_conditions
+	/** timebox_invoice_terms_conditions
 	 * flush settings cache for current multi-tenant host
 	 * Reload overrides and reload env overrides
 	 */
@@ -185,17 +197,23 @@ class extends="app.models.BaseService" {
 		var oOption = "";
 		var newOptions = [];
 
-		arguments.memento
+		arguments
+			.memento
+			.filter(
+				function( key, value ) {
+					return allSettings.keyExists( key );
+				}
+			)
 			// Only save, saveable keys
-			.filter( function( key, value ) {
-				return allSettings.keyExists( key );
-			} )
+
 			// Build out array of settings to save
-			.each( function( key, value ) {
-				var thisSetting = findWhere( { name: key } );
-				thisSetting.setValue( toString( value ) );
-				newOptions.append( thisSetting );
-			} )
+			.each(
+				function( key, value ) {
+					var thisSetting = findWhere( { name: key } );
+					thisSetting.setValue( toString( value ) );
+					newOptions.append( thisSetting );
+				}
+			);
 
 		if ( !isNull( arguments.banner ) && len( arguments.banner ) ) {
 			// Select format
@@ -209,27 +227,26 @@ class extends="app.models.BaseService" {
 			var defaultDisk = variables.cbfs.defaultDisk();
 			var fileDirectory = "data/settings";
 			var fileName = "banner." & uploadedFile.serverfileext;
-			var filePath = [ fileDirectory, fileName ].toList( "/" );
+			var filePath = [ fileDirectory, fileName].toList( "/" );
 
 			// Resize the banner image
 			var bannerFilePath = mediaUtil.createVariation(
-				original = uploadedFile.serverDirectory & "/" & uploadedFile.serverfile,
-				filePath = filePath,
-				width = 700,
-				height = 120,
-				mimeType = uploadedFile.serverfileext
-			);
-
+					original = uploadedFile.serverDirectory & "/" & uploadedFile.serverfile,
+					filePath = filePath,
+					width    = 700,
+					height   = 120,
+					mimeType = uploadedFile.serverfileext
+				);
 
 			// create public file on disk
 			var disk = defaultDisk.createFromFile(
-				source = expandPath( bannerFilePath ),
-				directory = fileDirectory,
-				deleteSource = true,
-				name = fileName,
-				overwrite = true,
-				visibility = "public"
-			);
+					source       = expandPath( bannerFilePath ),
+					directory    = fileDirectory,
+					deleteSource = true,
+					name         = fileName,
+					overwrite    = true,
+					visibility   = "public"
+				);
 			var thisSetting = findWhere( { name: "timebox_company_banner" } );
 			thisSetting.setValue( filePath );
 			newOptions.append( thisSetting );
@@ -246,26 +263,26 @@ class extends="app.models.BaseService" {
 			var defaultDisk = variables.cbfs.defaultDisk();
 			var fileDirectory = "data/settings";
 			var fileName = "logo." & uploadedFile.serverfileext;
-			var filePath = [ fileDirectory, fileName ].toList( "/" );
+			var filePath = [ fileDirectory, fileName].toList( "/" );
 
 			// Resize the banner image
 			var logoFilePath = mediaUtil.createVariation(
-				original = uploadedFile.serverDirectory & "/" & uploadedFile.serverfile,
-				filePath = filePath,
-				width = 296,
-				height = 62,
-				mimeType = uploadedFile.serverfileext
-			);
+					original = uploadedFile.serverDirectory & "/" & uploadedFile.serverfile,
+					filePath = filePath,
+					width    = 296,
+					height   = 62,
+					mimeType = uploadedFile.serverfileext
+				);
 
 			// create public file on disk
 			var disk = defaultDisk.createFromFile(
-				source = expandPath( logoFilePath ),
-				directory = fileDirectory,
-				deleteSource = true,
-				name = fileName,
-				overwrite = true,
-				visibility = "public"
-			);
+					source       = expandPath( logoFilePath ),
+					directory    = fileDirectory,
+					deleteSource = true,
+					name         = fileName,
+					overwrite    = true,
+					visibility   = "public"
+				);
 			var thisSetting = findWhere( { name: "timebox_company_logo" } );
 			thisSetting.setValue( filePath );
 			newOptions.append( thisSetting );
@@ -292,34 +309,34 @@ class extends="app.models.BaseService" {
 	 * @return struct of { records:array, count:numeric }
 	 */
 	struct function search(
-		search = "",
-		isCore = "",
-		isActive = true,
-		sortOrder = "name asc",
-		propertyList = "settingId,isActive,name,value,isCore",
-		numeric max = 0,
+		search         = "",
+		isCore         = "",
+		isActive       = true,
+		sortOrder      = "name asc",
+		propertyList   = "settingId,isActive,name,value,isCore",
+		numeric max    = 0,
 		numeric offset = 0,
 		required currentUser
 	) {
 		var results = { "count": 0, "records": [] };
 		// cfformat-ignore-start
-        var c = newCriteria()
-            .eq( "this.isActive", autoCast( "isActive", arguments.isActive ) )
-            .when( !isNull( arguments.isCore ) && isBoolean( arguments.isCore ), ( c ) => {
-                c.eq( "isCore", autoCast( "isCore", isCore ) );
-            } )
-            .when( len( arguments.search ), ( c ) => {
-                c.like( "name", "%#search#%" )
-            } )
-            .when( !arguments.currentUser.hasPermission( "SETTINGS_ADMIN" ), ( c ) => {
-                c.isIn(
-                    "name",
-                    wirebox
-                        .getInstance( "UserService" )
-                        .getBaseUISettings( currentUser )
-                )
-            } );
-        // cfformat-ignore-end
+		var c = newCriteria()
+           .eq( "this.isActive", autoCast( "isActive", arguments.isActive ) )
+           .when( !isNull( arguments.isCore ) && isBoolean( arguments.isCore ), ( c ) => {
+               c.eq( "isCore", autoCast( "isCore", isCore ) );
+           } )
+           .when( len( arguments.search ), ( c ) => {
+               c.like( "name", "%#search#%" )
+           } )
+           .when( !arguments.currentUser.hasPermission( "SETTINGS_ADMIN" ), ( c ) => {
+               c.isIn(
+                   "name",
+                   wirebox
+                       .getInstance( "UserService" )
+                       .getBaseUISettings( currentUser )
+               )
+           } );
+		// cfformat-ignore-end
 
 		results.count = c.count( "settingId" );
 
@@ -327,10 +344,10 @@ class extends="app.models.BaseService" {
 			.withProjections( property = "#arguments.propertyList#" )
 			.asStruct()
 			.list(
-				offset = arguments.offset,
-				max = arguments.max,
+				offset    = arguments.offset,
+				max       = arguments.max,
 				sortOrder = arguments.sortOrder,
-				asQuery = false
+				asQuery   = false
 			);
 
 		return results;
@@ -342,7 +359,11 @@ class extends="app.models.BaseService" {
 	function loadConfigOverrides() {
 		var oConfig = coldbox.getSetting( "ColdBoxConfig" );
 		var configStruct = coldbox.getConfigSettings();
-		var timeboxDSL = oConfig.getPropertyMixin( "timebox", "variables", structNew() );
+		var timeboxDSL = oConfig.getPropertyMixin(
+				"timebox",
+				"variables",
+				structNew()
+			);
 
 		// Verify Settings
 		if ( structKeyExists( timeboxDSL, "settings" ) ) {
@@ -384,7 +405,6 @@ class extends="app.models.BaseService" {
 
 	/******************************** PRIVATE ************************************************/
 
-
 	/**
 	 * Overwrite settings for Coldbox modules
 	 */
@@ -398,9 +418,9 @@ class extends="app.models.BaseService" {
 				{
 					"username": settings.timebox_mail_username,
 					"password": settings.timebox_mail_password,
-					"port": settings.timebox_mail_smtp,
-					"useTLS": settings.timebox_mail_tls,
-					"useSSL": settings.timebox_mail_ssl
+					"port"    : settings.timebox_mail_smtp,
+					"useTLS"  : settings.timebox_mail_tls,
+					"useSSL"  : settings.timebox_mail_ssl
 				},
 				true
 			);
@@ -414,11 +434,11 @@ class extends="app.models.BaseService" {
 	 * @return response
 	 */
 	function toggleStatus( required setting, required boolean isActive ) {
-		arguments.setting
+		arguments
+			.setting
 			.setIsActive( arguments.isActive )
 			.save();
 
 		return { "isUpdated": true, "isActive": arguments.isActive };
 	}
-
 }

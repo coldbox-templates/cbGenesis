@@ -1,6 +1,8 @@
 /**
  * A system permission that can be assigned to roles.
  */
+@persistent( true )
+@table( "permissions" )
 class extends="app.models.BaseEntity" {
 
 	/**
@@ -12,17 +14,53 @@ class extends="app.models.BaseEntity" {
 	/**
 	 * The unique identifier for the permission.
 	 */
-	property name="permissionId" default="";
+	@fieldType( "id" )
+	@generator( "uuid" )
+	property
+		name="permissionId"
+		setter="false";
 
 	/**
 	 * The unique permission string (slug) that identifies the permission.
 	 */
+	@notNull( true )
+	@unique( true )
 	property name="permission" default="";
 
 	/**
 	 * A brief description of the permission.
 	 */
+	@ormType( "text" )
 	property name="description" default="";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Relationships
+	 * --------------------------------------------------------------------------
+	 */
+
+	property
+		name="roles"
+		fieldtype="many-to-many"
+		type="array"
+		lazy="extra"
+		orderby="role"
+		cascade="save-update"
+		class="app.models.security.Role"
+		fkcolumn="FK_permissionId"
+		linktable="role_permissions"
+		inversejoincolumn="FK_roleId";
+
+	property
+		name="users"
+		fieldtype="many-to-many"
+		type="array"
+		lazy="extra"
+		cascade="save-update"
+		class="app.models.system.User"
+		fkcolumn="FK_permissionId"
+		linktable="user_permissions"
+		inversejoincolumn="FK_userId";
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -63,11 +101,13 @@ class extends="app.models.BaseEntity" {
 	 * Constructor
 	 */
 	function init() {
-		super.init( "permissionId" );
-		variables.permission = "";
-		variables.description = "";
+		super.init( "permissionId" )
+		variables.permission = ""
+		variables.description = ""
+		variables.roles = []
+		variables.users = []
 
-		return this;
+		return this
 	}
 
 	/**
@@ -82,5 +122,19 @@ class extends="app.models.BaseEntity" {
 			return variables.permission.getToken( 1, ":" )
 		}
 		return ""
+	}
+
+	/**
+	 * Gets the slug of the permission string (the part after the first :).
+	 * Example: For permission "user:create", this method returns "create".
+	 * If the permission string does not contain a colon, it returns the entire permission string.
+	 *
+	 * @return The slug of the permission string, or the entire permission string if no colon exists.
+	 */
+	string function getPermissionSlug(){
+		if( variables.permission.contains( ":" ) ){
+			return variables.permission.getToken( 2, ":" )
+		}
+		return variables.permission
 	}
 }
