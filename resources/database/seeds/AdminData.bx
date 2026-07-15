@@ -99,7 +99,7 @@ class {
 		]
 
 		// Create Admin role
-		qb.from( "roles" ).insert( {
+		qb.newQuery().from( "roles" ).insert( {
 			roleId      : adminRoleId,
 			role        : "Admin",
 			description : "System Administrator",
@@ -125,17 +125,20 @@ class {
 
 		// Create Admin user and assign Admin role
 		var adminUserId = "00000000-0000-0000-0000-000000000001"
-		qb.from( "users" ).insert( {
+		qb.newQuery().from( "users" ).insert( {
 			userId    : adminUserId,
 			isActive  : true,
 			firstName : "Admin",
 			lastName  : "User",
 			email     : "admin@cbgenesis.com",
 			password  : static.test_bcrypt,
-			biography : "I am a wonderful CBGenesis Admin"
+			biography : "I am a wonderful CBGenesis Admin",
+			preferences:  "{}",
+			isPasswordReset: false,
+			is2FactorAuth: false
 		} )
 		// Add the admin role to the admin user
-		qb.from( "user_roles" ).insert( {
+		qb.newQuery().from( "user_roles" ).insert( {
 			FK_userId : adminUserId,
 			FK_roleId : adminRoleId
 		} )

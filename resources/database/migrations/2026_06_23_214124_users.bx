@@ -4,7 +4,7 @@ class {
 		// Main Users table
 		schema.create( "users", (table)=>{
 			// Base Fields
-			table.uuid( "userId" ).primaryKey()
+			table.guid( "userId" ).primaryKey()
 			table.boolean( "isActive" ).default( true )
 			table.timestamps()
 
@@ -16,7 +16,7 @@ class {
 			table.text( "biography" ).default( "" )
 			table.datetime( "verifiedAt" ).nullable()
 			table.datetime( "lastLogin" ).nullable()
-			table.json( "preferences" ).default( "{}" )
+			table.json( "preferences" ).nullable()
 			table.boolean( "isPasswordReset" ).default( false )
 			table.boolean( "is2FactorAuth" ).default( false )
 
@@ -30,8 +30,8 @@ class {
 
 		// User Roles
 		schema.create( "user_roles", ( table ) => {
-			table.uuid( "FK_userId" )
-			table.uuid( "FK_roleId" )
+			table.guid( "FK_userId" )
+			table.guid( "FK_roleId" )
 
 			// Composite primary key
 			table.primaryKey( [ "FK_userId", "FK_roleId" ], "pk_user_roles" )
@@ -48,8 +48,8 @@ class {
 
 		// User a-la-carte Permissions
 		schema.create( "user_permissions", ( table ) => {
-			table.uuid( "FK_userId" )
-			table.uuid( "FK_permissionId" )
+			table.guid( "FK_userId" )
+			table.guid( "FK_permissionId" )
 
 			// Composite primary key
 			table.primaryKey( [ "FK_userId", "FK_permissionId" ], "pk_user_permissions" )
@@ -68,8 +68,8 @@ class {
 		// User Password Resets
 		schema.create( "user_password_resets", ( table ) => {
 			// Fields
-			table.uuid( "resetId" ).primaryKey()
-			table.uuid( "FK_userId" )
+			table.guid( "resetId" ).primaryKey()
+			table.guid( "FK_userId" )
 			table.string( "token" ).unique()
 			table.datetime( "createdDate" ).withCurrent()
 			table.datetime( "expiresDate" )
@@ -87,8 +87,8 @@ class {
 		// User API Tokens
 		schema.create( "user_api_tokens", ( table ) => {
 			// Fields
-			table.uuid( "tokenId" ).primaryKey()
-			table.uuid( "FK_userId" )
+			table.guid( "tokenId" ).primaryKey()
+			table.guid( "FK_userId" )
 			table.string( "label" )
 			table.string( "token", 64 ).unique()
 			table.datetime( "createdDate" ).withCurrent()
