@@ -55,6 +55,7 @@ class extends="app.models.BaseService" {
 	 * Constructor
 	 */
 	SettingService function init() {
+		super.init( entityName: "Setting" )
 		return this;
 	}
 

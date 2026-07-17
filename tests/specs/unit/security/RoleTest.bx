@@ -3,128 +3,72 @@
  * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
  * responsibility to update the model annotation instantiation path and init your model.
  */
+class extends="tests.resources.BaseIntegrationSpec" {
 
-@model( "app.models.security.Role" )
-class extends="coldbox.system.testing.BaseModelTest" {
-
-	/*********************************** LIFE CYCLE Methods ***********************************/
-
-	function beforeAll() {
-		super.beforeAll();
-
-		// setup the model
-		super.setup();
-
-		// init the model object
-		variables.role = getInstance( "app.models.security.Role" );
-	}
-
-	function afterAll() {
-		super.afterAll();
-	}
+	@inject
+	property name="roleService";
 
 	/*********************************** BDD SUITES ***********************************/
 
 	function run() {
-		describe(
-			"A Role",
-			function() {
-				it(
-					"can be created",
-					function() {
-						expect( variables.role ).toBeComponent();
-					}
-				);
+		describe( "A Role", () => {
+			beforeEach( () => {
+				variables.role = roleService.new()
+			} )
 
-				it(
-					"has default values on creation",
-					function() {
-						expect( variables.role.getIsActive() ).toBeTrue();
-						expect( variables.role.getRole() ).toBe( "" );
-						expect( variables.role.getDescription() ).toBe( "" );
-						expect( variables.role.isLoaded() ).toBeFalse();
-					}
-				);
+			it( "can be created", () => {
+				expect( role ).notToBeNull()
+			} )
 
-				it(
-					"has a non-persisted id before persistence",
-					function() {
-						expect( variables.role.getId() ).toBeNull();
-						expect( variables.role.isLoaded() ).toBeFalse();
-					}
-				);
+			it( "initializes with default values", () => {
+				expect( role.isLoaded() ).toBeFalse()
+				expect( role.getRole() ).toBe( "" )
+				expect( role.getDescription() ).toBe( "" )
+				expect( role.getPermissions() ).toBeArray()
+				expect( role.getUsers() ).toBeArray()
+			} )
 
-				it(
-					"can get a persisted id after setting it",
-					function() {
-						variables.role.setId( createUUID() );
-						expect( variables.role.getId() ).notToBeEmpty();
-						expect( variables.role.isLoaded() ).toBeTrue();
-					}
-				);
+			describe( "validation", () => {
+				it( "requires role field", () => {
+					role.setRole( "" )
+					expect( role.isValid() ).toBeFalse()
+					var results = role.getValidationResults()
+					expect( results.hasErrors() ).toBeTrue()
+					expect( results.getFieldErrors( "role" ) ).notToBeEmpty()
+				} )
 
-				it(
-					"can set and get role",
-					function() {
-						variables.role.setRole( "Admin" );
-						expect( variables.role.getRole() ).toBe( "Admin" );
-					}
-				);
+				it( "validates role size between 1 and 255 characters", () => {
+					role.setRole( repeatString( "a", 256 ) )
+					expect( role.isValid() ).toBeFalse()
+				} )
 
-				it(
-					"can set and get description",
-					function() {
-						variables.role.setDescription( "Administrator role" );
-						expect( variables.role.getDescription() ).toBe( "Administrator role" );
-					}
-				);
+				it( "allows description to be optional", () => {
+					role.setRole( "user" )
+					expect( role.isValid() ).toBeTrue( role.getValidationResults().getAllErrorsAsJSON() )
+				} )
+			} )
 
-				it(
-					"has memento configuration with default includes",
-					function() {
-						expect( variables.role ).toHaveKey( "memento" );
-						expect( variables
-								.role
-								.memento
-								.defaultIncludes ).toInclude( "role" );
-						expect( variables
-								.role
-								.memento
-								.defaultIncludes ).toInclude( "description" );
-					}
-				);
+			describe( "relationships", () => {
+				it( "has many-to-many relationship with permissions", () => {
+					expect( role.getPermissions() ).toBeArray()
+				} )
 
-				it(
-					"has validation constraints",
-					function() {
-						expect( variables.role ).toHaveKey( "constraints" );
-						expect( variables.role.constraints ).toHaveKey( "role" );
-						expect( variables.role.constraints ).toHaveKey( "description" );
-					}
-				);
+				it( "has many-to-many relationship with users", () => {
+					expect( role.getUsers() ).toBeArray()
+				} )
+			} )
 
-				it(
-					"can produce a memento struct",
-					function() {
-						variables.role.setRole( "Editor" );
-						variables.role.setDescription( "Content editor role" );
+			describe( "memento", () => {
+				it( "includes all properties by default", () => {
+					role.setRole( "admin" )
+					role.setDescription( "Administrator role" )
 
-						var memento = variables.role.getMemento();
-						expect( memento ).toHaveKey( "role" );
-						expect( memento ).toHaveKey( "description" );
-						expect( memento.role ).toBe( "Editor" );
-						expect( memento.description ).toBe( "Content editor role" );
-					}
-				);
+					var memento = role.getMemento()
 
-				it(
-					"can get a role slug",
-					function() {
-						variables.role.setRole( "  SuperAdmin  " );
-						expect( variables.role.getRoleSlug() ).toBe( "superadmin" );
-					}
-				);
-			}
-		);
+					expect( memento ).toHaveKey( "role" )
+					expect( memento ).toHaveKey( "description" )
+				} )
+			} )
+		} )
 	}
 }
