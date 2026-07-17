@@ -13,7 +13,6 @@ class{
 			},
 			// The defaults for all mail config payloads and protocols
 			defaults        : {
-				from : "info@mydomain.com"
 			},
 			// Whether the scheduled task is running or not
 			runQueueTask	: true

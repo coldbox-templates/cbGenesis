@@ -3,128 +3,107 @@
  * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
  * responsibility to update the model annotation instantiation path and init your model.
  */
+class extends="tests.resources.BaseIntegrationSpec" {
 
-@model( "app.models.security.Permission" )
-class extends="coldbox.system.testing.BaseModelTest" {
-
-	/*********************************** LIFE CYCLE Methods ***********************************/
-
-	function beforeAll() {
-		super.beforeAll();
-
-		// setup the model
-		super.setup();
-
-		// init the model object
-		variables.permission = getInstance( "app.models.security.Permission" );
-	}
-
-	function afterAll() {
-		super.afterAll();
-	}
+	@inject
+	property name="permissionService";
 
 	/*********************************** BDD SUITES ***********************************/
 
 	function run() {
-		describe(
-			"A Permission",
-			function() {
-				it(
-					"can be created",
-					function() {
-						expect( variables.permission ).toBeComponent();
-					}
-				);
+		describe( "A Permission", () => {
+			beforeEach( () => {
+				variables.permission = permissionService.new()
+			} )
 
-				it(
-					"has default values on creation",
-					function() {
-						expect( variables.permission.getIsActive() ).toBeTrue();
-						expect( variables.permission.getPermission() ).toBe( "" );
-						expect( variables.permission.getDescription() ).toBe( "" );
-						expect( variables.permission.isLoaded() ).toBeFalse();
-					}
-				);
+			it( "can be created", () => {
+				expect( permission ).notToBeNull()
+			} )
 
-				it(
-					"has a non-persisted id before persistence",
-					function() {
-						expect( variables.permission.getId() ).toBeNull();
-						expect( variables.permission.isLoaded() ).toBeFalse();
-					}
-				);
+			it( "initializes with default values", () => {
+				expect( permission.isLoaded() ).toBeFalse()
+				expect( permission.getPermission() ).toBe( "" )
+				expect( permission.getDescription() ).toBe( "" )
+				expect( permission.getRoles() ).toBeArray()
+				expect( permission.getUsers() ).toBeArray()
+			} )
 
-				it(
-					"can get a persisted id after setting it",
-					function() {
-						variables.permission.setId( createUUID() );
-						expect( variables.permission.getId() ).notToBeEmpty();
-						expect( variables.permission.isLoaded() ).toBeTrue();
-					}
-				);
+			describe( "getPrefix()", () => {
+				it( "returns prefix when permission contains colon", () => {
+					permission.setPermission( "user:create" )
+					expect( permission.getPrefix() ).toBe( "user" )
+				} )
 
-				it(
-					"can set and get permission",
-					function() {
-						variables.permission.setPermission( "users.manage" );
-						expect( variables.permission.getPermission() ).toBe( "users.manage" );
-					}
-				);
+				it( "returns empty string when permission has no colon", () => {
+					permission.setPermission( "admin" )
+					expect( permission.getPrefix() ).toBe( "" )
+				} )
 
-				it(
-					"can set and get description",
-					function() {
-						variables.permission.setDescription( "Manage users" );
-						expect( variables.permission.getDescription() ).toBe( "Manage users" );
-					}
-				);
+				it( "handles multiple colons by returning first segment", () => {
+					permission.setPermission( "api:v1:read" )
+					expect( permission.getPrefix() ).toBe( "api" )
+				} )
+			} )
 
-				it(
-					"has memento configuration with default includes",
-					function() {
-						expect( variables.permission ).toHaveKey( "memento" );
-						expect( variables
-								.permission
-								.memento
-								.defaultIncludes ).toInclude( "permission" );
-						expect( variables
-								.permission
-								.memento
-								.defaultIncludes ).toInclude( "description" );
-					}
-				);
+			describe( "getPermissionSlug()", () => {
+				it( "returns slug when permission contains colon", () => {
+					permission.setPermission( "user:create" )
+					expect( permission.getPermissionSlug() ).toBe( "create" )
+				} )
 
-				it(
-					"has validation constraints",
-					function() {
-						expect( variables.permission ).toHaveKey( "constraints" );
-						expect( variables.permission.constraints ).toHaveKey( "permission" );
-						expect( variables.permission.constraints ).toHaveKey( "description" );
-					}
-				);
+				it( "returns entire permission when no colon exists", () => {
+					permission.setPermission( "admin" )
+					expect( permission.getPermissionSlug() ).toBe( "admin" )
+				} )
 
-				it(
-					"can produce a memento struct",
-					function() {
-						variables.permission.setPermission( "users.read" );
-						variables.permission.setDescription( "Read users" );
+				it( "handles multiple colons by returning everything after first colon", () => {
+					permission.setPermission( "api:v1:read" )
+					expect( permission.getPermissionSlug() ).toBe( "v1:read" )
+				} )
+			} )
 
-						var memento = variables.permission.getMemento();
-						expect( memento ).toHaveKey( "permission" );
-						expect( memento ).toHaveKey( "description" );
-						expect( memento.permission ).toBe( "users.read" );
-						expect( memento.description ).toBe( "Read users" );
-					}
-				);
+			describe( "validation", () => {
+				it( "requires permission field", () => {
+					permission.setPermission( "" )
+					expect( permission.isValid() ).toBeFalse()
+					var results = permission.getValidationResults()
+					expect( results.hasErrors() ).toBeTrue()
+					expect( results.getFieldErrors( "permission" ) ).notToBeEmpty()
+				} )
 
-				it(
-					"can get a permission slug",
-					function() {
-						variables.permission.setPermission( "  Users.Manage  " );
-						expect( variables.permission.getPermissionSlug() ).toBe( "users.manage" );
-					}
-				);
-			}
-		);
+				it( "validates permission size between 1 and 255 characters", () => {
+					permission.setPermission( repeatString( "a", 256 ) )
+					expect( permission.isValid() ).toBeFalse()
+				} )
+
+				it( "allows description to be optional", () => {
+					permission.setPermission( "user:create" )
+					permission.setDescription( "" )
+					expect( permission.isValid() ).toBeTrue()
+				} )
+			} )
+
+			describe( "relationships", () => {
+				it( "has many-to-many relationship with roles", () => {
+					expect( permission.getRoles() ).toBeArray()
+				} )
+
+				it( "has many-to-many relationship with users", () => {
+					expect( permission.getUsers() ).toBeArray()
+				} )
+			} )
+
+			describe( "memento", () => {
+				it( "includes all properties by default", () => {
+					permission.setPermission( "user:create" )
+					permission.setDescription( "Create users" )
+
+					var memento = permission.getMemento()
+
+					expect( memento ).toHaveKey( "permission" )
+					expect( memento ).toHaveKey( "description" )
+				} )
+			} )
+		} )
 	}
 }

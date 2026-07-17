@@ -47,7 +47,7 @@ class {
 	// ORM SETTINGS
 	this.ormEnabled = true;
 	this.ormSettings = {
-		cfclocation: [ "/app/models" ],
+		entityPaths: [ "/app/models" ],
 		dbcreate: "none",
 		savemapping: false,
 		secondarycacheenabled: false,
@@ -55,7 +55,7 @@ class {
 		flushAtRequestEnd: false,
 		autoManageSession: false,
 		eventHandling: true,
-		EventHandler: "cborm.models.BxEventHandler",
+		eventHandler: "cborm.models.BxEventHandler",
 		ignoreParseErrors: true
 	}
 
@@ -67,8 +67,7 @@ class {
 	public boolean function onRequestStart( targetPage ) output="true"{
 		// Set a high timeout for long running tests
 		bx:setting requestTimeout   ="9999";
-		// Clear the page pool on each request for test freshness
-		pagePoolClear()
+
 		// New ColdBox Virtual Application Starter
 		request.coldBoxVirtualApp= new coldbox.system.testing.VirtualApp(
 			appMapping : "/app",
@@ -82,7 +81,8 @@ class {
 
 		// Reload for fresh results
 		if ( structKeyExists( url, "fwreinit" ) ) {
-			// ormReload();
+			pagePoolClear()
+			ormReload()
 			request.coldBoxVirtualApp.restart();
 		}
 

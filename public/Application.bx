@@ -70,7 +70,7 @@ class{
 	// ORM SETTINGS
 	this.ormEnabled = true;
 	this.ormSettings = {
-		cfclocation: [ "/app/models" ],
+		entityPaths: [ "/app/models" ],
 		dbcreate: "none",
 		savemapping: false,
 		secondarycacheenabled: false,
@@ -114,6 +114,11 @@ class{
 	 * @targetPage The requested page
 	 */
 	public boolean function onRequestStart( string targetPage ) output=true{
+
+		if( url.keyExists( "fwreinit" ) ){
+			ormReload()
+		}
+
 		return application.cbBootstrap.onRequestStart( arguments.targetPage )
 	}
 

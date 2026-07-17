@@ -10,6 +10,7 @@ build/**
 .engine/**
 .cbfs/**
 docker/.db/**
+public/includes/hot
 
 # Vite
 /public/includes/build/**

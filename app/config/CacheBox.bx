@@ -26,7 +26,7 @@ class {
 				freeMemoryPercentageThreshold : 0,
 				evictionPolicy                : "LRU",
 				evictCount                    : 1,
-				maxObjects                    : 300,
+				maxObjects                    : 1000,
 				objectStore                   : "ConcurrentStore", // guaranteed objects
 				coldboxEnabled                : true
 			},
@@ -54,9 +54,30 @@ class {
 						freeMemoryPercentageThreshold : 0,
 						reapFrequency                 : 5,
 						evictionPolicy                : "LRU",
-						evictCount                    : 2,
-						maxObjects                    : 300,
+						evictCount                    : 5,
+						maxObjects                    : 1000,
 						objectStore                   : "ConcurrentSoftReferenceStore" // memory sensitive
+					}
+				},
+
+				/**
+				 * --------------------------------------------------------------------------
+				 * Genesis Sessions
+				 * --------------------------------------------------------------------------
+				 * Sessions are managed by CacheBox so we can distribute to any cache provider in BoxLang.
+				 */
+				sessions: {
+					provider  : "coldbox.system.cache.providers.CacheBoxColdBoxProvider",
+					properties: {
+						objectDefaultTimeout          : 60,
+						objectDefaultLastAccessTimeout: 0,
+						useLastAccessTimeouts         : false,
+						freeMemoryPercentageThreshold : 0,
+						reapFrequency                 : 5,
+						evictionPolicy                : "LRU",
+						evictCount                    : 5,
+						maxObjects                    : 5000,
+						objectStore                   : "ConcurrentStore"
 					}
 				}
 			}
