@@ -114,7 +114,6 @@ class{
 	 * @targetPage The requested page
 	 */
 	public boolean function onRequestStart( string targetPage ) output=true{
-
 		if( url.keyExists( "fwreinit" ) ){
 			ormReload()
 		}

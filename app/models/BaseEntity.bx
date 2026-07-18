@@ -9,8 +9,11 @@ class extends="cborm.models.ActiveEntity" {
 	 * Non-Persisted Properties
 	 * --------------------------------------------------------------------------
 	 */
+
+	@persistent( false )
 	property name="primaryKey" type="string";
 
+	@persistent( false )
 	property name="entityName" type="string";
 
 	/**
