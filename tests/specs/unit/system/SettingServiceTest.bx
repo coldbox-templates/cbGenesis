@@ -1,0 +1,22 @@
+/**
+ * The base model test case will use the 'model' annotation as the instantiation path
+ * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
+ * responsibility to update the model annotation instantiation path and init your model.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject
+	property name="settingService";
+
+	/*********************************** BDD SUITES ***********************************/
+
+	function run() {
+		describe( "Setting Service", () => {
+
+			it( "can be created", () => {
+				expect( settingService ).notToBeNull()
+			} )
+
+		} )
+	}
+}

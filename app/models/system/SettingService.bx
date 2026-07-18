@@ -12,6 +12,7 @@ class extends="app.models.BaseService" {
 	 */
 
 	static {
+		CACHE_KEY = "cbgenesis-settings"
 		DEFAULTS = {
 			// The main logo path for the app, if empty it will use the default cbGenesis logo
 			cbAppLogo                : "/includes/images/cbgenesis-icon-full.svg",
@@ -101,7 +102,7 @@ class extends="app.models.BaseService" {
 	 * Retrieve a multi-tenant settings cache key
 	 */
 	string function getSettingsCacheKey() {
-		return "timebox-settings";
+		return static.CACHE_KEY & "-" & cgi.http_host
 	}
 
 	/**
@@ -111,18 +112,18 @@ class extends="app.models.BaseService" {
 	 * @defaultValue The default value if setting not found.
 	 */
 	function getSetting( required name, defaultValue ) {
-		var allSettings = getAllSettings();
+		var allSettings = getAllSettings()
 		if ( structKeyExists( allSettings, arguments.name ) ) {
-			return allSettings[ arguments.name ];
+			return allSettings[ arguments.name ]
 		}
 		if ( !isNull( arguments.defaultValue ) ) {
-			return arguments.defaultValue;
+			return arguments.defaultValue
 		}
 		throw(
-			message = "Setting #arguments.name# not found in settings collection",
+			message = "Setting [#arguments.name#] not found in settings collection",
 			detail  = "Registered settings are: #structKeyList( allSettings )#",
-			type    = "SettingService.SettingNotFound"
-		);
+			type    = "SettingNotFound"
+		)
 	}
 
 	/**
@@ -135,29 +136,37 @@ class extends="app.models.BaseService" {
 	 */
 	struct function getAllSettings( boolean force = false ) {
 		if ( arguments.force ) {
-			log.info( "Forcing clearing of settings cache!" );
-			cache.clear( getSettingsCacheKey() );
+			log.info( "Forcing clearing of settings cache!" )
+			variables.cache.clear( getSettingsCacheKey() )
 		}
 
 		return cache.getOrSet(
 				getSettingsCacheKey(),
-				function() {
-					log.info( "Settings not cached, rebuilding from DB!" );
-					return list( sorOrder = "name", asQuery = false ).reduce(
-							function( result, item ) {
-								result[ item.getName() ] = item.getValue();
-								return result;
-							},
-							{}
-						);
+				() => {
+					log.info( "Settings not cached, rebuilding from DB!" )
+					// Get all settings and do a struct of name => setting struct for easy access
+					return getAll(
+						sortOrder: "name",
+						properties: "settingId,name,value,description,isActive"
+					).reduce(
+						( result, item ) => {
+							result[ item.name ] = item
+							return result
+						},
+						{}
+					)
 				},
 				7200
-			);
+			)
 	}
 
 	/**
 	 * This will store the incoming structure as the settings in cache.
 	 * Usually this method is used for major overrides.
+	 *
+	 * @settings The struct of settings to store in cache.
+	 *
+	 * @return SettingService
 	 */
 	SettingService function storeSettings( struct settings ) {
 		// cache them for 5 days, usually app timeout
@@ -165,134 +174,62 @@ class extends="app.models.BaseService" {
 				getSettingsCacheKey(),
 				arguments.settings,
 				7200
-			);
-		return this;
-	}
-
-	/** timebox_invoice_terms_conditions
-	 * flush settings cache for current multi-tenant host
-	 * Reload overrides and reload env overrides
-	 */
-	SettingService function flushSettingsCache() {
-		log.info( "Settings Flush Executed!" );
-		// Clear out the settings cache
-		cache.clear( getSettingsCacheKey() );
-		// Loadup Config Overrides
-		loadConfigOverrides();
-		// Load Environment Overrides Now, they take precedence
-		loadEnvironmentOverrides();
-		// Overwrite settings for Coldbox modules
-		overwriteModuleSettings();
-		cache.clearAllEvents();
-		return this;
+			)
+		return this
 	}
 
 	/**
-	 * Bulk saving of options using a memento structure of options
+	 * Flush settings cache for current multi-tenant host
+	 * Reload overrides and reload env overrides
+	 */
+	SettingService function flushSettingsCache() {
+		log.info( "Settings Flush Executed!" )
+		// Clear out the settings cache
+		cache.clear( getSettingsCacheKey() )
+		// Loadup Config Overrides
+		loadConfigOverrides()
+		// Load Environment Overrides Now, they take precedence
+		loadEnvironmentOverrides()
+		// Overwrite settings for Coldbox modules
+		overwriteModuleSettings();
+		cache.clearAllEvents()
+		return this
+	}
+
+	/**
+	 * Bulk saving of settings using a memento structure of settings
 	 * This is usually done from the settings display manager
 	 *
 	 * @memento The struct of settings
 	 */
-	SettingService function bulkSave( Struct memento, banner, logo ) {
-		var allSettings = getAllSettings();
-		var oOption = "";
-		var newOptions = [];
+	SettingService function bulkSave( Struct memento ) {
+		var allSettings = getAllSettings()
+		var oOption = ""
+		var newOptions = []
 
 		arguments
 			.memento
 			.filter(
-				function( key, value ) {
-					return allSettings.keyExists( key );
+				( key, value ) => {
+					return allSettings.keyExists( key )
 				}
 			)
 			// Only save, saveable keys
-
 			// Build out array of settings to save
 			.each(
-				function( key, value ) {
-					var thisSetting = findWhere( { name: key } );
-					thisSetting.setValue( toString( value ) );
-					newOptions.append( thisSetting );
+				( key, value ) => {
+					var thisSetting = findWhere( { name: key } )
+					thisSetting.setValue( toString( value ) )
+					newOptions.append( thisSetting )
 				}
 			);
 
-		if ( !isNull( arguments.banner ) && len( arguments.banner ) ) {
-			// Select format
-			uploadedFile = fileUpload(
-				getTempDirectory(),
-				"banner",
-				"",
-				"MakeUnique"
-			);
 
-			var defaultDisk = variables.cbfs.defaultDisk();
-			var fileDirectory = "data/settings";
-			var fileName = "banner." & uploadedFile.serverfileext;
-			var filePath = [ fileDirectory, fileName].toList( "/" );
-
-			// Resize the banner image
-			var bannerFilePath = mediaUtil.createVariation(
-					original = uploadedFile.serverDirectory & "/" & uploadedFile.serverfile,
-					filePath = filePath,
-					width    = 700,
-					height   = 120,
-					mimeType = uploadedFile.serverfileext
-				);
-
-			// create public file on disk
-			var disk = defaultDisk.createFromFile(
-					source       = expandPath( bannerFilePath ),
-					directory    = fileDirectory,
-					deleteSource = true,
-					name         = fileName,
-					overwrite    = true,
-					visibility   = "public"
-				);
-			var thisSetting = findWhere( { name: "timebox_company_banner" } );
-			thisSetting.setValue( filePath );
-			newOptions.append( thisSetting );
-		}
-
-		if ( !isNull( arguments.logo ) && len( arguments.logo ) ) {
-			uploadedFile = fileUpload(
-				getTempDirectory(),
-				"logo",
-				"",
-				"MakeUnique"
-			);
-
-			var defaultDisk = variables.cbfs.defaultDisk();
-			var fileDirectory = "data/settings";
-			var fileName = "logo." & uploadedFile.serverfileext;
-			var filePath = [ fileDirectory, fileName].toList( "/" );
-
-			// Resize the banner image
-			var logoFilePath = mediaUtil.createVariation(
-					original = uploadedFile.serverDirectory & "/" & uploadedFile.serverfile,
-					filePath = filePath,
-					width    = 296,
-					height   = 62,
-					mimeType = uploadedFile.serverfileext
-				);
-
-			// create public file on disk
-			var disk = defaultDisk.createFromFile(
-					source       = expandPath( logoFilePath ),
-					directory    = fileDirectory,
-					deleteSource = true,
-					name         = fileName,
-					overwrite    = true,
-					visibility   = "public"
-				);
-			var thisSetting = findWhere( { name: "timebox_company_logo" } );
-			thisSetting.setValue( filePath );
-			newOptions.append( thisSetting );
-		}
 		// save new settings and flush cache
-		saveAll( newOptions );
-		flushSettingsCache();
+		saveAll( newOptions )
+		flushSettingsCache()
 
-		return this;
+		return this
 	}
 
 	/**
@@ -312,134 +249,121 @@ class extends="app.models.BaseService" {
 	struct function search(
 		search         = "",
 		isCore         = "",
-		isActive       = true,
-		sortOrder      = "name asc",
-		propertyList   = "settingId,isActive,name,value,isCore",
+		boolean isActive       = true,
+		string sortOrder      = "name asc",
+		string propertyList   = "settingId,isActive,name,value",
 		numeric max    = 0,
 		numeric offset = 0,
 		required currentUser
 	) {
-		var results = { "count": 0, "records": [] };
+		var results = { "count": 0, "records": [] }
+
 		// cfformat-ignore-start
 		var c = newCriteria()
-           .eq( "this.isActive", autoCast( "isActive", arguments.isActive ) )
-           .when( !isNull( arguments.isCore ) && isBoolean( arguments.isCore ), ( c ) => {
-               c.eq( "isCore", autoCast( "isCore", isCore ) );
+           .eq( "this.isActive", arguments.isActive castAs boolean )
+           .when( !isNull( arguments.isCore ) && isBoolean( arguments.isCore ), c => {
+               c.eq( "isCore", isCore castAs boolean )
            } )
-           .when( len( arguments.search ), ( c ) => {
-               c.like( "name", "%#search#%" )
-           } )
-           .when( !arguments.currentUser.hasPermission( "SETTINGS_ADMIN" ), ( c ) => {
-               c.isIn(
-                   "name",
-                   wirebox
-                       .getInstance( "UserService" )
-                       .getBaseUISettings( currentUser )
-               )
-           } );
+           .when( len( arguments.search ), c => c.like( "name", "%#search#%" ) )
 		// cfformat-ignore-end
 
-		results.count = c.count( "settingId" );
+		results.count = c.count( "settingId" )
 
 		results.records = c
-			.withProjections( property = "#arguments.propertyList#" )
+			.withProjections( property: "#arguments.propertyList#" )
 			.asStruct()
 			.list(
-				offset    = arguments.offset,
-				max       = arguments.max,
-				sortOrder = arguments.sortOrder,
-				asQuery   = false
-			);
+				offset    : arguments.offset,
+				max       : arguments.max,
+				sortOrder : arguments.sortOrder
+			)
 
-		return results;
+		return results
 	}
 
 	/**
-	 * Load up config overrides
+	 * This method will load up any config overrides for the settings from the ColdBox config file.
+	 * All cbGenesis settings are in the main settings with a prefix of `cb{Setting}`
 	 */
 	function loadConfigOverrides() {
-		var oConfig = coldbox.getSetting( "ColdBoxConfig" );
-		var configStruct = coldbox.getConfigSettings();
-		var timeboxDSL = oConfig.getPropertyMixin(
-				"timebox",
-				"variables",
-				structNew()
-			);
+		var cbSettings = variables.coldbox.getConfigSettings()
+			.filter( ( key, value ) => reFindNoCase( "^cb", key ) )
 
 		// Verify Settings
-		if ( structKeyExists( timeboxDSL, "settings" ) ) {
-			var overrides = timeboxDSL.settings;
-			// Store Appended Set
-			storeSettings( getAllSettings().append( overrides, true ) );
+		if ( cbSettings.count() ) {
+			// Store Appended Settings
+			storeSettings( getAllSettings().append( cbSettings, true ) )
 			// Log it
-			variables.log.info( "TimeBox config overrides loaded." );
+			variables.log.info( "cbGenesis config overrides loaded." )
 		}
 	}
 
 	/**
-	 * Load up java environment overrides for ForgeBox settings
-	 * The pattern to look is `timebox_{setting}`
-	 * Example: timebox_storage_s3_url_timeout
+	 * This method will load up any environment overrides for the settings from the ColdBox config file.
+	 * All cbGenesis settings are in the main settings with a prefix of `genesis_`
 	 */
 	function loadEnvironmentOverrides() {
-		var environmentSettings = getSystemEnvironmentMap();
-		var overrides = {};
+		var environmentSettings = getSystemEnvironmentMap()
+		var overrides = {}
 
 		// iterate and override, can't use functional, it's a java native object :(
 		for ( var thisKey in environmentSettings ) {
-			if ( reFindNoCase( "^timebox\_", thisKey ) ) {
-				overrides[ thisKey ] = environmentSettings[ thisKey ];
+			if ( reFindNoCase( "^genesis\_", thisKey ) ) {
+				overrides[ thisKey ] = environmentSettings[ thisKey ]
 			}
 		}
 
 		// If empty, exit out.
 		if ( overrides.isEmpty() ) {
-			return;
+			return
 		}
 
 		// Append and override
-		storeSettings( getAllSettings().append( overrides, true ) );
+		storeSettings( getAllSettings().append( overrides, true ) )
 
 		// Log it
-		variables.log.info( "TimeBox environment overrides loaded." );
+		variables.log.info( "cbGenesis environment overrides loaded." )
 	}
-
-	/******************************** PRIVATE ************************************************/
 
 	/**
 	 * Overwrite settings for Coldbox modules
 	 */
 	SettingService function overwriteModuleSettings() {
-		var settings = getAllSettings();
+		var settings = getAllSettings()
+
 		// Overwrite cbmail settings using DB settings
 		wirebox
 			.getInstance( "MailService@cbmailservices" )
 			.getDefaultSettings()
 			.append(
 				{
-					"username": settings.timebox_mail_username,
-					"password": settings.timebox_mail_password,
-					"port"    : settings.timebox_mail_smtp,
-					"useTLS"  : settings.timebox_mail_tls,
-					"useSSL"  : settings.timebox_mail_ssl
+					"from"    : settings.cbDefaultEmail,
+					"server"	: settings.cbMailHost,
+					"username": settings.cbMailUsername,
+					"password": settings.cbMailPassword,
+					"port"    : settings.cbMailPort,
+					"useTLS"  : settings.cbMailTLS,
+					"useSSL"  : settings.cbMailSSL
 				},
 				true
-			);
-		return this;
+			)
+
+		return this
 	}
 
 	/**
 	 * Updates the active status of a setting (soft delete or restore)
+	 *
 	 * @Setting The setting to update
 	 * @isActive Boolean indicating whether the setting should be active (true = restore, false = delete)
-	 * @return response
+	 *
+	 * @return The updated setting memento
 	 */
 	function toggleStatus( required setting, required boolean isActive ) {
-		arguments
+		return arguments
 			.setting
 			.setIsActive( arguments.isActive )
-			.save();
-
-		return { "isUpdated": true, "isActive": arguments.isActive };
+			.save()
+			.getMemento()
 	}
 }

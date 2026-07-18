@@ -9,7 +9,6 @@ class {
 			// Setting specific fields
 			table.string( "name" ).unique()
 			table.longText( "value" ).default( "" )
-			table.longText( "description" ).default( "" )
 
 			// Indexes
 			table.index( "isActive", "idx_settingActive" )

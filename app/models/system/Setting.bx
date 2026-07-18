@@ -28,9 +28,6 @@ class extends="app.models.BaseEntity" {
 	@notNull( true )
 	property name="value" default="";
 
-	@ormType( "text" )
-	property name="description" default="";
-
 	/**
 	 * --------------------------------------------------------------------------
 	 * Validation Constraints
@@ -52,7 +49,7 @@ class extends="app.models.BaseEntity" {
 	 */
 	this.memento = {
 		// Default properties to serialize
-		defaultIncludes: [ "*"],
+		defaultIncludes: [ "*" ],
 		// Default Exclusions
 		defaultExcludes: [],
 		// Never Include
