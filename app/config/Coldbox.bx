@@ -59,29 +59,11 @@ class {
 		 * --------------------------------------------------------------------------
 		 * App Settings
 		 * --------------------------------------------------------------------------
-		 * Update as you see fit.
+		 * You can config override any of the cbGenesis settings here, but make sure you also update the .env file for your environment.
+		 * The settings are in the SettingService and are stored in the database. You can also use the cbGenesis admin to update these settings.
 		 */
 		variables.settings = {
-			// The main logo path for the app, if empty it will use the default cbGenesis logo
-			cbAppLogo            : "/includes/images/cbgenesis-icon-full.svg",
-			// The main title for the app used in the sidebar
-			cbAppName            : "cbGenesis",
-			// The tagline for the app used in the sidebar and login page
-			cbAppTagline         : "A Modern ColdBox Application Starter Kit",
-			// The tagline for the app used in the branding area of the sidebar
-			cbAppBrandTagline    : "Starter Kit",
-			// Copyright notice
-			cbCopyrightNotice    : "&copy; #year()# cbGenesis. All rights reserved.",
-			// The default theme for the app, can be "light" or "dark"
-			cbDefaultTheme       : "dark",
-			// The login layout to use, can be "AuthCenter" or "AuthSplit" or your own custom layout.
-			cbLoginLayout        : "AuthSplit",
-			// Allow users to register themselves, if false, the register page will be disabled.
-			cbAllowRegistration  : true,
-			// Allow users to reset their password, if false, the forgot password page will be disabled.
-			cbAllowForgotPassword: true
 		}
-		variables.coldbox.appName = variables.settings.cbAppName
 
 		/**
 		 * --------------------------------------------------------------------------

@@ -55,6 +55,48 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				)
 			} )
 
+			it( "initializes the setting entity service", () => {
+				expect( settingService.init() ).toBe( settingService )
+			} )
+
+			it( "searches settings through the criteria builder", () => {
+				var service = prepareMock( settingService )
+				var criteria = createEmptyMock( "cborm.models.criterion.CriteriaBuilder" )
+				var records = [ { name: "cbSearchSetting", value: "value" } ]
+
+				criteria.$( "eq" ).$results( criteria )
+				criteria.$( "when" ).$results( criteria )
+				criteria.$( "count" ).$results( 1 )
+				criteria.$( "withProjections" ).$results( criteria )
+				criteria.$( "asStruct" ).$results( criteria )
+				criteria.$( "list" ).$results( records )
+				service.$( "newCriteria" ).$results( criteria )
+
+				var results = service.search(
+					search: "cbSearchSetting",
+					isCore: true,
+					currentUser: {}
+				)
+
+				expect( results.count ).toBe( 1 )
+				expect( results.records ).toBe( records )
+				expect( criteria.$once( "count" ) ).toBeTrue()
+			} )
+
+			it( "toggles a setting and returns its memento", () => {
+				var service = prepareMock( settingService )
+				var setting = createMock( "app.models.system.Setting" )
+				var memento = { name: "cbToggleSetting", isActive: false }
+
+				setting.$( "setIsActive" ).$results( setting )
+				setting.$( "save" ).$results( setting )
+				setting.$( "getMemento" ).$results( memento )
+
+				expect( service.toggleStatus( setting, false ) ).toBe( memento )
+				expect( setting.$once( "setIsActive" ) ).toBeTrue()
+				expect( setting.$once( "save" ) ).toBeTrue()
+			} )
+
 		} )
 	}
 }
