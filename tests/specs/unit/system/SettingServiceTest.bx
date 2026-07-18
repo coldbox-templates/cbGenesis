@@ -17,6 +17,44 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( settingService ).notToBeNull()
 			} )
 
+			it( "builds a host-specific cache key", () => {
+				expect( settingService.getSettingsCacheKey() ).toBe(
+					"cbgenesis-settings-#cgi.http_host#"
+				)
+			} )
+
+			it( "stores and retrieves settings from the cache", () => {
+				var settings = {
+					"cbTestSetting": {
+						"name": "cbTestSetting",
+						"value": "test value"
+					}
+				}
+
+				expect( settingService.storeSettings( settings ) ).toBe( settingService )
+
+				expect( settingService.getAllSettings() ).toBe( settings )
+				expect( settingService.getSetting( "cbTestSetting" ) ).toBe(
+					settings.cbTestSetting
+				)
+			} )
+
+			it( "returns a default value when a setting is missing", () => {
+				settingService.storeSettings( {} )
+
+				expect(
+					settingService.getSetting( "missingSetting", "fallback value" )
+				).toBe( "fallback value" )
+			} )
+
+			it( "throws when a setting is missing without a default", () => {
+				settingService.storeSettings( {} )
+
+				expect( () => settingService.getSetting( "missingSetting" ) ).toThrow(
+					"SettingNotFound"
+				)
+			} )
+
 		} )
 	}
 }
