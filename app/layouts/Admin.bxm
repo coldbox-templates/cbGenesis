@@ -1,18 +1,18 @@
 <bx:output>
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="#getSetting( "cbDefaultTheme" )#">
+<html lang="en" data-bs-theme="#prc.settings[ "cbDefaultTheme" ]#">
 <head>
     #view( "_components/app/includes" )#
 </head>
 
 <!--- x-init initializes Alpine stores:
       $store.theme.init()   — syncs Alpine's mode with the FOUC-prevention script
-      $store.sidebar.init() — restores collapse state from localStorage --->  
+      $store.sidebar.init() — restores collapse state from localStorage --->
 <body class="admin-body"
       x-data="adminBody( {} )"
       x-init="$store.theme.init(); $store.sidebar.init()">
 
-    <!--- ── Mobile sidebar backdrop ──────────────────────────────── --->  
+    <!--- ── Mobile sidebar backdrop ──────────────────────────────── --->
     <div class="sidebar-overlay"
          x-cloak
          x-show="$store.sidebar.open"
@@ -23,32 +23,32 @@
 
     <!--- ════════════════════════════════════════════════════════════
           SIDEBAR
-          ════════════════════════════════════════════════════════════ --->  
+          ════════════════════════════════════════════════════════════ --->
     #view( "_components/app/sidebar" )#
 
     <!--- ════════════════════════════════════════════════════════════
           MAIN WRAPPER  (topbar + page content + footer)
-          ════════════════════════════════════════════════════════════ --->  
+          ════════════════════════════════════════════════════════════ --->
     <div
 		class="main-wrapper"
 		id="main-wrapper"
         :class="{ 'sidebar-collapsed-ml': $store.sidebar.collapsed }">
 
-        <!--- ── Topbar ───────────────────────────────────────────── --->  
+        <!--- ── Topbar ───────────────────────────────────────────── --->
         #view( "_components/app/topbar" )#
 
-        <!--- ── Page content ─────────────────────────────────────── --->  
+        <!--- ── Page content ─────────────────────────────────────── --->
         <main class="main-content" id="main-content" tabindex="-1">
             <div class="container-fluid">
                 #renderView()#
             </div>
         </main>
 
-        <!--- ── Footer ───────────────────────────────────────────── --->  
+        <!--- ── Footer ───────────────────────────────────────────── --->
         #view( "_components/app/footer" )#
 
     </div>
-    <!--- ── /Main wrapper ────────────────────────────────────────── --->  
+    <!--- ── /Main wrapper ────────────────────────────────────────── --->
 
 </body>
 </html>

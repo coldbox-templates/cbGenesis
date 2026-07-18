@@ -13,7 +13,7 @@
                    compact   — 36px logo mark
                    icon-only — 28px logo mark
         size     : number — override mark pixel size (default: derived from variant)
-        classes  : string — extra CSS classes on root <span> (default: "") --->  
+        classes  : string — extra CSS classes on root <span> (default: "") --->
 <bx:param name="args.variant" default="full"/>
 <bx:param name="args.classes" default=""/>
 <bx:param name="args.alt" default="#getSetting( "appName" )# logo"/>
@@ -28,7 +28,7 @@
 )#"
       aria-label="#encodeForHTMLAttribute( getSetting( "appName" ) )#">
 	<img class="brand-logo__mark"
-		 src="#getSetting( "cbAppLogo" )#"
+		 src="#prc.settings.cbAppLogo#"
 		 width="#encodeForHTMLAttribute( args.size )#"
 		 height="#encodeForHTMLAttribute( args.size )#"
 		 alt="#encodeForHTMLAttribute( args.alt )#" />

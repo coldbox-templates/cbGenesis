@@ -142,10 +142,10 @@ class extends="app.models.BaseService" {
 					// Get all settings and do a struct of name => setting struct for easy access
 					return getAll(
 						sortOrder: "name",
-						properties: "settingId as settingId,name as name,value as value,isActive as isActive"
+						properties: "name as name, value as value"
 					).reduce(
 						( result, item ) => {
-							result[ item.name ] = item
+							result[ item.name ] = item.value
 							return result
 						},
 						{}
