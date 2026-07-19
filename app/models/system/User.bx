@@ -63,7 +63,7 @@ class extends="app.models.BaseEntity" {
 	@persistent( false )
 	property
 		name="loggedIn"
-		default="false"
+		default=false
 		type="boolean";
 
 	/**
@@ -123,8 +123,7 @@ class extends="app.models.BaseEntity" {
 		},
 		"preferences": { required: false, size: "0..8000" },
 		"biography": { required: false, size: "0..8000" },
-		"password": { required: true, size: "8..255" },
-		password: { required: true }
+		"password": { required: true, size: "8..255" }
 	};
 	// https://coldbox-validation.ortusbooks.com/overview/validating-constraints/validating-with-profiles
 	this.constraintProfiles = { "update": "firstName,lastName,email,biography" }
@@ -134,7 +133,7 @@ class extends="app.models.BaseEntity" {
 	 * Population Options
 	 * --------------------------------------------------------------------------
 	 */
-	this.population = { exclude: [ "id", "lastLogin", "verifiedAt", "isActive"] }
+	this.population = { exclude: [ "userId", "lastLogin", "verifiedAt", "isActive" ] }
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -165,6 +164,10 @@ class extends="app.models.BaseEntity" {
 		variables.verifiedAt = ""
 		variables.biography = ""
 
+		variables.roles = []
+		variables.permissions = []
+		variables.apiTokens = []
+
 		setPreferences( {} )
 
 		return this
@@ -174,7 +177,7 @@ class extends="app.models.BaseEntity" {
 	 * Has the user been verified via email or not
 	 */
 	boolean function isEmailVerified() {
-		return len( variables.verifiedAt ) && isDate( variables.verifiedAt );
+		return !isNull( variables.verifiedAt ) && isDate( variables.verifiedAt );
 	}
 
 	/**
@@ -207,7 +210,7 @@ class extends="app.models.BaseEntity" {
 	 *
 	 * @return User
 	 */
-	User function setPreferences( struct preferences ) {
+	User function setPreferences( required preferences ) {
 		if( isStruct( arguments.preferences ) ) {
 			variables.preferences = jsonSerialize( arguments.preferences )
 		} else if( isSimpleValue( arguments.preferences ) ) {

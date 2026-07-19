@@ -1,77 +1,224 @@
 /**
- * The base model test case will use the 'model' annotation as the instantiation path
- * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
- * responsibility to update the model annotation instantiation path and init your model.
+ * Integration tests for the User entity.
  */
+class extends="tests.resources.BaseIntegrationSpec" {
 
-@model( "app.models.User" )
-class extends="coldbox.system.testing.BaseModelTest" {
-
-	/*********************************** LIFE CYCLE Methods ***********************************/
-
-	function beforeAll() {
-		super.beforeAll();
-
-		// setup the model
-		super.setup();
-
-		// init the model object
-		variables.user = model.init();
-	}
-
-	function afterAll() {
-		super.afterAll();
-	}
+	@inject
+	property name="userService";
 
 	/*********************************** BDD SUITES ***********************************/
 
 	function run() {
-		describe(
-			"A User",
-			function() {
-				it(
-					"can be created",
-					function() {
-						expect( user ).toBeComponent();
-					}
-				);
+		describe( "A User", () => {
+			beforeEach( () => {
+				variables.user = userService.new()
+			} )
 
-				it(
-					"can get a user's full name",
-					function() {
-						expect( user
-								.setFirstname( "luis" )
-								.setLastName( "majano" )
-								.getFullName() ).toBe( "luis majano" );
-					}
-				);
+			it( "can be created", () => {
+				expect( user ).notToBeNull()
+			} )
 
-				it(
-					"can get a non persisted id",
-					function() {
-						expect( user.getId() ).toBeNull();
-						expect( user.isLoaded() ).toBeFalse();
-					}
-				);
+			it( "initializes with default values", () => {
+				expect( user.isLoaded() ).toBeFalse()
+				expect( user.getFirstName() ).toBe( "" )
+				expect( user.getLastName() ).toBe( "" )
+				expect( user.getEmail() ).toBe( "" )
+				expect( user.getPassword() ).toBe( "" )
+				expect( user.getBiography() ).toBe( "" )
+				expect( user.getPreferences() ).toBe( "{}" )
+				expect( user.isLoggedIn() ).toBeFalse()
+				expect( user.getRoles() ).toBeArray()
+				expect( user.getPermissions() ).toBeArray()
+				expect( user.getApiTokens() ).toBeArray()
+			} )
 
-				it(
-					"can get a persisted id",
-					function() {
-						user.setId( createUUID() );
-						expect( user.getId() ).notToBeEmpty();
-						expect( user.isLoaded() ).toBeTrue();
-					}
-				);
+			describe( "getFullName()", () => {
+				it( "combines first and last name", () => {
+					user.setFirstName( "luis" )
+					user.setLastName( "majano" )
+					expect( user.getFullName() ).toBe( "luis majano" )
+				} )
+			} )
 
-				it(
-					"can determine if a user has been verified or not",
-					function() {
-						expect( user.isEmailVerified() ).toBeFalse();
-						user.setVerifiedAt( now() );
-						expect( user.isEmailVerified() ).toBeTrue();
-					}
-				);
-			}
-		);
+			describe( "getInitials()", () => {
+				it( "returns initials from first and last name", () => {
+					user.setFirstName( "Luis" )
+					user.setLastName( "Majano" )
+					expect( user.getInitials() ).toBe( "LM" )
+				} )
+
+				it( "returns only first initial when no last name", () => {
+					user.setFirstName( "Luis" )
+					user.setLastName( "" )
+					expect( user.getInitials() ).toBe( "L" )
+				} )
+
+				it( "returns empty string when no names set", () => {
+					user.setFirstName( "" )
+					user.setLastName( "" )
+					expect( user.getInitials() ).toBe( "" )
+				} )
+			} )
+
+			describe( "isEmailVerified()", () => {
+				it( "returns false when verifiedAt is empty", () => {
+					expect( user.isEmailVerified() ).toBeFalse()
+				} )
+
+				it( "returns true when verifiedAt is set to a date", () => {
+					user.setVerifiedAt( now() )
+					expect( user.isEmailVerified() ).toBeTrue()
+				} )
+			} )
+
+			describe( "isLoggedIn()", () => {
+				it( "returns false by default", () => {
+					expect( user.isLoggedIn() ).toBeFalse()
+				} )
+
+				it( "returns false after being set explicitly", () => {
+					user.setLoggedIn( false )
+					expect( user.isLoggedIn() ).toBeFalse()
+				} )
+			} )
+
+			describe( "preferences", () => {
+				it( "defaults to an empty struct", () => {
+					var prefs = user.getAllPreferences()
+					expect( prefs ).toBeStruct()
+					expect( prefs ).toBeEmpty()
+				} )
+
+				it( "can set and get a preference", () => {
+					user.setPreference( "theme", "dark" )
+					expect( user.getPreference( "theme" ) ).toBe( "dark" )
+				} )
+
+				it( "can get a preference with a default value", () => {
+					expect( user.getPreference( "nonexistent", "defaultVal" ) ).toBe( "defaultVal" )
+				} )
+
+				it( "throws when getting a missing preference with no default", () => {
+					expect( () => user.getPreference( "nonexistent" ) ).toThrow( "UserPreferenceNotFound" )
+				} )
+
+				it( "can setPreferences with a struct", () => {
+					user.setPreferences( { "lang": "en", "timezone": "UTC" } )
+					var prefs = user.getAllPreferences()
+					expect( prefs ).toHaveKey( "lang" )
+					expect( prefs ).toHaveKey( "timezone" )
+					expect( prefs.lang ).toBe( "en" )
+				} )
+
+				it( "can setPreferences with a JSON string", () => {
+					user.setPreferences( '{ "lang": "es" }' )
+					expect( user.getPreference( "lang" ) ).toBe( "es" )
+				} )
+
+				it( "throws InvalidArgumentException for non-struct non-simple value", () => {
+					expect( () => user.setPreferences( [] ) ).toThrow( "InvalidArgumentException" )
+				} )
+			} )
+
+			describe( "validation", () => {
+				it( "requires firstName", () => {
+					user.setFirstName( "" )
+					expect( user.isValid() ).toBeFalse()
+					var results = user.getValidationResults()
+					expect( results.getFieldErrors( "firstName" ) ).notToBeEmpty()
+				} )
+
+				it( "requires lastName", () => {
+					user.setLastName( "" )
+					expect( user.isValid() ).toBeFalse()
+					var results = user.getValidationResults()
+					expect( results.getFieldErrors( "lastName" ) ).notToBeEmpty()
+				} )
+
+				it( "requires email", () => {
+					user.setEmail( "" )
+					expect( user.isValid() ).toBeFalse()
+					var results = user.getValidationResults()
+					expect( results.getFieldErrors( "email" ) ).notToBeEmpty()
+				} )
+
+				it( "validates email format", () => {
+					user.setEmail( "not-an-email" )
+					expect( user.isValid() ).toBeFalse()
+					var results = user.getValidationResults()
+					expect( results.getFieldErrors( "email" ) ).notToBeEmpty()
+				} )
+
+				it( "validates email size between 1 and 255", () => {
+					user.setEmail( repeatString( "a", 256 ) & "@test.com" )
+					expect( user.isValid() ).toBeFalse()
+				} )
+
+				it( "requires password", () => {
+					user.setPassword( "" )
+					expect( user.isValid() ).toBeFalse()
+					var results = user.getValidationResults()
+					expect( results.getFieldErrors( "password" ) ).notToBeEmpty()
+				} )
+
+				it( "validates password size minimum 8 characters", () => {
+					user.setPassword( "short" )
+					expect( user.isValid() ).toBeFalse()
+					var results = user.getValidationResults()
+					expect( results.getFieldErrors( "password" ) ).notToBeEmpty()
+				} )
+
+				it( "passes validation with valid data", () => {
+					user.setFirstName( "Luis" )
+					user.setLastName( "Majano" )
+					user.setEmail( "luis@example.com" )
+					user.setPassword( "password123" )
+					expect( user.isValid() ).toBeTrue( user.getValidationResults().getAllErrorsAsJSON() )
+				} )
+			} )
+
+			describe( "relationships", () => {
+				it( "has many-to-many relationship with roles", () => {
+					expect( user.getRoles() ).toBeArray()
+				} )
+
+				it( "has many-to-many relationship with permissions", () => {
+					expect( user.getPermissions() ).toBeArray()
+				} )
+
+				it( "has one-to-many relationship with apiTokens", () => {
+					expect( user.getApiTokens() ).toBeArray()
+				} )
+			} )
+
+			describe( "memento", () => {
+				it( "includes all properties by default", () => {
+					user.setFirstName( "Luis" )
+					user.setLastName( "Majano" )
+					user.setEmail( "luis@example.com" )
+					user.setBiography( "A developer" )
+
+					var memento = user.getMemento()
+
+					expect( memento ).toHaveKey( "firstName" )
+					expect( memento ).toHaveKey( "lastName" )
+					expect( memento ).toHaveKey( "email" )
+					expect( memento ).toHaveKey( "biography" )
+				} )
+
+				it( "never includes password", () => {
+					user.setPassword( "supersecret" )
+					var memento = user.getMemento()
+					expect( memento ).notToHaveKey( "password" )
+				} )
+
+				it( "includes inherited base properties", () => {
+					var memento = user.getMemento()
+					expect( memento ).toHaveKey( "createdDate" )
+					expect( memento ).toHaveKey( "modifiedDate" )
+					expect( memento ).toHaveKey( "isActive" )
+				} )
+			} )
+		} )
 	}
 }
