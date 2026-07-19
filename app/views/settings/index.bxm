@@ -1,10 +1,10 @@
 <bx:output>
-<!--- Page Heading --->  
+<!--- Page Heading  --->
 <div class="page-header admin-page-heading">
 	<div>
 		<p class="eyebrow">Settings</p>
 		<h2 class="page-title">Global Settings</h2>
-		<p class="page-subtitle">Mock application controls with instant UI feedback.</p>
+		<p class="page-subtitle">Manage application branding, security, and email configuration.</p>
 	</div>
 	<button class="btn btn-primary"><i class="ph-duotone ph-check"></i> Save All</button>
 </div>
@@ -14,138 +14,176 @@
 	x-data="{}"
 >
 
+	<!--- Branding --->
 	<section class="content-card settings-card">
-
 		<div class="content-card-header">
 			<h3 class="content-card-title">
-				<i class="ph-duotone ph-user-plus"></i> Registration
+				<i class="ph-duotone ph-palette"></i> Branding
 			</h3>
 		</div>
+		<div class="form-grid">
+			<label>App Logo Path
+				<input type="text" name="cbAppLogo" value="#encodeForHTMLAttribute( prc.settings.cbAppLogo )#">
+			</label>
+			<label>App Name
+				<input type="text" name="cbAppName" value="#encodeForHTMLAttribute( prc.settings.cbAppName )#">
+			</label>
+			<label>Tagline
+				<input type="text" name="cbAppTagline" value="#encodeForHTMLAttribute( prc.settings.cbAppTagline )#">
+			</label>
+			<label>Brand Tagline
+				<input type="text" name="cbAppBrandTagline" value="#encodeForHTMLAttribute( prc.settings.cbAppBrandTagline )#">
+			</label>
+			<label class="span-2">Copyright Notice
+				<input type="text" name="cbCopyrightNotice" value="#encodeForHTMLAttribute( prc.settings.cbCopyrightNotice )#">
+			</label>
+		</div>
+	</section>
 
+	<!--- Theme & Layout --->
+	<section class="content-card settings-card">
+		<div class="content-card-header">
+			<h3 class="content-card-title">
+				<i class="ph-duotone ph-paint-brush"></i> Theme & Layout
+			</h3>
+		</div>
 		<div class="settings-list">
 			<div class="setting-row">
 				<div>
-					<strong>Allow Public Registration</strong>
-					<small>Let anyone create an account on the login page</small>
+					<strong>Default Theme</strong>
+					<small>App-wide color scheme for all users</small>
 				</div>
-				#view(
-	view = "_components/ui/switch",
-	args = {
-		name : "allowPublicRegistration",
-		value: prc
-			.settings
-			.registration
-			.allowPublicRegistration
-	}
-)#
+				<select name="cbDefaultTheme">
+					<option value="light" #prc.settings.cbDefaultTheme == "light" ? "selected" : ""#>Light</option>
+					<option value="dark" #prc.settings.cbDefaultTheme == "dark" ? "selected" : ""#>Dark</option>
+				</select>
 			</div>
 			<div class="setting-row">
 				<div>
-					<strong>Require Email Verification</strong>
-					<small>Users must verify email before accessing the app</small>
+					<strong>Login Layout</strong>
+					<small>Layout used on authentication pages</small>
 				</div>
-				#view(
-	view = "_components/ui/switch",
-	args = {
-		name : "requireEmailVerification",
-		value: prc
-			.settings
-			.registration
-			.requireEmailVerification
-	}
-)#
-			</div>
-			<div class="setting-row">
-				<div>
-					<strong>Default Role for New Users</strong>
-					<small>Role assigned on registration</small>
-				</div>
-				<select>
-					<option>#encodeForHTML( prc
-		.settings
-		.registration
-		.defaultRole )#</option>
-					<option>Developer</option>
-					<option>Admin</option>
+				<select name="cbLoginLayout">
+					<option value="AuthCenter" #prc.settings.cbLoginLayout == "AuthCenter" ? "selected" : ""#>Auth Center</option>
+					<option value="AuthSplit" #prc.settings.cbLoginLayout == "AuthSplit" ? "selected" : ""#>Auth Split</option>
 				</select>
 			</div>
 		</div>
 	</section>
 
+	<!--- Registration --->
 	<section class="content-card settings-card">
-		<div class="content-card-header"><h3 class="content-card-title"><i class="ph-duotone ph-shield-check"></i> Security Policy</h3></div>
+		<div class="content-card-header">
+			<h3 class="content-card-title">
+				<i class="ph-duotone ph-user-plus"></i> Registration
+			</h3>
+		</div>
 		<div class="settings-list">
 			<div class="setting-row">
 				<div>
-					<strong>Require 2FA for Admins</strong>
-					<small>Force TOTP or Passkey for Admin+ roles</small>
+					<strong>Allow Registration</strong>
+					<small>Let anyone create an account on the login page</small>
 				</div>
 				#view(
 	view = "_components/ui/switch",
 	args = {
-		name : "require2FAForAdmins",
-		value: prc
-			.settings
-			.security
-			.require2FAForAdmins
+		name : "cbAllowRegistration",
+		value: prc.settings.cbAllowRegistration
 	}
 )#
 			</div>
 			<div class="setting-row">
 				<div>
-					<strong>Max Login Attempts</strong>
-					<small>Lock account after N failed attempts</small>
-				</div>
-				<input class="compact-input" type="number" value="#prc
-	.settings
-	.security
-	.maxLoginAttempts#">
-			</div>
-			<div class="setting-row">
-				<div>
-					<strong>Session Timeout (minutes)</strong>
-					<small>Automatically log out inactive users</small>
-				</div>
-				<input class="compact-input" type="number" value="#prc
-	.settings
-	.security
-	.sessionTimeout#">
-			</div>
-			<div class="setting-row">
-				<div>
-					<strong>Maintenance Mode</strong>
-					<small>Block non-admin access to the app</small>
+					<strong>Allow Forgot Password</strong>
+					<small>Enable the password reset flow on the login page</small>
 				</div>
 				#view(
 	view = "_components/ui/switch",
 	args = {
-		name : "maintenanceMode",
-		value: prc
-			.settings
-			.security
-			.maintenanceMode
+		name : "cbAllowForgotPassword",
+		value: prc.settings.cbAllowForgotPassword
 	}
 )#
 			</div>
 		</div>
 	</section>
 
+	<!--- Security --->
 	<section class="content-card settings-card">
-		<div class="content-card-header"><h3 class="content-card-title"><i class="ph-duotone ph-envelope-simple"></i> Email Configuration</h3></div>
+		<div class="content-card-header">
+			<h3 class="content-card-title">
+				<i class="ph-duotone ph-shield-check"></i> Security
+			</h3>
+		</div>
 		<div class="form-grid">
-			<label>SMTP Host<input type="text" value="#encodeForHTMLAttribute( prc
-		.settings
-		.email
-		.smtpHost )#"></label>
-			<label>SMTP Port<input type="number" value="#encodeForHTMLAttribute( prc
-		.settings
-		.email
-		.smtpPort )#"></label>
-			<label class="span-2">From Address<input type="email" value="#encodeForHTMLAttribute( prc
-		.settings
-		.email
-		.fromAddress )#"></label>
-			<div class="span-2"><button class="btn btn-outline-secondary"><i class="ph-duotone ph-paper-plane-tilt"></i> Send Test Email</button></div>
+			<label>Minimum Password Length
+				<input type="number" name="cbMinPasswordLength" value="#encodeForHTMLAttribute( prc.settings.cbMinPasswordLength )#">
+			</label>
+			<label>Password Reset Expiration (minutes)
+				<input type="number" name="cbPasswordResetExpiration" value="#encodeForHTMLAttribute( prc.settings.cbPasswordResetExpiration )#">
+			</label>
+			<label>Encryption Key
+				<input type="password" name="cbEncryptionKey" value="#encodeForHTMLAttribute( prc.settings.cbEncryptionKey )#" readonly>
+				<small>Generated at first run. Change only if you know what you are doing.</small>
+			</label>
+			<label>Salting Key
+				<input type="password" name="cbSaltingKey" value="#encodeForHTMLAttribute( prc.settings.cbSaltingKey )#" readonly>
+				<small>Generated at first run. Change only if you know what you are doing.</small>
+			</label>
+		</div>
+	</section>
+
+	<!--- Email Configuration --->
+	<section class="content-card settings-card">
+		<div class="content-card-header">
+			<h3 class="content-card-title">
+				<i class="ph-duotone ph-envelope-simple"></i> Email Configuration
+			</h3>
+		</div>
+		<div class="form-grid">
+			<label>Default From Address
+				<input type="email" name="cbDefaultEmail" value="#encodeForHTMLAttribute( prc.settings.cbDefaultEmail )#">
+			</label>
+			<label>SMTP Host
+				<input type="text" name="cbMailHost" value="#encodeForHTMLAttribute( prc.settings.cbMailHost )#">
+			</label>
+			<label>SMTP Port
+				<input type="number" name="cbMailPort" value="#encodeForHTMLAttribute( prc.settings.cbMailPort )#">
+			</label>
+			<label>SMTP Username
+				<input type="text" name="cbMailUsername" value="#encodeForHTMLAttribute( prc.settings.cbMailUsername )#">
+			</label>
+			<label>SMTP Password
+				<input type="password" name="cbMailPassword" value="#encodeForHTMLAttribute( prc.settings.cbMailPassword )#">
+			</label>
+		</div>
+		<div class="settings-list" style="margin-top:1rem;">
+			<div class="setting-row">
+				<div>
+					<strong>Use TLS</strong>
+					<small>Enable STARTTLS for SMTP connection</small>
+				</div>
+				#view(
+	view = "_components/ui/switch",
+	args = {
+		name : "cbMailTLS",
+		value: prc.settings.cbMailTLS
+	}
+)#
+			</div>
+			<div class="setting-row">
+				<div>
+					<strong>Use SSL</strong>
+					<small>Enable SSL for SMTP connection</small>
+				</div>
+				#view(
+	view = "_components/ui/switch",
+	args = {
+		name : "cbMailSSL",
+		value: prc.settings.cbMailSSL
+	}
+)#
+			</div>
 		</div>
 	</section>
 </div>
