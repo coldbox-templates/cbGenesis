@@ -40,7 +40,7 @@ class {
 	 * @password The password to verify
 	 *
 	 * @return The authenticated User object
-	 * @throws SecurityException if credentials are invalid
+	 * @throws InvalidCredentialsException if credentials are invalid
 	 */
 	User function login(
 		required string username,
@@ -52,7 +52,7 @@ class {
 			throw(
 				message = "Invalid credentials.",
 				detail  = "The username and password combination is not valid.",
-				type    = "SecurityException"
+				type    = "InvalidCredentialsException"
 			);
 		}
 
@@ -110,7 +110,7 @@ class {
 	private function updateLastLogin( required string id ) {
 		qb
 			.table( "users" )
-			.where( "id", arguments.id )
+			.where( "userId", arguments.id )
 			.update( { "lastLogin": { value: now(), cfsqlType: "timestamp" } } );
 	}
 }

@@ -30,6 +30,13 @@ class extends="app.models.BaseEntity" {
 
 	/**
 	 * --------------------------------------------------------------------------
+	 * Population Options
+	 * --------------------------------------------------------------------------
+	 */
+	this.population = { exclude: [ "settingId" ] }
+
+	/**
+	 * --------------------------------------------------------------------------
 	 * Validation Constraints
 	 * --------------------------------------------------------------------------
 	 */
@@ -65,6 +72,8 @@ class extends="app.models.BaseEntity" {
 	 */
 	function init() {
 		super.init( "settingId" )
+		variables.name = ""
+		variables.value = ""
 		return this
 	}
 }

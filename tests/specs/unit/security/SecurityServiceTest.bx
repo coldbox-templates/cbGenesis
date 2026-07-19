@@ -78,7 +78,7 @@ class extends="coldbox.system.testing.BaseModelTest" {
 					"login()",
 					function() {
 						it(
-							"throws SecurityException on invalid credentials",
+							"throws InvalidCredentialsException on invalid credentials",
 							function() {
 								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
 								mockAuthService
@@ -92,7 +92,6 @@ class extends="coldbox.system.testing.BaseModelTest" {
 
 								var mockUserService = createMock( "app.models.UserService" );
 								mockUserService.$( "isValidCredentials" ).$returns( false );
-								mockUserService.$( "retrieveUserByUsername" ).$returns( {} );
 
 								// Inject mocks
 								model.$( "getAuthenticationService" ).$returns( mockAuthService );
@@ -104,7 +103,7 @@ class extends="coldbox.system.testing.BaseModelTest" {
 									function() {
 										model.login( "test@example.com", "wrongpassword" );
 									}
-								).toThrow( "SecurityException" );
+								).toThrow( "InvalidCredentialsException" );
 							}
 						);
 

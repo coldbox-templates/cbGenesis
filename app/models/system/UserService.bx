@@ -63,15 +63,15 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
-	 * Get a user by username
+	 * Get a user by email
 	 *
-	 * @username The username to get the user with
+	 * @email The email to get the user with
 	 *
-	 * @return The valid user object representing the username or an empty user object
+	 * @return The valid user object representing the email or an empty user object
 	 */
-	User function retrieveUserByUsername( required username ) {
+	User function retrieveUserByEmail( required email ) {
 		return newCriteria()
-			.eq( "username", arguments.username )
+			.eq( "email", arguments.email )
 			.isTrue( "isActive" )
 			.get() ?: throw( type = "EntityNotFound", message = "User not found" )
 	}
@@ -80,13 +80,13 @@ class extends="app.models.BaseService" {
 	 * Verify if the incoming username and password are valid credentials. The user must also have been verified
 	 * in order to log in.
 	 *
-	 * @username The username to test
+	 * @username The username/email to test
 	 * @password The password to test
 	 *
 	 * @return true if valid, else false
 	 */
 	boolean function isValidCredentials( required username, required password ) {
-		var oUser = retrieveUserByUsername( arguments.username )
+		var oUser = retrieveUserByEmail( arguments.username )
 
 		// If the user is not loaded or the user has not been verified, then we cannot log in
 		if ( !oUser.isLoaded() || !oUser.isEmailVerified() ) {
@@ -331,23 +331,23 @@ class extends="app.models.BaseService" {
 			var bodyTokens = {
 				name: arguments.user.getFullName(),
 				email: arguments.user.getEmail(),
-				company: settings.timebox_company,
-				companyEmail: settings.timebox_outgoingEmail,
-				ip: getRealIP(),
-				linkLogin: settings.timebox_ui_url & "/login"
+				company: settings.cbAppName,
+				companyEmail: settings.cbDefaultEmail,
+				ip: variables.cbSecurity.getRealIP(),
+				linkLogin: event.buildLink( "/login" )
 			};
 
 			var mail = variables.mailservice.newMail();
 
 			mail.configure(
 				to = arguments.user.getEmail(),
-				from = settings.timebox_outgoingEmail,
-				subject = "TimeBox Password Reset Completed",
+				from = settings.cbDefaultEmail,
+				subject = "Password Reset Completed",
 				bodyTokens = bodyTokens,
 				type = "html"
 			);
 
-			mail.setBody( variables.renderer.externalView( "/timebox/models/email_templates/password_reset" ) );
+			mail.setBody( variables.renderer.externalView( "/app/email_templates/password_reset" ) );
 
 			// send it out
 			return mail
