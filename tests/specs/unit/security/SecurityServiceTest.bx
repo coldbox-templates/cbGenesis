@@ -78,7 +78,7 @@ class extends="coldbox.system.testing.BaseModelTest" {
 					"login()",
 					function() {
 						it(
-							"throws InvalidCredentialsException on invalid credentials",
+							"throws InvalidCredentials on invalid credentials",
 							function() {
 								var mockAuthService = createMock( "cbsecurity.modules.cbauth.models.AuthenticationService" );
 								mockAuthService
