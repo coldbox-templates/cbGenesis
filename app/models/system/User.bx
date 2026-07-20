@@ -160,14 +160,14 @@ class extends="app.models.BaseEntity" {
 		variables.lastName = ""
 		variables.email = ""
 		variables.password = ""
-		variables.lastLogin = ""
-		variables.verifiedAt = ""
 		variables.biography = ""
 
+		// relationships
 		variables.roles = []
 		variables.permissions = []
 		variables.apiTokens = []
 
+		// preferences
 		setPreferences( {} )
 
 		return this
