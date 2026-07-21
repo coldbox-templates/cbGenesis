@@ -117,6 +117,9 @@ class extends="app.models.BaseEntity" {
 	 * but never exposes the full token
 	 */
 	string function getTokenSnapshot(){
+		if( variables.token.isEmpty() ){
+			return "";
+		}
 		return "****" & right( variables.token, 4 )
 	}
 
