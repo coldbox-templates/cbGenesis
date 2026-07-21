@@ -8,6 +8,9 @@ class extends="tests.resources.BaseIntegrationSpec" {
 	@inject
 	property name="roleService";
 
+	@inject
+	property name="permissionService";
+
 	/*********************************** BDD SUITES ***********************************/
 
 	function run() {
@@ -58,15 +61,41 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				} )
 			} )
 
+			describe( "hasPermission()", () => {
+				it( "returns true for a matching permission and false otherwise", () => {
+					var permission = permissionService.new()
+					permission.setPermission( "users:read" )
+					role.setPermissions( [ permission ] )
+
+					expect( role.hasPermission( "users:read" ) ).toBeTrue()
+					expect( role.hasPermission( "users:delete" ) ).toBeFalse()
+				} )
+
+				it( "returns true when an array contains a matching permission", () => {
+					var permission = permissionService.new()
+					permission.setPermission( "users:read" )
+					role.setPermissions( [ permission ] )
+
+					expect( role.hasPermission( [ "users:delete", "users:read" ] ) ).toBeTrue()
+					expect( role.hasPermission( [ "users:delete", "users:update" ] ) ).toBeFalse()
+				} )
+			} )
+
 			describe( "memento", () => {
 				it( "includes all properties by default", () => {
 					role.setRole( "admin" )
 					role.setDescription( "Administrator role" )
+					var permission = permissionService.new()
+					permission.setPermission( "users:read" )
+					role.setPermissions( [ permission ] )
 
 					var memento = role.getMemento()
 
 					expect( memento ).toHaveKey( "role" )
 					expect( memento ).toHaveKey( "description" )
+					expect( memento ).toHaveKey( "permissions" )
+					expect( memento.permissions ).toBeArray()
+					expect( memento.permissions[ 1 ].permission ).toBe( "users:read" )
 				} )
 			} )
 		} )

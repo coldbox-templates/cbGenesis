@@ -98,7 +98,10 @@ class extends="app.models.BaseEntity" {
 	 * https://forgebox.io/view/mementifier
 	 */
 	this.memento = {
-		defaultIncludes: [ "*"],
+		defaultIncludes: [
+			"permission",
+			"description"
+		],
 		defaultExcludes: [],
 		neverInclude   : []
 	}

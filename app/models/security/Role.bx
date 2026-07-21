@@ -98,7 +98,11 @@ class extends="app.models.BaseEntity" {
 	 * https://forgebox.io/view/mementifier
 	 */
 	this.memento = {
-		defaultIncludes: [ "*"],
+		defaultIncludes: [
+			"role",
+			"description",
+			"permissions"
+		],
 		defaultExcludes: [],
 		neverInclude   : []
 	}
@@ -114,6 +118,50 @@ class extends="app.models.BaseEntity" {
 		variables.users = []
 
 		return this;
+	}
+
+	/**
+	 * Clear all permissions
+	 */
+	Role function clearPermissions() {
+		variables.permissions = []
+		return this
+	}
+
+	/**
+	 * Clear all users
+	 */
+	Role function clearUsers() {
+		variables.users = []
+		return this
+	}
+
+	/**
+	 * Check for specific permission by slug, one, list or an array of slugs.
+	 *
+	 * @slug A permission slug, list of slugs or an array of slugs to check for.
+	 *
+	 * @return True if the role has the specified permission(s), false otherwise.
+	 */
+	boolean function hasPermission( required slug ) {
+		// no perms, just return false
+		if ( !hasPermissions() ) {
+			return false
+		}
+
+		if( isSimpleValue( arguments.slug ) ) {
+			arguments.slug = listToArray( arguments.slug )
+		}
+
+		// check for any incoming matching permission
+		for( var thisSlug in arguments.slug ){
+			if( variables.permissions.some( perm => perm.getPermission() == thisSlug ) ) {
+				return true
+			}
+		}
+
+		// no matches found
+		return false
 	}
 
 }
