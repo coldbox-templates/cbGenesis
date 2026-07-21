@@ -30,6 +30,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( apiToken.hasExpiration() ).toBeFalse()
 				expect( apiToken.isExpired() ).toBeFalse()
 				expect( apiToken.isExpiringSoon() ).toBeFalse()
+				expect( apiToken.getUser() ).toBeNull()
 			} )
 
 			describe( "expiration", () => {
@@ -95,7 +96,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				} )
 			} )
 
-			describe( "relationship", () => {
+			describe( "relationships", () => {
 				it( "has a user relationship", () => {
 					expect( apiToken.getUser() ).toBeNull()
 				} )
@@ -116,6 +117,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					apiToken.setLabel( "CLI token" )
 					apiToken.setExpiration( dateAdd( "d", 30, now() ) )
 					apiToken.setLastUsed( now() )
+					apiToken.setToken( generateSecretKey( "AES", 256 ) )
 
 					var memento = apiToken.getMemento()
 

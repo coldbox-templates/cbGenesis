@@ -89,9 +89,15 @@ class extends="app.models.BaseEntity" {
 	 * NEVER expose the hashed token.
 	 */
 	this.memento = {
-		defaultIncludes: [ "*"],
+		defaultIncludes: [
+			"tokenId",
+			"label",
+			"expiration",
+			"lastUsed",
+			"tokenSnapshot"
+		],
 		defaultExcludes: [],
-		neverInclude   : [ "token"]
+		neverInclude   : [ "token" ]
 	};
 
 	/**
@@ -104,6 +110,14 @@ class extends="app.models.BaseEntity" {
 		variables.expiration = null;
 		variables.lastUsed = null;
 		return this;
+	}
+
+	/**
+	 * This method shows only a token identifier so folks can see which token they are using
+	 * but never exposes the full token
+	 */
+	string function getTokenSnapshot(){
+		return "****" & right( variables.token, 4 )
 	}
 
 	/**

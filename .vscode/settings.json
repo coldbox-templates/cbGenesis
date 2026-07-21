@@ -11,5 +11,7 @@
 		"javascript",
 		"javascriptreact"
     ],
-    "boxlang.debugger.moduleVersion": "1.1.1+2"
+    "boxlang.debugger.moduleVersion": "1.1.1+2",
+  	"testbox.runnerUrl": "http://127.0.0.1:55797/tests/runner.bxm",
+	"testbox.excludedPaths": "lib/**"
 }
