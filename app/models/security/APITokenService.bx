@@ -10,11 +10,194 @@
 class extends="app.models.BaseService" {
 
 	/**
-	 * Constructor
+	 * Initialize the API token service.
+	 *
+	 * @return The initialized service.
 	 */
 	function init() {
 		super.init( entityName: "APIToken" )
 		return this
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Public Methods
+	 * --------------------------------------------------------------------------
+	 */
+
+	/**
+	 * Create and persist an API token.
+	 *
+	 * The raw token is returned only in this response. The database stores only
+	 * its SHA-256 hash.
+	 *
+	 * @user The user who owns the token.
+	 * @label A descriptive token label.
+	 * @expiration Optional expiration date.
+	 *
+	 * @return The raw token and safe token metadata: rawToken:string, token:APIToken
+	 */
+	struct function createToken(
+		required any user,
+		required string label,
+		date expiration
+	) {
+		var rawToken = generateRawToken()
+		var token = new( {
+			label: arguments.label,
+			token: hashToken( rawToken ),
+			expiration: !isNull( arguments.expiration ) && !arguments.expiration.isEmpty() ? arguments.expiration : null,
+			user: arguments.user
+		} )
+
+		save( entity: token )
+
+		return {
+			rawToken: rawToken,
+			token: token
+		}
+	}
+
+	/**
+	 * Validate a raw API token and update its last-used timestamp.
+	 *
+	 * @rawToken The raw token supplied by the caller.
+	 *
+	 * @throws APIToken.Invalid when the token is missing, inactive, expired, or has no user.
+	 *
+	 * @return The active, non-expired API token entity.
+	 */
+	APIToken function validateToken( required string rawToken ) {
+		var token = findWhere( { token: hashToken( arguments.rawToken ) } )
+
+		if ( isNull( token ) || !token.getIsActive() ) {
+			throw( type = "APIToken.Invalid", message = "Invalid API token" )
+		}
+
+		if ( token.isExpired() || isNull( token.getUser() ) ) {
+			throw( type = "APIToken.Invalid", message = "Invalid API token" )
+		}
+
+		token.setLastUsed( now() )
+		save( entity: token )
+
+		return token
+	}
+
+	/**
+	 * Check whether a raw API token is valid without throwing an exception.
+	 *
+	 * @rawToken The raw token supplied by the caller.
+	 *
+	 * @return True when the token can be authenticated.
+	 */
+	boolean function isValidToken( required string rawToken ) {
+		try {
+			validateToken( arguments.rawToken )
+			return true
+		} catch ( any exception ) {
+			return false
+		}
+	}
+
+	/**
+	 * Revoke one API token by marking it inactive.
+	 *
+	 * @tokenId The token identifier.
+	 *
+	 * @return The revoked token entity.
+	 *
+	 * @throws APIToken.NotFound when no token matches the identifier.
+	 */
+	APIToken function revokeToken( required string tokenId ) {
+		var token = loadToken( arguments.tokenId )
+		token.setIsActive( false )
+		save( entity: token )
+		return token
+	}
+
+	/**
+	 * Revoke every API token belonging to a user.
+	 *
+	 * @userId The user identifier.
+	 * @return The number of affected token records.
+	 */
+	numeric function revokeAllForUser( required string userId ) {
+		var result = variables.qb
+			.table( "user_api_tokens" )
+			.where( "FK_userId", "=", arguments.userId )
+			.update( { isActive: false } )
+
+		return result?.result?.recordcount ?: 0
+	}
+
+	/**
+	 * List safe token metadata for a user.
+	*
+	 * @userId The user identifier.
+	 * @activeOnly Whether to include only active tokens.
+	 *
+	 * @return An array of token metadata structs.
+	 */
+	array function listForUser( required string userId, boolean activeOnly = true ) {
+		var queryBuilder = variables.qb
+			.newQuery()
+			.from( "user_api_tokens" )
+			.select( [ "tokenId", "label", "expiration", "lastUsed", "isActive" ] )
+			.where( "FK_userId", "=", arguments.userId )
+
+		if ( arguments.activeOnly ) {
+			queryBuilder.where( "isActive", "=", true )
+		}
+
+		return queryBuilder.get()
+	}
+
+	/**
+	 * Find a token only when it belongs to the supplied user.
+	 *
+	 * @tokenId The token identifier.
+	 * @userId The user identifier.
+	 * @return The matching API token entity.
+	 * @throws APIToken.NotFound when the token does not exist or belongs to another user.
+	 */
+	APIToken function findByIdForUser( required string tokenId, required string userId ) {
+		var token = loadToken( arguments.tokenId )
+
+		if ( !belongsToUser( token, arguments.userId ) ) {
+			throw( type = "APIToken.NotFound", message = "API token not found" )
+		}
+
+		return token
+	}
+
+	/**
+	 * Permanently delete a token after verifying ownership.
+	*
+	 * @tokenId The token identifier.
+	 * @userId The owning user identifier.
+	 * @return True when the token is deleted.
+	 * @throws APIToken.NotFound when the token does not exist or belongs to another user.
+	 */
+	boolean function deleteToken( required string tokenId, required string userId ) {
+		var token = findByIdForUser( arguments.tokenId, arguments.userId )
+		delete( entity: token )
+		return true
+	}
+
+	/**
+	 * Update the last-used timestamp for a token.
+	*
+	 * @tokenId The token identifier.
+	 *
+	 * @throws APIToken.NotFound when no token matches the identifier.
+	 *
+	 * @return The updated API token entity.
+	 */
+	APIToken function touchLastUsed( required string tokenId ) {
+		var token loadToken( arguments.tokenId ).setLastUsed( now() )
+		save( token )
+		return token
 	}
 
 	/**
@@ -29,6 +212,59 @@ class extends="app.models.BaseService" {
 			.delete()
 
 		return result?.result?.recordcount ?: 0
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Private Methods
+	 * --------------------------------------------------------------------------
+	 */
+
+	/**
+	 * Generate a raw token for one-time delivery to the caller.
+	 *
+	 * @return A prefixed cryptographically generated token.
+	 */
+	private string function generateRawToken() {
+		return "cb_" & generateSecretKey( "AES", 256 )
+	}
+
+	/**
+	 * Hash a raw token for secure database storage and lookup.
+	 *
+	 * @rawToken The raw token value.
+	 * @return The SHA-256 token hash.
+	 */
+	private string function hashToken( required string rawToken ) {
+		return hash( arguments.rawToken, "SHA-256" )
+	}
+
+	/**
+	 * Load a token by its identifier or throw when it does not exist.
+	 *
+	 * @tokenId The token identifier.
+	 * @return The matching API token entity.
+	 * @throws APIToken.NotFound when no token matches the identifier.
+	 */
+	private APIToken function loadToken( required string tokenId ) {
+		var token = findWhere( { tokenId: arguments.tokenId } )
+
+		if ( isNull( token ) ) {
+			throw( type = "APIToken.NotFound", message = "API token not found" )
+		}
+
+		return token
+	}
+
+	/**
+	 * Verify that a token belongs to the supplied user.
+	 *
+	 * @token The token entity to inspect.
+	 * @userId The user identifier to verify.
+	 * @return True when the token belongs to the user.
+	 */
+	private boolean function belongsToUser( required APIToken token, required string userId ) {
+		return !isNull( arguments.token.getUser() ) && arguments.token.getUser().getId() == arguments.userId
 	}
 
 }

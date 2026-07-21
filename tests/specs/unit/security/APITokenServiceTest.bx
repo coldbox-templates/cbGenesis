@@ -1,7 +1,7 @@
 /**
  * Integration tests for the API token service.
  */
-class extends="tests.resources.BaseIntegrationSpec" {
+class extends="tests.resources.BaseIntegrationSpec"{
 
 	@inject
 	property name="apiTokenService";
@@ -15,6 +15,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 		variables.testUser = userService.findWhere( {
 			email: "admin@cbGenesis.com"
 		} )
+		// Create any other fixtures here
 	}
 
 	/*********************************** BDD SUITES ***********************************/
@@ -24,6 +25,55 @@ class extends="tests.resources.BaseIntegrationSpec" {
 
 			it( "can be created", () => {
 				expect( apiTokenService ).notToBeNull()
+			} )
+
+			it( "creates and validates a token without exposing its hash", () => {
+				var tokenData = apiTokenService.createToken(
+					user      = variables.testUser,
+					label     = "Service test token",
+					expiration = dateAdd( "d", 1, now() )
+				)
+
+				expect( tokenData.token ).toStartWith( "cb_" )
+				expect( tokenData.tokenId ).notToBeEmpty()
+				expect( tokenData.label ).toBe( "Service test token" )
+				expect( apiTokenService.isValidToken( tokenData.token ) ).toBeTrue()
+
+				var token = apiTokenService.findByIdForUser(
+					tokenId = tokenData.tokenId,
+					userId  = variables.testUser.getId()
+				)
+				expect( token.getToken() ).notToBe( tokenData.token )
+				expect( token.getToken().len() ).toBe( 64 )
+				expect( token.getLastUsed() ).notToBeNull()
+			} )
+
+			it( "revokes a token and prevents further validation", () => {
+				var tokenData = apiTokenService.createToken(
+					user  = variables.testUser,
+					label = "Revocation test token"
+				)
+
+				apiTokenService.revokeToken( tokenData.tokenId )
+
+				expect( apiTokenService.isValidToken( tokenData.token ) ).toBeFalse()
+			} )
+
+			it( "lists and deletes tokens only for their owner", () => {
+				var tokenData = apiTokenService.createToken(
+					user  = variables.testUser,
+					label = "Ownership test token"
+				)
+				var tokens = apiTokenService.listForUser( variables.testUser.getId() )
+
+				expect( tokens ).toBeArray()
+				expect( tokens.map( ( token ) => token.tokenId ) ).toInclude( tokenData.tokenId )
+				expect(
+					apiTokenService.deleteToken(
+						tokenId = tokenData.tokenId,
+						userId  = variables.testUser.getId()
+					)
+				).toBeTrue()
 			} )
 
 			it( "purges expired tokens", () => {
