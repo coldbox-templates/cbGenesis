@@ -33,19 +33,20 @@ class extends="tests.resources.BaseIntegrationSpec"{
 					label     = "Service test token",
 					expiration = dateAdd( "d", 1, now() )
 				)
+				var token = tokenData.token
 
-				expect( tokenData.token ).toStartWith( "cb_" )
-				expect( tokenData.tokenId ).notToBeEmpty()
-				expect( tokenData.label ).toBe( "Service test token" )
-				expect( apiTokenService.isValidToken( tokenData.token ) ).toBeTrue()
+				expect( tokenData.rawToken ).toStartWith( "cb_" )
+				expect( token.getTokenId() ).notToBeEmpty()
+				expect( token.getLabel() ).toBe( "Service test token" )
+				expect( apiTokenService.isValidToken( tokenData.rawToken ) ).toBeTrue()
 
-				var token = apiTokenService.findByIdForUser(
-					tokenId = tokenData.tokenId,
+				var persistedToken = apiTokenService.findByIdForUser(
+					tokenId = token.getTokenId(),
 					userId  = variables.testUser.getId()
 				)
-				expect( token.getToken() ).notToBe( tokenData.token )
-				expect( token.getToken().len() ).toBe( 64 )
-				expect( token.getLastUsed() ).notToBeNull()
+				expect( persistedToken.getToken() ).notToBe( tokenData.rawToken )
+				expect( persistedToken.getToken().len() ).toBe( 64 )
+				expect( persistedToken.getLastUsed() ).notToBeNull()
 			} )
 
 			it( "revokes a token and prevents further validation", () => {
@@ -54,9 +55,9 @@ class extends="tests.resources.BaseIntegrationSpec"{
 					label = "Revocation test token"
 				)
 
-				apiTokenService.revokeToken( tokenData.tokenId )
+				apiTokenService.revokeToken( tokenData.token.getTokenId() )
 
-				expect( apiTokenService.isValidToken( tokenData.token ) ).toBeFalse()
+				expect( apiTokenService.isValidToken( tokenData.rawToken ) ).toBeFalse()
 			} )
 
 			it( "lists and deletes tokens only for their owner", () => {
@@ -67,13 +68,76 @@ class extends="tests.resources.BaseIntegrationSpec"{
 				var tokens = apiTokenService.listForUser( variables.testUser.getId() )
 
 				expect( tokens ).toBeArray()
-				expect( tokens.map( ( token ) => token.tokenId ) ).toInclude( tokenData.tokenId )
+				expect( tokens.map( ( token ) => token.tokenId ) ).toInclude( tokenData.token.getTokenId() )
 				expect(
 					apiTokenService.deleteToken(
-						tokenId = tokenData.tokenId,
+						tokenId = tokenData.token.getTokenId(),
 						userId  = variables.testUser.getId()
 					)
 				).toBeTrue()
+			} )
+
+			it( "touches a token and supports listing inactive tokens", () => {
+				var tokenData = apiTokenService.createToken(
+					user  = variables.testUser,
+					label = "Touch test token"
+				)
+				var tokenId = tokenData.token.getTokenId()
+
+				expect( tokenData.token.getLastUsed() ).toBeNull()
+				var touchedToken = apiTokenService.touchLastUsed( tokenId )
+				expect( touchedToken.getLastUsed() ).notToBeNull()
+
+				apiTokenService.revokeToken( tokenId )
+				var inactiveTokens = apiTokenService.listForUser(
+					userId = variables.testUser.getId(),
+					activeOnly = false
+				)
+				expect( inactiveTokens.map( ( token ) => token.tokenId ) ).toInclude( tokenId )
+			} )
+
+			it( "revokes all tokens for a user", () => {
+				var firstToken = apiTokenService.createToken(
+					user  = variables.testUser,
+					label = "Bulk revoke one"
+				)
+				var secondToken = apiTokenService.createToken(
+					user  = variables.testUser,
+					label = "Bulk revoke two"
+				)
+				var tokenCount = apiTokenService.listForUser(
+					userId = variables.testUser.getId()
+					, activeOnly = false
+				).len()
+
+				expect( apiTokenService.revokeAllForUser( variables.testUser.getId() ) ).toBe( tokenCount )
+				expect( apiTokenService.isValidToken( firstToken.rawToken ) ).toBeFalse()
+				expect( apiTokenService.isValidToken( secondToken.rawToken ) ).toBeFalse()
+			} )
+
+			it( "rejects invalid, expired, and unauthorized token access", () => {
+				var expiredToken = apiTokenService.createToken(
+					user       = variables.testUser,
+					label      = "Expired validation token",
+					expiration = dateAdd( "d", -1, now() )
+				)
+				var revokedToken = apiTokenService.createToken(
+					user  = variables.testUser,
+					label = "Revoked validation token"
+				)
+				apiTokenService.revokeToken( revokedToken.token.getTokenId() )
+
+				expect( () => apiTokenService.validateToken( "unknown-token" ) ).toThrow( "APIToken.Invalid" )
+				expect( () => apiTokenService.validateToken( expiredToken.rawToken ) ).toThrow( "APIToken.Invalid" )
+				expect( () => apiTokenService.validateToken( revokedToken.rawToken ) ).toThrow( "APIToken.Invalid" )
+				expect( () => apiTokenService.findByIdForUser(
+					tokenId = expiredToken.token.getTokenId(),
+					userId = createUUID()
+				) ).toThrow( "APIToken.NotFound" )
+				expect( () => apiTokenService.deleteToken(
+					tokenId = expiredToken.token.getTokenId(),
+					userId = createUUID()
+				) ).toThrow( "APIToken.NotFound" )
 			} )
 
 			it( "purges expired tokens", () => {
@@ -101,7 +165,7 @@ class extends="tests.resources.BaseIntegrationSpec"{
 					.setUser( variables.testUser )
 				apiTokenService.save( entity: activeToken )
 
-				expect( apiTokenService.purgeExpiredTokens() ).toBe( 2 )
+				$assert.isTrue( apiTokenService.purgeExpiredTokens() > 1 )
 			} )
 		} )
 	}

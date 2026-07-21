@@ -46,7 +46,7 @@ class extends="app.models.BaseService" {
 		var token = new( {
 			label: arguments.label,
 			token: hashToken( rawToken ),
-			expiration: !isNull( arguments.expiration ) && !arguments.expiration.isEmpty() ? arguments.expiration : null,
+			expiration: isNull( arguments.expiration ) ? null : arguments.expiration,
 			user: arguments.user
 		} )
 
@@ -123,12 +123,17 @@ class extends="app.models.BaseService" {
 	 * @return The number of affected token records.
 	 */
 	numeric function revokeAllForUser( required string userId ) {
+		var tokenCount = listForUser(
+			userId = arguments.userId,
+			activeOnly = false
+		).len()
 		var result = variables.qb
 			.table( "user_api_tokens" )
 			.where( "FK_userId", "=", arguments.userId )
 			.update( { isActive: false } )
+		ormClearSession()
 
-		return result?.result?.recordcount ?: 0
+		return tokenCount
 	}
 
 	/**
@@ -195,8 +200,8 @@ class extends="app.models.BaseService" {
 	 * @return The updated API token entity.
 	 */
 	APIToken function touchLastUsed( required string tokenId ) {
-		var token loadToken( arguments.tokenId ).setLastUsed( now() )
-		save( token )
+		var token = loadToken( arguments.tokenId ).setLastUsed( now() )
+		save( entity: token )
 		return token
 	}
 
