@@ -21,6 +21,11 @@ class {
 		 * You register tasks with the task() method and get back a ColdBoxScheduledTask object
 		 * that you can use to register your tasks configurations.
 		 */
+		task( "Purge Expired API Tokens" )
+			.call( () => getInstance( "APITokenService" ).purgeExpiredTokens() )
+			.everyDayAt( "03:00" )
+			.onOneServer()
+			.withNoOverlaps()
 	}
 
 	/**

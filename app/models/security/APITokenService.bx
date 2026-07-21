@@ -14,7 +14,21 @@ class extends="app.models.BaseService" {
 	 */
 	function init() {
 		super.init( entityName: "APIToken" )
-		return this;
+		return this
+	}
+
+	/**
+	 * Delete tokens that have passed their expiration date.
+	 *
+	 * @return The number of expired tokens deleted.
+	 */
+	numeric function purgeExpiredTokens() {
+		var result = variables.qb
+			.table( "user_api_tokens" )
+			.where( "expiration", "<", now() )
+			.delete()
+
+		return result?.result?.recordcount ?: 0
 	}
 
 }

@@ -1,0 +1,58 @@
+/**
+ * Integration tests for the API token service.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject
+	property name="apiTokenService";
+
+	@inject
+	property name="userService";
+
+	function beforeAll() {
+		super.beforeAll()
+		// get the test fixture user
+		variables.testUser = userService.findWhere( {
+			email: "admin@cbGenesis.com"
+		} )
+	}
+
+	/*********************************** BDD SUITES ***********************************/
+
+	function run(){
+		describe( "API Token Service", () => {
+
+			it( "can be created", () => {
+				expect( apiTokenService ).notToBeNull()
+			} )
+
+			it( "purges expired tokens", () => {
+				var expiredToken = apiTokenService.new()
+				expiredToken
+					.setLabel( "Expired token" )
+					.setToken( generateSecretKey( "AES", 256 ) )
+					.setExpiration( dateAdd( "d", -1, now() ) )
+					.setUser( variables.testUser )
+				apiTokenService.save( entity: expiredToken )
+
+				var anotherExpiredToken = apiTokenService.new()
+				anotherExpiredToken
+					.setLabel( "Another expired token" )
+					.setToken( generateSecretKey( "AES", 256 ) )
+					.setExpiration( dateAdd( "d", -2, now() ) )
+					.setUser( variables.testUser )
+				apiTokenService.save( entity: anotherExpiredToken )
+
+				var activeToken = apiTokenService.new()
+				activeToken
+					.setLabel( "Active token" )
+					.setToken( generateSecretKey( "AES", 256 ) )
+					.setExpiration( dateAdd( "d", 1, now() ) )
+					.setUser( variables.testUser )
+				apiTokenService.save( entity: activeToken )
+
+				expect( apiTokenService.purgeExpiredTokens() ).toBe( 2 )
+			} )
+		} )
+	}
+}
