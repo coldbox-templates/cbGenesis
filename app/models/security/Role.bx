@@ -39,29 +39,35 @@ class extends="app.models.BaseEntity" {
 	 * --------------------------------------------------------------------------
 	 */
 
+	/**
+	 * Permissions that belong to this role.
+	 */
+	@fieldtype( "many-to-many" )
+	@lazy( "true" )
+	@orderby( "permission" )
+	@cascade( "save-update" )
+	@class( "app.models.security.Permission" )
+	@fkcolumn( "FK_roleId" )
+	@linktable( "role_permissions" )
+	@inversejoincolumn( "FK_permissionId" )
 	property
 		name="permissions"
-		fieldtype="many-to-many"
-		type="array"
-		lazy="extra"
-		orderby="permission"
-		cascade="save-update"
-		class="app.models.security.Permission"
-		fkcolumn="FK_roleId"
-		linktable="role_permissions"
-		inversejoincolumn="FK_permissionId";
+		type="array";
 
+	/**
+	 * Users that have this role.
+	 */
+	@fieldtype( "many-to-many" )
+	@lazy( "true" )
+	@orderby( "email" )
+	@cascade( "save-update" )
+	@class( "app.models.system.User" )
+	@fkcolumn( "FK_roleId" )
+	@linktable( "user_roles" )
+	@inversejoincolumn( "FK_userId" )
 	property
 		name="users"
-		fieldtype="many-to-many"
-		type="array"
-		lazy="extra"
-		orderby="email"
-		cascade="save-update"
-		class="app.models.system.User"
-		fkcolumn="FK_roleId"
-		linktable="user_roles"
-		inversejoincolumn="FK_userId";
+		type="array";
 
 	/**
 	 * --------------------------------------------------------------------------

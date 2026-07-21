@@ -1,0 +1,136 @@
+/**
+ * Integration tests for the API token entity.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject
+	property name="apiTokenService";
+
+	@inject
+	property name="userService";
+
+	/*********************************** BDD SUITES ***********************************/
+
+	function run() {
+		describe( "An API Token", () => {
+			beforeEach( () => {
+				variables.apiToken = apiTokenService.new()
+			} )
+
+			it( "can be created", () => {
+				expect( apiToken ).notToBeNull()
+			} )
+
+			it( "initializes with default values", () => {
+				expect( apiToken.isLoaded() ).toBeFalse()
+				expect( apiToken.getLabel() ).toBe( "" )
+				expect( apiToken.getToken() ).toBe( "" )
+				expect( apiToken.getExpiration() ).toBeNull()
+				expect( apiToken.getLastUsed() ).toBeNull()
+				expect( apiToken.hasExpiration() ).toBeFalse()
+				expect( apiToken.isExpired() ).toBeFalse()
+				expect( apiToken.isExpiringSoon() ).toBeFalse()
+			} )
+
+			describe( "expiration", () => {
+				it( "detects an expiration date", () => {
+					apiToken.setExpiration( dateAdd( "d", 7, now() ) )
+
+					expect( apiToken.hasExpiration() ).toBeTrue()
+					expect( apiToken.isExpired() ).toBeFalse()
+				} )
+
+				it( "detects an expired token", () => {
+					apiToken.setExpiration( dateAdd( "d", -1, now() ) )
+
+					expect( apiToken.isExpired() ).toBeTrue()
+					expect( apiToken.isExpiringSoon() ).toBeFalse()
+				} )
+
+				it( "detects a token expiring soon", () => {
+					apiToken.setExpiration( dateAdd( "d", 3, now() ) )
+
+					expect( apiToken.isExpiringSoon() ).toBeTrue()
+				} )
+
+				it( "does not consider a token expiring soon outside the requested window", () => {
+					apiToken.setExpiration( dateAdd( "d", 8, now() ) )
+
+					expect( apiToken.isExpiringSoon( 7 ) ).toBeFalse()
+				} )
+			} )
+
+			describe( "validation", () => {
+				it( "requires label", () => {
+					apiToken.setToken( "token-hash" )
+					apiToken.setLabel( "" )
+
+					expect( apiToken.isValid() ).toBeFalse()
+					var results = apiToken.getValidationResults()
+					expect( results.hasErrors() ).toBeTrue()
+					expect( results.getFieldErrors( "label" ) ).notToBeEmpty()
+				} )
+
+				it( "validates label size between 1 and 255 characters", () => {
+					apiToken.setLabel( repeatString( "a", 256 ) )
+					apiToken.setToken( "token-hash" )
+
+					expect( apiToken.isValid() ).toBeFalse()
+				} )
+
+				it( "requires token", () => {
+					apiToken.setLabel( "CLI token" )
+					apiToken.setToken( "" )
+
+					expect( apiToken.isValid() ).toBeFalse()
+					var results = apiToken.getValidationResults()
+					expect( results.getFieldErrors( "token" ) ).notToBeEmpty()
+				} )
+
+				it( "passes validation with valid data", () => {
+					apiToken.setLabel( "CLI token" )
+					apiToken.setToken( "token-hash" )
+
+					expect( apiToken.isValid() ).toBeTrue( apiToken.getValidationResults().getAllErrorsAsJSON() )
+				} )
+			} )
+
+			describe( "relationship", () => {
+				it( "has a user relationship", () => {
+					expect( apiToken.getUser() ).toBeNull()
+				} )
+
+				it( "can link a user to the token", () => {
+					var user = userService.new()
+					user.setEmail( "api-token-user@example.com" )
+
+					apiToken.setUser( user )
+
+					expect( apiToken.getUser() ).notToBeNull()
+					expect( apiToken.getUser().getEmail() ).toBe( "api-token-user@example.com" )
+				} )
+			} )
+
+			describe( "memento", () => {
+				it( "includes token metadata", () => {
+					apiToken.setLabel( "CLI token" )
+					apiToken.setExpiration( dateAdd( "d", 30, now() ) )
+					apiToken.setLastUsed( now() )
+
+					var memento = apiToken.getMemento()
+
+					expect( memento ).toHaveKey( "label" )
+					expect( memento ).toHaveKey( "expiration" )
+					expect( memento ).toHaveKey( "lastUsed" )
+				} )
+
+				it( "never includes the hashed token", () => {
+					apiToken.setToken( "secret-token-hash" )
+					var memento = apiToken.getMemento()
+
+					expect( memento ).notToHaveKey( "token" )
+				} )
+			} )
+		} )
+	}
+}

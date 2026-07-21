@@ -126,7 +126,9 @@ class extends="app.models.BaseEntity" {
 		"password": { required: true, size: "8..255" }
 	};
 	// https://coldbox-validation.ortusbooks.com/overview/validating-constraints/validating-with-profiles
-	this.constraintProfiles = { "update": "firstName,lastName,email,biography" }
+	this.constraintProfiles = {
+		"update": "firstName,lastName,email,preferences,biography"
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -143,7 +145,7 @@ class extends="app.models.BaseEntity" {
 	 */
 	this.memento = {
 		// Default properties to serialize
-		defaultIncludes: [ "*"],
+		defaultIncludes: [ "*" ],
 		// Default Exclusions
 		defaultExcludes: [],
 		// Never Include
@@ -272,6 +274,8 @@ class extends="app.models.BaseEntity" {
 
 	/**
 	 * Save the user using more logic like bcrypting and logging
+	 * We go to the user service, since that controls the rest of the security
+	 * algorithms and logging. This is the preferred way to save a user.
 	 */
 	User function save( boolean passwordChange = false ) {
 		return variables.userService.save( this, arguments.passwordChange )
