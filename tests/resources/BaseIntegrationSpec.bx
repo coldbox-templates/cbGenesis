@@ -48,6 +48,9 @@ class extends="coldbox.system.testing.BaseTestCase"{
 		// Setup ColdBox
 		super.beforeAll()
 
+		// Make sure the settings are loaded and valid
+		settingService.preFlightCheck()
+
 		// Clear ORM Session, this is important to avoid caching issues with ORM and the tests
 		ormClearSession()
 
