@@ -3,7 +3,9 @@ class {
 	function configure() {
 		return {
 			// This is the path to your user object that contains the credential validation methods
-			userServiceClass: "UserService"
+			userServiceClass: "UserService",
+			// This is the object that will be used to store the session data. It must implement the IStorage interface.
+			sessionStorage: "CacheStorage@cbStorages"
 		}
 	}
 }

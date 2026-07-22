@@ -17,7 +17,7 @@ class {
 	 */
 
 	@inject( "authenticationService@cbauth" )
-	property name="authenticationService";
+	property name="cbauth";
 
 	@inject( "UserService" )
 	property name="userService";
@@ -27,6 +27,9 @@ class {
 
 	@inject( "logbox:logger:{this}" )
 	property name="log";
+
+	@inject( "cachebox:sessions" )
+	property name="sessionsCache";
 
 	/**
 	 * Constructor
@@ -47,24 +50,15 @@ class {
 	 *
 	 * @return The authenticated User object
 	 */
-	User function login(
+	User function authenticate(
 		required string username,
 		required string password
 	) {
-		// Validate credentials through UserService
-		if ( !userService.isValidCredentials( arguments.username, arguments.password ) ) {
-			throw(
-				message = "Invalid credentials.",
-				detail  = "The username and password combination is not valid.",
-				type    = "InvalidCredentials"
-			)
-		}
-
 		// Authenticate through cbauth (stores user in session + request)
-		var oUser = variables.authenticationService.authenticate( arguments.username, arguments.password )
+		var oUser = variables.cbauth.authenticate( arguments.username, arguments.password )
 
 		// Update lastLogin in the database
-		variables.updateLastLogin( oUser.getId() )
+		updateLastLogin( oUser.getId() )
 
 		return oUser
 	}
@@ -75,9 +69,9 @@ class {
 	 */
 	SecurityService function logout() {
 		try {
-			variables.authenticationService.logout()
-		} catch (SecurityException e) {
-			log.debug( "Logout attempted with no active session." )
+			variables.cbauth.logout()
+		} catch ( any e ) {
+			log.trace( "Logout attempted with no active session." )
 		}
 		return this
 	}
@@ -88,7 +82,7 @@ class {
 	 * @return true if a user is logged in, false otherwise
 	 */
 	boolean function isLoggedIn() {
-		return variables.authenticationService.isLoggedIn()
+		return variables.cbauth.isLoggedIn()
 	}
 
 	/**
@@ -98,9 +92,9 @@ class {
 	 */
 	User function getCurrentUser() {
 		try {
-			return variables.authenticationService.getUser()
-		} catch ( SecurityException e ) {
-			return null
+			return variables.cbauth.getUser()
+		} catch ( any e ) {
+			return variables.userService.new()
 		}
 	}
 
@@ -108,6 +102,8 @@ class {
 	 * Update the lastLogin timestamp for a user in the database.
 	 *
 	 * @id The user ID to update
+	 *
+	 * @return The SecurityService instance for method chaining
 	 */
 	private SecurityService function updateLastLogin( required string id ) {
 		variables.qb
@@ -115,5 +111,62 @@ class {
 			.where( "userId", arguments.id )
 			.update( { "lastLogin": { value: now(), sqlType: "timestamp" } } )
 		return this
+	}
+
+	/**
+	 * Generate a user rest token in the global cache
+	 *
+	 * @user The user to generate it to
+	 *
+	 * @return The reset token
+	 */
+	string function generatePasswordResetToken( required user ) {
+		// Store Security Token For X minutes
+		var salt = variables.settingService.getSetting( "cbSaltingKey" )
+		var token = hash( salt & arguments.user.getEmail() & arguments.user.getId() & now(), "SHA-512" )
+		var timeout = variables.settingService.getSetting( "cbPasswordResetExpiration" )
+
+		variables.sessionsCache.set(
+			"cbReset-#token#", // key
+			arguments.user.getId(), // value
+			timeout, // timeouts
+			timeout
+		)
+
+		return token
+	}
+
+	/**
+	 * Clear a password reset token for the user
+	 *
+	 * @token The password token to reset
+	 */
+	boolean function clearPasswordResetToken( required token ) {
+		return variables.sessionsCache.clear( "cbReset-#arguments.token#" )
+	}
+
+	/**
+	 * This function validates an incoming pw reset token to figure out their user.
+	 * The token is not removed just yet. It will be removed once the password has been reset.
+	 *
+	 * @token The security token to validate
+	 *
+	 * @return {error, user}
+	 */
+	struct function verifyPasswordResetToken( required token ) {
+		var results = { "error": false, "user": {} }
+		var userId = variables.sessionsCache.get( "cbReset-#arguments.token#" )
+
+		// If token not found, don't reset and return back
+		if ( isNull( userId ) ) {
+			results.error = true
+			return results
+		}
+
+		// Verify the user of the token
+		// Throws exception if not a valid user
+		results.user = variables.userService.retrieveUserById( userId )
+
+		return results
 	}
 }

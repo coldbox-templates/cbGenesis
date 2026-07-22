@@ -55,6 +55,12 @@ class extends="app.models.BaseEntity" {
 	@ormType( "text" )
 	property name="preferences" default="{}";
 
+	@ormType( "boolean" )
+	property name="isPasswordReset" default="false";
+
+	@ormType( "boolean" )
+	property name="is2FactorAuth" default="false";
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Non Persisted Properties
