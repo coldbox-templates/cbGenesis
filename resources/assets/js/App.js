@@ -25,8 +25,10 @@ Alpine.data( "footer", footer );
 // Auth Components
 import { passwordStrength } from "./components/ui/PasswordStrength.js";
 import { authForm }         from "./components/auth/AuthForm.js";
+import { registerForm }     from "./components/auth/RegisterForm.js";
 Alpine.data( "passwordStrength", passwordStrength );
 Alpine.data( "authForm", authForm );
+Alpine.data( "registerForm", registerForm );
 
 // UI Components
 import { messageBox }       from "./components/ui/MessageBox.js";

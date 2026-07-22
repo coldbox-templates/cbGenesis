@@ -16,12 +16,19 @@
  *   2 — fair   (2–3 rules met)
  *   3 — good   (4 rules met or length >= 12)
  *   4 — strong (all 5 rules met AND length >= 12)
+ *
+ * @returns {Object} Alpine state with password visibility and strength data.
  */
 export function passwordStrength() {
 	return {
 		password     : "",
 		showPassword : false,
 
+		/**
+		 * Returns the password strength score from zero through four.
+		 *
+		 * @returns {number} Current password strength score.
+		 */
 		get score() {
 			const p = this.password;
 			if ( !p ) return 0;
@@ -42,6 +49,11 @@ export function passwordStrength() {
 			return p.length >= 12 ? 4 : 3;          // strong if long enough
 		},
 
+		/**
+		 * Returns the human-readable label for the current strength score.
+		 *
+		 * @returns {string} Current strength label.
+		 */
 		get label() {
 			return [
 				"",
@@ -52,6 +64,11 @@ export function passwordStrength() {
 			][ this.score ] ?? "";
 		},
 
+		/**
+		 * Returns the CSS class for the current strength score.
+		 *
+		 * @returns {string} CSS class for the current strength.
+		 */
 		get labelClass() {
 			return [
 				"",
@@ -62,6 +79,11 @@ export function passwordStrength() {
 			][ this.score ] ?? "";
 		},
 
+		/**
+		 * Returns the status of each password composition requirement.
+		 *
+		 * @returns {Object} Requirement names mapped to completion states.
+		 */
 		get requirements() {
 			const p = this.password;
 			return {
@@ -73,7 +95,11 @@ export function passwordStrength() {
 			};
 		},
 
-		/** True when score >= 3 (good or strong) — use for form validation gates. */
+		/**
+		 * Returns true when the password score is good or strong.
+		 *
+		 * @returns {boolean} Whether the password passes the strength threshold.
+		 */
 		get isValid() {
 			return this.score >= 3;
 		},

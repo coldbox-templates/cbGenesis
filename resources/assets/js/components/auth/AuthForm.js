@@ -17,6 +17,8 @@
  * `canSubmit` is false until both email and password contain non-whitespace
  * values. `onSubmit` repeats this check to prevent keyboard or programmatic
  * submissions from bypassing the disabled button.
+ *
+ * @returns {Object} Alpine authentication state and submit validation.
  */
 export function authForm() {
 	return {
@@ -25,16 +27,19 @@ export function authForm() {
 		password : "",
 
 		/**
-		 * Returns true when both the email and password fields are non-empty (after trimming whitespace).
+		 * Returns true when both credentials contain non-whitespace values.
+		 *
+		 * @returns {boolean} Whether the form has both required credentials.
 		 */
 		get canSubmit() {
 			return !!String( this.email ).trim() && !!String( this.password ).trim();
 		},
 
 		/**
-		 * Called by @submit. Returns false (and prevents submit) when there is a
-         * client-side validation error; otherwise sets loading state and allows
-         * the native form POST to proceed.
+		 * Prevents invalid submission and marks valid submissions as loading.
+		 *
+		 * @param {SubmitEvent} event Form submit event.
+		 * @returns {void}
 		 */
 		onSubmit( event ) {
 			if ( !this.canSubmit ) {
