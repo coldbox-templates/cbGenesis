@@ -8,7 +8,7 @@
  */
 @singleton
 @threadSafe
-class {
+class extends="cbapp.models.BaseService"{
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -21,12 +21,6 @@ class {
 
 	@inject( "UserService" )
 	property name="userService";
-
-	@inject( "QueryBuilder@qb" )
-	property name="qb";
-
-	@inject( "logbox:logger:{this}" )
-	property name="log";
 
 	@inject( "cachebox:sessions" )
 	property name="sessionsCache";
@@ -70,7 +64,7 @@ class {
 	SecurityService function logout() {
 		try {
 			variables.cbauth.logout()
-		} catch ( any e ) {
+		} catch ( EntityNotFound e ) {
 			log.trace( "Logout attempted with no active session." )
 		}
 		return this

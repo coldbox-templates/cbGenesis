@@ -10,17 +10,23 @@ class extends="cborm.models.VirtualEntityService" {
 	 * Injections
 	 * --------------------------------------------------------------------------
 	 */
-	property name="qb" inject="provider:QueryBuilder@qb";
+	@inject( "provider:QueryBuilder@qb" )
+	property name="qb";
 
-	property name="coldbox" inject="coldbox";
+	@inject( "coldbox" )
+	property name="coldbox";
 
-	property name="wirebox" inject="wirebox";
+	@inject( "wirebox" )
+	property name="wirebox";
 
-	property name="cache" inject="cachebox:template";
+	@inject( "cachebox:template" )
+	property name="cache";
 
-	property name="validationManager" inject="ValidationManager@cbvalidation";
+	@inject( "ValidationManager@cbvalidation" )
+	property name="validationManager";
 
-	property name="log" inject="logbox:logger:{this}";
+	@inject( "logbox:logger:{this}" )
+	property name="log";
 
 	/**
 	 * Ensure the sort order is valid.
