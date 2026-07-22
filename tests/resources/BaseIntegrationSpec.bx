@@ -23,6 +23,9 @@ class extends="coldbox.system.testing.BaseTestCase"{
 	@inject( "provider:QueryBuilder@qb" )
 	property name="qb";
 
+	@inject( "provider:UserService" )
+	property name="userService";
+
 
     // Load on first test
     this.loadColdBox    = true;
@@ -111,6 +114,21 @@ class extends="coldbox.system.testing.BaseTestCase"{
 			"createdDate": now(),
 			"updatedDate": now()
 		}
+	}
+
+	/**
+	 * Create a verified user for authentication integration tests.
+	 * The surrounding test transaction rolls the user back automatically.
+	 */
+	User function createVerifiedUser( string email = "security-test-#createUUID()#@example.com" ) {
+		var user = userService.new( {
+			firstName: "Security",
+			lastName: "Tester",
+			email: arguments.email,
+			password: "correct-password",
+			verifiedAt: now()
+		} )
+		return userService.save( user )
 	}
 
 }

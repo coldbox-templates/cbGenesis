@@ -135,7 +135,8 @@ class {
 			biography : "I am a wonderful CBGenesis Admin",
 			preferences:  "{}",
 			isPasswordReset: false,
-			is2FactorAuth: false
+			is2FactorAuth: false,
+			verifiedAt: { value: now(), sqltype: "timestamp" }
 		} )
 		// Add the admin role to the admin user
 		qb.newQuery().from( "user_roles" ).insert( {

@@ -8,7 +8,7 @@
  */
 @singleton
 @threadSafe
-class extends="cbapp.models.BaseService"{
+class extends="app.models.BaseService"{
 
 	/**
 	 * --------------------------------------------------------------------------
