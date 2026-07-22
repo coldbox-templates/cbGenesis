@@ -23,120 +23,88 @@ class extends="tests.resources.BaseIntegrationSpec" {
 		} )
 
 		story( "Authenticate users", () => {
-			given( "a verified user with a password", () => {
-				when( "the username and password are valid", () => {
-					then( "the user is authenticated and returned", () => {
-						var user = createVerifiedUser()
+			it( "authenticates a verified user with valid credentials", () => {
+				var user = createVerifiedUser()
 
-						var authenticatedUser = securityService.authenticate(
-							username: user.getEmail(),
-							password: "correct-password"
-						)
+				var authenticatedUser = securityService.authenticate(
+					username: user.getEmail(),
+					password: "correct-password"
+				)
 
-						expect( authenticatedUser.getId() ).toBe( user.getId() )
-						expect( securityService.isLoggedIn() ).toBeTrue()
-						expect( securityService.getCurrentUser().getId() ).toBe( user.getId() )
-					} )
-				} )
+				expect( authenticatedUser.getId() ).toBe( user.getId() )
+				expect( securityService.isLoggedIn() ).toBeTrue()
+				expect( securityService.getCurrentUser().getId() ).toBe( user.getId() )
 			} )
 
-			given( "a verified user with a password", () => {
-				when( "the password is invalid", () => {
-					then( "authentication fails and no session is created", () => {
-						var user = createVerifiedUser()
-						securityService.logout( quiet: true )
+			it( "rejects invalid credentials without creating a session", () => {
+				var user = createVerifiedUser()
+				securityService.logout( quiet: true )
 
-						expect( () => securityService.authenticate(
-							username: user.getEmail(),
-							password: "wrong-password"
-						) ).toThrow()
-						expect( securityService.isLoggedIn() ).toBeFalse()
-					} )
-				} )
+				expect( () => securityService.authenticate(
+					username: user.getEmail(),
+					password: "wrong-password"
+				) ).toThrow()
+				expect( securityService.isLoggedIn() ).toBeFalse()
 			} )
 
-			given( "an unverified user", () => {
-				when( "the user attempts to authenticate", () => {
-					then( "authentication fails and no session is created", () => {
-						var user = userService.new({
-							firstName: "Unverified",
-							lastName: "Tester",
-							email: "unverified-#createUUID()#@example.com",
-							password: "correct-password"
-						} )
-						userService.save( user )
-						securityService.logout( quiet: true )
-
-						expect( () => securityService.authenticate(
-							username: user.getEmail(),
-							password: "correct-password"
-						) ).toThrow()
-						expect( securityService.isLoggedIn() ).toBeFalse()
-					} )
+			it( "rejects an unverified user without creating a session", () => {
+				var user = userService.new({
+					firstName: "Unverified",
+					lastName: "Tester",
+					email: "unverified-#createUUID()#@example.com",
+					password: "correct-password"
 				} )
+				userService.save( user )
+				securityService.logout( quiet: true )
+
+				expect( () => securityService.authenticate(
+					username: user.getEmail(),
+					password: "correct-password"
+				) ).toThrow()
+				expect( securityService.isLoggedIn() ).toBeFalse()
 			} )
 		} )
 
 		story( "Manage authenticated sessions", () => {
-			given( "the fixture user is not logged in", () => {
-				when( "the current user is requested", () => {
-					then( "an empty user is returned", () => {
-						securityService.logout()
+			it( "returns an empty user when no session is active", () => {
+				securityService.logout()
 
-						expect( securityService.isLoggedIn() ).toBeFalse()
-						expect( securityService.getCurrentUser().isLoaded() ).toBeFalse()
-					} )
-				} )
+				expect( securityService.isLoggedIn() ).toBeFalse()
+				expect( securityService.getCurrentUser().isLoaded() ).toBeFalse()
 			} )
 
-			given( "an authenticated user", () => {
-				when( "the user logs out", () => {
-					then( "the session is cleared", () => {
-						var user = createVerifiedUser()
-						securityService.authenticate( user.getEmail(), "correct-password" )
+			it( "clears the session when the user logs out", () => {
+				var user = createVerifiedUser()
+				securityService.authenticate( user.getEmail(), "correct-password" )
 
-						securityService.logout()
+				securityService.logout()
 
-						expect( securityService.isLoggedIn() ).toBeFalse()
-					} )
-				} )
+				expect( securityService.isLoggedIn() ).toBeFalse()
 			} )
 		} )
 
 		story( "Manage password reset tokens", () => {
-			given( "a user requesting a password reset", () => {
-				when( "a reset token is generated", () => {
-					then( "the token resolves to that user", () => {
-						var token = securityService.generatePasswordResetToken( variables.testUser )
-						var result = securityService.verifyPasswordResetToken( token )
+			it( "resolves a generated reset token to its user", () => {
+				var token = securityService.generatePasswordResetToken( variables.testUser )
+				var result = securityService.verifyPasswordResetToken( token )
 
-						expect( token ).notToBeEmpty()
-						expect( result.error ).toBeFalse()
-						expect( result.user.getId() ).toBe( variables.testUser.getId() )
-					} )
-				} )
+				expect( token ).notToBeEmpty()
+				expect( result.error ).toBeFalse()
+				expect( result.user.getId() ).toBe( variables.testUser.getId() )
 			} )
 
-			given( "an unknown reset token", () => {
-				when( "the token is verified", () => {
-					then( "the reset is rejected", () => {
-						var result = securityService.verifyPasswordResetToken( "unknown-token" )
+			it( "rejects an unknown reset token", () => {
+				var result = securityService.verifyPasswordResetToken( "unknown-token" )
 
-						expect( result.error ).toBeTrue()
-						expect( result.user ).toBeEmpty()
-					} )
-				} )
+				expect( result.error ).toBeTrue()
+				expect( result.user ).toBeEmpty()
 			} )
 
-			given( "a valid reset token", () => {
-				when( "the token is cleared", () => {
-					then( "it can no longer be verified", () => {
-						var token = securityService.generatePasswordResetToken( variables.testUser )
+			it( "does not verify a reset token after it is cleared", () => {
+				var token = securityService.generatePasswordResetToken( variables.testUser )
 
-						expect( securityService.clearPasswordResetToken( token ) ).toBeTrue()
-						expect( securityService.verifyPasswordResetToken( token ).error ).toBeTrue()
-					} )
-				} )
+				expect( securityService.clearPasswordResetToken( token ) ).toBeTrue()
+				expect( securityService.verifyPasswordResetToken( token ).error ).toBeTrue()
 			} )
 		} )
 	}
