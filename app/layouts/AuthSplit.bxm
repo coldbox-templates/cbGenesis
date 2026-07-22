@@ -3,9 +3,9 @@
 <html lang="en" data-bs-theme="#prc.settings[ "cbDefaultTheme" ]#">
 <head>
     #view(
-	view = "_components/app/includes",
-	args = { title: "Authentication" }
-)#
+		view = "_components/app/includes",
+		args = { title: "Authentication" }
+	)#
 </head>
 <body class="auth-body" x-data x-init="$store.theme.init()">
 
@@ -21,14 +21,14 @@
                 <!--- Logo mark (large) --->
                 <div class="auth-split-brand-logo">
                     #view(
-	view = "_components/ui/logo",
-	args = { variant: "full", size: 150 }
-)#
+						view = "_components/ui/logo",
+						args = { variant: "full", size: 150 }
+					)#
                 </div>
 
 				<!--- App name --->
                 <h1 class="auth-split-brand-title">
-                    #getSetting( "appName" )#
+                    #prc.settings.cbAppname#
                 </h1>
 
 				<!--- App tagline --->

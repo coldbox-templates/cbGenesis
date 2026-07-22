@@ -3,9 +3,9 @@
 <html lang="en" data-bs-theme="#prc.settings[ "cbDefaultTheme" ]#">
 <head>
     #view(
-	view = "_components/app/includes",
-	args = { title: "Authentication" }
-)#
+		view = "_components/app/includes",
+		args = { title: "Authentication" }
+	)#
 </head>
 <body class="auth-body" x-data x-init="$store.theme.init()">
 

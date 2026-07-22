@@ -8,18 +8,18 @@
 		#view( view: "_components/app/includes", args: { title: "Page Title" } )#
 
 	Args:
-		title : string — optional page title (default: "App Name") --->  
-<bx:param name="args.title" default="#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##getSetting( "appName" )#"/>
+		title : string — optional page title (default: "App Name") --->
+<bx:param name="args.title" default="#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##prc.settings.cbAppname#"/>
 
 <bx:output>
 <meta charset="utf-8">
-<!--- ViewPorts --->  
+<!--- ViewPorts --->
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<!--- Page Title --->  
+<!--- Page Title --->
 <title>#args.title#</title>
-<!--- SES URL Base --->  
+<!--- SES URL Base --->
 <base href="#event.getHTMLBaseURL()#" />
-<!--- Vite CSS + JS --->  
+<!--- Vite CSS + JS --->
 <script>
     (() => {
 		// Prevent FOUC (Flash of Unstyled Content) by setting the theme and sidebar collapsed state before CSS loads

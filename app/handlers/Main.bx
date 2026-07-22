@@ -9,6 +9,9 @@ class extends="coldbox.system.EventHandler" {
 	@inject
 	property name="settingService";
 
+	@inject
+	property name="securityService";
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Implicit Actions
@@ -23,7 +26,7 @@ class extends="coldbox.system.EventHandler" {
 
 	function onRequestStart( event, rc, prc ) {
 		prc.settings = variables.settingService.getAllSettings()
-		prc.authUser = new app.models.system.User()
+		prc.authUser = variables.securityService.getCurrentUser()
 	}
 
 	function onRequestEnd( event, rc, prc ) {

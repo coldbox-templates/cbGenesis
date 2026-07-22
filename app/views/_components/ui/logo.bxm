@@ -16,7 +16,7 @@
         classes  : string — extra CSS classes on root <span> (default: "") --->
 <bx:param name="args.variant" default="full"/>
 <bx:param name="args.classes" default=""/>
-<bx:param name="args.alt" default="#getSetting( "appName" )# logo"/>
+<bx:param name="args.alt" default="#prc.settings.cbAppname# logo"/>
 
 <bx:set localSizes = { "full": 50, "compact": 36, "icon-only": 28 }>
 <bx:set localSize = structKeyExists( localSizes, args.variant ) ? localSizes[ args.variant ] : 40>
@@ -26,7 +26,7 @@
 <span class="brand-logo brand-logo--#encodeForHTMLAttribute( args.variant )##(
 	len( args.classes ) ? " " & args.classes : ""
 )#"
-      aria-label="#encodeForHTMLAttribute( getSetting( "appName" ) )#">
+      aria-label="#encodeForHTMLAttribute( prc.settings.cbAppname )#">
 	<img class="brand-logo__mark"
 		 src="#prc.settings.cbAppLogo#"
 		 width="#encodeForHTMLAttribute( args.size )#"

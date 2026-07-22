@@ -153,11 +153,13 @@ class {
 		 * --------------------------------------------------------------------------
 		 * Flash Scope Settings
 		 * --------------------------------------------------------------------------
-		 * The available scopes are : session, client, cluster, ColdBoxCache, or a full instantiation CFC path
+		 * The available scopes are : session, cache, or a full instantiation class path
 		 */
 		variables.flash = {
-			scope       : "session",
-			properties  : {}, // constructor properties for the flash scope implementation
+			scope       : "cache",
+			properties  : {
+				cacheName: "sessions"
+			},
 			inflateToRC : true, // automatically inflate flash data into the RC scope
 			inflateToPRC: false, // automatically inflate flash data into the PRC scope
 			autoPurge   : true, // automatically purge flash data for you

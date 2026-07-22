@@ -3,7 +3,8 @@
  */
 class extends="coldbox.system.EventHandler" {
 
-	property name="settingService" inject="settingService"
+	@inject
+	property name="settingService";
 
 	function index( event, rc, prc ) {
 		prc.title = "Settings"
