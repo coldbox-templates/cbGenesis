@@ -30,7 +30,7 @@
         "cbmailservices":"^2",
         "cbsecurity":"^3",
         "vite-helpers":"^2",
-        "cborm":"^5.0.0"
+        "cborm":"be"
     },
     "installPaths":{
         "coldbox":"lib/coldbox/",

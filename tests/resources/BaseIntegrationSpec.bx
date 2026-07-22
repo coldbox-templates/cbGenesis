@@ -121,13 +121,13 @@ class extends="coldbox.system.testing.BaseTestCase"{
 	 * The surrounding test transaction rolls the user back automatically.
 	 */
 	User function createVerifiedUser( string email = "security-test-#createUUID()#@example.com" ) {
-		var user = userService.new( {
+		var user = userService.new( properties:{
 			firstName: "Security",
 			lastName: "Tester",
 			email: arguments.email,
 			password: "correct-password",
 			verifiedAt: now()
-		} )
+		}, ignoreTargetLists: true )
 		return userService.save( user )
 	}
 

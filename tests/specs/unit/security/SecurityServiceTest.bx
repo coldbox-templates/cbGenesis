@@ -44,6 +44,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				when( "the password is invalid", () => {
 					then( "authentication fails and no session is created", () => {
 						var user = createVerifiedUser()
+						securityService.logout( quiet: true )
 
 						expect( () => securityService.authenticate(
 							username: user.getEmail(),
@@ -64,6 +65,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 							password: "correct-password"
 						} )
 						userService.save( user )
+						securityService.logout( quiet: true )
 
 						expect( () => securityService.authenticate(
 							username: user.getEmail(),
