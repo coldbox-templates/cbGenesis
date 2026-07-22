@@ -1,100 +1,88 @@
 <bx:output>
-<div x-data="authForm">
+<div x-data="registerForm">
 
+	<!--- Form Title --->
     <div class="text-center mb-4">
         <h1 class="auth-heading">Create your account</h1>
         <p class="auth-subheading">Join us today — it only takes a minute</p>
     </div>
 
     <!--- Flash Messages --->
-	<bx:if flash.exists( "errors" )>
+	<bx:if flash.exists( "messages" )>
 		#view(
 			view = "_components/ui/messagebox",
 			args = {
-				type       : flash.get( "errors" ).type ?: "info",
-				message    : flash.get( "errors" ).message ?: "",
+				type       : flash.get( "messages" ).type ?: "info",
+				message    : flash.get( "messages" ).message ?: "",
 				dismissible: true,
 				classes    : "mb-4"
 			}
 		)#
 	</bx:if>
-    <bx:if flash.exists( "success" )>
-        #view(
-            view = "_components/ui/messagebox",
-            args = {
-                type       : flash.get( "success" ).type ?: "success",
-                message    : flash.get( "success" ).message ?: "",
-                dismissible: true,
-                classes    : "mb-4"
-            }
-        )#
-    </bx:if>
 
-    <form method="post"
-          action="#event.buildLink( "register" )#"
-          @submit="onSubmit"
-          novalidate>
+    <form
+		method="post"
+        action="#event.buildLink( "register" )#"
+        @submit="onSubmit"
+    	@password-changed.window="setPassword( $event.detail.value )"
+        novalidate
+	>
+
+		<!--- CSRF token --->
+        #csrfField()#
 
         <!--- First + Last name --->
         <div class="row g-3 mb-3">
             <div class="col-6">
                 <label for="firstName" class="form-label">First name</label>
-                <input type="text"
-                       id="firstName"
-                       name="firstName"
-                       class="form-control#(
+                <input
+					type="text"
+                    id="firstName"
+                    name="firstName"
+                    x-model="firstName"
+                    class="form-control#(
 	( prc.keyExists( "validationErrors" ) && structKeyExists( prc.validationErrors, "firstName" ) ) ? " is-invalid" : ""
 )#"
-                       value="#encodeForHTMLAttribute(
-rc.firstName ?: ""
-)#"
-                       autocomplete="given-name"
-                       placeholder="Jane"
-                       required>
-                <bx:if prc.keyExists( "validationErrors" ) && structKeyExists( prc.validationErrors, "firstName" )>
-                    <div class="invalid-feedback">#encodeForHTML( prc.validationErrors.firstName )#</div>
-                </bx:if>
+					value="#encodeForHTMLAttribute( rc.firstName ?: "" )#"
+					autocomplete="given-name"
+					placeholder="Jane"
+					required
+				>
             </div>
+
             <div class="col-6">
                 <label for="lastName" class="form-label">Last name</label>
-                <input type="text"
-                       id="lastName"
-                       name="lastName"
-                       class="form-control#(
-	( prc.keyExists( "validationErrors" ) && structKeyExists( prc.validationErrors, "lastName" ) ) ? " is-invalid" : ""
-)#"
-                       value="#encodeForHTMLAttribute(
-rc.lastName ?: ""
-)#"
-                       autocomplete="family-name"
-                       placeholder="Smith"
-                       required>
-                <bx:if prc.keyExists( "validationErrors" ) && structKeyExists( prc.validationErrors, "lastName" )>
-                    <div class="invalid-feedback">#encodeForHTML( prc.validationErrors.lastName )#</div>
-                </bx:if>
+                <input
+					type="text"
+                    id="lastName"
+                    name="lastName"
+                    x-model="lastName"
+					class="form-control"
+					value="#encodeForHTMLAttribute( rc.lastName ?: "" )#"
+					autocomplete="family-name"
+					placeholder="Smith"
+					required
+				>
             </div>
         </div>
 
         <!--- Email --->
         <div class="mb-3">
             <label for="email" class="form-label">Email address</label>
-            <input type="email"
-                   id="email"
-                   name="email"
-                   class="form-control#(
-	( prc.keyExists( "validationErrors" ) && structKeyExists( prc.validationErrors, "email" ) ) ? " is-invalid" : ""
-)#"
-                   value="#encodeForHTMLAttribute(
-rc.email ?: ""
-)#"
-                   autocomplete="email"
-                   placeholder="you@example.com"
-                   required>
-            <bx:if prc.keyExists( "validationErrors" ) && structKeyExists( prc.validationErrors, "email" )>
-                <div class="invalid-feedback">#encodeForHTML( prc.validationErrors.email )#</div>
-            </bx:if>
+            <input
+				type="email"
+				id="email"
+				name="email"
+				class="form-control"
+				x-model="email"
+				value="#encodeForHTMLAttribute( rc.email ?: "" )#"
+				autocomplete="email"
+				placeholder="you@example.com"
+				required
+				>
         </div>
 
+		<!--- Password Meter --->
         #view(
 			view = "_components/ui/passwordMeter",
 			args = {
@@ -114,30 +102,29 @@ rc.email ?: ""
         <div class="mb-4">
             <label for="passwordConfirm" class="form-label">Confirm password</label>
             <div class="input-group">
-                <input :type="showConfirm ? 'text' : 'password'"
-                       id="passwordConfirm"
-                       name="passwordConfirm"
-                       class="form-control#(
-	( prc.keyExists( "validationErrors" ) && structKeyExists( prc.validationErrors, "passwordConfirm" ) ) ? " is-invalid" : ""
-)#"
-                       x-model="confirmValue"
-                       @input="checkConfirm"
-                       @blur="checkConfirm"
-                       @password-changed.window="passwordRef = $event.detail.value; checkConfirm()"
-                       placeholder="••••••••"
-                       autocomplete="new-password">
-                <button class="btn btn-outline-secondary"
-                        type="button"
-                        @click="showConfirm = !showConfirm"
-                        :aria-label="showConfirm ? 'Hide password' : 'Show password'">
+                <input
+					:type="showConfirm ? 'text' : 'password'"
+					id="passwordConfirm"
+					name="passwordConfirm"
+					x-model="confirmValue"
+					required
+					class="form-control"
+					@input="checkConfirm"
+					@blur="checkConfirm"
+					placeholder="••••••••"
+					autocomplete="new-password"
+				>
+                <button
+					class="btn btn-outline-secondary"
+					type="button"
+					@click="showConfirm = !showConfirm"
+					:aria-label="showConfirm ? 'Hide password' : 'Show password'">
                     <i class="ph-duotone"
                        :class="showConfirm ? 'ph-eye-slash' : 'ph-eye'"
                        aria-hidden="true"></i>
                 </button>
-                <bx:if prc.keyExists( "validationErrors" ) && structKeyExists( prc.validationErrors, "passwordConfirm" )>
-                    <div class="invalid-feedback">#encodeForHTML( prc.validationErrors.passwordConfirm )#</div>
-                </bx:if>
             </div>
+
             <div class="invalid-feedback d-block"
                  x-show="confirmError"
                  x-cloak
@@ -145,13 +132,12 @@ rc.email ?: ""
                  role="alert"></div>
         </div>
 
-        <!--- CSRF token --->
-        <input type="hidden" name="_token" value="#csrfToken()#">
-
         <!--- Submit --->
-        <button type="submit"
-                class="btn btn-primary w-100 mb-3"
-                :disabled="loading">
+        <button
+			type="submit"
+            class="btn btn-primary w-100 mb-3"
+            :disabled="loading || !canSubmit"
+		>
             <span x-show="!loading">Create account</span>
             <span x-show="loading" x-cloak>
                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
@@ -159,7 +145,7 @@ rc.email ?: ""
             </span>
         </button>
 
-    </form>
+    </form	rm>
 
     <p class="text-center mb-0">
         Already have an account?
