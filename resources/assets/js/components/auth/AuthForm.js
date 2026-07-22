@@ -1,47 +1,43 @@
 /**
  * Alpine.js component: authForm
  *
- * Manages shared UI state for authentication forms:
- *   - loading state (spinner while the server processes the POST)
- *   - confirm-password visibility toggle + live mismatch feedback
+ * Manages authentication form state:
+ *   - email and password values used to gate submission
+ *   - loading state while the server processes the POST
  *
  * Usage:
  *   <form x-data="authForm" @submit="onSubmit">
  *     ...
- *     <input name="passwordConfirm" :type="showConfirm ? 'text' : 'password'"
- *            x-model="confirmValue" @input="checkConfirm">
- *     <p x-show="confirmError" x-text="confirmError" class="text-danger small"></p>
+ *     <input name="email" type="email" x-model="email">
+ *     <input name="password" type="password" x-model="password">
  *     ...
- *     <button :disabled="loading">Submit</button>
+ *     <button :disabled="loading || !canSubmit">Submit</button>
  *   </form>
  *
- * To wire up the confirm-password check, set `passwordRef` to the value of
- * the primary password field whenever it changes:
- *   @input="passwordRef = $event.target.value"   (on the primary password input)
+ * `canSubmit` is false until both email and password contain non-whitespace
+ * values. `onSubmit` repeats this check to prevent keyboard or programmatic
+ * submissions from bypassing the disabled button.
  */
 export function authForm() {
 	return {
-		loading      : false,
-		showConfirm  : false,
-		confirmValue : "",
-		passwordRef  : "",
-		confirmError : "",
+		loading  : false,
+		email    : "",
+		password : "",
 
-		checkConfirm(){
-			if ( this.confirmValue && this.passwordRef &&
-                 this.confirmValue !== this.passwordRef ) {
-				this.confirmError = "Passwords do not match.";
-			} else {
-				this.confirmError = "";
-			}
+		/**
+		 * Returns true when both the email and password fields are non-empty (after trimming whitespace).
+		 */
+		get canSubmit() {
+			return !!String( this.email ).trim() && !!String( this.password ).trim();
 		},
 
-		/** Called by @submit. Returns false (and prevents submit) when there is a
-         *  client-side validation error; otherwise sets loading state and allows
-         *  the native form POST to proceed. */
+		/**
+		 * Called by @submit. Returns false (and prevents submit) when there is a
+         * client-side validation error; otherwise sets loading state and allows
+         * the native form POST to proceed.
+		 */
 		onSubmit( event ) {
-			this.checkConfirm();
-			if ( this.confirmError ) {
+			if ( !this.canSubmit ) {
 				event.preventDefault();
 				return;
 			}

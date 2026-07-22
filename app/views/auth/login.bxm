@@ -7,13 +7,13 @@
         <p class="auth-subheading">Sign in to your account to continue</p>
     </div>
 
-	<!--- Flash Error Messages--->
-	<bx:if flash.exists( "errors" )>
+	<!--- Flash Messages--->
+	<bx:if flash.exists( "messages" )>
 		#view(
 			view = "_components/ui/messagebox",
 			args = {
-				type       : flash.get( "errors" ).type ?: "info",
-				message    : flash.get( "errors" ).message ?: "",
+				type       : flash.get( "messages" ).type ?: "info",
+				message    : flash.get( "messages" ).message ?: "",
 				dismissible: true,
 				classes    : "mb-4"
 			}
@@ -36,6 +36,7 @@
 				id="email"
 				name="email"
 				class="form-control"
+                x-model="email"
 				placeholder="you@cbGenesis.com"
 				autocomplete="email"
 				required
@@ -45,48 +46,33 @@
 
         <!--- Password --->
         <div class="mb-3">
-
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <label for="password" class="form-label mb-0">Password</label>
-                <a href="#event.buildLink( "auth/forgotPassword" )#" class="auth-link small">
-                    Forgot password?
-                </a>
-            </div>
-
-            <div x-data="passwordStrength">
-                <div class="input-group">
-                    <input
-						:type="showPassword ? 'text' : 'password'"
-						id="password"
-						name="password"
-						class="form-control"
-						x-model="password"
-						placeholder="••••••••"
-						autocomplete="current-password"
-						required>
-                    <button
-						class="btn btn-outline-secondary"
-						type="button"
-						@click="showPassword = !showPassword"
-						:aria-label="showPassword ? 'Hide password' : 'Show password'">
-                        <i class="ph-duotone"
-                           :class="showPassword ? 'ph-eye-slash' : 'ph-eye'"
-                           aria-hidden="true"></i>
-                    </button>
-                </div>
-            </div>
+			#view(
+				view = "_components/auth/passwordInput",
+				args = {
+					id         : "password",
+					name       : "password",
+					model      : "password",
+					classes    : "mb-3",
+					label      : "Password",
+					helperLink : event.buildLink( "auth/forgotPassword" ),
+					helperText : "Forgot password?",
+					placeholder: "••••••••"
+				}
+			)#
         </div>
 
-        <!--- Remember me --->
+        <!--- Remember Me --->
         <div class="mb-4 form-check">
             <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe" value="1">
             <label class="form-check-label" for="rememberMe">Keep me signed in</label>
         </div>
 
         <!--- Submit --->
-        <button type="submit"
-                class="btn btn-primary w-100 mb-3"
-                :disabled="loading">
+        <button
+			type="submit"
+            class="btn btn-primary w-100 mb-3"
+            :disabled="loading || !canSubmit"
+		>
             <span x-show="!loading">Sign in</span>
             <span x-show="loading" x-cloak>
                 <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>

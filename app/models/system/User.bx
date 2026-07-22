@@ -292,6 +292,14 @@ class extends="app.models.BaseEntity" {
 	/*************************** Utility Functions *****************************/
 
 	/**
+	 * Save the user to the database
+	 */
+	User function save( boolean passwordChange = false) {
+		variables.userService.save( this, passwordChange )
+		return this
+	}
+
+	/**
 	 * Validate if a user is logged in or not
 	 */
 	boolean function isLoggedIn() {

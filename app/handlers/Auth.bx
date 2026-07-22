@@ -17,6 +17,9 @@ class extends="coldbox.system.EventHandler" output=true{
 	@inject
 	property name="securityService";
 
+	@inject
+	property name="userService";
+
 	/**
 	 * Execute before any handler action is called.  This is a good place to check for
 	 * authentication and authorization.
@@ -26,6 +29,7 @@ class extends="coldbox.system.EventHandler" output=true{
 		if ( securityService.isLoggedIn() && event.getCurrentAction() != "logout" ) {
 			relocate( "dashboard" )
 		}
+		event.setLayout( prc.settings.cbLoginLayout )
 	}
 
 	// ============================================================
@@ -37,7 +41,7 @@ class extends="coldbox.system.EventHandler" output=true{
 	 */
 	function login( event, rc, prc ) {
 		prc.title = "Sign In"
-		event.setView( layout = prc.settings.cbLoginLayout, view = "auth/login" )
+		event.setView( "auth/login" )
 	}
 
 	// ============================================================
@@ -54,7 +58,7 @@ class extends="coldbox.system.EventHandler" output=true{
 
 		// --- CSRF Verification ---
 		if ( !csrfVerify( rc.csrf ) ) {
-			flash.put( "errors", {
+			flash.put( "messages", {
 				type   : "error",
 				message: "Invalid login token detected. Page refreshed, try again."
 			} )
@@ -71,7 +75,7 @@ class extends="coldbox.system.EventHandler" output=true{
 				password: { required:true, min: prc.settings.cbMinPasswordLength }
 			}
 		).onError( results => {
-			flash.put( "errors", {
+			flash.put( "messages", {
 				type   : "error",
 				message: "Please correct the highlighted errors and try again." & results.getAllErrors().toList( '<br>' )
 			} )
@@ -88,7 +92,7 @@ class extends="coldbox.system.EventHandler" output=true{
 			// Success — redirect to the dashboard
 			relocate( "dashboard" )
 		} catch ( "InvalidCredentials" | "EntityNotFound" e ) {
-			flash.put( "errors", {
+			flash.put( "messages", {
 				type   : "error",
 				message: "Invalid email or password"
 			} )
@@ -102,7 +106,75 @@ class extends="coldbox.system.EventHandler" output=true{
 
 	function register( event, rc, prc ) {
 		prc.title = "Create Account"
-		event.setView( layout = "AuthSplit", view = "auth/register" )
+		event.setView( "auth/register" )
+	}
+
+	// ============================================================
+	// Register — POST
+	// ============================================================
+
+	/**
+	 * Validate and create a new user account
+	 */
+	function doRegister( event, rc, prc ) {
+		param rc.firstName = ""
+		param rc.lastName = ""
+		param rc.email = ""
+		param rc.password = ""
+		param rc.passwordConfirm = ""
+		param rc._token = ""
+
+		// --- Verify Registration Enabled ---
+		if ( !prc.settings.cbAllowRegistration ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Registration is currently disabled."
+			} )
+			return relocate( "login" )
+		}
+
+		// --- CSRF Verify ---
+		if ( !csrfVerify( rc._token ) ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid registration token detected. Page refreshed, try again."
+			} )
+			return relocate( "register" )
+		}
+
+		// --- Validate ---
+		var args = arguments
+		validate(
+			target: rc,
+			constraints: {
+				firstName     : { required: true },
+				lastName      : { required: true },
+				email         : { required: true, type: "email", unique: { table: "users", column: "email" } },
+				password      : { required: true, min: prc.settings.cbMinPasswordLength },
+				passwordConfirm: { required: true, sameAs: "password" }
+			}
+		).onError( results =>{
+			flash.put( "messages", {
+				type   : "error",
+				message: "Please correct the highlighted errors and try again." & results.getAllErrors().toList( '<br>' )
+			} )
+			prc.validationErrors = results.getAllErrorsAsStruct()
+			return register( argumentCollection: args )
+		})
+
+		variables.userService.new( {
+			firstName: rc.firstName,
+			lastName : rc.lastName,
+			email    : rc.email,
+			password : rc.password
+		} ).save()
+
+		flash.put( "messages", {
+			type   : "success",
+			message: "Your account was created. Check your email to finish the registration process."
+		} )
+
+		return relocate( "login" )
 	}
 
 	// ============================================================
@@ -111,7 +183,7 @@ class extends="coldbox.system.EventHandler" output=true{
 
 	function forgotPassword( event, rc, prc ) {
 		prc.title = "Forgot Password"
-		event.setView( layout = "AuthCenter", view = "auth/forgotPassword" )
+		event.setView( "auth/forgotPassword" )
 	}
 
 	// ============================================================
@@ -122,7 +194,7 @@ class extends="coldbox.system.EventHandler" output=true{
 		prc.title = "Set New Password"
 		// Real impl: validate this token against DB
 		prc.token = rc.token ?: ""
-		event.setView( layout = "AuthCenter", view = "auth/resetPassword" )
+		event.setView( "auth/resetPassword" )
 	}
 
 	// ============================================================

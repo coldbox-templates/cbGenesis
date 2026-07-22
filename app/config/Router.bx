@@ -33,6 +33,10 @@ class {
 			GET: "login",
 			POST: "doLogin"
 		})
+		route( "register" ).withHandler( "Auth" ).toAction({
+			GET: "register",
+			POST: "doRegister"
+		})
 		post( pattern = "logout", target = "Auth.logout" )
 
 		// @app_routes@
