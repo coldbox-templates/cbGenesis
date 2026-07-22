@@ -97,7 +97,7 @@
     </form>
 
 	<bx:if prc.settings.cbAllowRegistration>
-    <p class="text-center mb-0" style="font-size:0.9rem; color:var(--app-text-muted);">
+    <p class="text-center mb-0">
         Don't have an account?
         <a href="#event.buildLink( "auth/register" )#" class="auth-link">Create one</a>
     </p>
