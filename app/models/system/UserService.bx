@@ -244,6 +244,7 @@ class extends="app.models.BaseService" {
 			name: arguments.user.getFullName(),
 			email: arguments.user.getEmail(),
 			appName: settings.cbAppName,
+			appNameInitial: left( settings.cbAppName, 1 ),
 			linkTimeout: settings.cbPasswordResetExpiration,
 			linkToken: event.buildLink( "/resetPassword?token=#token#" ),
 			forgotLink: event.buildLink( "/forgotPassword" ),
@@ -286,6 +287,7 @@ class extends="app.models.BaseService" {
 			name: arguments.user.getFullName(),
 			email: arguments.user.getEmail(),
 			appName: settings.cbAppName,
+			appNameInitial: left( settings.cbAppName, 1 ),
 			linkTimeout: settings.cbPasswordResetExpiration,
 			ip: variables.cbSecurity.getRealIP(),
 			linkToken: event.buildLink( "/resetPassword?token=#token#" ),
@@ -336,6 +338,7 @@ class extends="app.models.BaseService" {
 				name: arguments.user.getFullName(),
 				email: arguments.user.getEmail(),
 				company: settings.cbAppName,
+				companyInitial: left( settings.cbAppName, 1 ),
 				companyEmail: settings.cbDefaultEmail,
 				ip: variables.cbSecurity.getRealIP(),
 				linkLogin: event.buildLink( "/login" )
