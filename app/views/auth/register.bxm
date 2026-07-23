@@ -145,11 +145,11 @@
             </span>
         </button>
 
-    </form	rm>
+    </form>
 
     <p class="text-center mb-0">
         Already have an account?
-        <a href="#event.buildLink( "auth/login" )#" class="auth-link">Sign in</a>
+        <a href="#event.buildLink( "login" )#" class="auth-link">Sign in</a>
     </p>
 
 </div>

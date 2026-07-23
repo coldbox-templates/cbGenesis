@@ -290,7 +290,7 @@ class extends="app.models.BaseService" {
 			appNameInitial: left( settings.cbAppName, 1 ),
 			linkTimeout: settings.cbPasswordResetExpiration,
 			ip: variables.cbSecurity.getRealIP(),
-			linkToken: event.buildLink( "/reset-password?token=#token#" ),
+			linkToken: event.buildLink( "reset-password?token=#token#" ),
 			issuedBy: isNull( arguments.issuer ) ? "" : arguments.issuer.getFullName(),
 			issuedEmail: isNull( arguments.issuer ) ? "" : arguments.issuer.getEmail()
 		}
@@ -305,7 +305,9 @@ class extends="app.models.BaseService" {
 				bodyTokens: bodyTokens,
 				type: "html"
 			)
-			.setBody( variables.renderer.externalView( "/app/email_templates/password_verification" ) )
+			.setBody( variables.renderer.externalView( view: "/app/email_templates/password_verification", args:{
+				hasIssued: !isNull( arguments.issuer )
+			} ) )
 			.send()
 			.getResults()
 	}
@@ -341,7 +343,7 @@ class extends="app.models.BaseService" {
 				companyInitial: left( settings.cbAppName, 1 ),
 				companyEmail: settings.cbDefaultEmail,
 				ip: variables.cbSecurity.getRealIP(),
-				linkLogin: event.buildLink( "/login" )
+				linkLogin: event.buildLink( "login" )
 			}
 
 			var mail = variables.mailservice.newMail();

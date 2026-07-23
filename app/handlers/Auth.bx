@@ -250,8 +250,8 @@ class extends="coldbox.system.EventHandler" output=true{
 		param rc.token = ""
 
 		// --- Validate Token ---
-		prc.results = variables.securityService.verifyPasswordResetToken( rc.token )
-		if ( prc.results.error ) {
+		prc.tokenResults = variables.securityService.verifyPasswordResetToken( rc.token )
+		if ( prc.tokenResults.error ) {
 			flash.put( "messages", {
 				type   : "error",
 				message: "Invalid or expired password reset token. Please request a new password reset link."
@@ -260,7 +260,7 @@ class extends="coldbox.system.EventHandler" output=true{
 		}
 
 		// Valid token, set the user in the request collection for the view
-		prc.oUser = prc.results.user
+		prc.oUser = prc.tokenResults.user
 		// Present the reset password view
 		event.setView( "auth/resetPassword" )
 	}
@@ -281,8 +281,8 @@ class extends="coldbox.system.EventHandler" output=true{
 		}
 
 		// --- Validate Token ---
-		prc.results = variables.securityService.verifyPasswordResetToken( rc.token )
-		if ( prc.results.error ) {
+		prc.tokenResults = variables.securityService.verifyPasswordResetToken( rc.token )
+		if ( prc.tokenResults.error ) {
 			flash.put( "messages", {
 				type   : "error",
 				message: "Invalid or expired password reset token. Please request a new password reset link."
@@ -292,12 +292,17 @@ class extends="coldbox.system.EventHandler" output=true{
 
 		// Change the password for the user associated with the token
 		variables.userService.resetPassword(
-			token: rc.token,
-			user: prc.results.user,
+			token: prc.tokenResults.token,
+			user: prc.tokenResults.user,
 			password: rc.password
 		)
 
-		return relocate( "dashboard" )
+		flash.put( "messages", {
+			type   : "success",
+			message: "Your password has been reset successfully. You can now log in with your new password."
+		} )
+
+		return relocate( "login" )
 	}
 
 	// ============================================================
@@ -306,6 +311,6 @@ class extends="coldbox.system.EventHandler" output=true{
 
 	function logout( event, rc, prc ) {
 		variables.securityService.logout()
-		return relocate( "auth/login" )
+		return relocate( "login" )
 	}
 }
