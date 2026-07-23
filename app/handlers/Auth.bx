@@ -74,30 +74,32 @@ class extends="coldbox.system.EventHandler" output=true{
 				email: { required: true, type: "email" },
 				password: { required:true, min: prc.settings.cbMinPasswordLength }
 			}
-		).onError( results => {
+		)
+		// Handle validation errors
+		.onError( results => {
 			flash.put( "messages", {
 				type   : "error",
 				message: "Please correct the highlighted errors and try again." & results.getAllErrors().toList( '<br>' )
 			} )
 			login( argumentCollection: args )
-			return
 		} )
-
 		// --- Authentication ---
-		try {
-			var oUser = variables.securityService.authenticate(
-				username = rc.email,
-				password = rc.password
-			)
-			// Success — redirect to the dashboard
-			relocate( "dashboard" )
-		} catch ( "InvalidCredentials" | "EntityNotFound" e ) {
-			flash.put( "messages", {
-				type   : "error",
-				message: "Invalid email or password"
-			} )
-			relocate( "login" )
-		}
+		.onSuccess( results => {
+			try {
+				var oUser = variables.securityService.authenticate(
+					username = rc.email,
+					password = rc.password
+				)
+				// Success — redirect to the dashboard
+				relocate( "dashboard" )
+			} catch ( "InvalidCredentials" | "EntityNotFound" e ) {
+				flash.put( "messages", {
+					type   : "error",
+					message: "Invalid email or password"
+				} )
+				relocate( "login" )
+			}
+		} )
 	}
 
 	// ============================================================
@@ -153,30 +155,33 @@ class extends="coldbox.system.EventHandler" output=true{
 				password      : { required: true, min: prc.settings.cbMinPasswordLength },
 				passwordConfirm: { required: true, sameAs: "password" }
 			}
-		).onError( results =>{
+		)
+		// Handle validation errors
+		.onError( results =>{
 			flash.put( "messages", {
 				type   : "error",
 				message: "Please correct the highlighted errors and try again." & results.getAllErrors().toList( '<br>' )
 			} )
 			prc.validationErrors = results.getAllErrorsAsStruct()
-			return register( argumentCollection: args )
+			register( argumentCollection: args )
 		})
-
 		// --- Create User ---
-		prc.oUser = variables.userService.new( {
-			firstName: rc.firstName,
-			lastName : rc.lastName,
-			email    : rc.email,
-			password : rc.password
-		} )
-		userService.create( prc.oUser )
+		.onSuccess( results => {
+			prc.oUser = variables.userService.new( {
+				firstName: rc.firstName,
+				lastName : rc.lastName,
+				email    : rc.email,
+				password : rc.password
+			} )
+			userService.create( prc.oUser )
 
-		flash.put( "messages", {
-			type   : "success",
-			message: "Your account was created. Check your email to finish the registration process."
-		} )
+			flash.put( "messages", {
+				type   : "success",
+				message: "Your account was created. Check your email to finish the registration process."
+			} )
 
-		return relocate( "login" )
+			return relocate( "login" )
+		} )
 	}
 
 	// ============================================================
@@ -208,13 +213,16 @@ class extends="coldbox.system.EventHandler" output=true{
 			constraints: {
 				email: { required: true, type: "email" }
 			}
-		).onError( results => {
+		)
+		// Handle validation errors
+		.onError( results => {
 			flash.put( "messages", {
 				type   : "error",
 				message: "Invalid email address. Please correct the highlighted errors and try again."
 			} )
 			forgotPassword( argumentCollection: args )
 		} )
+		// --- Send Password Reset Email ---
 		.onSuccess( results => {
 			try{
 				prc.oUser = userService.retrieveUserByUsername( rc.email )
