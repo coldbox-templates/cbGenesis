@@ -202,6 +202,7 @@ class extends="coldbox.system.EventHandler" output=true{
 		}
 
 		// --- Validate ---
+		var args = arguments
 		validate(
 			target: rc,
 			constraints: {
@@ -210,24 +211,26 @@ class extends="coldbox.system.EventHandler" output=true{
 		).onError( results => {
 			flash.put( "messages", {
 				type   : "error",
-				message: "Please correct the highlighted errors and try again." & results.getAllErrors().toList( '<br>' )
+				message: "Invalid email address. Please correct the highlighted errors and try again."
 			} )
-			return forgotPassword( argumentCollection: arguments )
+			forgotPassword( argumentCollection: args )
+		} )
+		.onSuccess( results => {
+			try{
+				prc.oUser = userService.retrieveUserByUsername( rc.email )
+				userService.sendPasswordReminder( prc.oUser )
+			}catch( EntityNotFound e ) {
+				// Don't reveal whether the email exists for security reasons
+			}
+
+			flash.put( "messages", {
+				type   : "success",
+				message: "A password reset link has been sent to your email address."
+			} )
+
+			return relocate( "login" )
 		} )
 
-		try{
-			prc.oUser = userService.retrieveUserByUsername( rc.email )
-			userService.sendPasswordReminder( prc.oUser )
-		}catch( EntityNotFound e ) {
-			// Don't reveal whether the email exists for security reasons
-		}
-
-		flash.put( "messages", {
-			type   : "success",
-			message: "A password reset link has been sent to your email address."
-		} )
-
-		return relocate( "login" )
 	}
 
 	// ============================================================
