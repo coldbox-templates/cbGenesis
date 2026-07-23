@@ -14,7 +14,7 @@ class{
 	this.name                 = "ColdBox Application";
 	this.sessionManagement    = true;
 	this.sessionTimeout       = createTimespan( 0, 1, 0, 0 );
-	this.setClientCookies     = true;
+	this.setClientCookies     = false;
 	this.setDomainCookies     = true;
 	this.timezone             = "UTC";
 	this.whiteSpaceManagement = "smart";
