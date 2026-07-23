@@ -26,6 +26,7 @@ export function registerForm() {
 		password     : "",
 		confirmValue : "",
 		confirmError : "",
+		showConfirm  : false,
 
 		/**
 		 * Returns true when all fields are filled and passwords match.

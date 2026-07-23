@@ -38,6 +38,14 @@ class {
 			POST: "doRegister"
 		})
 		post( pattern = "logout", target = "Auth.logout" )
+		route( "forgot-password" ).withHandler( "Auth" ).toAction({
+			GET: "forgotPassword",
+			POST: "doForgotPassword"
+		})
+		route( "reset-password" ).withHandler( "Auth" ).toAction({
+			GET: "resetPassword",
+			POST: "doResetPassword"
+		})
 
 		// @app_routes@
 

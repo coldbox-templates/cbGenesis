@@ -290,7 +290,7 @@ class extends="app.models.BaseService" {
 			appNameInitial: left( settings.cbAppName, 1 ),
 			linkTimeout: settings.cbPasswordResetExpiration,
 			ip: variables.cbSecurity.getRealIP(),
-			linkToken: event.buildLink( "/resetPassword?token=#token#" ),
+			linkToken: event.buildLink( "/reset-password?token=#token#" ),
 			issuedBy: isNull( arguments.issuer ) ? "" : arguments.issuer.getFullName(),
 			issuedEmail: isNull( arguments.issuer ) ? "" : arguments.issuer.getEmail()
 		};

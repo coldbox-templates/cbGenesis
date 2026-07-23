@@ -122,7 +122,7 @@ class extends="coldbox.system.EventHandler" output=true{
 		param rc.email = ""
 		param rc.password = ""
 		param rc.passwordConfirm = ""
-		param rc._token = ""
+		param rc.csrf = ""
 
 		// --- Verify Registration Enabled ---
 		if ( !prc.settings.cbAllowRegistration ) {
@@ -134,12 +134,12 @@ class extends="coldbox.system.EventHandler" output=true{
 		}
 
 		// --- CSRF Verify ---
-		if ( !csrfVerify( rc._token ) ) {
+		if ( !csrfVerify( rc.csrf ) ) {
 			flash.put( "messages", {
 				type   : "error",
 				message: "Invalid registration token detected. Page refreshed, try again."
 			} )
-			return relocate( "register" )
+			return register( argumentCollection: args )
 		}
 
 		// --- Validate ---
@@ -162,12 +162,14 @@ class extends="coldbox.system.EventHandler" output=true{
 			return register( argumentCollection: args )
 		})
 
-		variables.userService.new( {
+		// --- Create User ---
+		prc.oUser = variables.userService.new( {
 			firstName: rc.firstName,
 			lastName : rc.lastName,
 			email    : rc.email,
 			password : rc.password
-		} ).save()
+		} )
+		userService.create( prc.oUser )
 
 		flash.put( "messages", {
 			type   : "success",
@@ -184,6 +186,48 @@ class extends="coldbox.system.EventHandler" output=true{
 	function forgotPassword( event, rc, prc ) {
 		prc.title = "Forgot Password"
 		event.setView( "auth/forgotPassword" )
+	}
+
+	function doForgotPassword( event, rc, prc ) {
+		param rc.email = ""
+		param rc.csrf = ""
+
+		// --- CSRF Verify ---
+		if ( !csrfVerify( rc.csrf ) ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid token detected. Page refreshed, try again."
+			} )
+			return forgotPassword( argumentCollection: arguments )
+		}
+
+		// --- Validate ---
+		validate(
+			target: rc,
+			constraints: {
+				email: { required: true, type: "email" }
+			}
+		).onError( results => {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Please correct the highlighted errors and try again." & results.getAllErrors().toList( '<br>' )
+			} )
+			return forgotPassword( argumentCollection: arguments )
+		} )
+
+		try{
+			prc.oUser = userService.retrieveUserByUsername( rc.email )
+			userService.sendPasswordReminder( prc.oUser )
+		}catch( EntityNotFound e ) {
+			// Don't reveal whether the email exists for security reasons
+		}
+
+		flash.put( "messages", {
+			type   : "success",
+			message: "A password reset link has been sent to your email address."
+		} )
+
+		return relocate( "login" )
 	}
 
 	// ============================================================
