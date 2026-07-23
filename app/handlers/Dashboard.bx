@@ -7,118 +7,15 @@
  * Replace the session-based mock auth check with cbsecurity's secure()
  * or annotation-based protection once the security layer is configured.
  */
+@secured
 class extends="coldbox.system.EventHandler" {
+
+	function preHandler( event, rc, prc ) {
+		event.setLayout( "Admin" )
+	}
 
 	function index( event, rc, prc ) {
 		prc.title = "Dashboard";
-
-		// Populate display user for the Admin layout (prc.authUser).
-		// The Admin layout reads this struct — it does NOT call methods on a User object,
-		// so it works for both this mock and a real authenticated user.
-		var cu = new app.models.system.User();
-		prc.authUser = {
-			"name"    : cu.fullName ?: ( cu.firstName ?: "Admin" ) & " " & ( cu.lastName ?: "" ),
-			"email"   : cu.email ?: "",
-			"role"    : cu.role ?: "User",
-			"initials": cu.initials ?: uCase( left( cu.firstName ?: "A", 1 ) )
-		};
-
-		// ── Mock data ─────────────────────────────────────────────────────────
-
-		prc.stats = [
-			{
-				"label"  : "Total Users",
-				"value"  : "2,847",
-				"change" : "+12.5%",
-				"up"     : true,
-				"icon"   : "ph-users",
-				"iconCss": "bg-gradient-brand text-white"
-			},
-			{
-				"label"  : "Monthly Revenue",
-				"value"  : "$48,290",
-				"change" : "+8.2%",
-				"up"     : true,
-				"icon"   : "ph-currency-dollar",
-				"iconCss": "bg-success bg-opacity-10 text-success"
-			},
-			{
-				"label"  : "Active Sessions",
-				"value"  : "142",
-				"change" : "-3.1%",
-				"up"     : false,
-				"icon"   : "ph-monitor",
-				"iconCss": "bg-info bg-opacity-10 text-info"
-			},
-			{
-				"label"  : "Conversion Rate",
-				"value"  : "3.2%",
-				"change" : "+0.4%",
-				"up"     : true,
-				"icon"   : "ph-trend-up",
-				"iconCss": "bg-warning bg-opacity-10 text-warning"
-			}
-		];
-
-		prc.activities = [
-			{
-				"icon"   : "ph-user-plus",
-				"iconCss": "bg-gradient-brand text-white",
-				"text"   : "John Smith created a new account",
-				"time"   : "2 minutes ago"
-			},
-			{
-				"icon"   : "ph-currency-dollar",
-				"iconCss": "bg-success bg-opacity-10 text-success",
-				"text"   : "Payment of $1,200 received from Acme Corp",
-				"time"   : "15 minutes ago"
-			},
-			{
-				"icon"   : "ph-file-text",
-				"iconCss": "bg-info bg-opacity-10 text-info",
-				"text"   : "Monthly analytics report generated",
-				"time"   : "1 hour ago"
-			},
-			{
-				"icon"   : "ph-shield-check",
-				"iconCss": "bg-warning bg-opacity-10 text-warning",
-				"text"   : "Security audit completed — no issues found",
-				"time"   : "3 hours ago"
-			},
-			{
-				"icon"   : "ph-database",
-				"iconCss": "bg-secondary bg-opacity-10 text-secondary",
-				"text"   : "Automated database backup completed",
-				"time"   : "6 hours ago"
-			}
-		];
-
-		prc.quickActions = [
-			{
-				"label": "New User",
-				"icon" : "ph-user-plus",
-				"href" : "##"
-			},
-			{
-				"label": "Generate Report",
-				"icon" : "ph-chart-bar",
-				"href" : "##"
-			},
-			{
-				"label": "View Analytics",
-				"icon" : "ph-trend-up",
-				"href" : "##"
-			},
-			{
-				"label": "Settings",
-				"icon" : "ph-gear",
-				"href" : "##"
-			}
-		];
-
-		// ── END mock data ─────────────────────────────────────────────────────
-
-		event.setLayout( "Admin" );
-		event.setView( "dashboard/index" );
+		event.setView( "dashboard/index" )
 	}
 }

@@ -7,7 +7,10 @@
 		args = { title: "Authentication" }
 	)#
 </head>
-<body class="auth-body" x-data x-init="$store.theme.init()">
+<body
+	class="auth-body"
+	x-data
+	x-init="$store.theme.init()">
 
     <div class="auth-center-wrapper">
 

@@ -7,21 +7,25 @@
 	Reads from prc (populated by protected handlers):
 		prc.authUser.initials — user avatar letter
 		prc.authUser.name     — display name
-		prc.authUser.role     — role label --->  
+		prc.authUser.role     — role label --->
 <bx:output>
 <div class="sidebar-footer" id="sidebar-footer">
 
-	<!--- User profile link --->  
-	<a href="#event.route( "profile" )#" class="sidebar-user text-decoration-none" @click="$store.sidebar.close()">
+	<!--- User profile link --->
+	<a
+		href="#event.route( "profile" )#"
+		class="sidebar-user text-decoration-none"
+		@click="$store.sidebar.close()">
+
+		<!--- User Avatar --->
 		<span class="sidebar-user-avatar">
 			#( prc.authUser.getInitials() ?: "A" )#
 		</span>
+
+		<!--- User Info --->
 		<span class="sidebar-user-info">
 			<span class="sidebar-user-name">
 				#( prc.authUser.getFullName() ?: "Admin User" )#
-			</span>
-			<span class="sidebar-user-role">
-				#( prc.authUser.getRole() ?: "Administrator" )#
 			</span>
 		</span>
 	</a>

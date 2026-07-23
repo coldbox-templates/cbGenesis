@@ -2,15 +2,19 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="#prc.settings[ "cbDefaultTheme" ]#">
 <head>
-    #view( "_components/app/includes" )#
+    #view(
+		view = "_components/app/includes",
+		args = { title: "Authentication" }
+	)#
 </head>
 
 <!--- x-init initializes Alpine stores:
       $store.theme.init()   — syncs Alpine's mode with the FOUC-prevention script
       $store.sidebar.init() — restores collapse state from localStorage --->
-<body class="admin-body"
-      x-data="adminBody( {} )"
-      x-init="$store.theme.init(); $store.sidebar.init()">
+<body
+	class="admin-body"
+	x-data
+	x-init="$store.theme.init()">
 
     <!--- ── Mobile sidebar backdrop ──────────────────────────────── --->
     <div class="sidebar-overlay"

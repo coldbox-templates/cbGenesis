@@ -1,9 +1,6 @@
 {
     "agents":[
-        "claude",
         "copilot",
-        "cursor",
-        "codex",
         "opencode",
         "pi"
     ],
