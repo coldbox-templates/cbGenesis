@@ -23,7 +23,7 @@
 
             <!--- View content — inject the login/register/forgot-password form --->
             <div class="auth-card-body">
-                #renderView()#
+                #view()#
             </div>
 
         </div>

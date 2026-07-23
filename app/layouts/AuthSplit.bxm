@@ -64,14 +64,14 @@
                 <div class="auth-split-logo-mobile">
                     <a href="/" class="auth-logo-link">
                         #view(
-	view = "_components/ui/logo",
-	args = { variant: "compact" }
-)#
+							view: "_components/ui/logo",
+							args: { variant: "compact" }
+						)#
                     </a>
                 </div>
 
                 <!--- View content — inject the login/register form --->
-                #renderView()#
+                #view()#
 
                 <!--- Footer: theme toggle --->
                 #view( view = "_components/auth/footer", args = { split: true } )#
