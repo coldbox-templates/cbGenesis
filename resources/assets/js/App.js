@@ -26,11 +26,14 @@ Alpine.data( "footer", footer );
 import { passwordStrength } from "./components/ui/PasswordStrength.js";
 import { authForm }         from "./components/auth/AuthForm.js";
 import { registerForm }     from "./components/auth/RegisterForm.js";
-import { forgetPasswordForm } from "./components/auth/ForgetPasswordForm.js";
+import { forgotPasswordForm } from "./components/auth/ForgotPasswordForm.js";
+import { passwordResetForm } from "./components/auth/PasswordResetForm.js";
 Alpine.data( "passwordStrength", passwordStrength );
 Alpine.data( "authForm", authForm );
 Alpine.data( "registerForm", registerForm );
-Alpine.data( "forgetPasswordForm", forgetPasswordForm );
+Alpine.data( "forgotPasswordForm", forgotPasswordForm );
+Alpine.data( "passwordResetForm", passwordResetForm );
+
 
 // UI Components
 import { messageBox }       from "./components/ui/MessageBox.js";

@@ -20,7 +20,7 @@
  *
  * @returns {Object} Alpine authentication state and submit validation.
  */
-export function forgetPasswordForm() {
+export function forgotPasswordForm() {
 	return {
 		loading : false,
 		email   : "",

@@ -293,7 +293,7 @@ class extends="app.models.BaseService" {
 			linkToken: event.buildLink( "/reset-password?token=#token#" ),
 			issuedBy: isNull( arguments.issuer ) ? "" : arguments.issuer.getFullName(),
 			issuedEmail: isNull( arguments.issuer ) ? "" : arguments.issuer.getEmail()
-		};
+		}
 
 		// Build email out
 		return variables.mailservice
@@ -331,7 +331,7 @@ class extends="app.models.BaseService" {
 				.save( passwordChange = true )
 
 			// Remove token now that we have the data and it has been validated
-			variables.securityService.clearPasswordResetToken( arguments.token );
+			variables.securityService.clearPasswordResetToken( arguments.token )
 
 			// get mail payload
 			var bodyTokens = {
@@ -342,24 +342,24 @@ class extends="app.models.BaseService" {
 				companyEmail: settings.cbDefaultEmail,
 				ip: variables.cbSecurity.getRealIP(),
 				linkLogin: event.buildLink( "/login" )
-			};
+			}
 
 			var mail = variables.mailservice.newMail();
 
 			mail.configure(
-				to = arguments.user.getEmail(),
-				from = settings.cbDefaultEmail,
-				subject = "Password Reset Completed",
-				bodyTokens = bodyTokens,
-				type = "html"
-			);
+				to: arguments.user.getEmail(),
+				from: settings.cbDefaultEmail,
+				subject: "Password Reset Completed",
+				bodyTokens: bodyTokens,
+				type: "html"
+			)
 
-			mail.setBody( variables.renderer.externalView( "/app/email_templates/password_reset" ) );
+			mail.setBody( variables.renderer.externalView( "/app/email_templates/password_reset" ) )
 
 			// send it out
 			return mail
 				.send()
-				.getResults();
+				.getResults()
 		}
 		// end of transaction
 	}

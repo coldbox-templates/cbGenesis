@@ -236,9 +236,57 @@ class extends="coldbox.system.EventHandler" output=true{
 
 	function resetPassword( event, rc, prc ) {
 		prc.title = "Set New Password"
-		// Real impl: validate this token against DB
-		prc.token = rc.token ?: ""
+		param rc.token = ""
+
+		// --- Validate Token ---
+		prc.results = variables.securityService.verifyPasswordResetToken( rc.token )
+		if ( prc.results.error ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid or expired password reset token. Please request a new password reset link."
+			} )
+			return relocate( "forgot-password" )
+		}
+
+		// Valid token, set the user in the request collection for the view
+		prc.oUser = prc.results.user
+		// Present the reset password view
 		event.setView( "auth/resetPassword" )
+	}
+
+	function doResetPassword( event, rc, prc ) {
+		param rc.token = ""
+		param rc.password = ""
+		param rc.passwordConfirm = ""
+		param rc.csrf = ""
+
+		// --- CSRF Verify ---
+		if ( !csrfVerify( rc.csrf ) ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid token detected. Page refreshed, try again."
+			} )
+			return resetPassword( argumentCollection: arguments )
+		}
+
+		// --- Validate Token ---
+		prc.results = variables.securityService.verifyPasswordResetToken( rc.token )
+		if ( prc.results.error ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid or expired password reset token. Please request a new password reset link."
+			} )
+			return relocate( "forgot-password" )
+		}
+
+		// Change the password for the user associated with the token
+		variables.userService.resetPassword(
+			token: rc.token,
+			user: prc.results.user,
+			password: rc.password
+		)
+
+		return relocate( "dashboard" )
 	}
 
 	// ============================================================

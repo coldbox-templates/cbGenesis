@@ -162,7 +162,11 @@ class extends="app.models.BaseService"{
 
 		// Verify the user of the token
 		// Throws exception if not a valid user
-		results.user = variables.userService.retrieveUserById( userId )
+		try{
+			results.user = variables.userService.retrieveUserById( userId )
+		}catch( EntityNotFound e ) {
+			results.error = true
+		}
 
 		return results
 	}
