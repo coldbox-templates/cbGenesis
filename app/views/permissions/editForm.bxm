@@ -1,14 +1,19 @@
 <bx:output>
-<form method="post" action="/permissions" @submit="submitting = true">
+<form
+	method="post"
+	:action="editingPermission ? '/permissions/' + encodeURIComponent( editingPermission.permissionId ) : '/permissions'"
+	@submit="editingPermission ? updatePermission( $event ) : submitting = true">
 
 	<!--- CSRF --->
 	<input type="hidden" name="csrf" id="csrf" x-model="csrfToken">
 
 	<!--- Modal Body --->
 	<div class="ui-modal__body">
+		<small x-show="formError" x-text="formError" class="delete-confirmation__error"></small>
+
 		<!--- Permission --->
 		<div class="form-field">
-			<label for="permission-name">Permission</label>
+			<label for="permission-name" x-text="editingPermission ? 'Permission' : 'Permission'"></label>
 			<input
 				id="permission-name"
 				name="permission"
@@ -36,8 +41,8 @@
 	<div class="ui-modal__footer">
 		<button type="button" class="btn btn-secondary" @click="closeModal()">Cancel</button>
 		<button type="submit" class="btn btn-primary" :disabled="submitting || !form.permission.trim()">
-			<i class="ph-duotone ph-plus" aria-hidden="true"></i>
-			Create Permission
+			<i class="ph-duotone" :class="editingPermission ? 'ph-floppy-disk' : 'ph-plus'" aria-hidden="true"></i>
+			<span x-text="editingPermission ? 'Save Permission' : 'Create Permission'"></span>
 		</button>
 	</div>
 </form>

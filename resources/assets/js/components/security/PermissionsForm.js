@@ -11,7 +11,9 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 		permissions        ,
 		query              : "",
 		modalOpen          : false,
+		editingPermission  : null,
 		submitting         : false,
+		formError          : "",
 		confirmModalOpen   : false,
 		selectedPermission : null,
 		deleteSubmitting   : false,
@@ -80,6 +82,23 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 		 * @returns {void}
 		 */
 		openModal() {
+			this.editingPermission = null;
+			this.formError = "";
+			this.modalOpen = true;
+			this.$nextTick( () => this.$root.querySelector( "#permission-name" )?.focus() );
+		},
+
+		/**
+		 * Opens the permission modal with an existing permission loaded for editing.
+		 *
+		 * @param {Object} permission Permission selected for editing.
+		 * @returns {void}
+		 */
+		openEditModal( permission ) {
+			this.editingPermission = permission;
+			this.formError = "";
+			this.form.permission = permission.permission || "";
+			this.form.description = permission.description || "";
 			this.modalOpen = true;
 			this.$nextTick( () => this.$root.querySelector( "#permission-name" )?.focus() );
 		},
@@ -89,13 +108,57 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 		 *
 		 * @returns {void}
 		 */
-		closeModal() {
-			if ( this.submitting || this.deleteSubmitting ) {
+		closeModal( force = false ) {
+			if ( ( this.submitting || this.deleteSubmitting ) && !force ) {
 				return;
 			}
 			this.modalOpen = false;
+			this.editingPermission = null;
+			this.formError = "";
 			this.form.permission = "";
 			this.form.description = "";
+		},
+
+		/**
+		 * Updates the selected permission through the remote handler action.
+		 *
+		 * @param {SubmitEvent} event Form submit event.
+		 * @returns {Promise<void>}
+		 */
+		async updatePermission( event ) {
+			event.preventDefault();
+			if ( !this.editingPermission || this.submitting ) {
+				return;
+			}
+
+			this.submitting = true;
+			this.formError = "";
+
+			try {
+				const response = await fetch( `/permissions/${ encodeURIComponent( this.editingPermission.permissionId ) }`, {
+					method  : "POST",
+					headers : { "Content-Type": "application/x-www-form-urlencoded" },
+					body    : new URLSearchParams( {
+						csrf        : this.csrfToken,
+						permission  : this.form.permission,
+						description : this.form.description,
+					} ),
+				} );
+				const result = await response.json();
+
+				if ( !response.ok || result.error ) {
+					throw new Error( result.messages || "Permission could not be saved." );
+				}
+
+				this.permissions = this.permissions.map( ( permission ) =>
+					permission.permissionId === result.data.permissionId ? result.data : permission
+				);
+				this.closeModal( true );
+			} catch ( error ) {
+				this.formError = error.message || "Permission could not be saved.";
+			} finally {
+				this.submitting = false;
+			}
 		},
 
 		/**

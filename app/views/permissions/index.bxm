@@ -60,6 +60,7 @@
 				<!--- Permission Header --->
 				<div class="content-card-header">
 					<div>
+						<span class="permission-icon"><i class="ph-duotone ph-key" aria-hidden="true"></i></span>
 						<h3 class="content-card-title" x-text="group.label"></h3>
 						<span class="count-pill" x-text="group.permissions.length" :aria-label="group.permissions.length + (group.permissions.length === 1 ? ' permission' : ' permissions')"></span>
 					</div>
@@ -69,12 +70,24 @@
 				<ul class="permission-list">
 					<template x-for="permission in group.permissions" :key="permission.permission">
 						<li>
-							<span class="permission-icon"><i class="ph-duotone ph-key" aria-hidden="true"></i></span>
 							<span>
-								<strong x-text="permission.slug"></strong>
+								<button
+									type="button"
+									class="permission-edit-trigger"
+									:title="'Edit ' + permission.permission"
+									@click="openEditModal( permission )"
+									x-text="permission.slug"></button>
 								<small x-text="permission.description || 'No description provided'"></small>
 								<code x-text="permission.permission"></code>
 							</span>
+								<button
+									type="button"
+									class="permission-edit"
+									title="Edit permission"
+									:aria-label="'Edit ' + permission.permission"
+									@click="openEditModal( permission )">
+									<i class="ph-duotone ph-pencil-simple" aria-hidden="true"></i>
+								</button>
 							<button
 								type="button"
 								class="permission-delete"
@@ -100,7 +113,7 @@
 	<!--- Create Permission Modal --->
 	#view( view: "_components/ui/modal", args: {
 		id            : "permission-create-modal",
-		title         : "Create Permission",
+		title         : "Permission",
 		openExpression: "modalOpen",
 		contentView   : "permissions/editForm"
 	} )#
