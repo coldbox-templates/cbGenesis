@@ -14,18 +14,34 @@ class {
 		 * Go get Funky!
 		 */
 
-		// A nice healthcheck route example
+		// A nice healthcheck
 		route(
 			"/healthcheck",
 			( event, rc, prc ) -> "Ok!"
 		)
 
-		// App Routes
+		// Dashboard
 		route( pattern = "dashboard", target = "Dashboard.index" )
-		route( pattern = "profile", target = "Profile.index" )
-		route( pattern = "users", target = "Users.index" )
-		route( pattern = "roles", target = "Roles.index" )
-		route( pattern = "permissions", target = "Permissions.index" )
+
+		// Resources
+		resources(
+			resource:"permissions",
+			parameterName: "permissionId"
+		)
+		resources(
+			resource:"roles",
+			parameterName: "roleId"
+		)
+		resources(
+			resource:"users",
+			parameterName: "userId"
+		)
+
+		// Profile Route
+		route( "profile" ).withHandler( "Profile" ).toAction({
+			GET: "index",
+			POST: "save"
+		})
 
 		// Settings Routes
 		route( "settings" ).withHandler( "Settings" ).toAction({
