@@ -1,7 +1,8 @@
 /**
  * Mock role management handler.
  */
-class extends="coldbox.system.EventHandler" {
+@secured
+class extends="BaseSecureHandler" {
 
 	function index( event, rc, prc ) {
 		prc.title = "Roles";

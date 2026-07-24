@@ -4,7 +4,6 @@
  * This handler is used to enforce authentication and authorization for all handlers that extend it.
  * It also sets the layout to "Admin" for all views rendered by handlers that extend this base handler.
  */
-@secured
 class extends="coldbox.system.EventHandler"{
 
 	@inject

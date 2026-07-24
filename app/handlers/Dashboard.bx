@@ -7,6 +7,7 @@
  * Replace the session-based mock auth check with cbsecurity's secure()
  * or annotation-based protection once the security layer is configured.
  */
+@secured
 class extends="BaseSecureHandler" {
 
 	function index( event, rc, prc ) {

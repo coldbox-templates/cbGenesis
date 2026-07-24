@@ -1,7 +1,8 @@
 /**
- * Mock profile handler.
+ * user Profile handler.
  */
-class extends="coldbox.system.EventHandler" {
+@secured
+class extends="BaseSecureHandler" {
 
 	function index( event, rc, prc ) {
 		prc.title = "My Profile";

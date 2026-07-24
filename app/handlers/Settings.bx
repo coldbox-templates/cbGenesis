@@ -1,6 +1,7 @@
 /**
  * Global settings handler.
  */
+@secured
 class extends="BaseSecureHandler" {
 
 	function index( event, rc, prc ) {
