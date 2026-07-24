@@ -80,6 +80,7 @@
 								<small x-text="permission.description || 'No description provided'"></small>
 								<code x-text="permission.permission"></code>
 							</span>
+							<div class="permission-actions">
 								<button
 									type="button"
 									class="permission-edit"
@@ -88,14 +89,15 @@
 									@click="openEditModal( permission )">
 									<i class="ph-duotone ph-pencil-simple" aria-hidden="true"></i>
 								</button>
-							<button
-								type="button"
-								class="permission-delete"
-								title="Delete permission"
-								:aria-label="'Delete ' + permission.permission"
-								@click="confirmDelete( permission )">
-								<i class="ph-duotone ph-trash" aria-hidden="true"></i>
-							</button>
+								<button
+									type="button"
+									class="permission-delete"
+									title="Delete permission"
+									:aria-label="'Delete ' + permission.permission"
+									@click="confirmDelete( permission )">
+									<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+								</button>
+							</div>
 						</li>
 					</template>
 				</ul>
