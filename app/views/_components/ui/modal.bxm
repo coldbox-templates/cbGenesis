@@ -6,19 +6,22 @@
 		#view( view: "_components/ui/modal", args: {
 			id         : "user-create-modal",
 			title      : "Create User",
-			openExpression   : "modalOpen",
-			contentView: "_components/users/createForm"
+			openExpression : "modalOpen",
+			closeExpression: "closeModal()",
+			contentView    : "_components/users/createForm"
 		} )#
 
 	Args:
 		id          : string — unique dialog id                  (default: "modal")
 		title       : string — visible dialog title              (default: "Modal")
 		openExpression    : string — Alpine expression controlling open state (default: "false")
+		closeExpression   : string — Alpine expression used to close the dialog (default: "closeModal()")
 		contentView : string — view rendered inside the dialog     (default: "")
 		contentArgs : struct — arguments passed to contentView     (default: {}) --->
 <bx:param name="args.id" default="modal"/>
 <bx:param name="args.title" default="Modal"/>
 <bx:param name="args.openExpression" default="false"/>
+<bx:param name="args.closeExpression" default="closeModal()"/>
 <bx:param name="args.contentView" default=""/>
 <bx:param name="args.contentArgs" default="#{}#"/>
 
@@ -31,12 +34,16 @@
 	role="dialog"
 	aria-modal="true"
 	aria-labelledby="#encodeForHTMLAttribute( args.id )#-title"
-	@click.self="closeModal()"
-	@keydown.escape.window="closeModal()">
+	@click.self="#args.closeExpression#"
+	@keydown.escape.window="#args.closeExpression#">
 	<div class="ui-modal__dialog" x-transition.scale.95>
 		<div class="ui-modal__header">
 			<h2 id="#encodeForHTMLAttribute( args.id )#-title">#encodeForHTML( args.title )#</h2>
-			<button type="button" class="ui-modal__close" @click="closeModal()" aria-label="Close dialog">
+			<button
+				type="button"
+				class="ui-modal__close"
+				@click="#args.closeExpression#"
+				aria-label="Close dialog">
 				<i class="ph-duotone ph-x" aria-hidden="true"></i>
 			</button>
 		</div>

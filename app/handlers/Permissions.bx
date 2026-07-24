@@ -20,7 +20,6 @@ class extends="BaseSecureHandler" {
 	}
 
 	function create( event, rc, prc ) {
-
 		// --- CSRF Verification ---
 		if ( !csrfVerify( rc.csrf ?: "" ) ) {
 			flash.put( "messages", {
@@ -44,14 +43,57 @@ class extends="BaseSecureHandler" {
 			return relocate( "permissions" )
 		}
 
-		prc.oPermission.save()
+		// --- Attempt to Save Permission ---
+		try{
+			prc.oPermission.save()
 
-		flash.put( "messages", {
-			type   : "success",
-			message: "Permission created successfully."
-		} )
+			flash.put( "messages", {
+				type   : "success",
+				message: "Permission created successfully."
+			} )
 
-		return relocate( "permissions" )
+			return relocate( "permissions" )
+		} catch( any error ){
+			log.error( "Error creating permission: #error.message#", error )
+			flash.put( "messages", {
+				type   : "error",
+				message: "Permission could not be created: #error.detail#"
+			} )
+		}
+	}
+
+	@remote( "This action is submitted remotely via JavaScript" )
+	function delete( event, rc, prc ) {
+
+		// --- CSRF Verification ---
+		if ( !csrfVerify( rc.csrf ?: "" ) ) {
+			event.setHTTPHeader( statusCode: 403 )
+			return {
+				error: true,
+				messages: "Invalid security token detected.",
+				data: ""
+			}
+		}
+
+		// --- Attempt to Delete Permission ---
+		try {
+			permissionService
+				.getOrFail( rc.permissionId ?: "" )
+				.delete()
+			return {
+				error: false,
+				messages: "Permission deleted successfully.",
+				data: ""
+			}
+		} catch ( any error ) {
+			log.error( "Error deleting permission with ID [#rc.permissionId#]: #error.message#", error )
+			event.setHTTPHeader( statusCode: 500 )
+			return {
+				error: true,
+				messages: "Permission could not be deleted: #error.detail#",
+				data: ""
+			}
+		}
 	}
 
 }

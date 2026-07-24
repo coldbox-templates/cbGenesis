@@ -421,6 +421,41 @@
 	}
 }
 
+.permission-delete {
+	display: inline-grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	border: 0;
+	border-radius: $border-radius;
+	background: transparent;
+	color: var(--app-text-muted);
+
+	&:hover,
+	&:focus-visible {
+		background: rgba($bl-danger, 0.12);
+		color: $bl-danger;
+	}
+}
+
+.delete-confirmation {
+	justify-items: center;
+	text-align: center;
+
+	> i {
+		font-size: 2.5rem;
+		color: $bl-danger;
+	}
+
+	p {
+		margin: 0;
+	}
+}
+
+.delete-confirmation__error {
+	color: $bl-danger;
+}
+
 .permission-icon {
 	display: inline-flex;
 	align-items: center;

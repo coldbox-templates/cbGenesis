@@ -1,0 +1,27 @@
+<bx:output>
+<div class="ui-modal__body delete-confirmation">
+	<i class="ph-duotone ph-warning-circle" aria-hidden="true"></i>
+	<p>
+		Are you sure you want to delete
+		<strong x-text="selectedPermission?.permission"></strong>?
+		This action cannot be undone.
+	</p>
+	<small x-show="deleteError" x-text="deleteError" class="delete-confirmation__error"></small>
+</div>
+
+<div class="ui-modal__footer">
+	<button
+		type="button"
+		class="btn btn-secondary"
+		@click="cancelDelete()"
+		:disabled="deleteSubmitting">Cancel</button>
+	<button
+		type="button"
+		class="btn btn-danger"
+		@click.prevent="deletePermission()"
+		:disabled="deleteSubmitting">
+		<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+		<span x-text="deleteSubmitting ? 'Deleting...' : 'Delete Permission'"></span>
+	</button>
+</div>
+</bx:output>

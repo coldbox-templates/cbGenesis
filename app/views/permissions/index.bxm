@@ -31,10 +31,10 @@
 	)#
 </bx:if>
 
-<!--- Catalog --->
+<!--- Permission Catalog --->
 <div
 	class="permission-catalog"
-	x-data='permissionsForm(#forAttribute( prc.permissionCatalog )#)'
+	x-data='permissionsForm( #forAttribute( prc.permissionCatalog )#, "#csrfToken()#" )'
 	@open-permission-modal.window="openModal()"
 >
 
@@ -75,6 +75,14 @@
 								<small x-text="permission.description || 'No description provided'"></small>
 								<code x-text="permission.permission"></code>
 							</span>
+							<button
+								type="button"
+								class="permission-delete"
+								title="Delete permission"
+								:aria-label="'Delete ' + permission.permission"
+								@click="confirmDelete( permission )">
+								<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+							</button>
 						</li>
 					</template>
 				</ul>
@@ -91,10 +99,19 @@
 
 	<!--- Create Permission Modal --->
 	#view( view: "_components/ui/modal", args: {
-		id         : "permission-create-modal",
-		title      : "Create Permission",
-		openExpression   : "modalOpen",
-		contentView: "permissions/editForm"
+		id            : "permission-create-modal",
+		title         : "Create Permission",
+		openExpression: "modalOpen",
+		contentView   : "permissions/editForm"
+	} )#
+
+	<!--- Delete Permission Modal --->
+	#view( view: "_components/ui/modal", args: {
+		id            : "permission-delete-modal",
+		title         : "Delete Permission",
+		openExpression: "confirmModalOpen",
+		closeExpression: "cancelDelete()",
+		contentView   : "permissions/deleteConfirm"
 	} )#
 </div>
 </bx:output>
