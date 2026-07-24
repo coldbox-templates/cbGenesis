@@ -120,9 +120,9 @@ class extends="app.models.BaseEntity" {
 	 * https://coldbox-validation.ortusbooks.com/overview/valid-constraints
 	 */
 	this.constraints = {
-		firstName: { required: true },
-		lastName : { required: true },
-		email    : {
+		"firstName": { required: true },
+		"lastName" : { required: true },
+		"email"    : {
 			required: true,
 			size: "1..255",
 			type: "email",
@@ -142,7 +142,11 @@ class extends="app.models.BaseEntity" {
 	 * Population Options
 	 * --------------------------------------------------------------------------
 	 */
-	this.population = { exclude: [ "userId", "lastLogin", "verifiedAt", "isActive" ] }
+	this.population = {
+		exclude: [
+			"userId", "lastLogin", "verifiedAt", "isActive"
+		]
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -293,6 +297,10 @@ class extends="app.models.BaseEntity" {
 
 	/**
 	 * Save the user to the database
+	 *
+	 * @passwordChange If true, the password will be hashed before saving
+	 *
+	 * @return User
 	 */
 	User function save( boolean passwordChange = false) {
 		variables.userService.save( this, passwordChange )
@@ -304,5 +312,91 @@ class extends="app.models.BaseEntity" {
 	 */
 	boolean function isLoggedIn() {
 		return variables.loggedIn;
+	}
+
+	/**
+	 * Get the user's role names as an array
+	 */
+	array function getRoleNames(){
+		return variables.roles.map( .getRole() )
+	}
+
+	/**
+	 * Check if the user has a specific role
+	 *
+	 * @roleName The name of the role to check
+	 */
+	boolean function hasRole( required roleName ) {
+		return arrayContains( getRoleNames(), arguments.roleName )
+	}
+
+	/**
+	 * Get's all the permissions attached to this user from roles and a-la-carte permissions
+	 *
+	 * @return array An array of permission strings
+	 */
+	set function getAllPermissions(){
+		if( !isNull( variables.allPermissions ) ){
+			return variables.allPermissions
+		}
+
+		variables.allPermissions =
+			// A-la-carte Permissions
+			setNew( values: variables.permissions.map( .getPermission ) )
+			// Add all role permissions
+			.addAll(
+				variables.roles
+					.map( r => r.getPermissions().map( .getPermission ) )
+					.flatten()
+			)
+
+		return variables.allPermissions
+	}
+
+	/**
+	 * Verifies if the user has a specific permission(s)
+	 *
+	 * If there are more than 1 permission, it's an OR check, meaning if the user has any of the permissions,
+	 * it will return true. If you want to check for all permissions, use the hasAllPermissions() method instead.
+	 *
+	 * @permission A permission string, list, or array of permissions to check against the user's permissions.
+	 *
+	 * @return boolean True if the user has the specified permission(s), false otherwise.
+	 */
+	boolean function hasPermission( required permission ){
+		return getAllPermissions()
+			.intersect( inflatePermissions( arguments.permission ) ).len() > 0
+	}
+
+	/**
+	 * Verifies if the user has all of the specified permissions
+	 *
+	 * @permission A permission string, list, or array of permissions to check against the user's permissions.
+	 *
+	 * @return boolean True if the user has all specified permissions, false otherwise.
+	 */
+	boolean function hasAllPermissions( required permission ){
+		return getAllPermissions().containsAll(
+			inflatePermissions( arguments.permission)
+		 )
+	}
+
+	/**
+	 * Inflates the permissions argument to a set for easier processing
+	 *
+	 * @permission A permission string, list, or array of permissions to check against the user's permissions.
+	 *
+	 * @return A set of permissions for easier processing
+	 */
+	private set function inflatePermissions( required permission ){
+		// Get the user's permissions as an array of permission strings
+		if( isSimpleValue( arguments.permission ) ){
+			arguments.permission = listToSet( arguments.permission )
+		} else if( isArray( arguments.permission ) ){
+			arguments.permission = arguments.permission.toSet()
+		} else if( !isBoxSet( arguments.permission ) ){
+			throw( type="InvalidArgumentException", message="Permission must be a string, list, set or array" )
+		}
+		return arguments.permission
 	}
 }

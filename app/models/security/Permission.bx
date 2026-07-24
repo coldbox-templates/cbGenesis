@@ -89,7 +89,9 @@ class extends="app.models.BaseEntity" {
 	 * --------------------------------------------------------------------------
 	 * https://coldbox.ortusbooks.com/the-basics/event-handlers/model-integration/model-data-binding#mass-population-control-this.population
 	 */
-	this.population = {}
+	this.population = {
+		exclude: [ "permissionId", "roles", "users" ]
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
