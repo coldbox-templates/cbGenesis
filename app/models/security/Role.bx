@@ -129,10 +129,38 @@ class extends="app.models.BaseEntity" {
 	}
 
 	/**
+	 * Override the setPermissions
+	 * So hibernate can handle the many to many relationship properly
+	 */
+	Role function setPermissions( required array permissions ) {
+		if ( hasPermissions() ) {
+			variables.permissions.clear();
+			variables.permissions.addAll( arguments.permissions );
+		} else {
+			variables.permissions = arguments.permissions;
+		}
+		return this;
+	}
+
+	/**
 	 * Clear all users
 	 */
 	Role function clearUsers() {
 		variables.users = []
+		return this
+	}
+
+	/**
+	 * Override the setUsers
+	 * So hibernate can handle the many to many relationship properly
+	 */
+	Role function setUsers( required array users ) {
+		if ( hasUsers() ) {
+			variables.users.clear()
+			variables.users.addAll( arguments.users )
+		} else {
+			variables.users = arguments.users
+		}
 		return this
 	}
 

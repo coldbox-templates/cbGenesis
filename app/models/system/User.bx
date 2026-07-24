@@ -382,6 +382,51 @@ class extends="app.models.BaseEntity" {
 	}
 
 	/**
+	 * Clear all permissions
+	 */
+	User function clearPermissions() {
+		variables.permissions = []
+		return this
+	}
+
+	/**
+	 * Override the setPermissions
+	 * So hibernate can clear relationships if set.
+	 */
+	User function setPermissions( required array permissions ) {
+		if ( hasPermissions() ) {
+			variables.permissions.clear()
+			variables.permissions.addAll( arguments.permissions )
+		} else {
+			variables.permissions = arguments.permissions
+		}
+		return this
+	}
+
+	/**
+	 * Override the setRoles
+	 * So hibernate can clear relationships if set.
+	 */
+	User function setRoles( required array roles ) {
+		if ( hasRoles() ) {
+			variables.roles.clear()
+			variables.roles.addAll( arguments.roles )
+		} else {
+			variables.roles = arguments.roles
+		}
+		return this
+	}
+
+	/**
+	 * Clear all roles
+	 */
+	User function clearRoles() {
+		variables.roles = []
+		return this
+	}
+
+
+	/**
 	 * Inflates the permissions argument to a set for easier processing
 	 *
 	 * @permission A permission string, list, or array of permissions to check against the user's permissions.
