@@ -1,0 +1,44 @@
+<bx:output>
+<form method="post" action="/permissions" @submit="submitting = true">
+
+	<!--- CSRF --->
+	#csrfField()#
+
+	<!--- Modal Body --->
+	<div class="ui-modal__body">
+		<!--- Permission --->
+		<div class="form-field">
+			<label for="permission-name">Permission</label>
+			<input
+				id="permission-name"
+				name="permission"
+				type="text"
+				placeholder="users:read"
+				required
+				maxlength="255"
+				x-model="form.permission">
+			<small>Use a module and action separated by a colon.</small>
+		</div>
+
+		<!--- Description --->
+		<div class="form-field">
+			<label for="permission-description">Description <span>(optional)</span></label>
+			<textarea
+				id="permission-description"
+				name="description"
+				rows="3"
+				placeholder="View and search users"
+				x-model="form.description"></textarea>
+		</div>
+	</div>
+
+	<!--- Modal Footer --->
+	<div class="ui-modal__footer">
+		<button type="button" class="btn btn-secondary" @click="closeModal()">Cancel</button>
+		<button type="submit" class="btn btn-primary" :disabled="submitting || !form.permission.trim()">
+			<i class="ph-duotone ph-plus" aria-hidden="true"></i>
+			Create Permission
+		</button>
+	</div>
+</form>
+</bx:output>

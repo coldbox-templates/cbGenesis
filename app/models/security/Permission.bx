@@ -100,7 +100,9 @@ class extends="app.models.BaseEntity" {
 	this.memento = {
 		defaultIncludes: [
 			"permission",
-			"description"
+			"description",
+			"prefix",
+			"slug"
 		],
 		defaultExcludes: [],
 		neverInclude   : []
@@ -140,7 +142,7 @@ class extends="app.models.BaseEntity" {
 	 *
 	 * @return The slug of the permission string, or the entire permission string if no colon exists.
 	 */
-	string function getPermissionSlug(){
+	string function getSlug(){
 		if( variables.permission.contains( ":" ) ){
 			return listRest( variables.permission, ":" )
 		}

@@ -1,0 +1,48 @@
+<!--- Modal Component
+	Renders a reusable Alpine-powered dialog shell. The modal body is supplied by
+	a view partial so this component is not coupled to a specific form or route.
+
+	Usage:
+		#view( view: "_components/ui/modal", args: {
+			id         : "user-create-modal",
+			title      : "Create User",
+			openExpression   : "modalOpen",
+			contentView: "_components/users/createForm"
+		} )#
+
+	Args:
+		id          : string — unique dialog id                  (default: "modal")
+		title       : string — visible dialog title              (default: "Modal")
+		openExpression    : string — Alpine expression controlling open state (default: "false")
+		contentView : string — view rendered inside the dialog     (default: "")
+		contentArgs : struct — arguments passed to contentView     (default: {}) --->
+<bx:param name="args.id" default="modal"/>
+<bx:param name="args.title" default="Modal"/>
+<bx:param name="args.openExpression" default="false"/>
+<bx:param name="args.contentView" default=""/>
+<bx:param name="args.contentArgs" default="#{}#"/>
+
+<bx:output>
+<div id="#encodeForHTMLAttribute( args.id )#"
+	class="ui-modal"
+	x-show="#args.openExpression#"
+	x-cloak
+	x-transition.opacity
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="#encodeForHTMLAttribute( args.id )#-title"
+	@click.self="closeModal()"
+	@keydown.escape.window="closeModal()">
+	<div class="ui-modal__dialog" x-transition.scale.95>
+		<div class="ui-modal__header">
+			<h2 id="#encodeForHTMLAttribute( args.id )#-title">#encodeForHTML( args.title )#</h2>
+			<button type="button" class="ui-modal__close" @click="closeModal()" aria-label="Close dialog">
+				<i class="ph-duotone ph-x" aria-hidden="true"></i>
+			</button>
+		</div>
+		<bx:if len( trim( args.contentView ) )>
+			#view( view: args.contentView, args: args.contentArgs )#
+		</bx:if>
+	</div>
+</div>
+</bx:output>

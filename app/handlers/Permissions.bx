@@ -1,11 +1,57 @@
 /**
  * Permissions handler.
  */
+@secured
 class extends="BaseSecureHandler" {
 
+	@inject
+	property name="permissionService";
+
 	function index( event, rc, prc ) {
-		prc.title = "Permissions";
-		event.setView( "permissions/index" );
+		prc.title = "Permissions"
+		prc.permissionCatalog = permissionService.findAllWhere(
+			criteria: {
+				isActive: true,
+			},
+			sortOrder: "permission"
+		)
+		.map( .getMemento() )
+		event.setView( "permissions/index" )
+	}
+
+	function create( event, rc, prc ) {
+
+		// --- CSRF Verification ---
+		if ( !csrfVerify( rc.csrf ?: "" ) ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid security token detected. Page refreshed, try again."
+			} )
+			return relocate( "permissions" )
+		}
+
+		// --- Validate and Create Permission ---
+		prc.oPermission = permissionService
+			.new()
+			.populate( rc )
+
+		if( !prc.oPermission.isValid() ){
+			flash.put( "messages", {
+				type   : "error",
+				message: "Permission could not be created. Please check the form for errors." &
+				prc.oPermission.getValidationResult().getAllErrors().toList( "<br>" )
+			} )
+			return relocate( "permissions" )
+		}
+
+		prc.oPermission.save()
+
+		flash.put( "messages", {
+			type   : "success",
+			message: "Permission created successfully."
+		} )
+
+		return relocate( "permissions" )
 	}
 
 }

@@ -1,34 +1,100 @@
 <bx:output>
+<!--- Header --->
 <div class="page-header admin-page-heading">
 	<div>
 		<p class="eyebrow">Security</p>
 		<h2 class="page-title">Permissions</h2>
-		<p class="page-subtitle">A browsable mock catalog for the permission objects the backend will own later.</p>
+		<p class="page-subtitle">
+			A permission is a specific action that can be performed in the system. Permissions are grouped into modules, which are then assigned to roles.
+		</p>
 	</div>
-	<button class="btn btn-outline-secondary"><i class="ph-duotone ph-download-simple"></i> Export CSV</button>
+	<button
+		type="button"
+		class="btn btn-primary"
+		@click="$dispatch( 'open-permission-modal' )"
+	>
+		<i class="ph-duotone ph-plus" aria-hidden="true"></i>
+		New Permission
+	</button>
 </div>
 
-<div class="permission-catalog" x-data="{ query: '' }">
+<!--- Flash Messages--->
+<bx:if flash.exists( "messages" )>
+	#view(
+		view = "_components/ui/messagebox",
+		args = {
+			type       : flash.get( "messages" ).type ?: "info",
+			message    : flash.get( "messages" ).message ?: "",
+			dismissible: true,
+			classes    : "mb-4"
+		}
+	)#
+</bx:if>
+
+<!--- Catalog --->
+<div
+	class="permission-catalog"
+	x-data='permissionsForm(#forAttribute( prc.permissionCatalog )#)'
+	@open-permission-modal.window="openModal()"
+>
+
+	<!--- Filter/Search Bar --->
 	<div class="content-card catalog-toolbar">
-		<div class="admin-search wide"><i class="ph-duotone ph-magnifying-glass"></i><input x-model="query" type="search" placeholder="Filter permissions..."></div>
-		<span class="muted-cell">#arrayLen( prc.permissionGroups )# modules</span>
+		<div class="admin-search wide">
+			<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+			<input
+				x-model.debounce.150ms="query"
+				type="search"
+				placeholder="Filter permissions..."
+				aria-label="Filter permissions">
+		</div>
+		<span
+			class="muted-cell"
+			x-text="filteredCount + (filteredCount === 1 ? ' permission' : ' permissions')"></span>
 	</div>
 
+	<!--- Permission Grid --->
 	<div class="permission-grid">
-		<bx:loop array="#prc.permissionGroups#" item="group">
+		<template x-for="group in groups" :key="group.key">
 			<section class="content-card permission-group-card">
-				<div class="content-card-header"><div><h3 class="content-card-title">#encodeForHTML( group.module )#</h3><p>#encodeForHTML( group.description )#</p></div></div>
+				<!--- Permission Header --->
+				<div class="content-card-header">
+					<div>
+						<h3 class="content-card-title" x-text="group.label"></h3>
+						<span class="count-pill" x-text="group.permissions.length" :aria-label="group.permissions.length + (group.permissions.length === 1 ? ' permission' : ' permissions')"></span>
+					</div>
+					<i class="ph-duotone ph-folder-open permission-group-icon" aria-hidden="true"></i>
+				</div>
+				<!--- Permission List --->
 				<ul class="permission-list">
-					<bx:loop array="#group.permissions#" item="permission">
-						<li x-show="query === '' || '#lCase( permission.permission )# #lCase( permission.description )#'.includes( query.toLowerCase() )">
-							<span class="permission-icon"><i class="ph-duotone ph-key"></i></span>
-							<span><strong>#encodeForHTML( permission.permission )#</strong><small>#encodeForHTML( permission.description )#</small></span>
-							<code>#encodeForHTML( permission.permissionId )#</code>
+					<template x-for="permission in group.permissions" :key="permission.permission">
+						<li>
+							<span class="permission-icon"><i class="ph-duotone ph-key" aria-hidden="true"></i></span>
+							<span>
+								<strong x-text="permission.slug"></strong>
+								<small x-text="permission.description || 'No description provided'"></small>
+								<code x-text="permission.permission"></code>
+							</span>
 						</li>
-					</bx:loop>
+					</template>
 				</ul>
 			</section>
-		</bx:loop>
+		</template>
+
+		<!--- No Permissions Tab --->
+		<div class="content-card empty-state" x-show="groups.length === 0" x-cloak>
+			<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+			<strong>No permissions found</strong>
+			<span>Try a different search term.</span>
+		</div>
 	</div>
+
+	<!--- Create Permission Modal --->
+	#view( view: "_components/ui/modal", args: {
+		id         : "permission-create-modal",
+		title      : "Create Permission",
+		openExpression   : "modalOpen",
+		contentView: "permissions/editForm"
+	} )#
 </div>
 </bx:output>

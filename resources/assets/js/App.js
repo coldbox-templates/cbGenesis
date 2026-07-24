@@ -22,19 +22,21 @@ Alpine.data( "adminBody", adminBody );
 Alpine.data( "sidebarBrand", sidebarBrand );
 Alpine.data( "footer", footer );
 
-// Auth Components
+// Form Components
 import { passwordStrength } from "./components/ui/PasswordStrength.js";
 import { authForm }         from "./components/auth/AuthForm.js";
 import { registerForm }     from "./components/auth/RegisterForm.js";
 import { forgotPasswordForm } from "./components/auth/ForgotPasswordForm.js";
 import { passwordResetForm } from "./components/auth/PasswordResetForm.js";
 import { settingsForm }   from "./components/settings/SettingsForm.js";
+import { permissionsForm } from "./components/security/permissionsForm.js";
 Alpine.data( "passwordStrength", passwordStrength );
 Alpine.data( "authForm", authForm );
 Alpine.data( "registerForm", registerForm );
 Alpine.data( "forgotPasswordForm", forgotPasswordForm );
 Alpine.data( "passwordResetForm", passwordResetForm );
 Alpine.data( "settingsForm", settingsForm );
+Alpine.data( "permissionsForm", permissionsForm );
 
 
 // UI Components
