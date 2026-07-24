@@ -54,8 +54,8 @@
 					model      : "password",
 					classes    : "mb-3",
 					label      : "Password",
-					helperLink : event.buildLink( "auth/forgotPassword" ),
-					helperText : "Forgot password?",
+					helperLink : prc.settings.cbAllowForgotPassword ? event.buildLink( "auth/forgotPassword" ) : "",
+					helperText : prc.settings.cbAllowForgotPassword ? "Forgot password?" : "",
 					placeholder: "••••••••"
 				}
 			)#

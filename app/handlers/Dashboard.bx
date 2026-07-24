@@ -7,12 +7,7 @@
  * Replace the session-based mock auth check with cbsecurity's secure()
  * or annotation-based protection once the security layer is configured.
  */
-@secured
-class extends="coldbox.system.EventHandler" {
-
-	function preHandler( event, rc, prc ) {
-		event.setLayout( "Admin" )
-	}
+class extends="BaseSecureHandler" {
 
 	function index( event, rc, prc ) {
 		prc.title = "Dashboard";

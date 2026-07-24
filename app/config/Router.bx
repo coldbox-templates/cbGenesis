@@ -23,10 +23,15 @@ class {
 		// App Routes
 		route( pattern = "dashboard", target = "Dashboard.index" )
 		route( pattern = "profile", target = "Profile.index" )
-		route( pattern = "settings", target = "Settings.index" )
 		route( pattern = "users", target = "Users.index" )
 		route( pattern = "roles", target = "Roles.index" )
 		route( pattern = "permissions", target = "Permissions.index" )
+
+		// Settings Routes
+		route( "settings" ).withHandler( "Settings" ).toAction({
+			GET: "index",
+			POST: "save"
+		})
 
 		// Auth Routes
 		route( "login" ).withHandler( "Auth" ).toAction({

@@ -189,11 +189,22 @@ class extends="coldbox.system.EventHandler" output=true{
 	// ============================================================
 
 	function forgotPassword( event, rc, prc ) {
+		// --- Verify Forgot Password Enabled ---
+		if( !prc.settings.cbAllowForgotPassword ){
+			relocate( "login" )
+		}
+
 		prc.title = "Forgot Password"
 		event.setView( "auth/forgotPassword" )
 	}
 
 	function doForgotPassword( event, rc, prc ) {
+		// --- Verify Forgot Password Enabled ---
+		if( !prc.settings.cbAllowForgotPassword ){
+			relocate( "login" )
+		}
+
+		// --- Initialize ---
 		param rc.email = ""
 		param rc.csrf = ""
 

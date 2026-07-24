@@ -1,26 +1,23 @@
 /**
  * Global settings handler.
  */
-class extends="coldbox.system.EventHandler" {
-
-	@inject
-	property name="settingService";
+class extends="BaseSecureHandler" {
 
 	function index( event, rc, prc ) {
 		prc.title = "Settings"
-		prc.authUser = getMockAuthUser()
-		prc.settings = settingService.getAllSettings()
-
-		event.setLayout( "Admin" )
 		event.setView( "settings/index" )
 	}
 
-	private struct function getMockAuthUser() {
-		return {
-			"name"    : "Luis Majano",
-			"email"   : "luis@ortussolutions.com",
-			"role"    : "Super Admin",
-			"initials": "LM"
-		}
+	function save( event, rc, prc ) {
+
+		settingsService.saveSettings( rc )
+
+		flash.put( "messages", {
+			type   : "success",
+			message: "Settings saved successfully."
+		} )
+
+		relocate( "settings" )
 	}
+
 }
