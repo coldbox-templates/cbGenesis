@@ -2,7 +2,11 @@
 <form
 	method="post"
 	action="#event.route( 'Settings' )#"
-	x-data=""
+	x-data="settingsForm( #forAttribute( prc.settings )# )"
+	@submit="onSubmit"
+	@input="markDirty"
+	@change="markDirty"
+	@click="markDirty"
 >
 	<!--- Page Heading  --->
 	<div class="page-header admin-page-heading">
@@ -11,7 +15,17 @@
 			<h2 class="page-title">Global Settings</h2>
 			<p class="page-subtitle">Manage application branding, security, and email configuration.</p>
 		</div>
-		<button class="btn btn-primary"><i class="ph-duotone ph-check"></i> Save All</button>
+		<button
+			type="submit"
+			class="btn btn-primary"
+			:disabled="loading || !dirty"
+		>
+			<span x-show="!loading"><i class="ph-duotone ph-check"></i> Save All</span>
+			<span x-show="loading" x-cloak>
+				<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+				Saving...
+			</span>
+		</button>
 	</div>
 
 	<!--- Flash Messages--->

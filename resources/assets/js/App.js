@@ -28,11 +28,13 @@ import { authForm }         from "./components/auth/AuthForm.js";
 import { registerForm }     from "./components/auth/RegisterForm.js";
 import { forgotPasswordForm } from "./components/auth/ForgotPasswordForm.js";
 import { passwordResetForm } from "./components/auth/PasswordResetForm.js";
+import { settingsForm }   from "./components/settings/SettingsForm.js";
 Alpine.data( "passwordStrength", passwordStrength );
 Alpine.data( "authForm", authForm );
 Alpine.data( "registerForm", registerForm );
 Alpine.data( "forgotPasswordForm", forgotPasswordForm );
 Alpine.data( "passwordResetForm", passwordResetForm );
+Alpine.data( "settingsForm", settingsForm );
 
 
 // UI Components

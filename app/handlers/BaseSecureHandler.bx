@@ -5,7 +5,10 @@
  * It also sets the layout to "Admin" for all views rendered by handlers that extend this base handler.
  */
 @secured
-class extends="coldbox.system.EventHandler" {
+class extends="coldbox.system.EventHandler"{
+
+	@inject
+	property name="settingService";
 
 	function preHandler( event, rc, prc ) {
 		event.setLayout( "Admin" )

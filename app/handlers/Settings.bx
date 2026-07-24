@@ -9,8 +9,7 @@ class extends="BaseSecureHandler" {
 	}
 
 	function save( event, rc, prc ) {
-
-		settingsService.saveSettings( rc )
+		settingService.bulkSave( rc )
 
 		flash.put( "messages", {
 			type   : "success",
