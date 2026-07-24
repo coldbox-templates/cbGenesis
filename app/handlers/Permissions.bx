@@ -20,44 +20,62 @@ class extends="BaseSecureHandler" {
 	}
 
 	function create( event, rc, prc ) {
+		arguments.permission = permissionService.new()
+		save( argumentCollection: arguments )
+		relocate( "permissions" )
+	}
+
+	function update( event, rc, prc ) {
+		try {
+			arguments.permission = permissionService.getOrFail( rc.permissionId )
+			save( argumentCollection: arguments )
+		} catch ( any error ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid permission ID specified. Please try again."
+			} )
+		}
+		relocate( "permissions" )
+	}
+
+	/**
+	 * Consolidated save permissions handler for both create and update actions.
+	 * Validates the CSRF token, populates the permission object, and attempts to save it.
+	 * Returns true on success, false on failure.
+	 */
+	private boolean function save( event, rc, prc, permission ) {
 		// --- CSRF Verification ---
 		if ( !csrfVerify( rc.csrf ?: "" ) ) {
 			flash.put( "messages", {
 				type   : "error",
-				message: "Invalid security token detected. Page refreshed, try again."
+				message: "Invalid security token detected."
 			} )
 			return relocate( "permissions" )
 		}
 
-		// --- Validate and Create Permission ---
-		prc.oPermission = permissionService
-			.new()
-			.populate( rc )
+		arguments.permission.populate( rc )
 
-		if( !prc.oPermission.isValid() ){
+		// --- Validation and Save ---
+		if ( !arguments.permission.isValid() ) {
 			flash.put( "messages", {
 				type   : "error",
-				message: "Permission could not be created. Please check the form for errors." &
-				prc.oPermission.getValidationResult().getAllErrors().toList( "<br>" )
+				message: "Permission could not be persisted. Please check the form for errors." &
+					arguments.permission.getValidationResult().getAllErrors().toList( "<br>" )
 			} )
 			return relocate( "permissions" )
 		}
 
-		// --- Attempt to Save Permission ---
-		try{
-			prc.oPermission.save()
-
+		try {
+			arguments.permission.save()
 			flash.put( "messages", {
 				type   : "success",
-				message: "Permission created successfully."
+				message: "Permission saved successfully."
 			} )
-
-			return relocate( "permissions" )
-		} catch( any error ){
-			log.error( "Error creating permission: #error.message#", error )
+		} catch ( any error ) {
+			log.error( "Error saving permission with ID [#arguments.permission.permissionId#]: #error.message#", error )
 			flash.put( "messages", {
 				type   : "error",
-				message: "Permission could not be created: #error.detail#"
+				message: "Permission could not be saved: #error.detail#"
 			} )
 		}
 	}
