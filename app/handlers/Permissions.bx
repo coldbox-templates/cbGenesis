@@ -7,6 +7,18 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="permissionService";
 
+	function preHandler( event, rc, prc ) {
+		// --- CSRF Verification ---
+		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid security token detected."
+			} )
+			return relocate( "permissions" )
+		}
+		super.preHandler( argumentCollection: arguments )
+	}
+
 	function index( event, rc, prc ) {
 		prc.title = "Permissions"
 		prc.permissionCatalog = permissionService.findAllWhere(
@@ -20,79 +32,66 @@ class extends="BaseSecureHandler" {
 	}
 
 	function create( event, rc, prc ) {
-		arguments.permission = permissionService.new()
-		save( argumentCollection: arguments )
-		relocate( "permissions" )
-	}
-
-	function update( event, rc, prc ) {
 		try {
-			arguments.permission = permissionService.getOrFail( rc.permissionId )
-			save( argumentCollection: arguments )
-		} catch ( any error ) {
-			flash.put( "messages", {
-				type   : "error",
-				message: "Invalid permission ID specified. Please try again."
-			} )
-		}
-		relocate( "permissions" )
-	}
-
-	/**
-	 * Consolidated save permissions handler for both create and update actions.
-	 * Validates the CSRF token, populates the permission object, and attempts to save it.
-	 * Returns true on success, false on failure.
-	 */
-	private boolean function save( event, rc, prc, permission ) {
-		// --- CSRF Verification ---
-		if ( !csrfVerify( rc.csrf ?: "" ) ) {
-			flash.put( "messages", {
-				type   : "error",
-				message: "Invalid security token detected."
-			} )
-			return relocate( "permissions" )
-		}
-
-		arguments.permission.populate( rc )
-
-		// --- Validation and Save ---
-		if ( !arguments.permission.isValid() ) {
-			flash.put( "messages", {
-				type   : "error",
-				message: "Permission could not be persisted. Please check the form for errors." &
-					arguments.permission.getValidationResult().getAllErrors().toList( "<br>" )
-			} )
-			return relocate( "permissions" )
-		}
-
-		try {
-			arguments.permission.save()
+			prc.permission = permissionService
+				.new()
+				.populate( rc )
+				.validateOrFail()
+				.save()
 			flash.put( "messages", {
 				type   : "success",
 				message: "Permission saved successfully."
 			} )
-		} catch ( any error ) {
-			log.error( "Error saving permission with ID [#arguments.permission.permissionId#]: #error.message#", error )
+		}
+		catch( ValidationException error ){
+			flash.put( "messages", {
+				type   : "error",
+				message: "Permission validation errors" &
+					prc.permission.getValidationResult().getAllErrors().toList( "<br>" )
+			} )
+		}
+		catch ( any error ) {
+			log.error( "Error saving permission with ID [#permission.permissionId#]: #error.message#", error )
 			flash.put( "messages", {
 				type   : "error",
 				message: "Permission could not be saved: #error.detail#"
 			} )
 		}
+		relocate( "permissions" )
+	}
+
+	@remote( "This action is submitted remotely via JavaScript" )
+	function update( event, rc, prc ) {
+		var results = {
+			error: false,
+			messages: "",
+			data: ""
+		}
+		try {
+			prc.permission = permissionService
+				.getOrFail( rc.permissionId ?: "" )
+				.populate( rc )
+				.validateOrFail()
+				.save()
+			results.messages = "Permission saved successfully."
+			results.data = prc.permission.getMemento()
+		}
+		catch( ValidationException error ){
+			results.error = true
+			results.messages = "Permission validation errors"
+			results.data = prc.permission.getValidationResult().getAllErrorsAsStruct()
+		}
+		catch ( any error ) {
+			log.error( "Error saving permission with ID [#permission.permissionId#]: #error.message#", error )
+			results.error = true
+			results.messages = "Permission could not be saved: #error.detail#"
+		}
+
+		return results
 	}
 
 	@remote( "This action is submitted remotely via JavaScript" )
 	function delete( event, rc, prc ) {
-
-		// --- CSRF Verification ---
-		if ( !csrfVerify( rc.csrf ?: "" ) ) {
-			event.setHTTPHeader( statusCode: 403 )
-			return {
-				error: true,
-				messages: "Invalid security token detected.",
-				data: ""
-			}
-		}
-
 		// --- Attempt to Delete Permission ---
 		try {
 			permissionService
