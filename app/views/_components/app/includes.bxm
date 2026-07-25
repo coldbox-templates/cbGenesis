@@ -10,7 +10,6 @@
 	Args:
 		title : string — optional page title (default: "App Name") --->
 <bx:param name="args.title" default="#( prc.keyExists( "title" ) ? prc.title & " — " : "" )##prc.settings.cbAppname#"/>
-
 <bx:output>
 <meta charset="utf-8">
 <!--- ViewPorts --->

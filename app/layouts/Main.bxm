@@ -12,7 +12,7 @@
 <body x-data x-init="$store.theme.init()">
 
     <div id="app">
-        #renderView()#
+        #view()#
     </div>
 
 </body>

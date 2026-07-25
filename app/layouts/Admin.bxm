@@ -1,12 +1,7 @@
 <bx:output>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="#prc.settings[ "cbDefaultTheme" ]#">
-<head>
-    #view(
-		view = "_components/app/includes",
-		args = { title: "Authentication" }
-	)#
-</head>
+<head>#view( "_components/app/includes" )#</head>
 
 <!--- x-init initializes Alpine stores:
       $store.theme.init()   — syncs Alpine's mode with the FOUC-prevention script
