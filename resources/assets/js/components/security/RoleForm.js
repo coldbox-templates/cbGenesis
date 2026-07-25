@@ -44,11 +44,11 @@ export function roleForm( roles = [], permissions = [], csrfToken = "" ) {
 		},
 
 		/**
-		 * Groups active permissions by their prefix and sorts the groups by label.
+		 * Groups active permissions by their prefix and sorts the permission groups by label.
 		 *
 		 * @returns {Array} Permission groups containing a key, label, and permissions list.
 		 */
-		get groups() {
+		get permissionGroups() {
 			const grouped = {};
 			this.permissions.forEach( ( permission ) => {
 				const key = permission.prefix || "general";
@@ -143,24 +143,51 @@ export function roleForm( roles = [], permissions = [], csrfToken = "" ) {
 		},
 
 		/**
+		 * Toggles all permissions in a group while preserving other selections.
+		 *
+		 * @param {Object} group Permission group to select.
+		 * @returns {void}
+		 */
+		togglePermissionGroup( group ) {
+			const groupPermissionIds = group.permissions.map( ( permission ) => permission.permissionId );
+			const allPermissionsSelected = groupPermissionIds.every( ( permissionId ) => this.hasPermission( permissionId ) );
+			if ( allPermissionsSelected ) {
+				this.form.permissionIds = this.form.permissionIds.filter( ( permissionId ) => !groupPermissionIds.includes( permissionId ) );
+				return;
+			}
+			this.form.permissionIds = [
+				...new Set( [
+					...this.form.permissionIds,
+					...groupPermissionIds,
+				] )
+			];
+		},
+
+		/**
 		 * Creates or updates the selected role through the remote handler action.
 		 *
 		 * @param {SubmitEvent} event Role form submit event.
 		 * @returns {Promise<void>}
 		 */
 		async saveRole( event ) {
+
+			// Prep Submission
 			event.preventDefault();
 			if ( this.submitting ) return;
 			this.submitting = true;
 			this.error = "";
+
+			// Prepare the submissions
 			const body = new URLSearchParams( {
 				csrf        : this.csrfToken,
 				role        : this.form.role,
 				description : this.form.description,
 			} );
-			this.form.permissionIds.forEach( ( permissionId ) => body.append( "permissionIds[]", permissionId ) );
+			this.form.permissionIds.forEach( ( permissionId ) => body.append( "permissions[]", permissionId ) );
 
 			try {
+				// POST => /roles = Create
+				// POST => /roles/{roleId} = Update
 				const endpoint = this.selectedRole ? `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }` : "/roles";
 				const response = await fetch( endpoint, {
 					method  : "POST",
@@ -168,10 +195,14 @@ export function roleForm( roles = [], permissions = [], csrfToken = "" ) {
 					body,
 				} );
 				const result = await response.json();
+				// Test response
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Role could not be saved." );
+				// If updating an existing role, replace it in the local catalog. If creating a new role, add it to the catalog and sort by name.
 				if ( this.selectedRole ) {
 					this.roles = this.roles.map( ( role ) => role.roleId === result.data.roleId ? result.data : role );
-				} else {
+				}
+				// If creating a new role, add it to the catalog and sort by name.
+				else {
 					this.roles = [
 						...this.roles,
 						result.data

@@ -41,7 +41,34 @@ class extends="BaseSecureHandler" {
 
 	@remote( "Create a role remotely via AJAX" )
 	function create( event, rc, prc ) {
-		return persistRole( event, rc, prc, roleService.new() )
+		var results = {
+			error: false,
+			messages: "",
+			data: ""
+		}
+		try {
+			prc.role = roleService
+				.new()
+				.populate( rc )
+				.validateOrFail()
+				.save()
+			results.messages = "Role saved successfully."
+			results.data = prc.role.getMemento()
+		}
+		catch( ValidationException error ){
+			results.error = true
+			results.messages = "Role validation errors"
+			results.data = prc.role.getValidationResult().getAllErrorsAsStruct()
+			event.setHTTPHeader( statusCode: 422 )
+		}
+		catch ( any error ) {
+			log.error( "Error saving role: #error.message#", error )
+			results.error = true
+			results.messages = "Role could not be saved: #error.message & error.detail#"
+			event.setHTTPHeader( statusCode: 500 )
+		}
+
+		return results
 	}
 
 	@remote( "Update a role remotely via AJAX" )
@@ -103,6 +130,8 @@ class extends="BaseSecureHandler" {
 			return failure( event, "User could not be unassigned: #error.message#", 422 )
 		}
 	}
+
+	/************************* PRIVATE METHODS ***********************************/
 
 	private struct function userResults( required struct results ) {
 		return { error: false, messages: "", data: arguments.results }

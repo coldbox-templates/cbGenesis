@@ -368,11 +368,25 @@
 	display: grid;
 	gap: 0.4rem;
 
-	h3 {
-		margin: 0;
+	&__toggle {
+		width: fit-content;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--app-text-muted);
+		font: inherit;
 		font-size: 0.75rem;
+		font-weight: 600;
 		letter-spacing: 0.06em;
+		margin: 0;
+		text-align: left;
 		text-transform: uppercase;
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible {
+			color: var(--app-text);
+		}
 	}
 }
 

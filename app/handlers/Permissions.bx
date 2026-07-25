@@ -80,11 +80,13 @@ class extends="BaseSecureHandler" {
 			results.error = true
 			results.messages = "Permission validation errors"
 			results.data = prc.permission.getValidationResult().getAllErrorsAsStruct()
+			event.setHTTPHeader( statusCode: 422 )
 		}
 		catch ( any error ) {
 			log.error( "Error saving permission with ID [#permission.permissionId#]: #error.message#", error )
 			results.error = true
-			results.messages = "Permission could not be saved: #error.detail#"
+			results.messages = "Permission could not be saved: #error.message & error.detail#"
+			event.setHTTPHeader( statusCode: 500 )
 		}
 
 		return results
@@ -92,25 +94,25 @@ class extends="BaseSecureHandler" {
 
 	@remote( "This action is submitted remotely via JavaScript" )
 	function delete( event, rc, prc ) {
+		var results = {
+			error: false,
+			messages: "",
+			data: ""
+		}
 		// --- Attempt to Delete Permission ---
 		try {
 			permissionService
 				.getOrFail( rc.permissionId ?: "" )
 				.delete()
-			return {
-				error: false,
-				messages: "Permission deleted successfully.",
-				data: ""
-			}
+			results.messages = "Permission deleted successfully."
 		} catch ( any error ) {
 			log.error( "Error deleting permission with ID [#rc.permissionId#]: #error.message#", error )
 			event.setHTTPHeader( statusCode: 500 )
-			return {
-				error: true,
-				messages: "Permission could not be deleted: #error.detail#",
-				data: ""
-			}
+			results.error = true
+			results.messages = "Permission could not be deleted: #error.message & error.detail#"
 		}
+
+		return results
 	}
 
 }
