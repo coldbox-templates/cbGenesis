@@ -62,11 +62,7 @@ class extends="BaseSecureHandler" {
 
 	@remote( "This action is submitted remotely via JavaScript" )
 	function update( event, rc, prc ) {
-		var results = {
-			error: false,
-			messages: "",
-			data: ""
-		}
+		var results = getApiResults()
 		try {
 			prc.permission = permissionService
 				.getOrFail( rc.permissionId ?: "" )
@@ -94,11 +90,7 @@ class extends="BaseSecureHandler" {
 
 	@remote( "This action is submitted remotely via JavaScript" )
 	function delete( event, rc, prc ) {
-		var results = {
-			error: false,
-			messages: "",
-			data: ""
-		}
+		var results = getApiResults()
 		// --- Attempt to Delete Permission ---
 		try {
 			permissionService

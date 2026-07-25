@@ -41,11 +41,7 @@ class extends="BaseSecureHandler" {
 
 	@remote( "Create a role remotely via AJAX" )
 	function create( event, rc, prc ) {
-		var results = {
-			error: false,
-			messages: "",
-			data: ""
-		}
+		var results = getApiResults()
 		try {
 			prc.role = roleService
 				.new()
@@ -73,21 +69,48 @@ class extends="BaseSecureHandler" {
 
 	@remote( "Update a role remotely via AJAX" )
 	function update( event, rc, prc ) {
+		var results = getApiResults()
 		try {
-			return persistRole( event, rc, prc, roleService.getOrFail( rc.roleId ?: "" ) )
-		} catch ( any error ) {
-			return failure( event, "Role could not be loaded: #error.message#", 404 )
+			prc.role = roleService
+				.getOrFail( rc.roleId ?: "" )
+				.populate( rc )
+				.validateOrFail()
+				.save()
+			results.messages = "Role saved successfully."
+			results.data = prc.role.getMemento()
 		}
+		catch( ValidationException error ){
+			results.error = true
+			results.messages = "Role validation errors"
+			results.data = prc.role.getValidationResult().getAllErrorsAsStruct()
+			event.setHTTPHeader( statusCode: 422 )
+		}
+		catch ( any error ) {
+			log.error( "Error saving role: #error.message#", error )
+			results.error = true
+			results.messages = "Role could not be saved: #error.message & error.detail#"
+			event.setHTTPHeader( statusCode: 500 )
+		}
+
+		return results
 	}
 
 	@remote( "Delete a role remotely via AJAX" )
 	function delete( event, rc, prc ) {
+		var results = getApiResults()
 		try {
-			roleService.deleteRole( roleService.getOrFail( rc.roleId ?: "" ) )
-			return { error: false, messages: "Role deleted successfully.", data: "" }
+			roleService
+				.getOrFail( rc.roleId ?: "" )
+				.delete()
+			results.messages = "Role deleted successfully."
 		} catch ( any error ) {
-			return failure( event, "Role could not be deleted: #error.message#", 500 )
+			log.error( "Error deleting role with ID [#rc.roleId#]: #error.message#", error )
+			event.setHTTPHeader( statusCode: 500 )
+			results.error = true
+			results.messages = "Role could not be deleted: #error.message & error.detail#"
 		}
+
+		return results
 	}
 
 	@remote( "List users assigned to a role" )
@@ -135,28 +158,6 @@ class extends="BaseSecureHandler" {
 
 	private struct function userResults( required struct results ) {
 		return { error: false, messages: "", data: arguments.results }
-	}
-
-	private struct function persistRole( required event, required rc, required prc, required role ) {
-		try {
-			var permissionIds = isArray( arguments.rc.permissionIds ?: [] ) ? arguments.rc.permissionIds : [ arguments.rc.permissionIds ]
-			var savedRole = roleService.saveRole(
-				role          = arguments.role,
-				roleName      = arguments.rc.role ?: "",
-				description   = arguments.rc.description ?: "",
-				permissionIds = permissionIds
-			)
-			return { error: false, messages: "Role saved successfully.", data: roleService.getManagementData( savedRole ) }
-		} catch ( ValidationException error ) {
-			arguments.event.setHTTPHeader( statusCode = 422 )
-			return {
-				error   : true,
-				messages: "Role validation errors",
-				data    : arguments.role.getValidationResult().getAllErrorsAsStruct()
-			}
-		} catch ( any error ) {
-			return failure( arguments.event, "Role could not be saved: #error.message#", 422 )
-		}
 	}
 
 	private struct function failure( required event, required string message, required numeric status ) {

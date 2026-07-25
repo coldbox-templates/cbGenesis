@@ -13,4 +13,21 @@ class extends="coldbox.system.EventHandler"{
 		event.setLayout( "Admin" )
 	}
 
+	/**
+	 * Returns a default API results structure for use in AJAX responses.
+	 *
+	 * @error A boolean indicating whether an error occurred (default: false).
+	 * @messages A string containing any messages related to the API response (default: "").
+	 * @data Any additional data to include in the API response (default: "").
+	 *
+	 * @return struct A structure containing default API results with keys: error, messages, and data.
+	 */
+	private struct function getApiResults( boolean error = false, string messages = "", any data = "" ) {
+		return {
+			error: arguments.error,
+			messages: arguments.messages,
+			data: arguments.data
+		}
+	}
+
 }
