@@ -30,6 +30,7 @@ import { forgotPasswordForm } from "./components/auth/ForgotPasswordForm.js";
 import { passwordResetForm } from "./components/auth/PasswordResetForm.js";
 import { settingsForm }   from "./components/settings/SettingsForm.js";
 import { permissionsForm } from "./components/security/permissionsForm.js";
+import { roleForm }         from "./components/security/RoleForm.js";
 Alpine.data( "passwordStrength", passwordStrength );
 Alpine.data( "authForm", authForm );
 Alpine.data( "registerForm", registerForm );
@@ -37,15 +38,18 @@ Alpine.data( "forgotPasswordForm", forgotPasswordForm );
 Alpine.data( "passwordResetForm", passwordResetForm );
 Alpine.data( "settingsForm", settingsForm );
 Alpine.data( "permissionsForm", permissionsForm );
+Alpine.data( "roleForm", roleForm );
 
 
 // UI Components
 import { messageBox }       from "./components/ui/MessageBox.js";
 import { passwordMeter }    from "./components/ui/PasswordMeter.js";
 import { switchComponent }  from "./components/ui/Switch.js";
+import { drawer }           from "./components/ui/Drawer.js";
 Alpine.data( "messageBox", messageBox );
 Alpine.data( "passwordMeter", passwordMeter );
 Alpine.data( "switchComponent", switchComponent );
+Alpine.data( "drawer", drawer );
 
 // ============================================================
 // Global Alpine Initialization

@@ -1,0 +1,46 @@
+<bx:param name="args.id" default="drawer"/>
+<bx:param name="args.title" default="Drawer"/>
+<bx:param name="args.openExpression" default="false"/>
+<bx:param name="args.closeExpression" default="closeDrawer()"/>
+<bx:param name="args.contentView" default=""/>
+<bx:param name="args.contentArgs" default="#{}#"/>
+
+<bx:output>
+<div id="#encodeForHTMLAttribute( args.id )#"
+	class="ui-drawer"
+	x-data="drawer()"
+	x-show="#args.openExpression#"
+	x-cloak
+	x-transition.opacity
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="#encodeForHTMLAttribute( args.id )#-title"
+	@click.self="#args.closeExpression#"
+	@keydown.escape.window="#args.closeExpression#">
+	<div
+		class="ui-drawer__panel"
+		x-transition:enter="ui-drawer__panel--transition"
+		x-transition:enter-start="ui-drawer__panel--from-right"
+		x-transition:enter-end="ui-drawer__panel--visible"
+		x-transition:leave="ui-drawer__panel--transition"
+		x-transition:leave-start="ui-drawer__panel--visible"
+		x-transition:leave-end="ui-drawer__panel--from-right">
+
+		<!--- Header --->
+		<div class="ui-drawer__header">
+			<h2 id="#encodeForHTMLAttribute( args.id )#-title">#encodeForHTML( args.title )#</h2>
+			<button
+				type="button"
+				class="ui-drawer__close"
+				@click="#args.closeExpression#"
+				aria-label="Close drawer">
+				<i class="ph-duotone ph-x" aria-hidden="true"></i>
+			</button>
+		</div>
+		<!--- Content --->
+		<bx:if len( trim( args.contentView ) )>
+			#view( view: args.contentView, args: args.contentArgs )#
+		</bx:if>
+	</div>
+</div>
+</bx:output>

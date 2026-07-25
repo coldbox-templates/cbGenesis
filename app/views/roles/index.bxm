@@ -1,52 +1,143 @@
 <bx:output>
-<div class="page-header admin-page-heading">
-	<div>
-		<p class="eyebrow">Security</p>
-		<h2 class="page-title">Role Management</h2>
-		<p class="page-subtitle">Define role bundles, then tune exact permissions in the matrix.</p>
-	</div>
-	<button class="btn btn-primary"><i class="ph-duotone ph-plus"></i> New Role</button>
-</div>
-
-<div class="roles-layout" x-data="{ selected: 1 }">
-	<section class="content-card role-list-panel">
-		<div class="content-card-header"><h3 class="content-card-title">Roles</h3><span class="count-pill">#arrayLen( prc.roles )#</span></div>
-		<div class="role-list">
-			<bx:loop array="#prc.roles#" item="role" index="roleIndex">
-				<button type="button" class="role-list-item" :class="selected === #roleIndex# ? 'active' : ''" @click="selected = #roleIndex#">
-					<strong>#encodeForHTML( role.role )#</strong>
-					<span>#encodeForHTML( role.users )# users &middot; #arrayLen( role.permissions )# permissions</span>
-					<bx:if condition = "#role.system#"><em>System</em></bx:if>
-				</button>
-			</bx:loop>
+<div
+	x-data='roleForm(
+		#forAttribute( prc.roles )#,
+		#forAttribute( prc.permissionCatalog )#,
+		"#csrfToken()#"
+	)'>
+	<div class="page-header admin-page-heading">
+		<div>
+			<p class="eyebrow">Security</p>
+			<h2 class="page-title">Roles</h2>
+			<p class="page-subtitle">Define role bundles and tune their exact permissions.</p>
 		</div>
-	</section>
+		<button
+			type="button"
+			class="btn btn-primary"
+			@click="openCreate()"><i
+			class="ph-duotone ph-plus"
+			aria-hidden="true"></i>
+			New
+			Role</button>
+	</div>
 
-	<section class="content-card permission-matrix-panel">
-		<bx:loop array="#prc.roles#" item="role" index="roleIndex">
-			<div x-show="selected === #roleIndex#" <bx:if condition = "#roleIndex != 1#">x-cloak</bx:if>>
-				<div class="content-card-header matrix-heading">
-					<div><h3 class="content-card-title">#encodeForHTML( role.role )# &mdash; Permission Matrix</h3><p>#encodeForHTML( role.description )#</p></div>
-					<bx:if condition = "#role.system#"><span class="chip chip-success">System Role</span></bx:if>
-				</div>
-				<div class="responsive-table-wrap">
-					<table class="admin-table permission-matrix">
-						<thead><tr><th>Module</th><bx:loop array="#prc.permissionActions#" item="action"><th>#encodeForHTML( action )#</th></bx:loop></tr></thead>
-						<tbody>
-							<bx:loop array="#prc.permissionModules#" item="moduleName">
-								<tr>
-									<td><strong>#encodeForHTML( moduleName )#</strong></td>
-									<bx:loop array="#prc.permissionActions#" item="action">
-										<td><label class="matrix-check"><input type="checkbox" <bx:if condition = "#role.permissions.findNoCase( moduleName & ":" & action ) ||
-	role.permissions.findNoCase( moduleName & ":*" )#">checked</bx:if> <bx:if condition = "#role.system#">disabled</bx:if>><span></span></label></td>
-									</bx:loop>
-								</tr>
-							</bx:loop>
-						</tbody>
-					</table>
+	<!--- Roles Layout --->
+	<div class="roles-layout">
+		<section class="content-card role-list-panel">
+
+			<!--- Roles Header --->
+			<div class="content-card-header">
+				<h3 class="content-card-title">Roles</h3>
+				<span class="count-pill" x-text="filteredCount"></span>
+			</div>
+
+			<!--- Roles Toolbar --->
+			<div class="catalog-toolbar">
+				<div class="admin-search wide">
+					<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+					<input x-model.debounce.150ms="query" type="search" placeholder="Filter roles..." aria-label="Filter roles">
 				</div>
 			</div>
-		</bx:loop>
-	</section>
+
+			<!--- Role Listing --->
+			<div class="role-list">
+				<template x-for="role in filteredRoles" :key="role.roleId">
+					<button
+						type="button"
+						class="role-list-item"
+						:class="selectedRole?.roleId === role.roleId ? 'active' : ''"
+						@click="selectRole( role )"
+						>
+						<strong x-text="role.role"></strong>
+						<span x-text="role.usersCount + ' users · ' + role.permissions.length + ' permissions'"></span>
+					</button>
+				</template>
+				<div
+					class="empty-state"
+					x-show="filteredRoles.length === 0"
+					x-cloak
+				>
+					<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+					<strong>No roles found</strong>
+				</div>
+			</div>
+		</section>
+
+		<!--- Role Details Section when Clicked --->
+		<section
+			class="content-card role-summary-panel"
+			x-show="selectedRole"
+			x-cloak
+		>
+			<div class="content-card-header matrix-heading">
+				<!--- Role Header Section --->
+				<div>
+					<h3 class="content-card-title" x-text="selectedRole?.role"></h3>
+					<p x-text="selectedRole?.description || 'No description provided'"></p>
+				</div>
+				<!--- Role Actions --->
+				<div class="page-actions">
+					<!--- Edit Role --->
+					<button
+						type="button"
+						class="btn btn-light"
+						@click="openEdit( selectedRole )"
+					>
+						<i class="ph-duotone ph-pencil-simple" aria-hidden="true"></i>
+						Edit
+					</button>
+					<!--- Delete Role --->
+					<button
+						type="button"
+						class="btn btn-light"
+						@click="confirmDelete( selectedRole )"
+					>
+						<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+						Delete
+					</button>
+				</div>
+			</div>
+
+			<!--- Role Stats --->
+			<div class="role-summary-stats">
+				<div>
+					<strong x-text="selectedRole?.usersCount"></strong>
+					<span>Assigned users</span>
+				</div>
+				<div>
+					<strong x-text="selectedRole?.permissions.length"></strong>
+					<span>Permissions</span>
+				</div>
+			</div>
+
+			<!--- Role Permissions --->
+			<div class="chip-row">
+				<template x-for="permission in ( selectedRole?.permissions || [] )" :key="permission.permissionId">
+					<span class="chip chip-info" x-text="permission.permission"></span>
+				</template>
+			</div>
+		</section>
+
+		<!--- User Edit Drawer --->
+		#view(
+			view: "_components/ui/drawer",
+			args: {
+				id: "role-editor-drawer",
+				title: "Role",
+				openExpression: "drawerOpen",
+				closeExpression: "closeDrawer()",
+				contentView: "roles/editForm"
+			}
+		)#
+
+		<!--- Cancel Delete Confirm --->
+		#view( view: "_components/ui/modal", args: {
+			id             : "role-delete-modal",
+			title          : "Delete Role",
+			openExpression : "confirmDeleteOpen",
+			closeExpression: "cancelDelete()",
+			contentView    : "roles/deleteConfirm"
+		} )#
+	</div>
 </div>
 </bx:output>

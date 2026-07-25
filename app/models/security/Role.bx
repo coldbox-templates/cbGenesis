@@ -101,7 +101,8 @@ class extends="app.models.BaseEntity" {
 		defaultIncludes: [
 			"role",
 			"description",
-			"permissions"
+			"permissions",
+			"usersCount"
 		],
 		defaultExcludes: [],
 		neverInclude   : []
@@ -118,6 +119,20 @@ class extends="app.models.BaseEntity" {
 		variables.users = []
 
 		return this;
+	}
+
+	/**
+	 * Check how many users are assigned to this role.
+	 *
+	 * @return The number of users assigned to this role.
+	 */
+	numeric function getUsersCount() {
+		if( !hasUsers() ) {
+			return 0
+		}
+		return newCriteria()
+			.eq( "roleId", getRoleId() )
+			.count( "users" )
 	}
 
 	/**

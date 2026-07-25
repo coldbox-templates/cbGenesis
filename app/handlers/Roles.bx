@@ -1,80 +1,137 @@
 /**
- * Mock role management handler.
+ * Role management handler.
  */
 @secured
 class extends="BaseSecureHandler" {
 
-	function index( event, rc, prc ) {
-		prc.title = "Roles";
-		prc.permissionModules = [
-			"Users",
-			"Roles",
-			"Permissions",
-			"Settings",
-			"Audit Log",
-			"API Tokens"
-		];
-		prc.permissionActions = [ "read", "write", "delete", "admin"];
-		prc.roles = [
-			{
-				"roleId"     : "role-super-admin",
-				"role"       : "Super Admin",
-				"description": "Full system access. Cannot be modified.",
-				"users"      : 1,
-				"system"     : true,
-				"permissions": [
-					"Users:*",
-					"Roles:*",
-					"Permissions:*",
-					"Settings:*",
-					"Audit Log:read",
-					"Audit Log:admin",
-					"API Tokens:*"
-				]
-			},
-			{
-				"roleId"     : "role-admin",
-				"role"       : "Admin",
-				"description": "Operational administrator for day-to-day access work.",
-				"users"      : 3,
-				"system"     : false,
-				"permissions": [
-					"Users:read",
-					"Users:write",
-					"Roles:read",
-					"Permissions:read",
-					"Settings:read",
-					"Audit Log:read"
-				]
-			},
-			{
-				"roleId"     : "role-developer",
-				"role"       : "Developer",
-				"description": "Technical access to API tokens and deploy-adjacent diagnostics.",
-				"users"      : 12,
-				"system"     : false,
-				"permissions": [ "Users:read", "API Tokens:read", "API Tokens:write", "Audit Log:read"]
-			},
-			{
-				"roleId"     : "role-viewer",
-				"role"       : "Viewer",
-				"description": "Read-only access to common administration screens.",
-				"users"      : 203,
-				"system"     : false,
-				"permissions": [ "Users:read", "Roles:read", "Settings:read"]
-			}
-		];
+	@inject
+	property name="roleService";
 
-		event.setLayout( "Admin" );
-		event.setView( "roles/index" );
+	@inject
+	property name="permissionService";
+
+	@inject
+	property name="userService";
+
+	function preHandler( event, rc, prc ) {
+		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
+			return renderData(
+				data   = { error: true, messages: "Invalid security token detected.", data: "" },
+				status = 403
+			)
+		}
+		super.preHandler( argumentCollection: arguments )
 	}
 
-	private struct function getMockAuthUser() {
-		return {
-			"name"    : "Luis Majano",
-			"email"   : "luis@ortussolutions.com",
-			"role"    : "Super Admin",
-			"initials": "LM"
-		};
+	function index( event, rc, prc ) {
+		prc.title = "Roles"
+		// Get all permissions and roles for the management view
+		prc.permissionCatalog = permissionService.findAllWhere(
+			criteria: { isActive: true },
+			sortOrder: "permission"
+		).map( .getMemento )
+
+		prc.roles = roleService.findAllWhere(
+			criteria: { isActive: true },
+			sortOrder: "role"
+		).map( .getMemento )
+
+		event.setView( "roles/index" )
+	}
+
+	@remote( "Create a role remotely via AJAX" )
+	function create( event, rc, prc ) {
+		return persistRole( event, rc, prc, roleService.new() )
+	}
+
+	@remote( "Update a role remotely via AJAX" )
+	function update( event, rc, prc ) {
+		try {
+			return persistRole( event, rc, prc, roleService.getOrFail( rc.roleId ?: "" ) )
+		} catch ( any error ) {
+			return failure( event, "Role could not be loaded: #error.message#", 404 )
+		}
+	}
+
+	@remote( "Delete a role remotely via AJAX" )
+	function delete( event, rc, prc ) {
+		try {
+			roleService.deleteRole( roleService.getOrFail( rc.roleId ?: "" ) )
+			return { error: false, messages: "Role deleted successfully.", data: "" }
+		} catch ( any error ) {
+			return failure( event, "Role could not be deleted: #error.message#", 500 )
+		}
+	}
+
+	@remote( "List users assigned to a role" )
+	function users( event, rc, prc ) {
+		return userResults( userService.searchSummaries(
+			searchTerm = rc.search ?: "",
+			offset     = rc.offset ?: 0,
+			max        = rc.max ?: 25,
+			roleId     = rc.roleId ?: ""
+		) )
+	}
+
+	@remote( "List users available for a role" )
+	function availableUsers( event, rc, prc ) {
+		return userResults( userService.searchSummaries(
+			searchTerm  = rc.search ?: "",
+			offset      = rc.offset ?: 0,
+			max         = rc.max ?: 25,
+			roleId      = rc.roleId ?: "",
+			excludeRole = true
+		) )
+	}
+
+	@remote( "Assign a user to a role" )
+	function addUser( event, rc, prc ) {
+		try {
+			var role = roleService.getOrFail( rc.roleId ?: "" )
+			return { error: false, messages: "User assigned successfully.", data: userService.addRole( rc.userId ?: "", role ) }
+		} catch ( any error ) {
+			return failure( event, "User could not be assigned: #error.message#", 422 )
+		}
+	}
+
+	@remote( "Remove a user from a role" )
+	function removeUser( event, rc, prc ) {
+		try {
+			var role = roleService.getOrFail( rc.roleId ?: "" )
+			return { error: false, messages: "User unassigned successfully.", data: userService.removeRole( rc.userId ?: "", role ) }
+		} catch ( any error ) {
+			return failure( event, "User could not be unassigned: #error.message#", 422 )
+		}
+	}
+
+	private struct function userResults( required struct results ) {
+		return { error: false, messages: "", data: arguments.results }
+	}
+
+	private struct function persistRole( required event, required rc, required prc, required role ) {
+		try {
+			var permissionIds = isArray( arguments.rc.permissionIds ?: [] ) ? arguments.rc.permissionIds : [ arguments.rc.permissionIds ]
+			var savedRole = roleService.saveRole(
+				role          = arguments.role,
+				roleName      = arguments.rc.role ?: "",
+				description   = arguments.rc.description ?: "",
+				permissionIds = permissionIds
+			)
+			return { error: false, messages: "Role saved successfully.", data: roleService.getManagementData( savedRole ) }
+		} catch ( ValidationException error ) {
+			arguments.event.setHTTPHeader( statusCode = 422 )
+			return {
+				error   : true,
+				messages: "Role validation errors",
+				data    : arguments.role.getValidationResult().getAllErrorsAsStruct()
+			}
+		} catch ( any error ) {
+			return failure( arguments.event, "Role could not be saved: #error.message#", 422 )
+		}
+	}
+
+	private struct function failure( required event, required string message, required numeric status ) {
+		arguments.event.setHTTPHeader( statusCode = arguments.status )
+		return { error: true, messages: arguments.message, data: "" }
 	}
 }

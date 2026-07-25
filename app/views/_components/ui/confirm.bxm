@@ -1,0 +1,91 @@
+<!--- Confirm Component
+	Renders a configurable Alpine-powered confirmation dialog without requiring
+	a separate content view.
+
+	Usage:
+		#view( view: "_components/ui/confirm", args: {
+			id                 : "user-delete-confirm",
+			title              : "Delete User",
+			message            : "Are you sure you want to delete this user?",
+			openExpression     : "confirmOpen",
+			closeExpression    : "cancelConfirm()",
+			confirmExpression  : "deleteUser()",
+			confirmLabel       : "Delete",
+			confirmClass       : "btn-danger",
+			confirmIcon        : "ph-trash"
+		} )#
+
+	Args:
+		id                : string — unique dialog id                    (default: "confirm")
+		title             : string — visible dialog title                 (default: "Confirm Action")
+		message           : string — visible confirmation message         (default: "Are you sure you want to continue?")
+		icon              : string — Phosphor icon class                   (default: "ph-warning-circle")
+		openExpression    : string — Alpine expression controlling state  (default: "false")
+		closeExpression   : string — Alpine expression used to cancel     (default: "closeConfirm()")
+		confirmExpression : string — Alpine expression used to confirm    (default: "confirmAction()")
+		cancelLabel       : string — cancel button label                  (default: "Cancel")
+		confirmLabel      : string — confirm button label                 (default: "Confirm")
+		confirmClass      : string — button modifier class                (default: "btn-primary")
+		confirmIcon       : string — optional confirm button icon class   (default: "")
+		disabledExpression: string — Alpine expression disabling buttons  (default: "false") --->
+<bx:param name="args.id" default="confirm"/>
+<bx:param name="args.title" default="Confirm Action"/>
+<bx:param name="args.message" default="Are you sure you want to continue?"/>
+<bx:param name="args.icon" default="ph-warning-circle"/>
+<bx:param name="args.openExpression" default="false"/>
+<bx:param name="args.closeExpression" default="closeConfirm()"/>
+<bx:param name="args.confirmExpression" default="confirmAction()"/>
+<bx:param name="args.cancelLabel" default="Cancel"/>
+<bx:param name="args.confirmLabel" default="Confirm"/>
+<bx:param name="args.confirmClass" default="btn-primary"/>
+<bx:param name="args.confirmIcon" default=""/>
+<bx:param name="args.disabledExpression" default="false"/>
+
+<bx:output>
+<div id="#encodeForHTMLAttribute( args.id )#"
+	class="ui-modal"
+	x-show="#args.openExpression#"
+	x-cloak
+	x-transition.opacity
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="#encodeForHTMLAttribute( args.id )#-title"
+	aria-describedby="#encodeForHTMLAttribute( args.id )#-message"
+	@click.self="#args.closeExpression#"
+	@keydown.escape.window="#args.closeExpression#">
+	<div class="ui-modal__dialog" x-transition.scale.95>
+		<div class="ui-modal__header">
+			<h2 id="#encodeForHTMLAttribute( args.id )#-title">#encodeForHTML( args.title )#</h2>
+			<button
+				type="button"
+				class="ui-modal__close"
+				@click="#args.closeExpression#"
+				:disabled="#args.disabledExpression#"
+				aria-label="Close dialog">
+				<i class="ph-duotone ph-x" aria-hidden="true"></i>
+			</button>
+		</div>
+		<div class="ui-modal__body delete-confirmation">
+			<i class="ph-duotone #encodeForHTMLAttribute( args.icon )#" aria-hidden="true"></i>
+			<p id="#encodeForHTMLAttribute( args.id )#-message">#encodeForHTML( args.message )#</p>
+		</div>
+		<div class="ui-modal__footer">
+			<button
+				type="button"
+				class="btn btn-secondary"
+				@click="#args.closeExpression#"
+				:disabled="#args.disabledExpression#">#encodeForHTML( args.cancelLabel )#</button>
+			<button
+				type="button"
+				class="btn #encodeForHTMLAttribute( args.confirmClass )#"
+				@click.prevent="#args.confirmExpression#"
+				:disabled="#args.disabledExpression#">
+				<bx:if len( trim( args.confirmIcon ) )>
+					<i class="ph-duotone #encodeForHTMLAttribute( args.confirmIcon )#" aria-hidden="true"></i>
+				</bx:if>
+				#encodeForHTML( args.confirmLabel )#
+			</button>
+		</div>
+	</div>
+</div>
+</bx:output>

@@ -1,0 +1,38 @@
+<bx:output>
+<form class="role-editor" @submit="saveRole( $event )">
+	<div class="drawer-form-body">
+		<div class="form-field">
+			<label for="role-name">Role name</label>
+			<input id="role-name" type="text" x-model.trim="form.role" required maxlength="255" autocomplete="off">
+		</div>
+		<div class="form-field">
+			<label for="role-description">Description</label>
+			<textarea id="role-description" rows="3" x-model.trim="form.description"></textarea>
+		</div>
+		<div class="drawer-section-heading">
+			<div><strong>Permissions</strong><small x-text="form.permissionIds.length + ' selected'"></small></div>
+		</div>
+		<div class="role-permission-groups">
+			<template x-for="group in groups" :key="group.key">
+				<section class="role-permission-group">
+					<h3 x-text="group.label"></h3>
+					<template x-for="permission in group.permissions" :key="permission.permissionId">
+						<label class="permission-choice">
+							<input type="checkbox" :checked="hasPermission( permission.permissionId )" @change="togglePermission( permission.permissionId )">
+							<span><strong x-text="permission.slug || permission.permission"></strong><small x-text="permission.description || 'No description provided'"></small></span>
+						</label>
+					</template>
+				</section>
+			</template>
+		</div>
+		<p class="form-error" x-show="error" x-text="error" x-cloak></p>
+	</div>
+	<div class="drawer-form-actions">
+		<button type="button" class="btn btn-light" @click="closeDrawer()">Cancel</button>
+		<button type="submit" class="btn btn-primary" :disabled="submitting">
+			<i class="ph-duotone ph-floppy-disk" aria-hidden="true"></i>
+			<span x-text="submitting ? 'Saving...' : 'Save role'"></span>
+		</button>
+	</div>
+</form>
+</bx:output>

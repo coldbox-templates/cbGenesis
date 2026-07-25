@@ -5,11 +5,71 @@
 @threadSafe
 class extends="app.models.BaseService" {
 
+	@inject( "provider:UserService" )
+	property name="userService";
+
 	/**
 	 * Constructor
 	 */
 	function init() {
 		super.init( entityName: "Role" )
+		return this
+	}
+
+	Role function saveRole(
+		required Role role,
+		required string roleName,
+		string description = "",
+		array permissionIds = []
+	) {
+		arguments.role
+			.setRole( trim( arguments.roleName ) )
+			.setDescription( trim( arguments.description ) )
+			.setPermissions( resolvePermissions( arguments.permissionIds ) )
+			.validateOrFail()
+
+		return save( arguments.role )
+	}
+
+	array function resolvePermissions( array permissionIds = [] ) {
+		var requestedIds = arguments.permissionIds
+			.filter( ( permissionId ) => isSimpleValue( permissionId ) && len( trim( permissionId ) ) )
+			.map( ( permissionId ) => trim( permissionId ) )
+			.toSet()
+			.toArray()
+
+		if ( requestedIds.isEmpty() ) {
+			return []
+		}
+
+		var permissions = findAllWhere(
+			criteria: { isActive: true },
+			sortOrder: "permission"
+		).filter( ( permission ) => requestedIds.contains( permission.getPermissionId() ) )
+
+		if ( permissions.len() != requestedIds.len() ) {
+			throw(
+				type    = "InvalidPermissionSelection",
+				message = "One or more selected permissions are invalid or inactive."
+			)
+		}
+
+		return permissions
+	}
+
+	/**
+	 * Deletes a role and removes it from all users.
+	 *
+	 * @role The role to be deleted.
+	 *
+	 * @return RoleService The current instance of the RoleService for method chaining.
+	 */
+	RoleService function deleteRole( required Role role ) {
+		transaction {
+			userService.removeRoleFromUsers( arguments.role )
+			arguments.role.clearUsers().clearPermissions()
+			super.delete( arguments.role )
+		}
 		return this
 	}
 
