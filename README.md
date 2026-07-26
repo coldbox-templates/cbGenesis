@@ -1,6 +1,6 @@
 # CB Genesis
 
-A production-ready ColdBox starter template for [BoxLang](https://boxlang.io) — the modern, dynamic JVM language. Ships with authentication, role-based permissions, API tokens, dark mode, and an Alpine-powered admin panel. Think Laravel starter kits, but for the JVM.
+A production-ready ColdBox starter template for [BoxLang](https://boxlang.io) — the modern, dynamic JVM language. Ships with authentication, role-based permissions, API tokens, dark mode, and an Alpine-powered admin panel.
 
 ---
 
