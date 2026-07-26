@@ -33,7 +33,7 @@ A production-ready ColdBox starter template for [BoxLang](https://boxlang.io) �
 | **CLI / Server** | CommandBox + BoxLang MiniServer |
 | **Dependency Injection** | WireBox |
 | **Security** | cbsecurity + cbauth (session-based + JWT) |
-| **Database** | MySQL via Hibernate ORM (cborm) |
+| **Database** | MySQL (default) via Hibernate ORM (cborm) — any JDBC-compatible DB supported |
 | **Query Builder** | qb (fluent SQL) |
 | **Migrations** | cfmigrations |
 | **Validation** | cbvalidation |
@@ -110,7 +110,7 @@ sequenceDiagram
 
 - **Java 21+** (JDK or JRE)
 - **Node.js 18+** (for Vite frontend)
-- **MySQL 8+** (or compatible)
+- **MySQL 8+** (default — any JDBC-compatible database works)
 - **macOS**, **Linux**, or **Windows**
 
 ---
@@ -173,7 +173,33 @@ box install
 npm install
 ```
 
-### 4. Configure Environment
+### 4. Install Database JDBC Driver
+
+The template ships with the MySQL JDBC driver (`bx-mysql`). For other databases, install the matching BX JDBC module via CommandBox:
+
+```bash
+# PostgreSQL
+box install bx-postgresql
+
+# Microsoft SQL Server
+box install bx-mssql
+
+# H2 (embedded, dev only)
+box install bx-h2
+
+# Derby (embedded, dev only)
+box install bx-derby
+
+# Oracle
+box install bx-oracle
+
+# SQLite
+box install bx-sqlite
+```
+
+> The `bx-mysql` module is pre-configured in `server.json` under `onServerInitialInstall`. To switch databases, update both `.env` (connection string) and `public/Application.bx` (datasource config). See the [BoxLang JDBC docs](https://boxlang.ortusbooks.com/boxlang-framework/jdbc) for all supported drivers and connection strings.
+
+### 5. Configure Environment
 
 ```bash
 # Copy environment file
@@ -183,7 +209,7 @@ cp .env.example .env
 # DB_HOST, DB_PORT, DB_DATABASE, DB_USER, DB_PASSWORD
 ```
 
-### 5. Run Migrations & Seed
+### 6. Run Migrations & Seed
 
 ```bash
 # Create database tables
@@ -199,7 +225,7 @@ Default admin credentials:
 
 > Change this immediately after logging in.
 
-### 6. Start the Server
+### 7. Start the Server
 
 ```bash
 box server start
@@ -207,13 +233,13 @@ box server start
 
 This starts the BoxLang server with CommandBox. The first time, it installs BoxLang modules specified in `server.json` (esapi, password-encrypt, mail, orm, mysql).
 
-### 7. Start Vite Dev Server (in another terminal)
+### 8. Start Vite Dev Server (in another terminal)
 
 ```bash
 npm run dev
 ```
 
-### 8. Open the App
+### 9. Open the App
 
 Visit **http://127.0.0.1:8080** — you'll see the login page.
 
