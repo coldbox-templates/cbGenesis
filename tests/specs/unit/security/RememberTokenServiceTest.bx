@@ -47,6 +47,17 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( () => rememberTokenService.validateToken( secondToken.rawToken ) ).toThrow( "RememberToken.Invalid" )
 			} )
 
+			it( "only revokes remembered browsers for the requested user", () => {
+				var firstUser = createVerifiedUser()
+				var secondUser = createVerifiedUser()
+				var firstToken = rememberTokenService.createToken( user: firstUser, days: 14 )
+				var secondToken = rememberTokenService.createToken( user: secondUser, days: 14 )
+
+				expect( rememberTokenService.revokeTokensForUser( firstUser.getId() ) ).toBe( 1 )
+				expect( () => rememberTokenService.validateToken( firstToken.rawToken ) ).toThrow( "RememberToken.Invalid" )
+				expect( rememberTokenService.validateToken( secondToken.rawToken ).getUser().getId() ).toBe( secondUser.getId() )
+			} )
+
 			it( "purges expired tokens", () => {
 				var user = createVerifiedUser()
 				var expiredToken = rememberTokenService.new( {

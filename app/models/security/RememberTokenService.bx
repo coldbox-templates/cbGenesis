@@ -96,6 +96,24 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
+	 * Revoke all active remembered-browser tokens for one user.
+	 *
+	 * @userId The user identifier whose remembered logins should be revoked.
+	 *
+	 * @return The number of tokens revoked.
+	 */
+	numeric function revokeTokensForUser( required userId ) {
+		var result = variables.qb
+			.table( "user_remember_tokens" )
+			.where( "FK_userId", "=", arguments.userId )
+			.where( "isActive", "=", true )
+			.update( { isActive: false } )
+		ormClearSession()
+
+		return result?.result?.recordcount ?: 0
+	}
+
+	/**
 	 * Purge all expired remembered-browser tokens.
 	 *
 	 * @return The number of tokens purged.
