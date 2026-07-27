@@ -4,21 +4,24 @@
 	<div>
 		<p class="eyebrow">My Profile</p>
 		<h2 class="page-title">Account Settings</h2>
-		<p class="page-subtitle">Mock profile settings, auth sessions, and API tokens.</p>
+		<p class="page-subtitle">My profile information and preferences.</p>
 	</div>
 </div>
 
-<div
-	class="profile-layout"
-	x-data="{ tab: 'profile' }"
->
+<div class="profile-layout">
 
-	<!--- Navigation --->
-	<div class="segmented-control mb-3">
-		<button type="button" :class="tab === 'profile' ? 'active' : ''" @click="tab = 'profile'">Profile</button>
-		<button type="button" :class="tab === 'password' ? 'active' : ''" @click="tab = 'password'">Password</button>
-		<button type="button" :class="tab === 'tokens' ? 'active' : ''" @click="tab = 'tokens'">API Tokens</button>
-	</div>
+	<!--- Flash Messages --->
+	<bx:if flash.exists( "messages" )>
+		#view(
+			view = "_components/ui/messagebox",
+			args = {
+				type       : flash.get( "messages" ).type ?: "info",
+				message    : flash.get( "messages" ).message ?: "",
+				dismissible: true,
+				classes    : "mb-4"
+			}
+		)#
+	</bx:if>
 
 	<!--- Profile Hero --->
 	<section class="content-card profile-hero">
@@ -30,88 +33,64 @@
 	</section>
 
 	<!--- Profile Form --->
-	<section class="content-card form-card" x-show="tab === 'profile'">
-		<div class="content-card-header"><h3 class="content-card-title">Personal Information</h3></div>
+	<section class="content-card form-card">
+
+		<!--- Personal Information Header --->
+		<div class="content-card-header">
+			<h3 class="content-card-title">Personal Information</h3>
+		</div>
+
+		<!--- Profile Form --->
 		<form method="post" action="#event.buildLink( "profile/update" )#">
-			<input type="hidden" name="_token" value="#csrfToken()#">
-			<div class="form-grid">
-				<label for="firstName">First Name<input id="firstName" name="firstName" type="text" value="#encodeForHTMLAttribute( prc.profile.firstName )#" autocomplete="given-name"></label>
-				<label for="lastName">Last Name<input id="lastName" name="lastName" type="text" value="#encodeForHTMLAttribute( prc.profile.lastName )#" autocomplete="family-name"></label>
-				<label class="span-2" for="email">Email Address<input id="email" name="email" type="email" value="#encodeForHTMLAttribute( prc.profile.email )#" autocomplete="email"></label>
-				<label class="span-2" for="bio">Bio<textarea id="bio" name="bio" rows="4">#encodeForHTML( prc.profile.bio )#</textarea></label>
-			</div>
-			<div class="form-actions">
-				<button type="submit" class="btn btn-primary"><i class="ph-duotone ph-check"></i> Save Profile</button>
-			</div>
-		</form>
-	</section>
+			<!--- CSRF Token --->
+			#csrfField()#
 
-	<!--- Password & Two-Factor Auth --->
-	<section class="content-card form-card" x-show="tab === 'password'" x-cloak>
-		<div class="content-card-header"><h3 class="content-card-title">Change Password</h3></div>
-		<form method="post" action="#event.buildLink( "profile/password" )#" x-data="authForm" @submit="onSubmit" @password-changed.window="passwordRef = $event.detail.value; checkConfirm()" novalidate>
-			<input type="hidden" name="_token" value="#csrfToken()#">
+			<!--- Profile Form --->
 			<div class="form-grid">
-
-				<label class="span-2" for="currentPassword">
-					Current Password
+				<label for="firstName">
+					First Name
 					<input
-						id="currentPassword"
-						name="currentPassword"
-						type="password"
-						autocomplete="current-password">
+						id="firstName"
+						name="firstName"
+						type="text"
+						value="#encodeForHTMLAttribute( prc.profile.firstName )#"
+						autocomplete="given-name">
 				</label>
-
-				#view(
-	view = "_components/ui/passwordMeter",
-	args = {
-		id     : "newPassword",
-		name   : "newPassword",
-		label  : "New Password",
-		classes: "password-field span-2"
-	}
-)#
-
-				<div class="password-field span-2">
-					<label for="passwordConfirm">Confirm Password</label>
-					<div class="input-group">
-						<input :type="showConfirm ? 'text' : 'password'"
-							   id="passwordConfirm"
-							   name="passwordConfirm"
-							   x-model="confirmValue"
-							   @input="checkConfirm"
-							   @blur="checkConfirm"
-							   autocomplete="new-password"
-							   required>
-						<button class="btn btn-outline-secondary"
-								type="button"
-								@click="showConfirm = !showConfirm"
-								:aria-label="showConfirm ? 'Hide password' : 'Show password'">
-							<i class="ph-duotone"
-							   :class="showConfirm ? 'ph-eye-slash' : 'ph-eye'"
-							   aria-hidden="true"></i>
-						</button>
-					</div>
-					<div class="invalid-feedback d-block" x-show="confirmError" x-cloak x-text="confirmError" role="alert"></div>
-				</div>
+				<label for="lastName">
+					Last Name
+					<input
+						id="lastName"
+						name="lastName"
+						type="text"
+						value="#encodeForHTMLAttribute( prc.profile.lastName )#"
+						autocomplete="family-name">
+				</label>
+				<label class="span-2" for="email">
+					Email Address
+					<input
+						id="email"
+						name="email"
+						type="email"
+						value="#encodeForHTMLAttribute( prc.profile.email )#"
+						autocomplete="email">
+				</label>
+				<label class="span-2" for="biography">
+					Biography
+					<textarea
+						id="biography"
+						name="biography"
+						rows="4">#encodeForHTML(
+						prc.profile.getBiography()
+						)#</textarea>
+				</label>
 			</div>
+
+			<!--- Form Actions --->
 			<div class="form-actions">
-				<button type="submit" class="btn btn-primary" :disabled="loading"><i class="ph-duotone ph-lock-key"></i> Update Password</button>
+				<button type="submit" class="btn btn-primary">
+					<i class="ph-duotone ph-check"></i> Save Profile
+				</button>
 			</div>
-		</form>
-	</section>
-
-	<!--- API Tokens --->
-	<section class="content-card form-card" x-show="tab === 'tokens'" x-cloak>
-		<form method="post" action="#event.buildLink( "profile/tokens" )#">
-			<input type="hidden" name="_token" value="#csrfToken()#">
-			<div class="content-card-header"><h3 class="content-card-title">API Tokens</h3><button type="submit" class="btn btn-sm btn-outline-secondary">Create Token</button></div>
-			<ul class="permission-list">
-				<bx:loop
-	array="#prc.profile.tokens#"
-	item="token"
-><li><span class="permission-icon"><i class="ph-duotone ph-code"></i></span><span><strong>#encodeForHTML( token.name )#</strong><small>#encodeForHTML( token.scope )# &middot; Last used #encodeForHTML( token.lastUsed )#</small></span><button type="button" class="btn btn-sm btn-outline-danger">Delete</button></li></bx:loop>
-			</ul>
 		</form>
 	</section>
 </div>
