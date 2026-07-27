@@ -9,7 +9,7 @@
  * @param {string} csrfToken CSRF token for form submissions.
  * @returns {Object} Alpine role form state, computed values, and actions.
  */
-export function roleForm( roles = [], permissions = [], csrfToken = "" ) {
+export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 	return {
 		roles,
 		permissions,
@@ -187,10 +187,10 @@ export function roleForm( roles = [], permissions = [], csrfToken = "" ) {
 
 			try {
 				// POST => /roles = Create
-				// POST => /roles/{roleId} = Update
+				// PUT => /roles/{roleId} = Update
 				const endpoint = this.selectedRole ? `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }` : "/roles";
 				const response = await fetch( endpoint, {
-					method  : "POST",
+					method  : this.selectedRole ? "PUT" : "POST",
 					headers : { "Content-Type": "application/x-www-form-urlencoded" },
 					body,
 				} );
@@ -200,6 +200,7 @@ export function roleForm( roles = [], permissions = [], csrfToken = "" ) {
 				// If updating an existing role, replace it in the local catalog. If creating a new role, add it to the catalog and sort by name.
 				if ( this.selectedRole ) {
 					this.roles = this.roles.map( ( role ) => role.roleId === result.data.roleId ? result.data : role );
+					this.selectedRole = result.data;
 				}
 				// If creating a new role, add it to the catalog and sort by name.
 				else {

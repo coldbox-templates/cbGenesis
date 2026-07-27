@@ -30,7 +30,8 @@
         "cbmailservices":"^2",
         "cbsecurity":"^3",
         "vite-helpers":"^2",
-        "cborm":"be"
+        "cborm":"be",
+        "route-visualizer":"^2.2.0+2"
     },
     "installPaths":{
         "coldbox":"lib/coldbox/",
@@ -39,7 +40,8 @@
         "cbmailservices":"lib/modules/cbmailservices/",
         "cbsecurity":"lib/modules/cbsecurity/",
         "vite-helpers":"lib/modules/vite-helpers/",
-        "cborm":"lib/modules/cborm/"
+        "cborm":"lib/modules/cborm/",
+        "route-visualizer":"lib/modules/route-visualizer/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",

@@ -30,7 +30,7 @@ import { forgotPasswordForm } from "./components/auth/ForgotPasswordForm.js";
 import { passwordResetForm } from "./components/auth/PasswordResetForm.js";
 import { settingsForm }   from "./components/settings/SettingsForm.js";
 import { permissionsForm } from "./components/security/permissionsForm.js";
-import { roleForm }         from "./components/security/RoleForm.js";
+import { rolesForm }         from "./components/security/RolesForm.js";
 Alpine.data( "passwordStrength", passwordStrength );
 Alpine.data( "authForm", authForm );
 Alpine.data( "registerForm", registerForm );
@@ -38,7 +38,7 @@ Alpine.data( "forgotPasswordForm", forgotPasswordForm );
 Alpine.data( "passwordResetForm", passwordResetForm );
 Alpine.data( "settingsForm", settingsForm );
 Alpine.data( "permissionsForm", permissionsForm );
-Alpine.data( "roleForm", roleForm );
+Alpine.data( "rolesForm", rolesForm );
 
 
 // UI Components
