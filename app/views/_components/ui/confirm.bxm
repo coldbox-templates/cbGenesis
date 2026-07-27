@@ -44,6 +44,7 @@
 <bx:output>
 <div id="#encodeForHTMLAttribute( args.id )#"
 	class="ui-modal"
+	x-data="{ submitting: false }"
 	x-show="#args.openExpression#"
 	x-cloak
 	x-transition.opacity
@@ -51,16 +52,16 @@
 	aria-modal="true"
 	aria-labelledby="#encodeForHTMLAttribute( args.id )#-title"
 	aria-describedby="#encodeForHTMLAttribute( args.id )#-message"
-	@click.self="#args.closeExpression#"
-	@keydown.escape.window="#args.closeExpression#">
+	@click.self="#args.closeExpression#; submitting = false"
+	@keydown.escape.window="#args.closeExpression#; submitting = false">
 	<div class="ui-modal__dialog" x-transition.scale.95>
 		<div class="ui-modal__header">
 			<h2 id="#encodeForHTMLAttribute( args.id )#-title">#encodeForHTML( args.title )#</h2>
 			<button
 				type="button"
 				class="ui-modal__close"
-				@click="#args.closeExpression#"
-				:disabled="#args.disabledExpression#"
+				@click="#args.closeExpression#; submitting = false"
+				:disabled="#args.disabledExpression# || submitting"
 				aria-label="Close dialog">
 				<i class="ph-duotone ph-x" aria-hidden="true"></i>
 			</button>
@@ -73,17 +74,24 @@
 			<button
 				type="button"
 				class="btn btn-secondary"
-				@click="#args.closeExpression#"
-				:disabled="#args.disabledExpression#">#encodeForHTML( args.cancelLabel )#</button>
+				@click="#args.closeExpression#; submitting = false"
+				:disabled="#args.disabledExpression# || submitting">#encodeForHTML( args.cancelLabel )#</button>
 			<button
 				type="button"
 				class="btn #encodeForHTMLAttribute( args.confirmClass )#"
-				@click.prevent="#args.confirmExpression#"
-				:disabled="#args.disabledExpression#">
-				<bx:if len( trim( args.confirmIcon ) )>
-					<i class="ph-duotone #encodeForHTMLAttribute( args.confirmIcon )#" aria-hidden="true"></i>
-				</bx:if>
-				#encodeForHTML( args.confirmLabel )#
+				@click.prevent="submitting = true; #args.confirmExpression#"
+				:disabled="#args.disabledExpression# || submitting"
+				:aria-busy="submitting">
+				<span x-show="!submitting">
+					<bx:if len( trim( args.confirmIcon ) )>
+						<i class="ph-duotone #encodeForHTMLAttribute( args.confirmIcon )#" aria-hidden="true"></i>
+					</bx:if>
+					#encodeForHTML( args.confirmLabel )#
+				</span>
+				<span x-show="submitting" x-cloak>
+					<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+					Processing...
+				</span>
 			</button>
 		</div>
 	</div>

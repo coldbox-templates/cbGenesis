@@ -266,6 +266,42 @@
 			</div>
 		</section>
 
+	</div>
+
+</form>
+
+
+<form
+	method="post"
+	x-data="{
+		confirmOpen: false,
+		formAction: '',
+
+		confirmMaintenance( action ) {
+			this.formAction = action;
+			this.confirmOpen = true;
+		},
+
+		cancelMaintenance() {
+			this.confirmOpen = false;
+			this.formAction = '';
+		},
+
+		submitMaintenance() {
+			if ( this.formAction ) {
+				this.$refs.maintenanceForm.submit();
+			}
+		}
+	}"
+	x-ref="maintenanceForm"
+	:action="formAction"
+>
+
+	<!--- CSRF Field --->
+	#csrfField()#
+
+	<div class="actions-stack">
+
 		<!--- Maintenance --->
 		<section class="content-card settings-card">
 			<div class="content-card-header">
@@ -280,9 +316,10 @@
 						<small>Clear cached views and event output.</small>
 					</div>
 					<button
-						type="submit"
+						type="button"
 						class="btn btn-outline-secondary"
-						formaction="#event.buildLink( "settings/clear-template-cache" )#">Clear</button>
+						data-action="#event.buildLink( "settings/clear-template-cache" )#"
+						@click="confirmMaintenance( $el.dataset.action )">Clear</button>
 				</div>
 				<div class="setting-row">
 					<div>
@@ -290,9 +327,10 @@
 						<small>Ends active sessions and clears flash messages and password reset tokens.</small>
 					</div>
 					<button
-						type="submit"
+						type="button"
 						class="btn btn-outline-danger"
-						formaction="#event.buildLink( "settings/clear-sessions-cache" )#">Clear</button>
+						data-action="#event.buildLink( "settings/clear-sessions-cache" )#"
+						@click="confirmMaintenance( $el.dataset.action )">Clear</button>
 				</div>
 				<div class="setting-row">
 					<div>
@@ -300,13 +338,29 @@
 						<small>Require every remembered browser to sign in again.</small>
 					</div>
 					<button
-						type="submit"
+						type="button"
 						class="btn btn-outline-danger"
-						formaction="#event.buildLink( "settings/revoke-remember-tokens" )#">Revoke
+						data-action="#event.buildLink( "settings/revoke-remember-tokens" )#"
+						@click="confirmMaintenance( $el.dataset.action )">Revoke
 						All</button>
 				</div>
 			</div>
 		</section>
 	</div>
+
+	#view(
+		view = "_components/ui/confirm",
+		args = {
+			id             : "maintenance-confirm",
+			title          : "Confirm Maintenance Action",
+			message        : "Are you sure you want to perform this maintenance action?",
+			openExpression : "confirmOpen",
+			closeExpression: "cancelMaintenance()",
+			confirmExpression: "submitMaintenance()",
+			confirmLabel   : "Continue",
+			confirmClass   : "btn-primary",
+			confirmIcon    : "ph-check"
+		}
+	)#
 </form>
 </bx:output>

@@ -800,6 +800,13 @@
 	max-width: 820px;
 }
 
+.actions-stack {
+	display: grid;
+	gap: 0.625rem;
+	max-width: 820px;
+	margin: 1.25rem 0px;
+}
+
 .setting-row {
 	display: grid;
 	grid-template-columns: 1fr auto;
