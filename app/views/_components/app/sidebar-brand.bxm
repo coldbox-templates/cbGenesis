@@ -18,8 +18,8 @@
 	aria-label="#encodeForHTMLAttribute( prc.settings.cbAppname )# dashboard"
 >
 	#view(
-		view = "_components/ui/logo",
-		args = { variant: args.variant, classes: "sidebar-brand-logo" }
+		view: "_components/ui/logo",
+		args: { variant: args.variant, classes: "sidebar-brand-logo" }
 	)#
 	<span class="sidebar-brand-name">#encodeForHTML( prc.settings.cbAppname )#</span>
 </a>
