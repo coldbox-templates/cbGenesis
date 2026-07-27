@@ -235,12 +235,14 @@ class extends="app.models.BaseService"{
 		try {
 			return variables.cbauth.getUser()
 		} catch ( any e ) {
-
 			// If the user is not logged in, check for a remember me cookie and restore the user session if valid
-			var user = restoreRememberedUser()
+			var allowRememberMe = variables.settingService.getSetting( "cbAllowRememberMe" )
+			if( allowRememberMe ) {
+				var user = restoreRememberedUser()
 
-			if( !isNull( user ) ){
-				return user
+				if( !isNull( user ) ){
+					return user
+				}
 			}
 
 			return variables.userService.new()

@@ -90,7 +90,7 @@ class extends="coldbox.system.EventHandler" output=true{
 				var oUser = variables.securityService.login(
 					username = rc.email,
 					password = rc.password,
-					rememberMe = rc.rememberMe
+					rememberMe = rc.rememberMe && prc.settings.cbAllowRememberMe
 				)
 				// Success — redirect to the dashboard
 				relocate( "dashboard" )
