@@ -1,6 +1,6 @@
 <bx:output>
 <div
-	x-data='roleForm(
+	x-data='rolesForm(
 		#forAttribute( prc.roles )#,
 		#forAttribute( prc.permissionCatalog )#,
 		"#csrfToken()#"

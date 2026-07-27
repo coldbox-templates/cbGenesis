@@ -14,10 +14,18 @@ class extends="BaseSecureHandler" {
 	property name="userService";
 
 	function preHandler( event, rc, prc ) {
+		// --- CSRF Verification ---
+		// Only for non-index actions, since the index action is a GET request and doesn't modify state.
 		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
-			return renderData(
-				data   = { error: true, messages: "Invalid security token detected.", data: "" },
-				status = 403
+			onAuthorizationFailure(
+				event: event,
+				rc: rc,
+				prc: prc,
+				abort: true,
+				exception: {
+					type: "InvalidCSRF",
+					message: "Invalid or expired CSRF token"
+				}
 			)
 		}
 		super.preHandler( argumentCollection: arguments )
@@ -41,76 +49,79 @@ class extends="BaseSecureHandler" {
 
 	@remote( "Create a role remotely via AJAX" )
 	function create( event, rc, prc ) {
-		var results = getApiResults()
+		var response = event.getResponse()
 		try {
 			prc.role = roleService
 				.new()
 				.populate( rc )
 				.validateOrFail()
 				.save()
-			results.messages = "Role saved successfully."
-			results.data = prc.role.getMemento()
+			response.setData( data: prc.role.getMemento(), message: "Role created successfully." )
 		}
 		catch( ValidationException error ){
-			results.error = true
-			results.messages = "Role validation errors"
-			results.data = prc.role.getValidationResult().getAllErrorsAsStruct()
-			event.setHTTPHeader( statusCode: 422 )
+			response.setErrorMessage(
+				message: "Role validation errors",
+				statusCode: 422,
+				data : prc.role.getValidationResult().getAllErrorsAsStruct()
+			)
 		}
 		catch ( any error ) {
 			log.error( "Error saving role: #error.message#", error )
-			results.error = true
-			results.messages = "Role could not be saved: #error.message & error.detail#"
-			event.setHTTPHeader( statusCode: 500 )
+			response.setErrorMessage(
+				message: "Role could not be saved: #error.message & error.detail#",
+				statusCode: 500
+			)
 		}
 
-		return results
+		return response
 	}
 
 	@remote( "Update a role remotely via AJAX" )
 	function update( event, rc, prc ) {
-		var results = getApiResults()
+		var response = event.getResponse()
 		try {
 			prc.role = roleService
 				.getOrFail( rc.roleId ?: "" )
 				.populate( rc )
 				.validateOrFail()
 				.save()
-			results.messages = "Role saved successfully."
-			results.data = prc.role.getMemento()
+			response.setData( data: prc.role.getMemento(), message: "Role saved successfully." )
 		}
 		catch( ValidationException error ){
-			results.error = true
-			results.messages = "Role validation errors"
-			results.data = prc.role.getValidationResult().getAllErrorsAsStruct()
-			event.setHTTPHeader( statusCode: 422 )
+			response.setErrorMessage(
+				message: "Role validation errors",
+				statusCode: 422,
+				data : prc.role.getValidationResult().getAllErrorsAsStruct()
+			)
 		}
 		catch ( any error ) {
 			log.error( "Error saving role: #error.message#", error )
-			results.error = true
-			results.messages = "Role could not be saved: #error.message & error.detail#"
-			event.setHTTPHeader( statusCode: 500 )
+			response.setErrorMessage(
+				message: "Role could not be saved: #error.message & error.detail#",
+				statusCode: 500
+			)
 		}
 
-		return results
+		return response
 	}
 
 	@remote( "Delete a role remotely via AJAX" )
 	function delete( event, rc, prc ) {
-		var results = getApiResults()
+		var response = event.getResponse()
 		try {
 			roleService
 				.getOrFail( rc.roleId ?: "" )
 				.delete()
-			results.messages = "Role deleted successfully."
+			response.addMessage( "Role deleted successfully." )
 		} catch ( any error ) {
 			log.error( "Error deleting role with ID [#rc.roleId#]: #error.message#", error )
-			event.setHTTPHeader( statusCode: 500 )
-			results.error = true
-			results.messages = "Role could not be deleted: #error.message & error.detail#"
+			response.setErrorMessage(
+				message: "Role could not be deleted: #error.message & error.detail#",
+				statusCode: 500
+			)
 		}
 
-		return results
+		return response
 	}
 
 	@remote( "List users assigned to a role" )

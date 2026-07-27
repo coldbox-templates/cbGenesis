@@ -28,6 +28,8 @@ class {
 			resource:"permissions",
 			parameterName: "permissionId"
 		)
+
+		// Role Routes
 		route( "/roles/:roleId/users", "Roles.users" ).withVerbs( "GET" )
 		route( "/roles/:roleId/available-users", "Roles.availableUsers" ).withVerbs( "GET" )
 		route( "/roles/:roleId/users/:userId", "Roles.addUser" ).withVerbs( "POST" )
@@ -36,6 +38,8 @@ class {
 			resource:"roles",
 			parameterName: "roleId"
 		)
+
+		// User Routes
 		resources(
 			resource:"users",
 			parameterName: "userId"
