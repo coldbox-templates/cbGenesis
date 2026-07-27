@@ -1,0 +1,139 @@
+/**
+ * Persistence service for remembered-browser tokens.
+ *
+ * SecurityService owns the authentication workflow and delegates token entity
+ * persistence and lookup to this VirtualEntityService-backed service.
+ */
+@singleton
+@threadSafe
+class extends="app.models.BaseService" {
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		super.init( entityName: "RememberToken" )
+		return this
+	}
+
+	/**
+	 * Create a new remembered-browser token for a user.
+	 *
+	 * @user The user to associate with the token.
+	 * @days The number of days until the token expires.
+	 *
+	 * @return A struct containing the raw token and its persistent entity: { rawToken, token }
+	 */
+	struct function createToken( required any user, required numeric days ) {
+		var rawToken = generateRawToken()
+		var token = new( {
+			token     : hashToken( rawToken ),
+			expiration: dateAdd( "d", arguments.days, now() ),
+			user      : arguments.user
+		} )
+
+		save( entity: token )
+
+		return { rawToken: rawToken, token: token }
+	}
+
+	/**
+	 * Validate a remembered-browser token.
+	 *
+	 * @rawToken The raw token value to validate.
+	 *
+	 * @return The persistent RememberToken entity if valid.
+	 *
+	 * @throws "RememberToken.Invalid" if the token is not found, revoked, or expired.
+	 */
+	RememberToken function validateToken( required string rawToken ) {
+		var token = findWhere( { token: hashToken( arguments.rawToken ) } )
+
+		// If the token is not found, revoked, or expired, throw an exception
+		if ( isNull( token ) || !token.getIsActive() || token.isExpired() || isNull( token.getUser() ) || !token.getUser().isActive() ) {
+			throw( type = "RememberToken.Invalid", message = "Invalid remember token" )
+		}
+
+		token.setLastUsed( now() )
+		save( token )
+
+		return token
+	}
+
+	/**
+	 * Revoke a remembered-browser token.
+	 *
+	 * @rawToken The raw token value to revoke.
+	 *
+	 * @return True if the token was found and revoked, false if it was not found or already revoked.
+	 */
+	boolean function revokeToken( required string rawToken ) {
+		var token = findWhere( { token: hashToken( arguments.rawToken ) } )
+
+		// If the token is not found or already revoked, return false
+		if ( isNull( token ) || !token.getIsActive() ) {
+			return false
+		}
+
+		save( token.setIsActive( false ) )
+
+		return true
+	}
+
+	/**
+	 * Revoke all active remembered-browser tokens.
+	 *
+	 * @return The number of tokens revoked.
+	 */
+	numeric function revokeAllTokens() {
+		var result = variables.qb
+			.table( "user_remember_tokens" )
+			.where( "isActive", "=", true )
+			.update( { isActive: false } )
+		ormClearSession()
+
+		return result?.result?.recordcount ?: 0
+	}
+
+	/**
+	 * Purge all expired remembered-browser tokens.
+	 *
+	 * @return The number of tokens purged.
+	 */
+	numeric function purgeExpiredTokens() {
+		var result = variables.qb
+			.table( "user_remember_tokens" )
+			.where( "expiration", "<", now() )
+			.delete()
+
+		return result?.result?.recordcount ?: 0
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Private Methods
+	 * --------------------------------------------------------------------------
+	 */
+
+
+	 /**
+	  * Generate a random raw token for browser storage.
+	  *
+	  * @return A random string suitable for use as a remember-me cookie value
+	  */
+	private string function generateRawToken() {
+		return "cbr_" & generateSecretKey( "AES", 256 )
+	}
+
+	/**
+	 * Hash a raw token for secure storage.
+	 *
+	 * @rawToken The raw token value to hash.
+	 *
+	 * @return The SHA-256 hash of the raw token.
+	 */
+	private string function hashToken( required string rawToken ) {
+		return hash( arguments.rawToken, "SHA-256" )
+	}
+
+}

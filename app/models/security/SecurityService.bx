@@ -28,6 +28,13 @@ class extends="app.models.BaseService"{
 	@inject( "cachebox:sessions" )
 	property name="sessionsCache";
 
+	@inject
+	property name="rememberTokenService";
+
+	static{
+		FINAL REMEMBER_ME_COOKIE_NAME = "cbRememberMe"
+	}
+
 	/**
 	 * Constructor
 	 */
@@ -61,12 +68,149 @@ class extends="app.models.BaseService"{
 	}
 
 	/**
+	 * Log in a user with username and password.
+	 * Validates credentials via UserService, then authenticates through cbauth.
+	 * Updates the user's lastLogin timestamp on success.
+	 *
+	 * @username The email/username to log in with
+	 * @password The password to verify
+	 *
+	 * @throws InvalidCredentials If credentials are invalid
+	 *
+	 * @return The authenticated User object
+	 */
+	User function login(
+		required string username,
+		required string password,
+		boolean rememberMe = false
+	){
+		var user = authenticate( arguments.username, arguments.password )
+
+		if( arguments.rememberMe ){
+			rememberUser( user, variables.settingService.getSetting( "cbRememberMeDays" ) )
+		}
+
+		return user
+	}
+
+	/**
+	 * Create a persistent browser-login token for an authenticated user.
+	 *
+	 * @user The authenticated user.
+	 * @days The configured remembered-login lifetime in days.
+	 *
+	 * @return The raw browser token and its persistent entity.
+	 */
+	struct function createRememberToken( required User user, required numeric days ) {
+		return variables.rememberTokenService.createToken(
+			user: arguments.user,
+			days: getRememberMeDays( arguments.days )
+		)
+	}
+
+	/**
+	 * Issue a persistent login for the current browser.
+	 */
+	struct function rememberUser( required User user, required numeric days ) {
+		var tokenResult = createRememberToken( user: arguments.user, days: arguments.days )
+		setRememberCookie( tokenResult.rawToken, tokenResult.token.getExpiration() )
+		return tokenResult
+	}
+
+	/**
+	 * Restore a normal cbauth session from a valid raw remember token.
+	 *
+	 * @return The logged-in User object.
+	 */
+	User function restoreRememberedUser() {
+		var rawToken = getRememberCookie()
+
+		// If no remember-me cookie is present, return null
+		if ( !len( rawToken ) ) {
+			return null
+		}
+
+		try {
+			var token = variables.rememberTokenService.validateToken( rawToken )
+			var user = variables.cbauth.login( token.getUser() )
+			// Rotate the token to prevent replay attacks
+			rotateRememberToken(
+				rawToken: rawToken,
+				user    : user
+			)
+			return user
+		} catch ( "RememberToken.Invalid" error ) {
+			clearRememberedUser()
+			return null
+		}
+	}
+
+	/**
+	 * Rotate a remembered browser credential after a successful restoration.
+	 *
+	 * @rawToken The token to invalidate.
+	 * @user The authenticated user.
+	 *
+	 * @return The new raw browser token and its persistent entity.
+	 */
+	struct function rotateRememberToken(
+		required string rawToken,
+		required User user
+	) {
+		var days = variables.settingService.getSetting( "cbRememberMeDays" )
+
+		transaction{
+			// Revoke the old token and create a new one
+			variables.rememberTokenService.revokeToken( arguments.rawToken )
+			// Create a new token and set the cookie
+			var tokenResult = createRememberToken( user: arguments.user, days: days )
+			setRememberCookie( tokenResult.rawToken, tokenResult.token.getExpiration() )
+		}
+
+		return tokenResult
+	}
+
+	/**
+	 * Revoke a remembered browser credential.
+	 */
+	boolean function revokeRememberToken( required string rawToken ) {
+		return variables.rememberTokenService.revokeToken( arguments.rawToken )
+	}
+
+	/**
+	 * Revoke the current browser's persistent login and clear its cookie.
+	 */
+	SecurityService function clearRememberedUser() {
+		var rawToken = getRememberCookie()
+		if ( len( rawToken ) ) {
+			variables.rememberTokenService.revokeToken( rawToken )
+		}
+		clearRememberCookie()
+		return this
+	}
+
+	/**
+	 * Revoke all active persistent browser logins.
+	 */
+	numeric function revokeAllRememberTokens() {
+		return variables.rememberTokenService.revokeAllTokens()
+	}
+
+	/**
+	 * Delete expired persistent browser-login tokens.
+	 */
+	numeric function purgeExpiredRememberTokens() {
+		return variables.rememberTokenService.purgeExpiredTokens()
+	}
+
+	/**
 	 * Log out the currently logged in user.
 	 * Clears the session and request scope user data.
 	 */
 	SecurityService function logout() {
 		try {
 			variables.cbauth.logout()
+			clearRememberedUser()
 		} catch ( EntityNotFound e ) {
 			log.trace( "Logout attempted with no active session." )
 		}
@@ -91,6 +235,14 @@ class extends="app.models.BaseService"{
 		try {
 			return variables.cbauth.getUser()
 		} catch ( any e ) {
+
+			// If the user is not logged in, check for a remember me cookie and restore the user session if valid
+			var user = restoreRememberedUser()
+
+			if( !isNull( user ) ){
+				return user
+			}
+
 			return variables.userService.new()
 		}
 	}
@@ -107,6 +259,71 @@ class extends="app.models.BaseService"{
 			.table( "users" )
 			.where( "userId", arguments.id )
 			.update( { "lastLogin": { value: now(), sqlType: "timestamp" } } )
+		return this
+	}
+
+	/**
+	 * Normalize an administrator-configured remembered-login duration.
+	 *
+	 * @days The number of days until the token expires.
+	 *
+	 * @throws RememberToken.InvalidDuration If the duration is not between 1 and 365 days.
+	 *
+	 * @return The normalized number of days (1-365).
+	 */
+	private numeric function getRememberMeDays( required numeric days ) {
+		if ( arguments.days < 1 || arguments.days > 365 ) {
+			throw( type = "RememberToken.InvalidDuration", message = "Remember-me duration must be between 1 and 365 days" )
+		}
+		return int( arguments.days )
+	}
+
+	/**
+	 * Generate a random raw token for browser storage.
+	 *
+	 * @return A random string suitable for use as a remember-me cookie value
+	 */
+	private string function getRememberCookie() {
+		return cookie.keyExists( static.REMEMBER_ME_COOKIE_NAME )
+			? cookie[ static.REMEMBER_ME_COOKIE_NAME ]
+			: ""
+	}
+
+	/**
+	 * Set a remember-me cookie in the browser.
+	 *
+	 * @rawToken The raw token value to store in the cookie.
+	 * @expiration The expiration date of the cookie.
+	 *
+	 * @return The SecurityService instance for method chaining
+	 */
+	private SecurityService function setRememberCookie( required string rawToken, required date expiration ) {
+		bx:cookie
+			name    : static.REMEMBER_ME_COOKIE_NAME
+			value   : arguments.rawToken
+			expires : arguments.expiration
+			secure  : cgi.https == "on"
+			httpOnly: true
+			sameSite: "lax"
+		;
+		return this
+	}
+
+	/**
+	 * Clear the remember-me cookie in the browser.
+	 *
+	 * @return The SecurityService instance for method chaining
+	 */
+	private SecurityService function clearRememberCookie() {
+		bx:cookie
+			name    : static.REMEMBER_ME_COOKIE_NAME
+			value   : ""
+			expires : "now"
+			secure  : cgi.https == "on"
+			httpOnly: true
+			sameSite: "lax"
+		;
+		cookie.delete( static.REMEMBER_ME_COOKIE_NAME )
 		return this
 	}
 

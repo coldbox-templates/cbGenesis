@@ -65,23 +65,24 @@ class {
 				.onDelete( "CASCADE" )
 		} )
 
-		// User Password Resets
-		schema.create( "user_password_resets", ( table ) => {
-			// Fields
-			table.guid( "resetId" ).primaryKey()
+		schema.create( "user_remember_tokens", ( table ) => {
+			table.guid( "rememberTokenId" ).primaryKey()
 			table.guid( "FK_userId" )
-			table.string( "token" ).unique()
-			table.datetime( "createdDate" ).withCurrent()
-			table.datetime( "expiresDate" )
+			table.string( "token", 64 ).unique()
+			table.timestamps()
+			table.boolean( "isActive" ).default( true )
+			table.datetime( "expiration" )
+			table.datetime( "lastUsed" ).nullable()
 
-			table.foreignKey( "FK_userId" )
+			table
+				.foreignKey( "FK_userId" )
 				.references( "userId" )
 				.onTable( "users" )
 				.onDelete( "CASCADE" )
 
-			table.index( "FK_userId", "idx_passwordResetUser" )
-			table.index( "token", "idx_passwordResetToken" )
-			table.index( "expiresDate", "idx_passwordResetExpires" )
+			table.index( "FK_userId", "idx_rememberTokenUser" )
+			table.index( "isActive", "idx_rememberTokenActive" )
+			table.index( "expiration", "idx_rememberTokenExpiration" )
 		} )
 
 		// User API Tokens
@@ -112,7 +113,7 @@ class {
 		schema.dropIfExists( "user_api_tokens" )
 		schema.dropIfExists( "user_roles" )
 		schema.dropIfExists( "user_permissions" )
-		schema.dropIfExists( "user_password_resets" )
+		schema.dropIfExists( "user_remember_tokens" )
 		schema.dropIfExists( "users" )
     }
 

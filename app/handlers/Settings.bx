@@ -4,19 +4,66 @@
 @secured
 class extends="BaseSecureHandler" {
 
+	@inject
+	property name="securityService";
+
+	@inject
+	property name="cacheMaintenanceService";
+
+	function preHandler( event, rc, prc ) {
+		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid security token detected."
+			} )
+			return relocate( "settings" )
+		}
+		super.preHandler( argumentCollection: arguments )
+	}
+
 	function index( event, rc, prc ) {
 		prc.title = "Settings"
 		event.setView( "settings/index" )
 	}
 
 	function save( event, rc, prc ) {
-		settingService.bulkSave( rc )
+		try {
+			settingService.bulkSave( rc )
+			flash.put( "messages", {
+				type   : "success",
+				message: "Settings saved successfully."
+			} )
+		} catch ( any error ) {
+			flash.put( "messages", { type: "error", message: error.message } )
+		}
 
+		relocate( "settings" )
+	}
+
+	@secured( "settings:admin" )
+	function clearTemplateCache( event, rc, prc ) {
+		getCache( "template" ).clearAll()
+		flash.put( "messages", { type: "success", message: "Template cache cleared." } )
+		relocate( "settings" )
+	}
+
+	@secured( "settings:admin" )
+	function clearSessionsCache( event, rc, prc ) {
+		getCache( "sessions" ).clearAll()
 		flash.put( "messages", {
 			type   : "success",
-			message: "Settings saved successfully."
+			message: "Sessions cache cleared. Active sessions, flash messages, and password reset tokens were removed."
 		} )
+		relocate( "settings" )
+	}
 
+	@secured( "settings:admin" )
+	function revokeRememberTokens( event, rc, prc ) {
+		var count = securityService.revokeAllRememberTokens()
+		flash.put( "messages", {
+			type   : "success",
+			message: "Revoked [#count#] remembered browser login(s)."
+		} )
 		relocate( "settings" )
 	}
 

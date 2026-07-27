@@ -57,6 +57,11 @@ class {
 			POST: "save"
 		})
 
+		// Setting Admin Actions
+		post( pattern = "settings/clear-template-cache", target = "Settings.clearTemplateCache" )
+		post( pattern = "settings/clear-sessions-cache", target = "Settings.clearSessionsCache" )
+		post( pattern = "settings/revoke-remember-tokens", target = "Settings.revokeRememberTokens" )
+
 		// Auth Routes
 		route( "login" ).withHandler( "Auth" ).toAction({
 			GET: "login",

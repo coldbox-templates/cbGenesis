@@ -54,6 +54,7 @@ class extends="coldbox.system.EventHandler" output=true{
 	function doLogin( event, rc, prc ) {
 		param rc.email = ""
 		param rc.password = ""
+		param rc.rememberMe = false
 		param rc.csrf = ""
 
 		// --- CSRF Verification ---
@@ -86,9 +87,10 @@ class extends="coldbox.system.EventHandler" output=true{
 		// --- Authentication ---
 		.onSuccess( results => {
 			try {
-				var oUser = variables.securityService.authenticate(
+				var oUser = variables.securityService.login(
 					username = rc.email,
-					password = rc.password
+					password = rc.password,
+					rememberMe = rc.rememberMe
 				)
 				// Success — redirect to the dashboard
 				relocate( "dashboard" )

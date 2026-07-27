@@ -1,0 +1,103 @@
+/**
+ * Persistent browser-login token.
+ *
+ * Only the SHA-256 digest is stored. The raw value is sent to the browser once
+ * by SecurityService and is never exposed through a memento.
+ */
+@persistent( true )
+@table( "user_remember_tokens" )
+class extends="app.models.BaseEntity" {
+
+	@fieldType( "id" )
+	@generator( "uuid" )
+	property
+		name="rememberTokenId"
+		setter="false";
+
+	@notNull( true )
+	@unique( true )
+	property name="token" default="";
+
+	@notNull( true )
+	property name="expiration" type="date";
+
+	property name="lastUsed" type="date";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Relationships
+	 * --------------------------------------------------------------------------
+	 */
+
+	@notNull( true )
+	@fieldType( "many-to-one" )
+	@class( "app.models.system.User" )
+	@fkColumn( "FK_userId" )
+	@lazy( "proxy" )
+	property name="user";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Validation Constraints
+	 * --------------------------------------------------------------------------
+	 * https://coldbox-validation.ortusbooks.com/overview/valid-constraints
+	 */
+	this.constraints = {
+		token: {
+			required: true,
+			unique  : { table: "user_remember_tokens", column: "token" }
+		},
+		expiration: { required: true }
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Population Options
+	 * --------------------------------------------------------------------------
+	 */
+	this.population = {
+		exclude: [
+			"rememberTokenId",
+			"lastUsed"
+		]
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Mementifier Options
+	 * --------------------------------------------------------------------------
+	 * https://forgebox.io/view/mementifier
+	 */
+	this.memento = {
+		defaultIncludes: [ "expiration", "lastUsed" ],
+		defaultExcludes: [],
+		neverInclude   : [ "token" ]
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Methods
+	 * --------------------------------------------------------------------------
+	 */
+
+	/**
+	 * Initialize the RememberToken entity.
+	 */
+	function init() {
+		super.init( "rememberTokenId" )
+		variables.token = ""
+		variables.expiration = null
+		variables.lastUsed = null
+		return this
+	}
+
+	/**
+	 * Check if the token is expired.
+	 *
+	 * @return True if the token is expired, false otherwise.
+	 */
+	boolean function isExpired() {
+		return dateCompare( variables.expiration, now(), "s" ) < 0
+	}
+
+}

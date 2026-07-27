@@ -113,6 +113,18 @@ class extends="app.models.BaseEntity" {
 		batchsize="25"
 		orderby="label asc";
 
+	property
+		name="rememberTokens"
+		fieldtype="one-to-many"
+		type="array"
+		inverse="true"
+		lazy="extra"
+		class="app.models.security.RememberToken"
+		fkcolumn="FK_userId"
+		cascade="all-delete-orphan"
+		batchsize="25"
+		orderby="expiration desc";
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Validation Constraints
@@ -191,6 +203,7 @@ class extends="app.models.BaseEntity" {
 		variables.roles = []
 		variables.permissions = []
 		variables.apiTokens = []
+		variables.rememberTokens = []
 
 		// preferences
 		setPreferences( {} )

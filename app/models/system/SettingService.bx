@@ -44,6 +44,9 @@ class extends="app.models.BaseService" {
 			cbMinPasswordLength      : 8,
 			// Password reset expiration time in minutes,
 			cbPasswordResetExpiration: 60,
+			// Persistent browser-login duration in days
+			cbRememberMeDays          : 14,
+			cbAllowRememberMe		: true,
 			// Mail Settings
 			cbMailHost               : "smtp.mailtrap.io",
 			cbMailPort               : 25,
@@ -198,6 +201,7 @@ class extends="app.models.BaseService" {
 	 * @memento The struct of settings
 	 */
 	SettingService function bulkSave( Struct memento ) {
+		validateSettings( arguments.memento )
 		var allSettings = getAllSettings()
 		var oOption = ""
 		var newOptions = []
@@ -225,6 +229,23 @@ class extends="app.models.BaseService" {
 		flushSettingsCache()
 
 		return this
+	}
+
+	/**
+	 * Validates the settings memento for any invalid values.  This is usually done before saving the settings.
+	 *
+	 * @memento The struct of settings
+	 */
+	private void function validateSettings( required struct memento ) {
+
+		// Validate the cbRememberMeDays setting to be a whole number between 1 and 365
+		var days = arguments.memento?.cbRememberMeDays ?: this.DEFAULTS.cbRememberMeDays
+		if ( !isNumeric( days ) || int( days ) != days || int( days ) < 1 || int( days ) > 365 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "Keep me signed in duration must be a whole number between 1 and 365 days."
+			)
+		}
 	}
 
 	/**

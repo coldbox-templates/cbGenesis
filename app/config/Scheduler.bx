@@ -26,6 +26,12 @@ class {
 			.everyDayAt( "03:00" )
 			.onOneServer()
 			.withNoOverlaps()
+
+		task( "Purge Expired Remember Tokens" )
+			.call( () => getInstance( "SecurityService" ).purgeExpiredRememberTokens() )
+			.everyDayAt( "03:15" )
+			.onOneServer()
+			.withNoOverlaps()
 	}
 
 	/**

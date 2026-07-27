@@ -1,0 +1,64 @@
+/**
+ * Integration tests for remembered-browser token persistence.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject
+	property name="rememberTokenService";
+
+	function run() {
+		describe( "Remember Token Service", () => {
+			it( "creates a hashed token and validates its raw value", () => {
+				var user = createVerifiedUser()
+				var tokenData = rememberTokenService.createToken( user: user, days: 14 )
+				var token = rememberTokenService.validateToken( tokenData.rawToken )
+
+				expect( tokenData.rawToken ).toStartWith( "cbr_" )
+				expect( token.getToken() ).notToBe( tokenData.rawToken )
+				expect( token.getToken().len() ).toBe( 64 )
+				expect( token.getUser().getId() ).toBe( user.getId() )
+				expect( token.getLastUsed() ).notToBeNull()
+				expect( token.getMemento() ).notToHaveKey( "token" )
+			} )
+
+			it( "rejects revoked and expired tokens", () => {
+				var user = createVerifiedUser()
+				var tokenData = rememberTokenService.createToken( user: user, days: 14 )
+				var expiredToken = rememberTokenService.new( {
+					token     : hash( generateSecretKey( "AES", 256 ), "SHA-256" ),
+					expiration: dateAdd( "d", -1, now() ),
+					user      : user
+				} )
+				rememberTokenService.save( entity: expiredToken )
+
+				expect( rememberTokenService.revokeToken( tokenData.rawToken ) ).toBeTrue()
+				expect( () => rememberTokenService.validateToken( tokenData.rawToken ) ).toThrow( "RememberToken.Invalid" )
+				expect( () => rememberTokenService.validateToken( "unknown-token" ) ).toThrow( "RememberToken.Invalid" )
+				expect( () => rememberTokenService.validateToken( hash( generateSecretKey( "AES", 256 ), "SHA-256" ) ) ).toThrow( "RememberToken.Invalid" )
+			} )
+
+			it( "revokes every active remembered browser", () => {
+				var user = createVerifiedUser()
+				var firstToken = rememberTokenService.createToken( user: user, days: 14 )
+				var secondToken = rememberTokenService.createToken( user: user, days: 14 )
+
+				expect( rememberTokenService.revokeAllTokens() ).toBeGTE( 2 )
+				expect( () => rememberTokenService.validateToken( firstToken.rawToken ) ).toThrow( "RememberToken.Invalid" )
+				expect( () => rememberTokenService.validateToken( secondToken.rawToken ) ).toThrow( "RememberToken.Invalid" )
+			} )
+
+			it( "purges expired tokens", () => {
+				var user = createVerifiedUser()
+				var expiredToken = rememberTokenService.new( {
+					token     : hash( generateSecretKey( "AES", 256 ), "SHA-256" ),
+					expiration: dateAdd( "d", -1, now() ),
+					user      : user
+				} )
+				rememberTokenService.save( entity: expiredToken )
+
+				expect( rememberTokenService.purgeExpiredTokens() ).toBeGTE( 1 )
+			} )
+		} )
+	}
+
+}

@@ -8,6 +8,10 @@
 	@change="markDirty"
 	@click="markDirty"
 >
+
+	<!--- CSRF Field --->
+	#csrfField()#
+
 	<!--- Page Heading  --->
 	<div class="page-header admin-page-heading">
 		<div>
@@ -134,7 +138,7 @@
 		<section class="content-card settings-card">
 			<div class="content-card-header">
 				<h3 class="content-card-title">
-					<i class="ph-duotone ph-user-plus"></i> Registration
+					<i class="ph-duotone ph-user-plus"></i> Account Access
 				</h3>
 			</div>
 			<div class="settings-list">
@@ -164,6 +168,19 @@
 						}
 					)#
 				</div>
+				<div class="setting-row">
+					<div>
+						<strong>Allow Remember Me</strong>
+						<small>Enable the "Remember Me" functionality on the login page</small>
+					</div>
+					#view(
+						view = "_components/ui/switch",
+						args = {
+							name : "cbAllowRememberMe",
+							value: prc.settings.cbAllowRememberMe
+						}
+					)#
+				</div>
 			</div>
 		</section>
 
@@ -180,6 +197,9 @@
 				</label>
 				<label>Password Reset Expiration (minutes)
 					<input type="number" name="cbPasswordResetExpiration" value="#encodeForHTMLAttribute( prc.settings.cbPasswordResetExpiration )#">
+				</label>
+				<label>Keep Me Signed In (days)
+					<input type="number" name="cbRememberMeDays" min="1" max="365" step="1" value="#encodeForHTMLAttribute( prc.settings.cbRememberMeDays )#">
 				</label>
 				<label>Encryption Key
 					<input type="password" name="cbEncryptionKey" value="#encodeForHTMLAttribute( prc.settings.cbEncryptionKey )#" readonly>
@@ -242,6 +262,48 @@
 							value: prc.settings.cbMailSSL
 						}
 					)#
+				</div>
+			</div>
+		</section>
+
+		<!--- Maintenance --->
+		<section class="content-card settings-card">
+			<div class="content-card-header">
+				<h3 class="content-card-title">
+					<i class="ph-duotone ph-wrench"></i> Maintenance Actions
+				</h3>
+			</div>
+			<div class="settings-list">
+				<div class="setting-row">
+					<div>
+						<strong>Template Cache</strong>
+						<small>Clear cached views and event output.</small>
+					</div>
+					<button
+						type="submit"
+						class="btn btn-outline-secondary"
+						formaction="#event.buildLink( "settings/clear-template-cache" )#">Clear</button>
+				</div>
+				<div class="setting-row">
+					<div>
+						<strong>Sessions Cache</strong>
+						<small>Ends active sessions and clears flash messages and password reset tokens.</small>
+					</div>
+					<button
+						type="submit"
+						class="btn btn-outline-danger"
+						formaction="#event.buildLink( "settings/clear-sessions-cache" )#">Clear</button>
+				</div>
+				<div class="setting-row">
+					<div>
+						<strong>Remembered Browsers</strong>
+						<small>Require every remembered browser to sign in again.</small>
+					</div>
+					<button
+						type="submit"
+						class="btn btn-outline-danger"
+						formaction="#event.buildLink( "settings/revoke-remember-tokens" )#">Revoke
+						All</button>
 				</div>
 			</div>
 		</section>
