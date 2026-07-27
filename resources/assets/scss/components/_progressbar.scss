@@ -1,0 +1,75 @@
+.ui-progressbar {
+	display: grid;
+	gap: 0.45rem;
+
+	&--sm {
+		gap: 0.35rem;
+
+		.ui-progressbar__label {
+			font-size: 0.78rem;
+		}
+
+		.ui-progressbar__track {
+			height: 0.3rem;
+		}
+	}
+
+	&--lg {
+		gap: 0.6rem;
+
+		.ui-progressbar__label {
+			font-size: 0.95rem;
+		}
+
+		.ui-progressbar__track {
+			height: 0.55rem;
+		}
+	}
+
+	&__label {
+		color: var(--app-text-muted);
+		font-size: 0.85rem;
+	}
+
+	&__track {
+		height: 0.4rem;
+		overflow: hidden;
+		border-radius: 999px;
+		background: var(--app-surface-raised);
+	}
+
+	&__indicator {
+		display: block;
+		width: var(--progress-value);
+		height: 100%;
+		border-radius: inherit;
+		background: $bl-cyan;
+		transition: width 0.25s ease;
+
+		&--indeterminate {
+			width: 38%;
+			animation: ui-progressbar-indeterminate 1.2s ease-in-out infinite;
+		}
+	}
+
+	&--blue .ui-progressbar__indicator { background: $bl-blue; }
+	&--success .ui-progressbar__indicator { background: $bl-success; }
+	&--warning .ui-progressbar__indicator { background: $bl-warning; }
+	&--danger .ui-progressbar__indicator { background: $bl-danger; }
+}
+
+@keyframes ui-progressbar-indeterminate {
+	0% { transform: translateX(-110%); }
+	100% { transform: translateX(285%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ui-progressbar__indicator {
+		transition: none;
+
+		&--indeterminate {
+			animation: none;
+			transform: translateX(80%);
+		}
+	}
+}

@@ -6,7 +6,6 @@ class extends="BaseSecureHandler" {
 
 	function index( event, rc, prc ) {
 		prc.title = "My Profile";
-		prc.authUser = getMockAuthUser();
 		prc.profile = {
 			"firstName"  : "Luis",
 			"lastName"   : "Majano",
@@ -40,28 +39,7 @@ class extends="BaseSecureHandler" {
 			]
 		};
 
-		event.setLayout( "Admin" );
 		event.setView( "profile/index" );
 	}
 
-	function update( event, rc, prc ) {
-		return relocate( "profile" );
-	}
-
-	function password( event, rc, prc ) {
-		return relocate( "profile" );
-	}
-
-	function tokens( event, rc, prc ) {
-		return relocate( "profile" );
-	}
-
-	private struct function getMockAuthUser() {
-		return {
-			"name"    : "Luis Majano",
-			"email"   : "luis@ortussolutions.com",
-			"role"    : "Super Admin",
-			"initials": "LM"
-		};
-	}
 }

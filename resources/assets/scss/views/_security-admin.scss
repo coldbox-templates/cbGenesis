@@ -412,19 +412,53 @@
 	}
 }
 
-.role-summary-stats {
-	display: flex;
-	gap: 2rem;
-	padding: 1.25rem;
-	border-bottom: 1px solid var(--app-border-subtle);
+.role-detail-section {
+	border-top: 1px solid var(--app-border-subtle);
+}
 
-	div {
-		display: grid;
-		gap: 0.2rem;
+.role-section-header {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.85rem 1.25rem 0.25rem;
+
+	h4 {
+		margin: 0;
+		font-size: 0.95rem;
 	}
 
-	strong {
-		font-size: 1.4rem;
+	.count-pill {
+		min-width: 1.45rem;
+		height: 1.45rem;
+		font-size: 0.75rem;
+	}
+}
+
+.role-permissions-section > .chip-row {
+	padding: 0.5rem 1.25rem 0.9rem;
+}
+
+.role-users-section {
+	.role-section-header {
+		padding-bottom: 0.75rem;
+	}
+}
+
+.role-users-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 1rem 1.25rem 0.75rem;
+	flex-wrap: wrap;
+
+	h4,
+	span {
+		margin: 0;
+	}
+
+	h4 {
+		font-size: 0.95rem;
 	}
 
 	span {
@@ -433,8 +467,61 @@
 	}
 }
 
-.role-summary-panel > .chip-row {
-	padding: 0.75rem 1.25rem;
+.role-users-search {
+	min-width: 220px;
+	padding: 0.45rem 0.65rem;
+}
+
+.role-users-list {
+	display: grid;
+}
+
+.role-user-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.7rem 1.25rem;
+	border-top: 1px solid var(--app-border-subtle);
+
+	> div {
+		min-width: 0;
+		display: grid;
+		gap: 0.15rem;
+	}
+
+	strong,
+	span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	span {
+		color: var(--app-text-muted);
+		font-size: 0.8rem;
+	}
+
+	.btn {
+		flex-shrink: 0;
+	}
+}
+
+.role-users-status {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 1rem 1.25rem;
+	color: var(--app-text-muted);
+	font-size: 0.85rem;
+}
+
+.role-users-loading {
+	padding: 0.35rem 1.25rem 1rem;
+}
+
+.role-users-error {
+	color: $bl-danger;
 }
 
 .role-list,
@@ -493,6 +580,16 @@
 	margin: 0.2rem 0 0;
 	color: var(--app-text-muted);
 	font-size: 0.84rem;
+}
+
+.role-summary-panel > .matrix-heading {
+	background: rgba($bl-blue, 0.07);
+	border-bottom-color: rgba($bl-blue, 0.18);
+
+	.btn-light {
+		background: rgba($bl-blue, 0.08);
+		border-color: rgba($bl-blue, 0.1);
+	}
 }
 
 .permission-group-icon {

@@ -1,5 +1,5 @@
 <bx:output>
-<!--- User Header --->  
+<!--- User Header --->
 <div class="page-header admin-page-heading">
 	<div>
 		<p class="eyebrow">My Profile</p>
@@ -13,24 +13,23 @@
 	x-data="{ tab: 'profile' }"
 >
 
-	<!--- Navigation --->  
+	<!--- Navigation --->
 	<div class="segmented-control mb-3">
 		<button type="button" :class="tab === 'profile' ? 'active' : ''" @click="tab = 'profile'">Profile</button>
 		<button type="button" :class="tab === 'password' ? 'active' : ''" @click="tab = 'password'">Password</button>
 		<button type="button" :class="tab === 'tokens' ? 'active' : ''" @click="tab = 'tokens'">API Tokens</button>
 	</div>
 
-	<!--- Profile Hero --->  
+	<!--- Profile Hero --->
 	<section class="content-card profile-hero">
 		<div class="profile-hero-cover"></div>
 		<div class="profile-hero-body">
-			<div class="profile-orb small">#encodeForHTML( prc.authUser.initials )#</div>
-			<h3>#encodeForHTML( prc.authUser.name )#</h3>
-			<p>#encodeForHTML( prc.authUser.role )#</p>
+			<div class="profile-orb small">#encodeForHTML( prc.authUser.getInitials() )#</div>
+			<h3>#encodeForHTML( prc.authUser.getFullName() )#</h3>
 		</div>
 	</section>
 
-	<!--- Profile Form --->  
+	<!--- Profile Form --->
 	<section class="content-card form-card" x-show="tab === 'profile'">
 		<div class="content-card-header"><h3 class="content-card-title">Personal Information</h3></div>
 		<form method="post" action="#event.buildLink( "profile/update" )#">
@@ -47,7 +46,7 @@
 		</form>
 	</section>
 
-	<!--- Password & Two-Factor Auth --->  
+	<!--- Password & Two-Factor Auth --->
 	<section class="content-card form-card" x-show="tab === 'password'" x-cloak>
 		<div class="content-card-header"><h3 class="content-card-title">Change Password</h3></div>
 		<form method="post" action="#event.buildLink( "profile/password" )#" x-data="authForm" @submit="onSubmit" @password-changed.window="passwordRef = $event.detail.value; checkConfirm()" novalidate>
@@ -102,7 +101,7 @@
 		</form>
 	</section>
 
-	<!--- API Tokens --->  
+	<!--- API Tokens --->
 	<section class="content-card form-card" x-show="tab === 'tokens'" x-cloak>
 		<form method="post" action="#event.buildLink( "profile/tokens" )#">
 			<input type="hidden" name="_token" value="#csrfToken()#">

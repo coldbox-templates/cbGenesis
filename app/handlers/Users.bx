@@ -6,10 +6,7 @@ class extends="BaseSecureHandler" {
 
 	function index( event, rc, prc ) {
 		prc.title = "Users";
-		prc.authUser = getMockAuthUser();
 		setMockSecurityData( prc );
-
-		event.setLayout( "Admin" );
 		event.setView( "users/index" );
 	}
 

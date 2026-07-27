@@ -15,12 +15,17 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 		permissions,
 		csrfToken,
 		query             : "",
+		userQuery         : "",
 		selectedRole      : null,
+		assignedUsers     : [],
+		loadingUsers      : false,
+		removingUserId    : null,
 		drawerOpen        : false,
 		confirmDeleteOpen : false,
 		submitting        : false,
 		deleting          : false,
 		error             : "",
+		usersError        : "",
 		form              : {
 			role          : "",
 			description   : "",
@@ -68,6 +73,20 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 		},
 
 		/**
+		 * Returns users matching the current name or email filter.
+		 *
+		 * @returns {Array} Assigned users matching the query.
+		 */
+		get filteredUsers() {
+			const query = this.userQuery.trim().toLowerCase();
+			if ( !query ) return this.assignedUsers;
+			return this.assignedUsers.filter( ( user ) => [
+				user.fullName,
+				user.email,
+			].some( ( value ) => String( value || "" ).toLowerCase().includes( query ) ) );
+		},
+
+		/**
 		 * Opens the role drawer with an empty create form.
 		 *
 		 * @returns {void}
@@ -85,8 +104,63 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 		 * @param {Object} role Role selected from the role catalog.
 		 * @returns {void}
 		 */
-		selectRole( role ) {
+		async selectRole( role ) {
 			this.selectedRole = role;
+			this.userQuery = "";
+			this.assignedUsers = [];
+			this.usersError = "";
+			await this.loadRoleUsers( role );
+		},
+
+		/**
+		 * Loads users assigned to a role through the remote handler action.
+		 *
+		 * @param {Object} role Role whose users should be loaded.
+		 * @returns {Promise<void>}
+		 */
+		async loadRoleUsers( role ) {
+			this.loadingUsers = true;
+			try {
+				const response = await fetch( `/roles/${ encodeURIComponent( role.roleId ) }/users` );
+				const result = await response.json();
+				if ( !response.ok || result.error ) throw new Error( result.messages || "Users could not be loaded." );
+				if ( this.selectedRole?.roleId === role.roleId ) this.assignedUsers = result.data || [];
+			} catch ( error ) {
+				if ( this.selectedRole?.roleId === role.roleId ) this.usersError = error.message || "Users could not be loaded.";
+			} finally {
+				if ( this.selectedRole?.roleId === role.roleId ) this.loadingUsers = false;
+			}
+		},
+
+		/**
+		 * Removes a user from the selected role after confirmation.
+		 *
+		 * @param {Object} user User to remove from the selected role.
+		 * @returns {Promise<void>}
+		 */
+		async removeUser( user ) {
+			if ( !this.selectedRole || this.removingUserId ) return;
+			const name = user.fullName || user.email;
+			if ( !window.confirm( `Remove ${ name } from ${ this.selectedRole.role }?` ) ) return;
+
+			this.removingUserId = user.userId;
+			this.usersError = "";
+			try {
+				const response = await fetch( `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }/users/${ encodeURIComponent( user.userId ) }`, {
+					method  : "DELETE",
+					headers : { "Content-Type": "application/x-www-form-urlencoded" },
+					body    : new URLSearchParams( { csrf: this.csrfToken } ),
+				} );
+				const result = await response.json();
+				if ( !response.ok || result.error ) throw new Error( result.messages || "User could not be removed from the role." );
+				this.assignedUsers = this.assignedUsers.filter( ( assignedUser ) => assignedUser.userId !== user.userId );
+				this.selectedRole.usersCount = Math.max( 0, Number( this.selectedRole.usersCount || 0 ) - 1 );
+				this.roles = this.roles.map( ( role ) => role.roleId === this.selectedRole.roleId ? this.selectedRole : role );
+			} catch ( error ) {
+				this.usersError = error.message || "User could not be removed from the role.";
+			} finally {
+				this.removingUserId = null;
+			}
 		},
 
 		/**

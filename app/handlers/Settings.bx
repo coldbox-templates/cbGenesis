@@ -7,9 +7,6 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="securityService";
 
-	@inject
-	property name="cacheMaintenanceService";
-
 	function preHandler( event, rc, prc ) {
 		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
 			flash.put( "messages", {

@@ -187,6 +187,7 @@ class extends="app.models.BaseEntity" {
 		defaultIncludes: [
 			"firstName",
 			"lastName",
+			"fullName",
 			"email",
 			"biography",
 			"preferences",

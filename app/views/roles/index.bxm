@@ -98,23 +98,84 @@
 				</div>
 			</div>
 
-			<!--- Role Stats --->
-			<div class="role-summary-stats">
-				<div>
-					<strong x-text="selectedRole?.usersCount"></strong>
-					<span>Assigned users</span>
+			<!--- Role Permissions --->
+			<div class="role-detail-section role-permissions-section">
+				<div class="role-section-header">
+					<h4>Permissions</h4>
+					<span class="count-pill" x-text="selectedRole?.permissions.length"></span>
 				</div>
-				<div>
-					<strong x-text="selectedRole?.permissions.length"></strong>
-					<span>Permissions</span>
+				<div class="chip-row">
+					<template
+						x-for="permission in ( selectedRole?.permissions || [] )"
+						:key="permission.permissionId">
+						<span class="chip chip-info" x-text="permission.permission"></span>
+					</template>
 				</div>
 			</div>
 
-			<!--- Role Permissions --->
-			<div class="chip-row">
-				<template x-for="permission in ( selectedRole?.permissions || [] )" :key="permission.permissionId">
-					<span class="chip chip-info" x-text="permission.permission"></span>
-				</template>
+			<!--- Assigned Users --->
+			<div class="role-detail-section role-users-section">
+				<div class="role-section-header role-users-header">
+					<div>
+						<h4>Assigned users</h4>
+						<span x-text="filteredUsers.length + ' of ' + assignedUsers.length"></span>
+					</div>
+					<div class="admin-search role-users-search">
+						<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+						<input
+							x-model.debounce.150ms="userQuery"
+							type="search"
+							placeholder="Filter users..."
+							aria-label="Filter assigned users">
+					</div>
+				</div>
+
+				<div class="role-users-loading" x-show="loadingUsers" x-cloak>
+					#view( view: "_components/ui/progressbar", args: {
+						label        : "Loading users...",
+						ariaLabel    : "Loading assigned users",
+						indeterminate: true,
+						variant      : "cyan",
+						size         : "sm"
+					} )#
+				</div>
+
+				<!--- Role Users Error --->
+				<div
+					class="role-users-status role-users-error"
+					x-show="usersError"
+					x-text="usersError"
+					x-cloak></div>
+
+				<!--- Role Users --->
+				<div
+					class="role-users-list"
+					x-show="!loadingUsers && !usersError"
+					x-cloak>
+					<template x-for="user in filteredUsers" :key="user.userId">
+						<div class="role-user-row">
+							<div>
+								<strong x-text="user.firstName + ' ' + user.lastName"></strong>
+								<span x-text="user.email"></span>
+							</div>
+							<button
+								type="button"
+								class="btn btn-light btn-sm"
+								@click="removeUser( user )"
+								:disabled="removingUserId === user.userId"
+								:title="'Remove ' + ( user.firstName + ' ' + user.lastName )"
+								:aria-label="'Remove ' + ( user.firstName + ' ' + user.lastName )">
+								<i class="ph-duotone ph-user-minus" aria-hidden="true"></i>
+								<span x-text="removingUserId === user.userId ? 'Removing...' : 'Remove'"></span>
+							</button>
+						</div>
+					</template>
+					<div
+						class="role-users-status"
+						x-show="filteredUsers.length === 0">
+						<span x-text="assignedUsers.length ? 'No users match this filter.' : 'No users are assigned to this role.'"></span>
+					</div>
+				</div>
 			</div>
 		</section>
 

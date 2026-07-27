@@ -1,0 +1,60 @@
+<!--- Progress bar component
+	Renders an accessible determinate or indeterminate progress bar.
+
+	Usage:
+		#view( view: "_components/ui/progressbar", args: {
+			label        : "Loading users...",
+			ariaLabel    : "Loading assigned users",
+			indeterminate: true,
+			variant      : "cyan",
+			size         : "sm"
+		} )#
+
+	Args:
+		label         : string  — visible label (default: "Loading...")
+		ariaLabel     : string  — accessible label (defaults to label)
+		value         : number  — current value for determinate bars
+		max           : number  — maximum value (default: 100)
+		indeterminate : boolean — animate without a known value (default: true)
+		variant       : string  — cyan | blue | success | warning | danger
+		size          : string  — sm | md | lg (default: md)
+		showLabel     : boolean — show the visible label (default: true)
+		classes       : string  — extra CSS classes --->
+<bx:param name="args.label" default="Loading..."/>
+<bx:param name="args.ariaLabel" default=""/>
+<bx:param name="args.value" default=""/>
+<bx:param name="args.max" default="100"/>
+<bx:param name="args.indeterminate" default="true"/>
+<bx:param name="args.variant" default="cyan"/>
+<bx:param name="args.size" default="md"/>
+<bx:param name="args.showLabel" default="true"/>
+<bx:param name="args.classes" default=""/>
+
+<bx:script>
+	localVariant = listFindNoCase( "cyan,blue,success,warning,danger", args.variant ) ? lCase( args.variant ) : "cyan"
+	localSize = listFindNoCase( "sm,md,lg", args.size ) ? lCase( args.size ) : "md"
+	localIndeterminate = args.indeterminate == true || lCase( toString( args.indeterminate ) ) == "true"
+	localShowLabel = args.showLabel == true || lCase( toString( args.showLabel ) ) == "true"
+	localMax = isNumeric( args.max ) && val( args.max ) > 0 ? val( args.max ) : 100
+	localValue = isNumeric( args.value ) ? min( max( val( args.value ), 0 ), localMax ) : 0
+	localPercent = ( localValue / localMax ) * 100
+	localAriaLabel = len( trim( args.ariaLabel ) ) ? args.ariaLabel : args.label
+	localClasses = len( trim( args.classes ) ) ? " " & args.classes : ""
+	localIndicatorClass = localIndeterminate ? "ui-progressbar__indicator ui-progressbar__indicator--indeterminate" : "ui-progressbar__indicator"
+	localValueAttributes = localIndeterminate ? "" : " aria-valuenow='#numberFormat( localValue, '0.00' )#' aria-valuemax='#numberFormat( localMax, '0.00' )#'"
+</bx:script>
+
+<bx:output>
+<div
+	class="ui-progressbar ui-progressbar--#localVariant# ui-progressbar--#localSize##localClasses#"
+	role="progressbar"
+	aria-label="#encodeForHTMLAttribute( localAriaLabel )##localValueAttributes#"
+	style="--progress-value: #numberFormat( localPercent, '0.00' )#%;">
+	<bx:if localShowLabel>
+		<span class="ui-progressbar__label">#encodeForHTML( args.label )#</span>
+	</bx:if>
+	<div class="ui-progressbar__track">
+		<span class="#localIndicatorClass#"></span>
+	</div>
+</div>
+</bx:output>
