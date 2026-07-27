@@ -130,7 +130,7 @@ class extends="app.models.BaseEntity" {
 	 * @return The number of users assigned to this role.
 	 */
 	numeric function getUsersCount() {
-		if( !hasUsers() ) {
+		if( !hasUser() ) {
 			return 0
 		}
 		return newCriteria()
