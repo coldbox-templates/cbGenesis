@@ -50,6 +50,7 @@ class extends="app.models.BaseEntity" {
 	@fkcolumn( "FK_roleId" )
 	@linktable( "role_permissions" )
 	@inversejoincolumn( "FK_permissionId" )
+	@singularName( "permission" )
 	property
 		name="permissions"
 		type="array";
@@ -58,13 +59,15 @@ class extends="app.models.BaseEntity" {
 	 * Users that have this role.
 	 */
 	@fieldtype( "many-to-many" )
-	@lazy( "true" )
+	@lazy( true )
 	@orderby( "email" )
 	@cascade( "save-update" )
 	@class( "app.models.system.User" )
 	@fkcolumn( "FK_roleId" )
 	@linktable( "user_roles" )
 	@inversejoincolumn( "FK_userId" )
+	@inverse( true )
+	@singularName( "user" )
 	property
 		name="users"
 		type="array";

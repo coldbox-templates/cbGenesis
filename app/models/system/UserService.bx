@@ -177,10 +177,15 @@ class extends="app.models.BaseService" {
 		boolean isActive,
 		boolean isVerified,
 		roleId,
-		sortOrder = "lname",
+		sortOrder = "lastName asc",
 		propertyList = ""
 	) {
 		var results = { "count": 0, "records": [] }
+
+		// If the property list is an array, convert it to a list for the criteria builder
+		if( isArray( arguments.propertyList ) ) {
+			arguments.propertyList = arguments.propertyList.toList()
+		}
 
 		var c = newCriteria()
 			// Search Terms
@@ -196,112 +201,20 @@ class extends="app.models.BaseService" {
 			// Verified
 			.when( !isNull( arguments.isVerified ), ( c ) => isVerified ? c.isNotNull( "verifiedAt" ) : c.isNull( "verifiedAt" )  )
 			// Role Filters
-			.when( !isNull( arguments.roleId ) && len( arguments.roleId ), ( c ) => c.eq( "role.roleId", roleId ) )
+			.when( !isNull( arguments.roleId ) && len( arguments.roleId ), ( c ) => c.eq( "roles.roleId", roleId ) )
 
 		// Run Results
 		results.count = c.count( "userId" )
 
 		// If we have a property list, then we will use projections to return a struct instead of ORM objects
 		if ( len( arguments.propertyList ) ) {
-			c.withProjections( property = arguments.propertyList )
+			c.withProjections( property: arguments.propertyList )
 				.asStruct()
 		}
 
 		results.records = c.list( offset: arguments.offset, max: arguments.max, sortOrder: arguments.sortOrder )
 
 		return results
-	}
-
-	/**
-	 * Search users and return only the summary fields needed by selectors and role management.
-	 */
-	struct function searchSummaries(
-		searchTerm = "",
-		numeric offset = 0,
-		numeric max = 25,
-		boolean isActive = true,
-		roleId,
-		boolean excludeRole = false
-	) {
-		var searchResults = search(
-			searchTerm  = arguments.searchTerm,
-			offset      = arguments.excludeRole ? 0 : arguments.offset,
-			max         = arguments.excludeRole ? 10000 : arguments.max,
-			isActive    = arguments.isActive,
-			roleId      = arguments.excludeRole ? "" : arguments.roleId ?: "",
-			propertyList = "userId,firstName,lastName,email,isActive"
-		)
-
-		if ( arguments.excludeRole && !isNull( arguments.roleId ) && len( arguments.roleId ) ) {
-			var assignedUsers = search(
-				roleId       = arguments.roleId,
-				max          = 10000,
-				isActive     = arguments.isActive,
-				propertyList = "userId"
-			).records.map( ( user ) => user.userId )
-			searchResults.records = searchResults.records
-				.filter( ( user ) => !assignedUsers.contains( user.userId ) )
-			searchResults.count = searchResults.records.len()
-			searchResults.records = searchResults.records.slice( arguments.offset + 1, arguments.offset + arguments.max )
-		}
-
-		searchResults.records = searchResults.records.map( ( user ) => toSummary( user ) )
-		return searchResults
-	}
-
-	/**
-	 * Add one user to a role without disturbing the user's other roles.
-	 */
-	struct function addRole( required userId, required role ) {
-		var user = newCriteria()
-			.eq( "userId", arguments.userId )
-			.isTrue( "isActive" )
-			.get()
-
-		if ( isNull( user ) ) {
-			throw( type = "EntityNotFound", message = "Active user not found" )
-		}
-		if ( user.getRoles().some( ( assignedRole ) => assignedRole.getRoleId() == arguments.role.getRoleId() ) ) {
-			throw( type = "DuplicateRoleAssignment", message = "User already has this role" )
-		}
-
-		user.setRoles( user.getRoles().append( arguments.role ) )
-		save( user )
-		return toSummary( user )
-	}
-
-	/**
-	 * Remove one role while preserving every other role assigned to the user.
-	 */
-	struct function removeRole( required userId, required role ) {
-		var user = newCriteria().eq( "userId", arguments.userId ).get()
-		if ( isNull( user ) ) {
-			throw( type = "EntityNotFound", message = "User not found" )
-		}
-
-		user.setRoles( user.getRoles().filter( ( assignedRole ) => assignedRole.getRoleId() != arguments.role.getRoleId() ) )
-		save( user )
-		return toSummary( user )
-	}
-
-	/**
-	 * Unassign a role from every user before the role is deleted.
-	 */
-	void function removeRoleFromUsers( required role ) {
-		arguments.role.getUsers().each( ( user ) => {
-			user.setRoles( user.getRoles().filter( ( assignedRole ) => assignedRole.getRoleId() != arguments.role.getRoleId() ) )
-			save( user )
-		} )
-	}
-
-	private struct function toSummary( required user ) {
-		return {
-			userId   : arguments.user.userId ?: arguments.user.getUserId(),
-			name     : arguments.user.name ?: arguments.user.getFullName(),
-			fullName : arguments.user.fullName ?: arguments.user.getFullName(),
-			email    : arguments.user.email ?: arguments.user.getEmail(),
-			isActive : arguments.user.isActive ?: arguments.user.getIsActive()
-		}
 	}
 
 	/**

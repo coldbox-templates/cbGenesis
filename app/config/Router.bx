@@ -30,10 +30,15 @@ class {
 		)
 
 		// Role Routes
-		route( "/roles/:roleId/users", "Roles.users" ).withVerbs( "GET" )
-		route( "/roles/:roleId/available-users", "Roles.availableUsers" ).withVerbs( "GET" )
-		route( "/roles/:roleId/users/:userId", "Roles.addUser" ).withVerbs( "POST" )
-		route( "/roles/:roleId/users/:userId", "Roles.removeUser" ).withVerbs( "DELETE" )
+		route( "/roles/:roleId/available-users", "Roles.availableUsers" )
+		// Add and remove users from a role
+		route( "/roles/:roleId/users/:userId" ).withHandler( "Roles" ).toAction({
+			POST   : "addUser",
+			DELETE : "removeUser"
+		})
+		// Get a user's roles
+		route( "/roles/:roleId/users", "Roles.users" )
+		// Role Resources
 		resources(
 			resource:"roles",
 			parameterName: "roleId"

@@ -13,10 +13,24 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="userService";
 
+	static{
+		csrfVerify = {
+			"create" : true,
+			"update" : true,
+			"delete" : true,
+			"addUser" : true,
+			"removeUser" : true
+		}
+	}
+
 	function preHandler( event, rc, prc ) {
 		// --- CSRF Verification ---
 		// Only for non-index actions, since the index action is a GET request and doesn't modify state.
-		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
+		if (
+			static.csrfVerify.keyExists( event.getCurrentAction() )
+			&& !csrfVerify( rc.csrf ?: "" )
+		) {
+			event.getResponse().addMessage( "Invalid or expired CSRF token" )
 			onAuthorizationFailure(
 				event: event,
 				rc: rc,
@@ -126,53 +140,50 @@ class extends="BaseSecureHandler" {
 
 	@remote( "List users assigned to a role" )
 	function users( event, rc, prc ) {
-		return userResults( userService.searchSummaries(
-			searchTerm = rc.search ?: "",
-			offset     = rc.offset ?: 0,
-			max        = rc.max ?: 25,
-			roleId     = rc.roleId ?: ""
-		) )
+		prc.users = userService.search(
+			max: 0,
+			isActive: true,
+			isVerified: true,
+			roleId: rc.roleId ?: "",
+			propertyList: [ "userId", "firstName", "lastName", "email" ]
+		)
+		event.getResponse().setData( data: prc.users.records )
 	}
 
 	@remote( "List users available for a role" )
 	function availableUsers( event, rc, prc ) {
-		return userResults( userService.searchSummaries(
+		prc.users = userResults( userService.searchSummaries(
 			searchTerm  = rc.search ?: "",
 			offset      = rc.offset ?: 0,
 			max         = rc.max ?: 25,
-			roleId      = rc.roleId ?: "",
-			excludeRole = true
+			propertyList: [ "userId", "firstName", "lastName", "email" ]
 		) )
+		event.getResponse().setData( data: prc.users.records )
 	}
 
 	@remote( "Assign a user to a role" )
 	function addUser( event, rc, prc ) {
-		try {
-			var role = roleService.getOrFail( rc.roleId ?: "" )
-			return { error: false, messages: "User assigned successfully.", data: userService.addRole( rc.userId ?: "", role ) }
-		} catch ( any error ) {
-			return failure( event, "User could not be assigned: #error.message#", 422 )
-		}
+		prc.user = userService
+			.getOrFail( rc.userId ?: "" )
+			.addRole( roleService.getOrFail( rc.roleId ?: "" ) )
+			.save()
+		event.getResponse().setData(
+			data: prc.user.getMemento(),
+			message: "User assigned successfully."
+		)
+
 	}
 
 	@remote( "Remove a user from a role" )
 	function removeUser( event, rc, prc ) {
-		try {
-			var role = roleService.getOrFail( rc.roleId ?: "" )
-			return { error: false, messages: "User unassigned successfully.", data: userService.removeRole( rc.userId ?: "", role ) }
-		} catch ( any error ) {
-			return failure( event, "User could not be unassigned: #error.message#", 422 )
-		}
-	}
-
-	/************************* PRIVATE METHODS ***********************************/
-
-	private struct function userResults( required struct results ) {
-		return { error: false, messages: "", data: arguments.results }
-	}
-
-	private struct function failure( required event, required string message, required numeric status ) {
-		arguments.event.setHTTPHeader( statusCode = arguments.status )
-		return { error: true, messages: arguments.message, data: "" }
+		prc.role = roleService.getOrFail( rc.roleId ?: "" )
+		prc.user = userService
+			.getOrFail( rc.userId ?: "" )
+			.removeRole( prc.role )
+			.save()
+		event.getResponse().setData(
+			data: prc.user.getMemento(),
+			message: "User removed from role successfully."
+		)
 	}
 }

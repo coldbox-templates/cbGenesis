@@ -79,51 +79,67 @@ class extends="app.models.BaseEntity" {
 	 * --------------------------------------------------------------------------
 	 */
 
+	/**
+	 * Roles that belong to this user.
+	 */
+	@fieldtype( "many-to-many" )
+	@lazy( "extra" )
+	@cascade( "save-update" )
+	@class( "app.models.security.Role" )
+	@fkcolumn( "FK_userId" )
+	@linktable( "user_roles" )
+	@inversejoincolumn( "FK_roleId" )
+	@singularName( "role" )
 	property
 		name="roles"
-		fieldtype="many-to-many"
-		type="array"
-		lazy="extra"
-		cascade="save-update"
-		cfc="app.models.security.Role"
-		fkcolumn="FK_userId"
-		linktable="user_roles"
-		inversejoincolumn="FK_roleId";
+		type="array";
 
+	/**
+	 * A-la-carte Permissions that belong to this user.
+	 */
+	@fieldtype( "many-to-many" )
+	@lazy( "extra" )
+	@cascade( "save-update" )
+	@class( "app.models.security.Permission" )
+	@fkcolumn( "FK_userId" )
+	@linktable( "user_permissions" )
+	@inversejoincolumn( "FK_permissionId" )
+	@singularName( "permission" )
 	property
 		name="permissions"
-		fieldtype="many-to-many"
-		type="array"
-		lazy="extra"
-		cascade="save-update"
-		cfc="app.models.security.Permission"
-		fkcolumn="FK_userId"
-		linktable="user_permissions"
-		inversejoincolumn="FK_permissionId";
+		type="array";
 
-    property
-        name="apiTokens"
-        fieldtype="one-to-many"
-        type="array"
-		inverse="true"
-        lazy="extra"
-        class="app.models.security.APIToken"
-        fkcolumn="FK_userId"
-        cascade="all-delete-orphan"
-		batchsize="25"
-		orderby="label asc";
+	/**
+	 * APITokens that belong to this user.
+	 */
+	@fieldtype( "one-to-many" )
+	@inverse( "true" )
+	@lazy( "extra" )
+	@class( "app.models.security.APIToken" )
+	@fkcolumn( "FK_userId" )
+	@cascade( "all-delete-orphan" )
+	@batchsize( "25" )
+	@orderby( "label asc" )
+	@singularName( "apiToken" )
+	property
+		name="apiTokens"
+		type="array";
 
+	/**
+	 * RememberTokens that belong to this user.
+	 */
+	@fieldtype( "one-to-many" )
+	@inverse( "true" )
+	@lazy( "extra" )
+	@class( "app.models.security.RememberToken" )
+	@fkcolumn( "FK_userId" )
+	@cascade( "all-delete-orphan" )
+	@batchsize( "25" )
+	@orderby( "expiration desc" )
+	@singularName( "rememberToken" )
 	property
 		name="rememberTokens"
-		fieldtype="one-to-many"
-		type="array"
-		inverse="true"
-		lazy="extra"
-		class="app.models.security.RememberToken"
-		fkcolumn="FK_userId"
-		cascade="all-delete-orphan"
-		batchsize="25"
-		orderby="expiration desc";
+		type="array";
 
 	/**
 	 * --------------------------------------------------------------------------

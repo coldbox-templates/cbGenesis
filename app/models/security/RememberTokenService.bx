@@ -50,7 +50,7 @@ class extends="app.models.BaseService" {
 		var token = findWhere( { token: hashToken( arguments.rawToken ) } )
 
 		// If the token is not found, revoked, or expired, throw an exception
-		if ( isNull( token ) || !token.getIsActive() || token.isExpired() || isNull( token.getUser() ) || !token.getUser().isActive() ) {
+		if ( isNull( token ) || !token.getIsActive() || token.isExpired() || isNull( token.getUser() ) || !token.getUser().getIsActive() ) {
 			throw( type = "RememberToken.Invalid", message = "Invalid remember token" )
 		}
 
