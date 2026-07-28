@@ -1,0 +1,56 @@
+<bx:output>
+<form
+	method="post"
+	:action="tokenModalMode === 'edit' ? '/profile/api-tokens/' + encodeURIComponent( editingToken.tokenId ) : '/profile/api-tokens'"
+	@submit="saveToken"
+>
+	#csrfField()#
+	<div class="ui-modal__body">
+		<div class="form-field">
+			<label for="api-token-label">Label <span class="required-mark" aria-hidden="true">*</span></label>
+			<input
+				id="api-token-label"
+				name="label"
+				type="text"
+				maxlength="255"
+				x-model.trim="tokenForm.label"
+				:class="{ 'is-invalid': tokenErrors.label }"
+				required
+				autocomplete="off">
+			<span class="invalid-feedback" x-show="tokenErrors.label" x-text="tokenErrors.label"></span>
+		</div>
+		<div class="form-field">
+			<label for="api-token-expiration">Expiration <span>(optional)</span></label>
+			<input
+				id="api-token-expiration"
+				name="expiration"
+				type="date"
+				x-model="tokenForm.expiration"
+				:class="{ 'is-invalid': tokenErrors.expiration }">
+			<span class="invalid-feedback" x-show="tokenErrors.expiration" x-text="tokenErrors.expiration"></span>
+		</div>
+		<div class="api-token-secret" x-show="createdRawToken" x-cloak>
+			<strong>Copy this token now</strong>
+			<p>This value is shown only once and cannot be recovered later.</p>
+			<code x-text="createdRawToken"></code>
+			<button type="button" class="btn btn-secondary btn-sm" @click="copyCreatedToken()">
+				<i class="ph-duotone ph-copy" aria-hidden="true"></i>
+				<span x-text="tokenCopied ? 'Copied' : 'Copy Token'"></span>
+			</button>
+		</div>
+	</div>
+	<div class="ui-modal__footer">
+		<button type="button" class="btn btn-secondary" @click="closeTokenModal()" :disabled="tokenSubmitting">Cancel</button>
+		<button type="submit" class="btn btn-primary" :disabled="tokenSubmitting || !tokenFormValid">
+			<span x-show="!tokenSubmitting">
+				<i class="ph-duotone" :class="tokenModalMode === 'edit' ? 'ph-floppy-disk' : 'ph-plus'" aria-hidden="true"></i>
+				<span x-text="tokenModalMode === 'edit' ? 'Save Token' : 'Create Token'"></span>
+			</span>
+			<span x-show="tokenSubmitting" x-cloak>
+				<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+				Saving...
+			</span>
+		</button>
+	</div>
+</form>
+</bx:output>

@@ -31,6 +31,7 @@
 <bx:param name="args.id" default="confirm"/>
 <bx:param name="args.title" default="Confirm Action"/>
 <bx:param name="args.message" default="Are you sure you want to continue?"/>
+<bx:param name="args.messageExpression" default=""/>
 <bx:param name="args.icon" default="ph-warning-circle"/>
 <bx:param name="args.openExpression" default="false"/>
 <bx:param name="args.closeExpression" default="closeConfirm()"/>
@@ -68,7 +69,13 @@
 		</div>
 		<div class="ui-modal__body delete-confirmation">
 			<i class="ph-duotone #encodeForHTMLAttribute( args.icon )#" aria-hidden="true"></i>
-			<p id="#encodeForHTMLAttribute( args.id )#-message">#encodeForHTML( args.message )#</p>
+			<p id="#encodeForHTMLAttribute( args.id )#-message">
+				<bx:if len( trim( args.messageExpression ) )>
+					<span x-text="#args.messageExpression#"></span>
+				<bx:else>
+					#encodeForHTML( args.message )#
+				</bx:if>
+			</p>
 		</div>
 		<div class="ui-modal__footer">
 			<button

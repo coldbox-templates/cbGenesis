@@ -158,7 +158,7 @@
 		</section>
 
 		<!--- Password --->
-		<section class="content-card form-card" x-show="activeTab === 'password'" x-cloak>
+		<section class="content-card form-card profile-password-card" x-show="activeTab === 'password'" x-cloak>
 			<div class="content-card-header"><h3 class="content-card-title">Change Password</h3></div>
 
 			<form
@@ -229,6 +229,70 @@
 				</div>
 			</form>
 		</section>
+
+		<!--- API Tokens --->
+		<section class="content-card form-card api-tokens-card" x-show="activeTab === 'password'" x-cloak>
+			<div class="content-card-header">
+				<div>
+					<h3 class="content-card-title">
+						<i class="ph-duotone ph-key" aria-hidden="true"></i>
+						API Tokens
+					</h3>
+					<p class="content-card-subtitle">Create tokens for integrations that access your account.</p>
+				</div>
+				<button type="button" class="btn btn-primary btn-sm" @click="openCreateTokenModal()">
+					<i class="ph-duotone ph-plus" aria-hidden="true"></i>
+					Create Token
+				</button>
+			</div>
+
+			<div class="api-token-list" x-show="apiTokens.length" x-cloak>
+				<template x-for="token in apiTokens" :key="token.tokenId">
+					<div class="api-token-row">
+						<div class="api-token-details">
+							<strong x-text="token.label"></strong>
+							<code x-text="token.tokenSnapshot"></code>
+						</div>
+						<div class="api-token-actions">
+							<button type="button" class="icon-button" title="Edit token" aria-label="Edit token" @click="openEditTokenModal( token )">
+								<i class="ph-duotone ph-pencil-simple" aria-hidden="true"></i>
+							</button>
+							<button type="button" class="icon-button danger" title="Delete token" aria-label="Delete token" @click="confirmDeleteToken( token )">
+								<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+							</button>
+						</div>
+					</div>
+				</template>
+			</div>
+			<p class="text-muted api-token-empty" x-show="!apiTokens.length" x-cloak>No API tokens have been created.</p>
+		</section>
+
+		#view(
+			view = "_components/ui/modal",
+			args = {
+				id            : "api-token-modal",
+				title         : "API Token",
+				openExpression: "tokenModalOpen",
+				closeExpression: "closeTokenModal()",
+				contentView   : "profile/apiTokenForm"
+			}
+		)#
+
+		#view(
+			view = "_components/ui/confirm",
+			args = {
+				id                 : "api-token-delete-confirm",
+				title              : "Delete API Token",
+				messageExpression  : "'Delete ' + ( selectedToken?.label || 'this token' ) + '?'",
+				openExpression     : "confirmTokenOpen",
+				closeExpression    : "cancelDeleteToken()",
+				confirmExpression  : "deleteApiToken()",
+				confirmLabel       : "Delete Token",
+				confirmClass       : "btn-danger",
+				confirmIcon        : "ph-trash",
+				disabledExpression : "deleteTokenLoading"
+			}
+		)#
 	</div>
 </div>
 </bx:output>

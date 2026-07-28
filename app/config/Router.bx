@@ -21,9 +21,9 @@ class {
 		)
 
 		// Dashboard
-		route( pattern = "dashboard", target = "Dashboard.index" )
+		route( "dashboard", "Dashboard.index" )
 
-		// Resources
+		// Permission Resources
 		resources(
 			resource:"permissions",
 			parameterName: "permissionId"
@@ -50,12 +50,20 @@ class {
 			parameterName: "userId"
 		)
 
-		// Profile Route
+		// Profile Routes
+		post( "profile/password", "Profile.doPasswordChange" )
+		route( "profile/api-tokens" ).withHandler( "Profile" ).toAction({
+			GET : "listTokens",
+			POST: "createToken"
+		})
+		route( "profile/api-tokens/:tokenId" ).withHandler( "Profile" ).toAction({
+			POST  : "updateToken",
+			DELETE: "deleteToken"
+		})
 		route( "profile" ).withHandler( "Profile" ).toAction({
 			GET: "index",
 			POST: "save"
 		})
-		post( pattern = "profile/password", target = "Profile.password" )
 
 		// Settings Routes
 		route( "settings" ).withHandler( "Settings" ).toAction({
@@ -64,9 +72,9 @@ class {
 		})
 
 		// Setting Admin Actions
-		post( pattern = "settings/clear-template-cache", target = "Settings.clearTemplateCache" )
-		post( pattern = "settings/clear-sessions-cache", target = "Settings.clearSessionsCache" )
-		post( pattern = "settings/revoke-remember-tokens", target = "Settings.revokeRememberTokens" )
+		post( "settings/clear-template-cache", "Settings.clearTemplateCache" )
+		post( "settings/clear-sessions-cache", "Settings.clearSessionsCache" )
+		post( "settings/revoke-remember-tokens", "Settings.revokeRememberTokens" )
 
 		// Auth Routes
 		route( "login" ).withHandler( "Auth" ).toAction({

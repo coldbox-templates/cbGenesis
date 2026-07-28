@@ -10,10 +10,16 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="securityService";
 
+	@inject
+	property name="apiTokenService";
+
 	static{
 		csrfVerify = {
 			"save"    : true,
-			"password": true
+			"password": true,
+			"createToken": true,
+			"updateToken": true,
+			"deleteToken": true
 		}
 	}
 
@@ -78,7 +84,7 @@ class extends="BaseSecureHandler" {
 	}
 
 	@remote( "Change the authenticated user's password remotely via AJAX" )
-	function password( event, rc, prc ) {
+	function doPasswordChange( event, rc, prc ) {
 		var response = event.getResponse()
 		var currentPassword = rc.currentPassword.trim() ?: ""
 		var newPassword = rc.password.trim() ?: ""
@@ -107,6 +113,102 @@ class extends="BaseSecureHandler" {
 		)
 
 		response.addMessage( "Password changed successfully." )
+	}
+
+	/**
+	 * List the authenticated user's active API tokens as safe mementos.
+	 */
+	@remote( "List the authenticated user's API tokens remotely via AJAX" )
+	function listTokens( event, rc, prc ) {
+		event.getResponse().setData(
+			apiTokenService
+				.listForUser( prc.authUser.getId() )
+				.map( .getMemento )
+		)
+	}
+
+	/**
+	 * Create an API token for the authenticated user.
+	 */
+	@remote( "Create an API token remotely via AJAX" )
+	function createToken( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			// Prep incoming data
+			rc.label = trim( rc.label ?: "" )
+			rc.expiration = trim( rc.expiration ?: "" )
+			// Create the token
+			prc.tokenResults = apiTokenService
+				.new()
+				.populate( rc )
+				.validateOrFail()
+				.save()
+			response.setData(
+				data: {
+					token   : prc.tokenResults.token.getMemento(),
+					rawToken: prc.tokenResults.rawToken
+				},
+				message: "API token created successfully."
+			)
+		} catch ( ValidationException error ) {
+			response.setErrorMessage(
+				message: "Token validation errors",
+				statusCode: 422,
+				data : prc.token.getValidationResult().getAllErrorsAsStruct()
+			)
+		} catch ( any error ) {
+			log.error( "Error saving token: #error.message#", error )
+			response.setErrorMessage(
+				message: "Token could not be saved: #error.message & error.detail#",
+				statusCode: 500
+			)
+		}
+		return response
+	}
+
+	/**
+	 * Update an authenticated user's API token label.
+	 */
+	@remote( "Update an API token remotely via AJAX" )
+	function updateToken( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			// You can only update the label
+			prc.tokenResults = apiTokenService
+				.getOrFail( rc.tokenId ?: "" )
+				.setLabel( rc.label ?: "" )
+				.save()
+			response.setData( data: token.getMemento(), message: "API token saved successfully." )
+		} catch ( any error ) {
+			log.error( "Error updating API token: #error.message#", error )
+			response.setErrorMessage(
+				message   : "API token could not be saved.",
+				statusCode: 500
+			)
+		}
+		return response
+	}
+
+	/**
+	 * Permanently delete an authenticated user's API token after confirmation.
+	 */
+	@remote( "Delete an API token remotely via AJAX" )
+	function deleteToken( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			apiTokenService
+				.getOrFail( rc.tokenId ?: "" )
+				.delete()
+			response.addMessage( "API token deleted successfully." )
+		} catch ( any error ) {
+			log.error( "Error deleting API token with ID [#rc.tokenId#]: #error.message#", error )
+			response.setErrorMessage(
+				message: "API token could not be deleted: #error.message & error.detail#",
+				statusCode: 500
+			)
+		}
+
+		return response
 	}
 
 }

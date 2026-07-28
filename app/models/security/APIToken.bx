@@ -10,6 +10,15 @@ class extends="app.models.BaseEntity" {
 
 	/**
 	 * --------------------------------------------------------------------------
+	 * Injections
+	 * --------------------------------------------------------------------------
+	 */
+	@inject( "APITokenService" )
+	@persistent( false )
+	property name="apiTokenService";
+
+	/**
+	 * --------------------------------------------------------------------------
 	 * Properties
 	 * --------------------------------------------------------------------------
 	 */
@@ -90,26 +99,25 @@ class extends="app.models.BaseEntity" {
 	 */
 	this.memento = {
 		defaultIncludes: [
-			"tokenId",
 			"label",
 			"expiration",
 			"lastUsed",
 			"tokenSnapshot"
 		],
 		defaultExcludes: [],
-		neverInclude   : [ "token" ]
+		neverInclude   : [ "token", "lastUsed" ]
 	};
 
 	/**
 	 * Constructor
 	 */
 	function init() {
-		super.init( "tokenId" );
-		variables.label = "";
-		variables.token = "";
-		variables.expiration = null;
-		variables.lastUsed = null;
-		return this;
+		super.init( "tokenId" )
+		variables.label = ""
+		variables.token = generateRawToken()
+		variables.expiration = null
+		variables.lastUsed = null
+		return this
 	}
 
 	/**
@@ -118,9 +126,20 @@ class extends="app.models.BaseEntity" {
 	 */
 	string function getTokenSnapshot(){
 		if( variables.token.isEmpty() ){
-			return "";
+			return ""
 		}
-		return "****" & right( variables.token, 4 )
+		return left( variables.token, 5 ) & "****"
+	}
+
+	/**
+	 * Check if the provided apiToken matches the user's current apiToken
+	 *
+	 * @apiToken The apiToken to check
+	 *
+	 * @return boolean True if the apiToken matches, false otherwise.
+	 */
+	boolean function sameApiToken( required string apiToken ) {
+		return BCryptVerify( arguments.apiToken, getToken() )
 	}
 
 	/**
@@ -154,20 +173,62 @@ class extends="app.models.BaseEntity" {
 	 */
 	boolean function isExpiringSoon( numeric days = 7 ) {
 		if ( isNull( variables.expiration ) ) {
-			return false;
+			return false
 		}
 		var threshold = dateAdd(
 			"d",
 			arguments.days,
 			now()
-		);
+		)
+
 		return dateCompare(
 					variables.expiration,
 					threshold,
 					"s"
 				) <=
 				0 &&
-			!this.isExpired();
+			!this.isExpired()
+	}
+
+	/**
+	 * Set the expiration date for this token.
+	 *
+	 * @expiration The expiration date to set.
+	 *
+	 * @return The updated API token entity.
+	 */
+	APIToken function setExpiration( date expiration ) {
+		variables.expiration = parseTokenExpiration( arguments.expiration )
+		return this
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Private Methods
+	 * --------------------------------------------------------------------------
+	 */
+
+	/**
+	 * Generate a raw token using a cryptographically secure random number generator.
+	 *
+	 * @return A cryptographically generated token with a "cb_" prefix.
+	 */
+	private string function generateRawToken() {
+		return "cb_" & generateSecretKey( "AES", 256 )
+	}
+
+	/**
+	 * Parse a token expiration date from a string.
+	 *
+	 * @expiration The expiration date as a string.
+	 *
+	 * @return The parsed date or null if the input is empty.
+	 */
+	private date function parseTokenExpiration( required string expiration ) {
+		if ( isNull( arguments.expiration ) || !len( trim( arguments.expiration ) ) ) {
+			return null
+		}
+		return parseDateTime( "#trim( arguments.expiration )# 23:59:59" )
 	}
 
 }
