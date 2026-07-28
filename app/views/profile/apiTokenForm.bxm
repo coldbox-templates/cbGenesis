@@ -5,8 +5,8 @@
 	@submit="saveToken"
 >
 	<input type="hidden" name="csrf" :value="csrfToken">
-	<div class="ui-modal__body">
-		<div class="form-field">
+	<div class="ui-modal__body" :class="{ 'api-token-reveal-body': createdRawToken }">
+		<div class="form-field" x-show="!createdRawToken">
 			<label for="api-token-label">Label <span class="required-mark" aria-hidden="true">*</span></label>
 			<input
 				id="api-token-label"
@@ -19,7 +19,7 @@
 				autocomplete="off">
 			<span class="invalid-feedback" x-show="tokenErrors.label" x-text="tokenErrors.label"></span>
 		</div>
-		<div class="form-field">
+		<div class="form-field" x-show="!createdRawToken">
 			<label for="api-token-expiration">Expiration <span>(optional)</span></label>
 			<input
 				id="api-token-expiration"
@@ -40,8 +40,12 @@
 		</div>
 	</div>
 	<div class="ui-modal__footer">
-		<button type="button" class="btn btn-secondary" @click="closeTokenModal()" :disabled="tokenSubmitting">Cancel</button>
-		<button type="submit" class="btn btn-primary" :disabled="tokenSubmitting || !tokenFormValid">
+		<button type="button" class="btn btn-secondary" @click="closeTokenModal()" :disabled="tokenSubmitting" x-show="!createdRawToken">Cancel</button>
+		<button type="button" class="btn btn-primary" @click="closeTokenModal()" x-show="createdRawToken" x-cloak>
+			<i class="ph-duotone ph-check" aria-hidden="true"></i>
+			Done
+		</button>
+		<button type="submit" class="btn btn-primary" :disabled="tokenSubmitting || !tokenFormValid" x-show="!createdRawToken">
 			<span x-show="!tokenSubmitting">
 				<i class="ph-duotone" :class="tokenModalMode === 'edit' ? 'ph-floppy-disk' : 'ph-plus'" aria-hidden="true"></i>
 				<span x-text="tokenModalMode === 'edit' ? 'Save Token' : 'Create Token'"></span>

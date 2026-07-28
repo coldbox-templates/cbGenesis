@@ -46,6 +46,7 @@
 <div id="#encodeForHTMLAttribute( args.id )#"
 	class="ui-modal"
 	x-data="{ submitting: false }"
+	x-effect="if ( !#args.openExpression# ) submitting = false"
 	x-show="#args.openExpression#"
 	x-cloak
 	x-transition.opacity

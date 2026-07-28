@@ -218,7 +218,7 @@ class extends="BaseSecureHandler" {
 			}
 
 			// Delete it
-			token.delete()
+			prc.token.delete()
 			response.addMessage( "API token deleted successfully." )
 		} catch ( any error ) {
 			log.error( "Error deleting API token with ID [#rc.tokenId#]: #error.message#", error )
