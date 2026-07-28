@@ -901,8 +901,10 @@
 	max-width: 820px;
 
 	.content-card-header {
-		align-items: flex-start;
-		gap: 1rem;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto auto;
+		align-items: center;
+		gap: 0.75rem 1rem;
 	}
 
 	.content-card-header > div:first-child {
@@ -969,6 +971,7 @@
 @media (max-width: 520px) {
 	.api-tokens-card .content-card-header {
 		flex-wrap: wrap;
+		display: flex;
 	}
 
 	.api-tokens-card .content-card-header .btn {
@@ -977,6 +980,18 @@
 
 	.api-token-row {
 		align-items: flex-start;
+	}
+}
+
+@media (min-width: 900px) {
+	.profile-layout > .profile-password-card {
+		grid-column: 1 / -1;
+		max-width: none;
+	}
+
+	.profile-layout > .api-tokens-card {
+		grid-column: 1 / -1;
+		max-width: none;
 	}
 }
 

@@ -67,7 +67,7 @@ class extends="BaseSecureHandler" {
 		}
 		catch( ValidationException error ) {
 			response.setErrorMessage(
-				message: "Profile validation errors",
+				errorMessage: "Profile validation errors",
 				statusCode: 422,
 				data: prc.profile.getValidationResult().getAllErrorsAsStruct()
 			)
@@ -75,7 +75,7 @@ class extends="BaseSecureHandler" {
 		catch ( any error ) {
 			log.error( "Error saving profile: #error.message#", error )
 			response.setErrorMessage(
-				message: "Profile could not be saved: #error.message#",
+				errorMessage: "Profile could not be saved: #error.message#",
 				statusCode: 500
 			)
 		}
@@ -95,7 +95,7 @@ class extends="BaseSecureHandler" {
 		if ( !prc.authUser.samePassword( currentPassword ) ) {
 			errors.currentPassword = "The current password is incorrect."
 			return response.setErrorMessage(
-				message: "Password validation errors",
+				errorMessage: "Password validation errors",
 				statusCode: 422,
 				data: errors
 			)
@@ -105,7 +105,7 @@ class extends="BaseSecureHandler" {
 		if ( !securityService.isValidPassword( newPassword ) ) {
 			errors.password = "The new password must be at least 8 characters and include uppercase, lowercase, number, and special characters."
 			return response.setErrorMessage(
-				message: "Password validation errors",
+				errorMessage: "Password validation errors",
 				statusCode: 422,
 				data: errors
 			)
@@ -158,14 +158,14 @@ class extends="BaseSecureHandler" {
 			)
 		} catch ( ValidationException error ) {
 			response.setErrorMessage(
-				message: "Token validation errors",
+				errorMessage: "Token validation errors",
 				statusCode: 422,
 					data : prc.token.getValidationResult().getAllErrorsAsStruct()
 			)
 		} catch ( any error ) {
 			log.error( "Error saving token: #error.message#", error )
 			response.setErrorMessage(
-				message: "Token could not be saved: #error.message & error.detail#",
+				errorMessage: "Token could not be saved: #error.message & error.detail#",
 				statusCode: 500
 			)
 		}
@@ -196,7 +196,7 @@ class extends="BaseSecureHandler" {
 		} catch ( any error ) {
 			log.error( "Error updating API token: #error.message#", error )
 			response.setErrorMessage(
-				message   : "API token could not be saved.",
+				errorMessage   : "API token could not be saved.",
 				statusCode: 500
 			)
 		}
@@ -223,7 +223,7 @@ class extends="BaseSecureHandler" {
 		} catch ( any error ) {
 			log.error( "Error deleting API token with ID [#rc.tokenId#]: #error.message#", error )
 			response.setErrorMessage(
-				message: "API token could not be deleted: #error.message & error.detail#",
+				errorMessage: "API token could not be deleted: #error.message & error.detail#",
 				statusCode: 500
 			)
 		}
