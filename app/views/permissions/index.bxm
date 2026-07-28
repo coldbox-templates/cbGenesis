@@ -55,7 +55,7 @@
 
 	<!--- Permission Grid --->
 	<div class="permission-grid">
-		<template x-for="group in permissionGroups" :key="group.key">
+		<template x-for="group in groups" :key="group.key">
 			<section class="content-card permission-group-card">
 				<!--- Permission Header --->
 				<div class="content-card-header">
@@ -105,7 +105,7 @@
 		</template>
 
 		<!--- No Permissions Tab --->
-		<div class="content-card empty-state" x-show="permissionGroups.length === 0" x-cloak>
+		<div class="content-card empty-state" x-show="groups.length === 0" x-cloak>
 			<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
 			<strong>No permissions found</strong>
 			<span>Try a different search term.</span>
