@@ -107,7 +107,7 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			this.editingToken = token;
 			this.tokenForm = {
 				label      : token.label || "",
-				expiration : token.expiration ? String( token.expiration ).substring( 0, 10 ) : "",
+				expiration : "",
 			};
 			this.tokenErrors = {};
 			this.createdRawToken = "";
