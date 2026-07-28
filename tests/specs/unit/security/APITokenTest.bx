@@ -24,7 +24,8 @@ class extends="tests.resources.BaseIntegrationSpec" {
 			it( "initializes with default values", () => {
 				expect( apiToken.isLoaded() ).toBeFalse()
 				expect( apiToken.getLabel() ).toBe( "" )
-				expect( apiToken.getToken() ).toBe( "" )
+				expect( apiToken.getToken() ).toStartWith( "cb_" )
+				expect( apiToken.getToken() ).notToBeEmpty()
 				expect( apiToken.getExpiration() ).toBeNull()
 				expect( apiToken.getLastUsed() ).toBeNull()
 				expect( apiToken.hasExpiration() ).toBeFalse()

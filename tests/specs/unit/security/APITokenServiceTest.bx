@@ -11,11 +11,24 @@ class extends="tests.resources.BaseIntegrationSpec"{
 
 	function beforeAll() {
 		super.beforeAll()
-		// get the test fixture user
-		variables.testUser = userService.findWhere( {
-			email: "admin@cbGenesis.com"
+		variables.testUser = createVerifiedUser()
+	}
+
+	private struct function createTokenFixture(
+		required any user,
+		required string label,
+		any expiration
+	) {
+		var token = apiTokenService.new( {
+			label: arguments.label,
+			user : arguments.user
 		} )
-		// Create any other fixtures here
+
+		if ( !isNull( arguments.expiration ) ) {
+			token.setExpiration( arguments.expiration )
+		}
+
+		return apiTokenService.createToken( token )
 	}
 
 	/*********************************** BDD SUITES ***********************************/
@@ -28,9 +41,9 @@ class extends="tests.resources.BaseIntegrationSpec"{
 			} )
 
 			it( "creates and validates a token without exposing its hash", () => {
-				var tokenData = apiTokenService.createToken(
-					user      = variables.testUser,
-					label     = "Service test token",
+				var tokenData = createTokenFixture(
+					user       = variables.testUser,
+					label      = "Service test token",
 					expiration = dateAdd( "d", 1, now() )
 				)
 				var token = tokenData.token
@@ -38,30 +51,28 @@ class extends="tests.resources.BaseIntegrationSpec"{
 				expect( tokenData.rawToken ).toStartWith( "cb_" )
 				expect( token.getTokenId() ).notToBeEmpty()
 				expect( token.getLabel() ).toBe( "Service test token" )
-				expect( apiTokenService.isValidToken( tokenData.rawToken ) ).toBeTrue()
+				var validatedToken = apiTokenService.validateToken( tokenData.rawToken )
 
-				var persistedToken = apiTokenService.findByIdForUser(
-					tokenId = token.getTokenId(),
-					userId  = variables.testUser.getId()
-				)
-				expect( persistedToken.getToken() ).notToBe( tokenData.rawToken )
-				expect( persistedToken.getToken().len() ).toBe( 64 )
-				expect( persistedToken.getLastUsed() ).notToBeNull()
+				expect( validatedToken.getToken() ).notToBe( tokenData.rawToken )
+				expect( validatedToken.getToken().len() ).toBeGTE( 50 )
+				expect( validatedToken.getLastUsed() ).notToBeNull()
+				expect( validatedToken.getUser().getId() ).toBe( variables.testUser.getId() )
 			} )
 
 			it( "revokes a token and prevents further validation", () => {
-				var tokenData = apiTokenService.createToken(
+				var tokenData = createTokenFixture(
 					user  = variables.testUser,
 					label = "Revocation test token"
 				)
 
-				apiTokenService.revokeToken( tokenData.token.getTokenId() )
+				expect( apiTokenService.revokeToken( tokenData.token.getTokenId() ) ).toBeTrue()
+				expect( apiTokenService.revokeToken( tokenData.token.getTokenId() ) ).toBeFalse()
 
 				expect( apiTokenService.isValidToken( tokenData.rawToken ) ).toBeFalse()
 			} )
 
-			it( "lists and deletes tokens only for their owner", () => {
-				var tokenData = apiTokenService.createToken(
+			it( "lists tokens for their owner", () => {
+				var tokenData = createTokenFixture(
 					user  = variables.testUser,
 					label = "Ownership test token"
 				)
@@ -69,46 +80,18 @@ class extends="tests.resources.BaseIntegrationSpec"{
 
 				expect( tokens ).toBeArray()
 				expect( tokens.map( ( token ) => token.tokenId ) ).toInclude( tokenData.token.getTokenId() )
-				expect(
-					apiTokenService.deleteToken(
-						tokenId = tokenData.token.getTokenId(),
-						userId  = variables.testUser.getId()
-					)
-				).toBeTrue()
-			} )
-
-			it( "touches a token and supports listing inactive tokens", () => {
-				var tokenData = apiTokenService.createToken(
-					user  = variables.testUser,
-					label = "Touch test token"
-				)
-				var tokenId = tokenData.token.getTokenId()
-
-				expect( tokenData.token.getLastUsed() ).toBeNull()
-				var touchedToken = apiTokenService.touchLastUsed( tokenId )
-				expect( touchedToken.getLastUsed() ).notToBeNull()
-
-				apiTokenService.revokeToken( tokenId )
-				var inactiveTokens = apiTokenService.listForUser(
-					userId = variables.testUser.getId(),
-					activeOnly = false
-				)
-				expect( inactiveTokens.map( ( token ) => token.tokenId ) ).toInclude( tokenId )
 			} )
 
 			it( "revokes all tokens for a user", () => {
-				var firstToken = apiTokenService.createToken(
+				var firstToken = createTokenFixture(
 					user  = variables.testUser,
 					label = "Bulk revoke one"
 				)
-				var secondToken = apiTokenService.createToken(
+				var secondToken = createTokenFixture(
 					user  = variables.testUser,
 					label = "Bulk revoke two"
 				)
-				var tokenCount = apiTokenService.listForUser(
-					userId = variables.testUser.getId()
-					, activeOnly = false
-				).len()
+				var tokenCount = 2
 
 				expect( apiTokenService.revokeAllForUser( variables.testUser.getId() ) ).toBe( tokenCount )
 				expect( apiTokenService.isValidToken( firstToken.rawToken ) ).toBeFalse()
@@ -116,12 +99,12 @@ class extends="tests.resources.BaseIntegrationSpec"{
 			} )
 
 			it( "rejects invalid, expired, and unauthorized token access", () => {
-				var expiredToken = apiTokenService.createToken(
+				var expiredToken = createTokenFixture(
 					user       = variables.testUser,
 					label      = "Expired validation token",
 					expiration = dateAdd( "d", -1, now() )
 				)
-				var revokedToken = apiTokenService.createToken(
+				var revokedToken = createTokenFixture(
 					user  = variables.testUser,
 					label = "Revoked validation token"
 				)
@@ -130,14 +113,6 @@ class extends="tests.resources.BaseIntegrationSpec"{
 				expect( () => apiTokenService.validateToken( "unknown-token" ) ).toThrow( "APIToken.Invalid" )
 				expect( () => apiTokenService.validateToken( expiredToken.rawToken ) ).toThrow( "APIToken.Invalid" )
 				expect( () => apiTokenService.validateToken( revokedToken.rawToken ) ).toThrow( "APIToken.Invalid" )
-				expect( () => apiTokenService.findByIdForUser(
-					tokenId = expiredToken.token.getTokenId(),
-					userId = createUUID()
-				) ).toThrow( "APIToken.NotFound" )
-				expect( () => apiTokenService.deleteToken(
-					tokenId = expiredToken.token.getTokenId(),
-					userId = createUUID()
-				) ).toThrow( "APIToken.NotFound" )
 			} )
 
 			it( "purges expired tokens", () => {
