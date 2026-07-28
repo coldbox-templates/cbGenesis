@@ -66,6 +66,56 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
+	 * Check if a password meets the minimum system requirements and rules.
+	 *
+	 * - Min length: 8 characters
+	 * - Must contain at least one uppercase letter
+	 * - Must contain at least one lowercase letter
+	 * - Must contain at least one number
+	 * - Must contain at least one special character
+	 *
+	 * @password The password to check.
+	 * @predicate A function that takes a password and returns true if it meets the requirements, false otherwise. This allows for custom password validation logic to be passed in.
+	 *
+	 * @return True if the password is valid, false otherwise.
+	 */
+	boolean function isValidPassword( required string password, function predicate ) {
+		var minLength = getSetting( "cbMinPasswordLength" )
+
+		// Check the minimum length
+		if ( len( arguments.password ) < minLength ) {
+			return false
+		}
+
+		// Check the custom predicate if provided
+		if ( !isNull( arguments.predicate ) && !arguments.predicate( password ) ) {
+			return false
+		}
+
+		// Check for at least one uppercase letter
+		if ( !reFind( "[A-Z]", arguments.password ) ) {
+			return false
+		}
+
+		// Check for at least one lowercase letter
+		if ( !reFind( "[a-z]", arguments.password ) ) {
+			return false
+		}
+
+		// Check for at least one number
+		if ( !reFind( "[0-9]", arguments.password ) ) {
+			return false
+		}
+
+		// Check for at least one special character
+		if ( !reFind( "[^A-Za-z0-9]", arguments.password ) ) {
+			return false
+		}
+
+		return true
+	}
+
+	/**
 	 * This method will go over all system settings and make sure that there are no missing default core settings.
 	 * If they are, we will create the core settings with the appropriate defaults: this.DEFAULTS
 	 */

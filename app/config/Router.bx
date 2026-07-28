@@ -55,6 +55,7 @@ class {
 			GET: "index",
 			POST: "save"
 		})
+		post( pattern = "profile/password", target = "Profile.password" )
 
 		// Settings Routes
 		route( "settings" ).withHandler( "Settings" ).toAction({

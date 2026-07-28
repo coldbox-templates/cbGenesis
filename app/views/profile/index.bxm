@@ -1,97 +1,234 @@
 <bx:output>
-<!--- User Header --->
-<div class="page-header admin-page-heading">
-	<div>
-		<p class="eyebrow">My Profile</p>
-		<h2 class="page-title">Account Settings</h2>
-		<p class="page-subtitle">My profile information and preferences.</p>
+<div
+	class="profile-page"
+	x-data='profileForm( #forAttribute( prc.profile.getMemento() )# )'
+	@profile-password-changed.window="setNewPassword( $event.detail.value )"
+>
+
+	<!--- Header --->
+	<div class="page-header admin-page-heading">
+		<div>
+			<p class="eyebrow">My Profile</p>
+			<h2 class="page-title">Account Settings</h2>
+			<p class="page-subtitle">My profile information and preferences.</p>
+		</div>
 	</div>
-</div>
 
-<div class="profile-layout">
+	<div class="profile-layout">
 
-	<!--- Flash Messages --->
-	<bx:if flash.exists( "messages" )>
+		<!--- Profile Hero --->
+		<section class="content-card profile-hero">
+			<div class="profile-hero-cover"></div>
+			<div class="profile-hero-body">
+				<div class="profile-orb small" data-profile-initials>#encodeForHTML( prc.authUser.getInitials() )#</div>
+				<h3 data-profile-name>#encodeForHTML( prc.authUser.getFullName() )#</h3>
+			</div>
+		</section>
+
+		<!--- Access Summary --->
+		<section class="content-card form-card access-summary-card">
+			<div class="content-card-header">
+				<div>
+					<h3 class="content-card-title">
+						<i class="ph-duotone ph-shield-check" aria-hidden="true"></i>
+						Assigned Access
+					</h3>
+					<p class="content-card-subtitle">Roles and direct permissions assigned to your account.</p>
+				</div>
+			</div>
+			<div class="access-summary-grid">
+				<div>
+					<h4>Roles</h4>
+					<div class="chip-row">
+						<bx:if prc.authUser.getRoles().len()>
+							<bx:loop array="#prc.authUser.getRoles()#" item="role">
+								<span class="chip chip-info">#encodeForHTML( role.getRole() )#</span>
+							</bx:loop>
+						<bx:else>
+							<span class="text-muted">No roles assigned.</span>
+						</bx:if>
+					</div>
+				</div>
+				<div>
+					<h4>Direct Permissions</h4>
+					<div class="chip-row">
+						<bx:if prc.authUser.getPermissions().len()>
+							<bx:loop array="#prc.authUser.getPermissions()#" item="permission">
+								<span class="chip chip-cyan">#encodeForHTML( permission.getPermission() )#</span>
+							</bx:loop>
+						<bx:else>
+							<span class="text-muted">No direct permissions assigned.</span>
+						</bx:if>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!--- Profile Tabs --->
+		<div class="segmented-control profile-tabs" role="tablist" aria-label="Profile settings">
+			<button
+				type="button"
+				role="tab"
+				:class="activeTab === 'profile' ? 'active' : ''"
+				:aria-selected="activeTab === 'profile'"
+				@click="activeTab = 'profile'"
+			>
+				<i class="ph-duotone ph-user" aria-hidden="true"></i>
+				Profile
+			</button>
+			<button
+				type="button"
+				role="tab"
+				:class="activeTab === 'password' ? 'active' : ''"
+				:aria-selected="activeTab === 'password'"
+				@click="activeTab = 'password'"
+				>
+				<i class="ph-duotone ph-lock-key" aria-hidden="true"></i>
+				Password
+			</button>
+		</div>
+
+		<!--- MessageBox --->
 		#view(
 			view = "_components/ui/messagebox",
 			args = {
-				type       : flash.get( "messages" ).type ?: "info",
-				message    : flash.get( "messages" ).message ?: "",
-				dismissible: true,
-				classes    : "mb-4"
+				dynamic          : true,
+				messageExpression: "notice.message",
+				typeExpression   : "notice.type",
+				dismissAction    : "clearNotice()"
 			}
 		)#
-	</bx:if>
-
-	<!--- Profile Hero --->
-	<section class="content-card profile-hero">
-		<div class="profile-hero-cover"></div>
-		<div class="profile-hero-body">
-			<div class="profile-orb small">#encodeForHTML( prc.authUser.getInitials() )#</div>
-			<h3>#encodeForHTML( prc.authUser.getFullName() )#</h3>
-		</div>
-	</section>
-
-	<!--- Profile Form --->
-	<section class="content-card form-card">
-
-		<!--- Personal Information Header --->
-		<div class="content-card-header">
-			<h3 class="content-card-title">Personal Information</h3>
-		</div>
 
 		<!--- Profile Form --->
-		<form method="post" action="#event.buildLink( "profile/update" )#">
-			<!--- CSRF Token --->
-			#csrfField()#
+		<section class="content-card form-card" x-show="activeTab === 'profile'" x-cloak>
+			<div class="content-card-header"><h3 class="content-card-title">Personal Information</h3></div>
+			<form method="post" action="#event.buildLink( "profile" )#" @submit="submitProfile">
+				#csrfField()#
+				<div class="form-grid">
+					<label for="firstName"><span class="field-label">First Name <span class="required-mark" aria-hidden="true">*</span></span>
+						<input
+							id="firstName"
+							name="firstName"
+							type="text"
+							x-model.trim="profile.firstName"
+							:class="{ 'is-invalid': !profile.firstName.trim() || profile.errors.firstName }"
+							required
+							autocomplete="given-name">
+						<span class="invalid-feedback" x-show="profile.errors.firstName" x-text="profile.errors.firstName"></span>
+					</label>
+					<label for="lastName"><span class="field-label">Last Name <span class="required-mark" aria-hidden="true">*</span></span>
+						<input
+							id="lastName"
+							name="lastName"
+							type="text"
+							x-model.trim="profile.lastName"
+							:class="{ 'is-invalid': !profile.lastName.trim() || profile.errors.lastName }"
+							required
+							autocomplete="family-name">
+						<span class="invalid-feedback" x-show="profile.errors.lastName" x-text="profile.errors.lastName"></span>
+					</label>
+					<label class="span-2" for="email"><span class="field-label">Email Address <span class="required-mark" aria-hidden="true">*</span></span>
+						<input
+							id="email"
+							name="email"
+							type="email"
+							x-model.trim="profile.email"
+							:class="{ 'is-invalid': !profile.email.trim() || profile.errors.email }"
+							required
+							autocomplete="email">
+						<span class="invalid-feedback" x-show="profile.errors.email" x-text="profile.errors.email"></span>
+					</label>
+					<label class="span-2" for="biography">Biography <span class="optional-label"></span>
+						<textarea
+							id="biography"
+							name="biography"
+							rows="4"
+							x-model="profile.biography"
+							:class="{ 'is-invalid': profile.errors.biography }"></textarea>
+						<span class="invalid-feedback" x-show="profile.errors.biography" x-text="profile.errors.biography"></span>
+					</label>
+				</div>
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary" :disabled="loading || !profileDirty || !profileValid">
+						<span x-show="loading !== 'profile'"><i class="ph-duotone ph-check"></i> Save Profile</span>
+						<span x-show="loading === 'profile'" x-cloak><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...</span>
+					</button>
+				</div>
+			</form>
+		</section>
 
-			<!--- Profile Form --->
-			<div class="form-grid">
-				<label for="firstName">
-					First Name
-					<input
-						id="firstName"
-						name="firstName"
-						type="text"
-						value="#encodeForHTMLAttribute( prc.profile.firstName )#"
-						autocomplete="given-name">
-				</label>
-				<label for="lastName">
-					Last Name
-					<input
-						id="lastName"
-						name="lastName"
-						type="text"
-						value="#encodeForHTMLAttribute( prc.profile.lastName )#"
-						autocomplete="family-name">
-				</label>
-				<label class="span-2" for="email">
-					Email Address
-					<input
-						id="email"
-						name="email"
-						type="email"
-						value="#encodeForHTMLAttribute( prc.profile.email )#"
-						autocomplete="email">
-				</label>
-				<label class="span-2" for="biography">
-					Biography
-					<textarea
-						id="biography"
-						name="biography"
-						rows="4">#encodeForHTML(
-						prc.profile.getBiography()
-						)#</textarea>
-				</label>
-			</div>
+		<!--- Password --->
+		<section class="content-card form-card" x-show="activeTab === 'password'" x-cloak>
+			<div class="content-card-header"><h3 class="content-card-title">Change Password</h3></div>
 
-			<!--- Form Actions --->
-			<div class="form-actions">
-				<button type="submit" class="btn btn-primary">
-					<i class="ph-duotone ph-check"></i> Save Profile
-				</button>
-			</div>
-		</form>
-	</section>
+			<form
+				method="post"
+				action="#event.buildLink( "profile/password" )#"
+				@submit="submitPassword">
+
+				<!--- CSRF Field --->
+				#csrfField()#
+
+				<div class="form-grid password-form-grid">
+
+					#view(
+						view = "_components/auth/passwordInput",
+						args = {
+							id          : "currentPassword",
+							name        : "currentPassword",
+							model       : "password.currentPassword",
+							label       : "Current Password",
+							classes     : "span-2",
+							inputClassExpression: "!password.currentPassword || password.errors.currentPassword ? 'is-invalid' : ''",
+							errorMessage: ""
+						}
+					)#
+
+					<span
+						class="invalid-feedback"
+						x-show="password.errors.currentPassword"
+						x-text="password.errors.currentPassword"></span>
+
+					<div class="span-2">
+						#view(
+							view = "_components/ui/passwordMeter",
+							args = {
+								id           : "newPassword",
+								name         : "password",
+								label        : "New Password",
+								dispatchEvent: "profile-password-changed"
+							}
+						)#
+						<span class="invalid-feedback" x-show="password.errors.password" x-text="password.errors.password"></span>
+					</div>
+
+					<!--- Confirm New Password --->
+					<label class="span-2" for="passwordConfirm">Confirm New Password
+						<input
+							id="passwordConfirm"
+							name="passwordConfirm"
+							type="password"
+							x-model="password.passwordConfirm"
+							@input="setPasswordConfirmation($event.target.value)"
+							:class="{ 'is-invalid': passwordConfirmationError || password.errors.passwordConfirm }"
+							required>
+						<span
+							class="invalid-feedback"
+							x-show="passwordConfirmationError || password.errors.passwordConfirm"
+							x-text="passwordConfirmationError || password.errors.passwordConfirm"></span>
+					</label>
+				</div>
+				<!--- Form Actions --->
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary" :disabled="loading || !passwordValid">
+						<span x-show="loading !== 'password'"><i class="ph-duotone ph-lock"></i> Change Password</span>
+						<span x-show="loading === 'password'" x-cloak>
+							<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Changing...
+						</span>
+					</button>
+				</div>
+			</form>
+		</section>
+	</div>
 </div>
 </bx:output>

@@ -14,6 +14,13 @@
             autoDismiss : 8000
         } )#
 
+        #view( view: "_components/ui/messagebox", args: {
+            dynamic          : true,
+            messageExpression: "notice.message",
+            typeExpression   : "notice.type",
+            dismissAction    : "clearNotice()"
+        } )#
+
     Args:
         type        : info | success | warning | error   (default: "info")
         message     : string — body text                 (required; renders nothing if empty)
@@ -21,20 +28,57 @@
         dismissible : boolean — show ✕ button            (default: true)
         autoDismiss : number  — ms until auto-hide       (default: 0 = never)
         classes     : string  — extra CSS classes        (default: "")
+        dynamic     : boolean — bind to surrounding Alpine state (default: false)
+        messageExpression : string — Alpine expression for the message (default: "notice.message")
+        typeExpression : string — Alpine expression for the message type (default: "notice.type")
+        dismissAction : string — Alpine expression for dismissing the message (default: "clearNotice()")
 
     Supported types and their icons:
         info    → ph-info
         success → ph-check-circle
         warning → ph-warning
-        error   → ph-x-circle --->  
+        error   → ph-x-circle --->
 <bx:param name="args.type" default="info"/>
 <bx:param name="args.message" default=""/>
 <bx:param name="args.title" default=""/>
 <bx:param name="args.dismissible" default="true"/>
 <bx:param name="args.autoDismiss" default="0"/>
 <bx:param name="args.classes" default=""/>
+<bx:param name="args.dynamic" default="false"/>
+<bx:param name="args.messageExpression" default="notice.message"/>
+<bx:param name="args.typeExpression" default="notice.type"/>
+<bx:param name="args.dismissAction" default="clearNotice()"/>
 
-<bx:if len( trim( args.message ) )>
+<bx:if args.dynamic>
+    <bx:output>
+    <div
+        class="messagebox#( len( args.classes ) ? " " & args.classes : "" )#"
+        :class="#encodeForHTMLAttribute( args.typeExpression )# ? 'messagebox--' + #encodeForHTMLAttribute( args.typeExpression )# : ''"
+        x-show="#encodeForHTMLAttribute( args.messageExpression )#"
+        x-cloak
+        role="alert"
+        aria-live="polite">
+
+        <i
+            class="ph-duotone ph-info messagebox__icon"
+            :class="#encodeForHTMLAttribute( args.typeExpression )# === 'success' ? 'ph-check-circle' : (#encodeForHTMLAttribute( args.typeExpression )# === 'warning' ? 'ph-warning' : (#encodeForHTMLAttribute( args.typeExpression )# === 'error' ? 'ph-x-circle' : 'ph-info'))"
+            aria-hidden="true"></i>
+
+        <div class="messagebox__body">
+            <p class="messagebox__text" x-text="#encodeForHTMLAttribute( args.messageExpression )#"></p>
+        </div>
+
+        <button
+            type="button"
+            class="messagebox__dismiss"
+            @click="#encodeForHTMLAttribute( args.dismissAction )#"
+            aria-label="Dismiss">
+            <i class="ph-duotone ph-x" aria-hidden="true"></i>
+        </button>
+
+    </div>
+    </bx:output>
+<bx:elseif len( trim( args.message ) )>
 
     <bx:set localIcons = {
 	"info"   : "ph-info",

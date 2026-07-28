@@ -4,13 +4,35 @@
 @secured
 class extends="BaseSecureHandler" {
 
+	@inject
+	property name="userService";
+
+	@inject
+	property name="securityService";
+
+	static{
+		csrfVerify = {
+			"save"    : true,
+			"password": true
+		}
+	}
+
 	function preHandler( event, rc, prc ) {
-		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
-			flash.put( "messages", {
-				type   : "error",
-				message: "Invalid security token detected."
-			} )
-			return relocate( "profile" )
+		if (
+			static.csrfVerify.keyExists( event.getCurrentAction() )
+			&& !csrfVerify( rc.csrf ?: "" )
+		) {
+			event.getResponse().addMessage( "Invalid or expired CSRF token." )
+			onAuthorizationFailure(
+				event: event,
+				rc: rc,
+				prc: prc,
+				abort: true,
+				exception: {
+					type: "InvalidCSRF",
+					message: "Invalid or expired CSRF token"
+				}
+			)
 		}
 		super.preHandler( argumentCollection: arguments )
 	}
@@ -21,31 +43,70 @@ class extends="BaseSecureHandler" {
 		event.setView( "profile/index" )
 	}
 
+	@remote( "Save the authenticated user's profile remotely via AJAX" )
 	function save( event, rc, prc ) {
+		var response = event.getResponse()
 		try {
 			prc.profile = prc.authUser
-				.populate( rc )
-				.validateOrFail( fields: "firstName,lastName,email,biography,preferences" )
+				.setFirstName( rc.firstName ?: "" )
+				.setLastName( rc.lastName ?: "" )
+				.setEmail( rc.email ?: "" )
+				.setBiography( rc.biography ?: "" )
+				.validateOrFail( fields: "firstName,lastName,email,biography" )
 				.save()
-			flash.put( "messages", {
-				type   : "success",
+			response.setData(
+				data: prc.profile.getMemento(),
 				message: "Profile saved successfully."
-			} )
+			)
 		}
 		catch( ValidationException error ) {
-			flash.put( "messages", {
-				type   : "error",
-				message: "Profile validation errors" & prc.profile.getValidationResults().getAllErrors().toList( "<br>" )
-			} )
+			response.setErrorMessage(
+				message: "Profile validation errors",
+				statusCode: 422,
+				data: prc.profile.getValidationResult().getAllErrorsAsStruct()
+			)
 		}
 		catch ( any error ) {
-			flash.put( "messages", {
-				type   : "error",
-				message: "Profile could not be saved: " & error.message
-			} )
+			log.error( "Error saving profile: #error.message#", error )
+			response.setErrorMessage(
+				message: "Profile could not be saved: #error.message#",
+				statusCode: 500
+			)
 		}
 
-		relocate( "profile" )
+		return response
+	}
+
+	@remote( "Change the authenticated user's password remotely via AJAX" )
+	function password( event, rc, prc ) {
+		var response = event.getResponse()
+		var currentPassword = rc.currentPassword.trim() ?: ""
+		var newPassword = rc.password.trim() ?: ""
+		var passwordConfirm = rc.passwordConfirm.trim() ?: ""
+		var errors = {}
+
+		// Validate the current password
+		if ( !prc.authUser.samePassword( currentPassword ) ) {
+			errors.currentPassword = "The current password is incorrect."
+			return response.setErrorMessage(
+				message: "Password validation errors",
+				statusCode: 422,
+				data: errors
+			)
+		}
+
+		// Validate the new password
+		if ( !securityService.isValidPassword( newPassword ) ) {
+			errors.password = "The new password must be at least 8 characters and include uppercase, lowercase, number, and special characters."
+		}
+
+		// Update the password for the authenticated user
+		userService.save(
+			user: prc.authUser.setPassword( newPassword ),
+			passwordChange: true
+		)
+
+		response.addMessage( "Password changed successfully." )
 	}
 
 }

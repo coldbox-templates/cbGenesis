@@ -124,6 +124,7 @@ This project includes AI-powered development assistance with on-demand guideline
 ### Code Style
 
 - **Semicolons:** Optional in CFML/BoxLang. Only use when demarcating properties or in inline component syntax
+- **Naming:** Prefer descriptive, unabbreviated names for component arguments and state. Use names such as `messageExpression`, `typeExpression`, and `dismissAction`; avoid abbreviations unless they are established domain terms.
 - **Handler naming:** Plural nouns (Users.cfc, Orders.cfc)
 - **Service naming:** Descriptive with "Service" suffix (UserService.cfc)
 - **Dependency injection:** Use `property name="service" inject` over manual getInstance()
