@@ -78,7 +78,7 @@ class extends="app.models.BaseEntity" {
 		"label": { required: true, size: "1..255" },
 		"token": {
 			required: true,
-			unique  : { table: "user_api_tokens", column: "token" }
+			validator: "UniqueValidator@cborm"
 		}
 	}
 

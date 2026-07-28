@@ -114,13 +114,24 @@
 			}
 		)#
 
-		<!--- Profile Form --->
+		<!--- Profile Tab --->
 		<section class="content-card form-card" x-show="activeTab === 'profile'" x-cloak>
-			<div class="content-card-header"><h3 class="content-card-title">Personal Information</h3></div>
+
+			<!--- Content Header --->
+			<div class="content-card-header">
+				<h3 class="content-card-title">Personal Information</h3>
+			</div>
+
+			<!--- Profile Form --->
 			<form method="post" action="#event.buildLink( "profile" )#" @submit="submitProfile">
+
+				<!--- CSRF Token --->
 				<input type="hidden" name="csrf" :value="csrfToken">
+
+				<!--- Grid --->
 				<div class="form-grid">
-					<label for="firstName"><span class="field-label">First Name <span class="required-mark" aria-hidden="true">*</span></span>
+					<label for="firstName">
+						<span class="field-label">First Name <span class="required-mark" aria-hidden="true">*</span></span>
 						<input
 							id="firstName"
 							name="firstName"
@@ -131,7 +142,8 @@
 							autocomplete="given-name">
 						<span class="invalid-feedback" x-show="profile.errors.firstName" x-text="profile.errors.firstName"></span>
 					</label>
-					<label for="lastName"><span class="field-label">Last Name <span class="required-mark" aria-hidden="true">*</span></span>
+					<label for="lastName">
+						<span class="field-label">Last Name <span class="required-mark" aria-hidden="true">*</span></span>
 						<input
 							id="lastName"
 							name="lastName"
@@ -267,34 +279,112 @@
 				</button>
 			</div>
 
-			<!--- Token List --->
-			<div class="api-token-list" x-show="apiTokens.length" x-cloak>
-				<template x-for="( token, index ) in apiTokens" :key="`${ token.tokenId || 'token' }-${ index }`">
-					<div class="api-token-row">
-						<div class="api-token-details">
-							<strong x-text="token.label"></strong>
-							<code x-text="token.tokenSnapshot"></code>
-						</div>
-						<div class="api-token-actions">
-							<button
-								type="button"
-								class="icon-button"
-								title="Edit token"
-								aria-label="Edit token"
-								@click="openEditTokenModal( token )">
-								<i class="ph-duotone ph-pencil-simple" aria-hidden="true"></i>
-							</button>
-							<button
-								type="button"
-								class="icon-button danger"
-								title="Delete token"
-								aria-label="Delete token"
-								@click="confirmDeleteToken( token )">
-								<i class="ph-duotone ph-trash" aria-hidden="true"></i>
-							</button>
-						</div>
-					</div>
-				</template>
+			<!--- Token Table --->
+			<div class="cb-table-wrap" x-show="apiTokens.length" x-cloak>
+				<table class="cb-table cb-token-table">
+					<thead>
+						<tr>
+							<th scope="col" :aria-sort="tokenSortKey === 'label' ? tokenSortDirection + 'ending' : 'none'">
+								<button
+									type="button"
+									class="cb-table-sort-button"
+									:class="tokenSortKey === 'label' ? 'is-active' : ''"
+									:title="'Sort by label ' + ( tokenSortKey === 'label' && tokenSortDirection === 'desc' ? 'ascending' : 'descending' )"
+									@click="sortTokens( 'label' )">
+									Label
+									<i
+										class="ph-duotone"
+										:class="tokenSortDirection === 'desc' ? 'ph-caret-down' : 'ph-caret-up'"
+										x-show="tokenSortKey === 'label'"
+										aria-hidden="true"></i>
+								</button>
+							</th>
+							<th scope="col">Token</th>
+							<th scope="col" :aria-sort="tokenSortKey === 'expiration' ? tokenSortDirection + 'ending' : 'none'">
+								<button
+									type="button"
+									class="cb-table-sort-button"
+									:class="tokenSortKey === 'expiration' ? 'is-active' : ''"
+									:title="'Sort by expiration ' + ( tokenSortKey === 'expiration' && tokenSortDirection === 'desc' ? 'ascending' : 'descending' )"
+									@click="sortTokens( 'expiration' )">
+									Expiration
+									<i
+										class="ph-duotone"
+										:class="tokenSortDirection === 'desc' ? 'ph-caret-down' : 'ph-caret-up'"
+										x-show="tokenSortKey === 'expiration'"
+										aria-hidden="true"></i>
+								</button>
+							</th>
+							<th scope="col" :aria-sort="tokenSortKey === 'lastUsed' ? tokenSortDirection + 'ending' : 'none'">
+								<button
+									type="button"
+									class="cb-table-sort-button"
+									:class="tokenSortKey === 'lastUsed' ? 'is-active' : ''"
+									:title="'Sort by last used ' + ( tokenSortKey === 'lastUsed' && tokenSortDirection === 'desc' ? 'ascending' : 'descending' )"
+									@click="sortTokens( 'lastUsed' )">
+									Last Used
+									<i
+										class="ph-duotone"
+										:class="tokenSortDirection === 'desc' ? 'ph-caret-down' : 'ph-caret-up'"
+										x-show="tokenSortKey === 'lastUsed'"
+										aria-hidden="true"></i>
+								</button>
+							</th>
+							<th scope="col" :aria-sort="tokenSortKey === 'createdDate' ? tokenSortDirection + 'ending' : 'none'">
+								<button
+									type="button"
+									class="cb-table-sort-button"
+									:class="tokenSortKey === 'createdDate' ? 'is-active' : ''"
+									:title="'Sort by created date ' + ( tokenSortKey === 'createdDate' && tokenSortDirection === 'desc' ? 'ascending' : 'descending' )"
+									@click="sortTokens( 'createdDate' )">
+									Created
+									<i
+										class="ph-duotone"
+										:class="tokenSortDirection === 'desc' ? 'ph-caret-down' : 'ph-caret-up'"
+										x-show="tokenSortKey === 'createdDate'"
+										aria-hidden="true"></i>
+								</button>
+							</th>
+							<th scope="col" class="actions-column"><span class="visually-hidden">Actions</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						<template x-for="( token, index ) in sortedApiTokens" :key="`${ token.tokenId || 'token' }-${ index }`">
+							<tr>
+								<td><strong x-text="token.label"></strong></td>
+								<td><code x-text="token.tokenSnapshot"></code></td>
+								<td>
+									<span
+										class="chip"
+										:class="tokenExpiringSoon( token.expiration ) ? 'chip-locked' : ''"
+										x-text="token.expiration ? formatTokenDate( token.expiration ) : 'Never expires'"></span>
+								</td>
+								<td class="muted-cell" x-text="token.lastUsed ? formatTokenDate( token.lastUsed ) : 'Never used'"></td>
+								<td class="muted-cell" x-text="formatTokenDate( token.createdDate )"></td>
+								<td>
+									<div class="api-token-actions">
+										<button
+											type="button"
+											class="icon-button"
+											title="Edit token"
+											aria-label="Edit token"
+											@click="openEditTokenModal( token )">
+											<i class="ph-duotone ph-pencil-simple" aria-hidden="true"></i>
+										</button>
+										<button
+											type="button"
+											class="icon-button danger"
+											title="Delete token"
+											aria-label="Delete token"
+											@click="confirmDeleteToken( token )">
+											<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+										</button>
+									</div>
+								</td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
 			</div>
 			<p class="text-muted api-token-empty" x-show="!apiTokens.length" x-cloak>No API tokens have been created.</p>
 		</section>

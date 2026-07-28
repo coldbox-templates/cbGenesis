@@ -6,6 +6,7 @@
  *
  * @param {Object} initialProfile Safe profile data loaded by the server.
  * @param {string} csrfToken CSRF token for profile and API token submissions.
+ *
  * @returns {Object} Alpine profile form state and handlers.
  */
 export function profileForm( initialProfile = {}, csrfToken = "" ) {
@@ -29,6 +30,8 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			errors          : {},
 		},
 		apiTokens          : [],
+		tokenSortKey       : "label",
+		tokenSortDirection : "asc",
 		tokenModalOpen     : false,
 		tokenModalMode     : "create",
 		editingToken       : null,
@@ -61,6 +64,79 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 		 */
 		get tokenFormValid() {
 			return Boolean( this.tokenForm.label.trim() );
+		},
+
+		/**
+		 * Formats an API token date for display.
+		 *
+		 * @param {string|Date|null} value Date value returned by the server.
+		 * @param {string} fallback Label used when no valid date exists.
+		 *
+		 * @returns {string} Localized date or a fallback label.
+		 */
+		formatTokenDate( value, fallback = "Never" ) {
+			if ( !value ) return fallback;
+			const date = new Date( value );
+			return Number.isNaN( date.getTime() )
+				? fallback
+				: new Intl.DateTimeFormat( undefined, { dateStyle: "medium" } ).format( date );
+		},
+
+		/**
+		 * Returns whether an API token is expired or expires within seven days.
+		 *
+		 * @param {string|Date|null} value Token expiration date.
+		 *
+		 * @returns {boolean} Whether the token expiration should be emphasized.
+		 */
+		tokenExpiringSoon( value ) {
+			if ( !value ) return false;
+			const expiration = new Date( value );
+			if ( Number.isNaN( expiration.getTime() ) ) return false;
+			return expiration <= new Date( Date.now() + ( 7 * 24 * 60 * 60 * 1000 ) );
+		},
+
+		/**
+		 * Returns API tokens ordered by the active table sort.
+		 *
+		 * @returns {Array} Sorted API token metadata.
+		 */
+		get sortedApiTokens() {
+			const direction = this.tokenSortDirection === "asc" ? 1 : -1;
+			const sortKey = this.tokenSortKey;
+
+			return [ ...this.apiTokens ].sort( ( firstToken, secondToken ) => {
+				const firstValue = firstToken[ sortKey ];
+				const secondValue = secondToken[ sortKey ];
+				if ( !firstValue && !secondValue ) return 0;
+				if ( !firstValue ) return 1;
+				if ( !secondValue ) return -1;
+
+				if ( [
+					"expiration",
+					"lastUsed",
+					"createdDate"
+				].includes( sortKey ) ) {
+					return ( new Date( firstValue ) - new Date( secondValue ) ) * direction;
+				}
+
+				return String( firstValue ).localeCompare( String( secondValue ) ) * direction;
+			} );
+		},
+
+		/**
+		 * Selects a table sort column or reverses its direction.
+		 *
+		 * @param {string} sortKey Token field to sort by.
+		 * @returns {void}
+		 */
+		sortTokens( sortKey ) {
+			if ( this.tokenSortKey === sortKey ) {
+				this.tokenSortDirection = this.tokenSortDirection === "asc" ? "desc" : "asc";
+				return;
+			}
+			this.tokenSortKey = sortKey;
+			this.tokenSortDirection = "asc";
 		},
 
 		/**

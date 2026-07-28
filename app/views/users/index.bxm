@@ -1,79 +1,70 @@
 <bx:output>
-<div class="page-header admin-page-heading">
-	<div>
-		<p class="eyebrow">Security</p>
-		<h2 class="page-title">User Management</h2>
-		<p class="page-subtitle">Manage user access with mock roles and a-la-carte permissions.</p>
-	</div>
-	<button class="btn btn-primary">
-		<i class="ph-duotone ph-plus" aria-hidden="true"></i>
-		Invite User
-	</button>
-</div>
-
-<section class="content-card admin-workbench">
-	<div class="content-card-header admin-toolbar">
-		<div class="segmented-control" aria-label="User filters">
-			<button class="active" type="button">All Users</button>
-			<button type="button">Active</button>
-			<button type="button">Pending</button>
-			<button type="button">Locked</button>
+<div x-data='usersForm( #forAttribute( prc.users )# )'>
+	<div class="page-header admin-page-heading">
+		<div>
+			<p class="eyebrow">Security</p>
+			<h2 class="page-title">User Management</h2>
+			<p class="page-subtitle">Manage user access with mock roles and a-la-carte permissions.</p>
 		</div>
-		<div class="admin-search">
-			<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
-			<input type="search" placeholder="Search users..." aria-label="Search users">
-		</div>
+		<button type="button" class="btn btn-primary">
+			<i class="ph-duotone ph-plus" aria-hidden="true"></i>
+			Invite User
+		</button>
 	</div>
 
-	<div class="responsive-table-wrap">
-		<table class="admin-table">
-			<thead>
-				<tr>
-					<th>User</th>
-					<th>Roles</th>
-					<th>A-la-carte Permissions</th>
-					<th>2FA</th>
-					<th>Status</th>
-					<th>Last Login</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody>
-				<bx:loop array="#prc.users#" item="user">
+	<section class="content-card admin-workbench">
+		<div class="content-card-header admin-toolbar">
+			<div class="segmented-control" aria-label="User filters">
+				<button type="button" :class="statusFilter === 'all' ? 'active' : ''" @click="statusFilter = 'all'">All Users</button>
+				<button type="button" :class="statusFilter === 'active' ? 'active' : ''" @click="statusFilter = 'active'">Active</button>
+				<button type="button" :class="statusFilter === 'pending' ? 'active' : ''" @click="statusFilter = 'pending'">Pending</button>
+				<button type="button" :class="statusFilter === 'locked' ? 'active' : ''" @click="statusFilter = 'locked'">Locked</button>
+			</div>
+			<div class="admin-search">
+				<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+				<input x-model.debounce.150ms="query" type="search" placeholder="Search users..." aria-label="Search users">
+			</div>
+		</div>
+
+		<div class="cb-table-wrap">
+			<table class="cb-table">
+				<thead>
 					<tr>
-						<td>
-							<div class="identity-cell">
-								<span class="avatar-token">#encodeForHTML( user.initials )#</span>
-								<span>
-									<strong>#encodeForHTML( user.name )#</strong>
-									<small>#encodeForHTML( user.email )#</small>
-								</span>
-							</div>
-						</td>
-						<td>
-							<bx:loop array="#user.roles#" item="role">
-								<span class="chip chip-info">#encodeForHTML( role )#</span>
-							</bx:loop>
-						</td>
-						<td>
-							<bx:loop array="#user.permissions#" item="permission">
-								<span class="chip">#encodeForHTML( permission )#</span>
-							</bx:loop>
-						</td>
-						<td><span class="chip chip-cyan">#encodeForHTML( user.authMethod )#</span></td>
-						<td><span class="chip chip-#lCase( user.status )#">#encodeForHTML( user.status )#</span></td>
-						<td class="muted-cell">#encodeForHTML( user.lastLogin )#</td>
-						<td>
-							<div class="table-actions">
-								<a href="/users/detail?id=#encodeForURL( user.userId )#" title="Edit user"><i class="ph-duotone ph-pencil-simple"></i></a>
-								<button type="button" title="Lock account"><i class="ph-duotone ph-lock"></i></button>
-								<button type="button" title="Delete user"><i class="ph-duotone ph-trash"></i></button>
-							</div>
-						</td>
+						<th scope="col">User</th>
+						<th scope="col">Roles</th>
+						<th scope="col">2FA</th>
+						<th scope="col">Status</th>
 					</tr>
-				</bx:loop>
-			</tbody>
-		</table>
-	</div>
-</section>
+				</thead>
+				<tbody>
+					<template x-for="user in filteredUsers" :key="user.userId">
+						<tr>
+							<td>
+								<div class="identity-cell">
+									<span class="avatar-token" x-text="user.initials"></span>
+									<span>
+										<strong x-text="user.name"></strong>
+										<small x-text="user.email"></small>
+									</span>
+								</div>
+							</td>
+							<td>
+								<div class="chip-row">
+									<template x-for="role in user.roles" :key="role">
+										<span class="chip chip-info" x-text="role"></span>
+									</template>
+								</div>
+							</td>
+							<td><span class="chip chip-cyan" x-text="user.authMethod"></span></td>
+							<td><span class="chip" :class="'chip-' + user.status.toLowerCase()" x-text="user.status"></span></td>
+						</tr>
+					</template>
+					<tr x-show="filteredCount === 0" x-cloak>
+						<td colspan="4" class="empty-state">No users found</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+</div>
 </bx:output>

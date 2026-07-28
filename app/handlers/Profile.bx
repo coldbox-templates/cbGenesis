@@ -196,7 +196,7 @@ class extends="BaseSecureHandler" {
 		} catch ( any error ) {
 			log.error( "Error updating API token: #error.message#", error )
 			response.setErrorMessage(
-				errorMessage   : "API token could not be saved.",
+				errorMessage   : "Token could not be saved: #error.message & error.detail#",
 				statusCode: 500
 			)
 		}
