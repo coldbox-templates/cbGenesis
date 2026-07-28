@@ -194,7 +194,7 @@
 							model       : "password.currentPassword",
 							label       : "Current Password",
 							classes     : "span-2",
-							inputClassExpression: "!password.currentPassword || password.errors.currentPassword ? 'is-invalid' : ''",
+							inputClassExpression: "password.errors.currentPassword ? 'is-invalid' : ''",
 							errorMessage: ""
 						}
 					)#
@@ -254,10 +254,10 @@
 					<h3 class="content-card-title">
 						<i class="ph-duotone ph-key" aria-hidden="true"></i>
 						API Tokens
+						<span class="count-pill" x-text="apiTokens.length" aria-label="API token count"></span>
 					</h3>
 					<p class="content-card-subtitle">Create tokens for integrations that access your account.</p>
 				</div>
-				<span class="count-pill" x-text="apiTokens.length"></span>
 				<button
 					type="button"
 					class="btn btn-primary btn-sm"

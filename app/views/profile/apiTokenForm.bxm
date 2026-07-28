@@ -4,8 +4,13 @@
 	:action="tokenModalMode === 'edit' ? '/profile/api-tokens/' + encodeURIComponent( editingToken.tokenId ) : '/profile/api-tokens'"
 	@submit="saveToken"
 >
+	<!--- CSRF Token --->
 	<input type="hidden" name="csrf" :value="csrfToken">
+
+	<!--- Modal Body --->
 	<div class="ui-modal__body" :class="{ 'api-token-reveal-body': createdRawToken }">
+
+		<!--- Label --->
 		<div class="form-field" x-show="!createdRawToken">
 			<label for="api-token-label">Label <span class="required-mark" aria-hidden="true">*</span></label>
 			<input
@@ -19,16 +24,21 @@
 				autocomplete="off">
 			<span class="invalid-feedback" x-show="tokenErrors.label" x-text="tokenErrors.label"></span>
 		</div>
-		<div class="form-field" x-show="!createdRawToken">
+
+		<!--- Expiration --->
+		<div class="form-field" x-show="tokenModalMode === 'create' && !createdRawToken">
 			<label for="api-token-expiration">Expiration <span>(optional)</span></label>
 			<input
 				id="api-token-expiration"
 				name="expiration"
 				type="date"
 				x-model="tokenForm.expiration"
+				:disabled="tokenModalMode !== 'create'"
 				:class="{ 'is-invalid': tokenErrors.expiration }">
 			<span class="invalid-feedback" x-show="tokenErrors.expiration" x-text="tokenErrors.expiration"></span>
 		</div>
+
+		<!--- Created Token COPY UI --->
 		<div class="api-token-secret" x-show="createdRawToken" x-cloak>
 			<strong>Copy this token now</strong>
 			<p>This value is shown only once and cannot be recovered later.</p>
@@ -39,13 +49,34 @@
 			</button>
 		</div>
 	</div>
+
+	<!--- Modal Footer --->
 	<div class="ui-modal__footer">
-		<button type="button" class="btn btn-secondary" @click="closeTokenModal()" :disabled="tokenSubmitting" x-show="!createdRawToken">Cancel</button>
-		<button type="button" class="btn btn-primary" @click="closeTokenModal()" x-show="createdRawToken" x-cloak>
+		<!--- Cancel --->
+		<button
+			type="button"
+			class="btn btn-secondary"
+			@click="closeTokenModal()"
+			:disabled="tokenSubmitting"
+			x-show="!createdRawToken">Cancel</button>
+
+		<!--- Done: When created token only --->
+		<button
+			type="button"
+			class="btn btn-primary"
+			@click="closeTokenModal()"
+			x-show="createdRawToken"
+			x-cloak>
 			<i class="ph-duotone ph-check" aria-hidden="true"></i>
 			Done
 		</button>
-		<button type="submit" class="btn btn-primary" :disabled="tokenSubmitting || !tokenFormValid" x-show="!createdRawToken">
+
+		<!--- Submit --->
+		<button
+			type="submit"
+			class="btn btn-primary"
+			:disabled="tokenSubmitting || !tokenFormValid"
+			x-show="!createdRawToken">
 			<span x-show="!tokenSubmitting">
 				<i class="ph-duotone" :class="tokenModalMode === 'edit' ? 'ph-floppy-disk' : 'ph-plus'" aria-hidden="true"></i>
 				<span x-text="tokenModalMode === 'edit' ? 'Save Token' : 'Create Token'"></span>
