@@ -1,7 +1,7 @@
 <bx:output>
 <div
 	class="profile-page"
-	x-data='profileForm( #forAttribute( prc.profile.getMemento() )# )'
+	x-data='profileForm( #forAttribute( prc.profile.getMemento() )#, "#csrfToken()#" )'
 	@profile-password-changed.window="setNewPassword( $event.detail.value )"
 >
 
@@ -66,6 +66,7 @@
 
 		<!--- Profile Tabs --->
 		<div class="segmented-control profile-tabs" role="tablist" aria-label="Profile settings">
+			<!--- PII --->
 			<button
 				type="button"
 				role="tab"
@@ -76,6 +77,8 @@
 				<i class="ph-duotone ph-user" aria-hidden="true"></i>
 				Profile
 			</button>
+
+			<!--- Password --->
 			<button
 				type="button"
 				role="tab"
@@ -85,6 +88,18 @@
 				>
 				<i class="ph-duotone ph-lock-key" aria-hidden="true"></i>
 				Password
+			</button>
+
+			<!--- API Tokens --->
+			<button
+				type="button"
+				role="tab"
+				:class="activeTab === 'api-tokens' ? 'active' : ''"
+				:aria-selected="activeTab === 'api-tokens'"
+				@click="activeTab = 'api-tokens'"
+				>
+				<i class="ph-duotone ph-key" aria-hidden="true"></i>
+				API Tokens
 			</button>
 		</div>
 
@@ -103,7 +118,7 @@
 		<section class="content-card form-card" x-show="activeTab === 'profile'" x-cloak>
 			<div class="content-card-header"><h3 class="content-card-title">Personal Information</h3></div>
 			<form method="post" action="#event.buildLink( "profile" )#" @submit="submitProfile">
-				#csrfField()#
+				<input type="hidden" name="csrf" :value="csrfToken">
 				<div class="form-grid">
 					<label for="firstName"><span class="field-label">First Name <span class="required-mark" aria-hidden="true">*</span></span>
 						<input
@@ -167,7 +182,7 @@
 				@submit="submitPassword">
 
 				<!--- CSRF Field --->
-				#csrfField()#
+				<input type="hidden" name="csrf" :value="csrfToken">
 
 				<div class="form-grid password-form-grid">
 
@@ -231,7 +246,9 @@
 		</section>
 
 		<!--- API Tokens --->
-		<section class="content-card form-card api-tokens-card" x-show="activeTab === 'password'" x-cloak>
+		<section class="content-card form-card api-tokens-card" x-show="activeTab === 'api-tokens'" x-cloak>
+
+			<!--- Header --->
 			<div class="content-card-header">
 				<div>
 					<h3 class="content-card-title">
@@ -240,24 +257,39 @@
 					</h3>
 					<p class="content-card-subtitle">Create tokens for integrations that access your account.</p>
 				</div>
-				<button type="button" class="btn btn-primary btn-sm" @click="openCreateTokenModal()">
+				<span class="count-pill" x-text="apiTokens.length"></span>
+				<button
+					type="button"
+					class="btn btn-primary btn-sm"
+					@click="openCreateTokenModal()">
 					<i class="ph-duotone ph-plus" aria-hidden="true"></i>
 					Create Token
 				</button>
 			</div>
 
+			<!--- Token List --->
 			<div class="api-token-list" x-show="apiTokens.length" x-cloak>
-				<template x-for="token in apiTokens" :key="token.tokenId">
+				<template x-for="( token, index ) in apiTokens" :key="`${ token.tokenId || 'token' }-${ index }`">
 					<div class="api-token-row">
 						<div class="api-token-details">
 							<strong x-text="token.label"></strong>
 							<code x-text="token.tokenSnapshot"></code>
 						</div>
 						<div class="api-token-actions">
-							<button type="button" class="icon-button" title="Edit token" aria-label="Edit token" @click="openEditTokenModal( token )">
+							<button
+								type="button"
+								class="icon-button"
+								title="Edit token"
+								aria-label="Edit token"
+								@click="openEditTokenModal( token )">
 								<i class="ph-duotone ph-pencil-simple" aria-hidden="true"></i>
 							</button>
-							<button type="button" class="icon-button danger" title="Delete token" aria-label="Delete token" @click="confirmDeleteToken( token )">
+							<button
+								type="button"
+								class="icon-button danger"
+								title="Delete token"
+								aria-label="Delete token"
+								@click="confirmDeleteToken( token )">
 								<i class="ph-duotone ph-trash" aria-hidden="true"></i>
 							</button>
 						</div>

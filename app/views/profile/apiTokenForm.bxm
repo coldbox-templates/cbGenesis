@@ -4,7 +4,7 @@
 	:action="tokenModalMode === 'edit' ? '/profile/api-tokens/' + encodeURIComponent( editingToken.tokenId ) : '/profile/api-tokens'"
 	@submit="saveToken"
 >
-	#csrfField()#
+	<input type="hidden" name="csrf" :value="csrfToken">
 	<div class="ui-modal__body">
 		<div class="form-field">
 			<label for="api-token-label">Label <span class="required-mark" aria-hidden="true">*</span></label>

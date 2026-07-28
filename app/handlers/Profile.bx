@@ -104,6 +104,11 @@ class extends="BaseSecureHandler" {
 		// Validate the new password
 		if ( !securityService.isValidPassword( newPassword ) ) {
 			errors.password = "The new password must be at least 8 characters and include uppercase, lowercase, number, and special characters."
+			return response.setErrorMessage(
+				message: "Password validation errors",
+				statusCode: 422,
+				data: errors
+			)
 		}
 
 		// Update the password for the authenticated user
@@ -138,11 +143,12 @@ class extends="BaseSecureHandler" {
 			rc.label = trim( rc.label ?: "" )
 			rc.expiration = trim( rc.expiration ?: "" )
 			// Create the token
-			prc.tokenResults = apiTokenService
+			prc.token = apiTokenService
 				.new()
 				.populate( rc )
+				.setUser( prc.authUser )
 				.validateOrFail()
-				.save()
+			prc.tokenResults = apiTokenService.createToken( prc.token )
 			response.setData(
 				data: {
 					token   : prc.tokenResults.token.getMemento(),
@@ -154,7 +160,7 @@ class extends="BaseSecureHandler" {
 			response.setErrorMessage(
 				message: "Token validation errors",
 				statusCode: 422,
-				data : prc.token.getValidationResult().getAllErrorsAsStruct()
+					data : prc.token.getValidationResult().getAllErrorsAsStruct()
 			)
 		} catch ( any error ) {
 			log.error( "Error saving token: #error.message#", error )
@@ -174,11 +180,19 @@ class extends="BaseSecureHandler" {
 		var response = event.getResponse()
 		try {
 			// You can only update the label
-			prc.tokenResults = apiTokenService
-				.getOrFail( rc.tokenId ?: "" )
+			prc.token = apiTokenService.getOrFail( rc.tokenId ?: "" )
+
+			// Verify ownership
+			if ( !prc.token.sameUser( prc.authUser ) ) {
+				throw( type: "APIToken.NotFound", message: "API token not found" )
+			}
+
+			// Update it
+			prc.token
 				.setLabel( rc.label ?: "" )
+				.validateOrFail()
 				.save()
-			response.setData( data: token.getMemento(), message: "API token saved successfully." )
+			response.setData( data: prc.token.getMemento(), message: "API token saved successfully." )
 		} catch ( any error ) {
 			log.error( "Error updating API token: #error.message#", error )
 			response.setErrorMessage(
@@ -196,9 +210,15 @@ class extends="BaseSecureHandler" {
 	function deleteToken( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
-			apiTokenService
-				.getOrFail( rc.tokenId ?: "" )
-				.delete()
+			prc.token = apiTokenService.getOrFail( rc.tokenId ?: "" )
+
+			// Verify ownership
+			if ( !prc.token.sameUser( prc.authUser ) ) {
+				throw( type: "APIToken.NotFound", message: "API token not found" )
+			}
+
+			// Delete it
+			token.delete()
 			response.addMessage( "API token deleted successfully." )
 		} catch ( any error ) {
 			log.error( "Error deleting API token with ID [#rc.tokenId#]: #error.message#", error )

@@ -52,13 +52,13 @@ class {
 
 		// Profile Routes
 		post( "profile/password", "Profile.doPasswordChange" )
-		route( "profile/api-tokens" ).withHandler( "Profile" ).toAction({
-			GET : "listTokens",
-			POST: "createToken"
-		})
 		route( "profile/api-tokens/:tokenId" ).withHandler( "Profile" ).toAction({
 			POST  : "updateToken",
 			DELETE: "deleteToken"
+		})
+		route( "profile/api-tokens" ).withHandler( "Profile" ).toAction({
+			GET : "listTokens",
+			POST: "createToken"
 		})
 		route( "profile" ).withHandler( "Profile" ).toAction({
 			GET: "index",

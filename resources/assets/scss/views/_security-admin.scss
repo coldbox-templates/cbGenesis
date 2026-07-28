@@ -899,6 +899,20 @@
 
 .api-tokens-card {
 	max-width: 820px;
+
+	.content-card-header {
+		align-items: flex-start;
+		gap: 1rem;
+	}
+
+	.content-card-header > div:first-child {
+		min-width: 0;
+	}
+
+	.content-card-header .btn {
+		flex-shrink: 0;
+		white-space: nowrap;
+	}
 }
 
 @media (min-width: 900px) {
@@ -931,6 +945,7 @@
 	border: 1px solid var(--app-border);
 	border-radius: $border-radius;
 	background: var(--app-surface-raised);
+	min-width: 0;
 }
 
 .api-token-details {
@@ -949,6 +964,20 @@
 	display: flex;
 	gap: 0.35rem;
 	flex-shrink: 0;
+}
+
+@media (max-width: 520px) {
+	.api-tokens-card .content-card-header {
+		flex-wrap: wrap;
+	}
+
+	.api-tokens-card .content-card-header .btn {
+		margin-left: auto;
+	}
+
+	.api-token-row {
+		align-items: flex-start;
+	}
 }
 
 .api-token-empty {

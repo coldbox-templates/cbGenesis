@@ -80,7 +80,7 @@ class extends="app.models.BaseEntity" {
 			required: true,
 			unique  : { table: "user_api_tokens", column: "token" }
 		}
-	};
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -89,7 +89,9 @@ class extends="app.models.BaseEntity" {
 	 * Fields to exclude when populating the entity.
 	 * https://coldbox.ortusbooks.com/the-basics/event-handlers/model-integration/model-data-binding#mass-population-control-this.population
 	 */
-	this.population = {};
+	this.population = {
+		excludes: [ "token", "user", "lastUsed" ]
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -106,7 +108,7 @@ class extends="app.models.BaseEntity" {
 		],
 		defaultExcludes: [],
 		neverInclude   : [ "token", "lastUsed" ]
-	};
+	}
 
 	/**
 	 * Constructor
@@ -140,6 +142,17 @@ class extends="app.models.BaseEntity" {
 	 */
 	boolean function sameApiToken( required string apiToken ) {
 		return BCryptVerify( arguments.apiToken, getToken() )
+	}
+
+	/**
+	 * Check if the provided user is the same as the user associated with this token.
+	 *
+	 * @target The user to compare against.
+	 *
+	 * @return boolean True if the users are the same, false otherwise.
+	 */
+	boolean function sameUser( required User target ){
+		return !isNull( variables.user ) && !isNull( arguments.target ) && variables.user.getId() == arguments.target.getId()
 	}
 
 	/**
