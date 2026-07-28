@@ -46,6 +46,15 @@ class extends="app.models.BaseEntity" {
 	property name="token" default="";
 
 	/**
+	 * A short, non-secret identifier for this token.
+	 */
+	@notNull( true )
+	property
+		name="tokenSnapshot"
+		setter="false"
+		default="";
+
+	/**
 	 * The expiration date for this token, if any. Null means no expiration.
 	 */
 	property name="expiration" type="date";
@@ -90,7 +99,7 @@ class extends="app.models.BaseEntity" {
 	 * https://coldbox.ortusbooks.com/the-basics/event-handlers/model-integration/model-data-binding#mass-population-control-this.population
 	 */
 	this.population = {
-		excludes: [ "token", "user", "lastUsed" ]
+		excludes: [ "token", "tokenSnapshot", "user", "lastUsed" ]
 	}
 
 	/**
@@ -117,20 +126,10 @@ class extends="app.models.BaseEntity" {
 		super.init( "tokenId" )
 		variables.label = ""
 		variables.token = generateRawToken()
+		variables.tokenSnapshot = left( variables.token, 7 ) & "****"
 		variables.expiration = null
 		variables.lastUsed = null
 		return this
-	}
-
-	/**
-	 * This method shows only a token identifier so folks can see which token they are using
-	 * but never exposes the full token
-	 */
-	string function getTokenSnapshot(){
-		if( variables.token.isEmpty() ){
-			return ""
-		}
-		return left( variables.token, 5 ) & "****"
 	}
 
 	/**

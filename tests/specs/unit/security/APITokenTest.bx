@@ -26,6 +26,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( apiToken.getLabel() ).toBe( "" )
 				expect( apiToken.getToken() ).toStartWith( "cb_" )
 				expect( apiToken.getToken() ).notToBeEmpty()
+				expect( apiToken.getTokenSnapshot() ).toBe( left( apiToken.getToken(), 7 ) & "****" )
 				expect( apiToken.getExpiration() ).toBeNull()
 				expect( apiToken.getLastUsed() ).toBeNull()
 				expect( apiToken.hasExpiration() ).toBeFalse()
@@ -134,6 +135,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					expect( memento ).notToHaveKey( "token" )
 				} )
 			} )
+
 		} )
 	}
 }

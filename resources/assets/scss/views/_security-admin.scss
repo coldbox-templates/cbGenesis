@@ -1040,6 +1040,9 @@
 
 .api-token-empty {
 	margin: 0;
+	padding: 1.1rem 1.25rem;
+	border-top: 1px solid var(--app-border-subtle);
+	text-align: center;
 }
 
 .api-token-secret {

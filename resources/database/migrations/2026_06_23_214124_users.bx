@@ -92,6 +92,7 @@ class {
 			table.guid( "FK_userId" )
 			table.string( "label" )
 			table.string( "token", 64 ).unique()
+			table.string( "tokenSnapshot", 11 )
 			table.datetime( "createdDate" ).withCurrent()
 			table.datetime( "modifiedDate" )
 			table.boolean( "isActive" ).default( true )

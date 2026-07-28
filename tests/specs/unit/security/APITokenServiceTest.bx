@@ -51,6 +51,7 @@ class extends="tests.resources.BaseIntegrationSpec"{
 				expect( tokenData.rawToken ).toStartWith( "cb_" )
 				expect( token.getTokenId() ).notToBeEmpty()
 				expect( token.getLabel() ).toBe( "Service test token" )
+				expect( token.getTokenSnapshot() ).toBe( left( tokenData.rawToken, 7 ) & "****" )
 				var validatedToken = apiTokenService.validateToken( tokenData.rawToken )
 
 				expect( validatedToken.getToken() ).notToBe( tokenData.rawToken )
