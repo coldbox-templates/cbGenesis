@@ -6,7 +6,7 @@
 		#view( "_components/auth/footer", args: { split: false } )#
 
     Args:
-        split : boolean — whether to use the split layout (default: true) --->  
+        split : boolean — whether to use the split layout (default: true) --->
 <bx:param name="args.split" default="true"/>
 
 <bx:output>

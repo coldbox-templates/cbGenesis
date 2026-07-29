@@ -8,7 +8,7 @@
     Reads from prc (populated by protected handlers):
         prc.authUser.initials — user avatar letter
         prc.authUser.name     — display name
-        prc.authUser.role     — role label --->  
+        prc.authUser.role     — role label --->
 <bx:output>
 <aside
 	class="cb-sidebar"
@@ -17,22 +17,22 @@
                 'cb-sidebar-open':       $store.sidebar.open }"
     aria-label="Main navigation">
 
-    <!--- ── Brand ──────────────────────────────────────────── --->  
+    <!--- ── Brand ──────────────────────────────────────────── --->
     <div class="cb-sidebar-header" id="cb-sidebar-header">
         #view( "_components/app/sidebar-brand" )#
     </div>
 
-    <!--- ── Navigation ─────────────────────────────────────── --->  
+    <!--- ── Navigation ─────────────────────────────────────── --->
     <!--- Alpine x-data tracks the current path so nav items can be marked active
         without a round-trip to the server. Add :class="isActive('/path')" to
-        each anchor for automatic highlighting. --->  
+        each anchor for automatic highlighting. --->
     <nav
 		class="cb-sidebar-nav"
 		id="cb-sidebar-nav"
         x-data="{ path: window.location.pathname }"
         aria-label="Main navigation">
 
-        <!--- Main Items --->  
+        <!--- Main Items --->
         <div class="cb-sidebar-nav-section">
             <span class="cb-sidebar-nav-label">Main</span>
             <ul class="cb-sidebar-nav-list">
@@ -50,7 +50,7 @@
             </ul>
         </div>
 
-        <!--- Management Items --->  
+        <!--- Management Items --->
         <div class="cb-sidebar-nav-section">
             <span class="cb-sidebar-nav-label">Management</span>
             <ul class="cb-sidebar-nav-list">
@@ -98,11 +98,11 @@
         </div>
 
     </nav>
-    <!--- ── /Navigation ─────────────────────────────────────── --->  
+    <!--- ── /Navigation ─────────────────────────────────────── --->
 
-    <!--- ── User footer ─────────────────────────────────────── --->  
+    <!--- ── User footer ─────────────────────────────────────── --->
     <!--- Sidebar has overflow:hidden for the collapse transition, so Bootstrap
-        dropdowns clip here. Use a link to a dedicated profile page instead. --->  
+        dropdowns clip here. Use a link to a dedicated profile page instead. --->
     #view( "_components/app/sidebar-footer" )#
 
 </aside>

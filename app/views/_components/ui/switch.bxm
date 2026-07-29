@@ -11,7 +11,7 @@
 		model : string — alias for name (default: "")
 		trueValue : string — submitted value when enabled (default: "true")
 		falseValue : string — submitted value when disabled (default: "false")
-		classes : string — extra CSS classes (default: "") --->  
+		classes : string — extra CSS classes (default: "") --->
 <bx:param name="args.value" default="false"/>
 <bx:param name="args.name" default=""/>
 <bx:param name="args.model" default=""/>
