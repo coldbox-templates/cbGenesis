@@ -29,17 +29,33 @@ class extends="cborm.models.VirtualEntityService" {
 	property name="log";
 
 	/**
-	 * Ensure the sort order is valid.
+	 * Ensure a sort order contains only an allowed column and direction.
 	 *
-	 * @orderDirection The order direction, either "asc" or "desc".
+	 * @sortOrder        The requested column, or column plus "asc" or "desc".
+	 * @sortMap          A map of allowed sort columns to entity properties.
+	 * @defaultSortOrder The fallback sort order.
 	 *
-	 * @return The validated order direction.
+	 * @return The validated sort order.
 	 */
-	private string function ensureSortOrder( required orderDirection ) {
-		var order = lcase( arguments.orderDirection );
-		if ( listFindNoCase( "asc,desc", order ) == 0 ) {
-			order = "desc";
+	protected string function ensureSortOrder(
+		required sortOrder,
+		required sortMap,
+		string defaultSortOrder = "lastName asc"
+	) {
+		var sortParts = reMatchNoCase( "\\S+", trim( arguments.sortOrder ?: "" ) )
+		var sortColumn = sortParts.len() && structKeyExists( arguments.sortMap, sortParts[ 1 ] )
+			? arguments.sortMap[ sortParts[ 1 ] ]
+			: ""
+		var sortDirection = sortParts.len() > 1 ? lcase( sortParts[ 2 ] ) : "asc"
+
+		if (
+			len( sortColumn )
+			&& sortParts.len() <= 2
+			&& [ "asc", "desc" ].findNoCase( sortDirection )
+		) {
+			return sortColumn & " " & sortDirection
 		}
-		return order;
+
+		return arguments.defaultSortOrder
 	}
 }
