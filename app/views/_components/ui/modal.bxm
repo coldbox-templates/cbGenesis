@@ -27,7 +27,7 @@
 
 <bx:output>
 <div id="#encodeForHTMLAttribute( args.id )#"
-	class="ui-modal"
+	class="cb-ui-modal"
 	x-show="#args.openExpression#"
 	x-cloak
 	x-transition.opacity
@@ -36,12 +36,12 @@
 	aria-labelledby="#encodeForHTMLAttribute( args.id )#-title"
 	@click.self="#args.closeExpression#"
 	@keydown.escape.window="#args.closeExpression#">
-	<div class="ui-modal__dialog" x-transition.scale.95>
-		<div class="ui-modal__header">
+	<div class="cb-ui-modal__dialog" x-transition.scale.95>
+		<div class="cb-ui-modal__header">
 			<h2 id="#encodeForHTMLAttribute( args.id )#-title">#encodeForHTML( args.title )#</h2>
 			<button
 				type="button"
-				class="ui-modal__close"
+				class="cb-ui-modal__close"
 				@click="#args.closeExpression#"
 				aria-label="Close dialog">
 				<i class="ph-duotone ph-x" aria-hidden="true"></i>

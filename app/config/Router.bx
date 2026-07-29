@@ -65,16 +65,16 @@ class {
 			POST: "save"
 		})
 
-		// Settings Routes
-		route( "settings" ).withHandler( "Settings" ).toAction({
-			GET: "index",
-			POST: "save"
-		})
-
 		// Setting Admin Actions
 		post( "settings/clear-template-cache", "Settings.clearTemplateCache" )
 		post( "settings/clear-sessions-cache", "Settings.clearSessionsCache" )
 		post( "settings/revoke-remember-tokens", "Settings.revokeRememberTokens" )
+
+		// Settings Resources
+		route( "settings" ).withHandler( "Settings" ).toAction({
+			GET: "index",
+			POST: "save"
+		})
 
 		// Auth Routes
 		route( "login" ).withHandler( "Auth" ).toAction({

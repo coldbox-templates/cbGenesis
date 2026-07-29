@@ -7,19 +7,19 @@
 		args = { title: "Authentication" }
 	)#
 </head>
-<body class="auth-body" x-data x-init="$store.theme.init()">
+<body class="cb-auth-body" x-data x-init="$store.theme.init()">
 
-    <div class="auth-split-wrapper">
+    <div class="cb-auth-split-wrapper">
 
         <!--- ── Left panel: brand illustration ───────────────────── --->
-        <div class="auth-split-brand" aria-hidden="true">
+        <div class="cb-auth-split-brand" aria-hidden="true">
             <!--- Decorative glow orbs --->
-            <div class="auth-split-orb orb-cyan"></div>
-            <div class="auth-split-orb orb-blue"></div>
+            <div class="cb-auth-split-orb cb-orb-cyan"></div>
+            <div class="cb-auth-split-orb cb-orb-blue"></div>
 
-            <div class="auth-split-brand-content">
+            <div class="cb-auth-split-brand-content">
                 <!--- Logo mark (large) --->
-                <div class="auth-split-brand-logo">
+                <div class="cb-auth-split-brand-logo">
                     #view(
 						view = "_components/ui/logo",
 						args = { variant: "full", size: 150 }
@@ -27,28 +27,28 @@
                 </div>
 
 				<!--- App name --->
-                <h1 class="auth-split-brand-title">
+                <h1 class="cb-auth-split-brand-title">
                     #prc.settings.cbAppname#
                 </h1>
 
 				<!--- App tagline --->
-                <p class="auth-split-brand-tagline">
+                <p class="cb-auth-split-brand-tagline">
                     Start building your applications faster with
 					a modern, lightweight framework that is secure by default.
                 </p>
 
                 <!--- Feature highlights --->
-                <ul class="auth-split-features">
-                    <li class="auth-split-feature">
-                        <span class="feature-icon"><i class="ph-duotone ph-lightning"></i></span>
+                <ul class="cb-auth-split-features">
+                    <li class="cb-auth-split-feature">
+                        <span class="cb-feature-icon"><i class="ph-duotone ph-lightning"></i></span>
                         Fast and lightweight
                     </li>
-                    <li class="auth-split-feature">
-                        <span class="feature-icon"><i class="ph-duotone ph-shield-check"></i></span>
+                    <li class="cb-auth-split-feature">
+                        <span class="cb-feature-icon"><i class="ph-duotone ph-shield-check"></i></span>
                         Secure by default
                     </li>
-                    <li class="auth-split-feature">
-                        <span class="feature-icon"><i class="ph-duotone ph-cloud"></i></span>
+                    <li class="cb-auth-split-feature">
+                        <span class="cb-feature-icon"><i class="ph-duotone ph-cloud"></i></span>
                         Ready to deploy anywhere
                     </li>
                 </ul>
@@ -57,12 +57,12 @@
         <!--- ── /Left panel ──────────────────────────────────────── --->
 
         <!--- ── Right panel: form ────────────────────────────────── --->
-        <div class="auth-split-form">
-            <div class="auth-split-form-inner">
+        <div class="cb-auth-split-form">
+            <div class="cb-auth-split-form-inner">
 
                 <!--- Logo shown only on mobile (brand panel hidden) --->
-                <div class="auth-split-logo-mobile">
-                    <a href="/" class="auth-logo-link">
+                <div class="cb-auth-split-logo-mobile">
+                    <a href="/" class="cb-auth-logo-link">
                         #view(
 							view: "_components/ui/logo",
 							args: { variant: "compact" }

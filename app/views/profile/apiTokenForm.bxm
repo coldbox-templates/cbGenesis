@@ -8,10 +8,10 @@
 	<input type="hidden" name="csrf" :value="csrfToken">
 
 	<!--- Modal Body --->
-	<div class="ui-modal__body" :class="{ 'api-token-reveal-body': createdRawToken }">
+	<div class="cb-ui-modal__body" :class="{ 'cb-api-token-reveal-body': createdRawToken }">
 
 		<!--- Label --->
-		<div class="form-field" x-show="!createdRawToken">
+		<div class="cb-form-field" x-show="!createdRawToken">
 			<label for="api-token-label">Label <span class="required-mark" aria-hidden="true">*</span></label>
 			<input
 				id="api-token-label"
@@ -26,7 +26,7 @@
 		</div>
 
 		<!--- Expiration --->
-		<div class="form-field" x-show="tokenModalMode === 'create' && !createdRawToken">
+		<div class="cb-form-field" x-show="tokenModalMode === 'create' && !createdRawToken">
 			<label for="api-token-expiration">Expiration <span>(optional)</span></label>
 			<input
 				id="api-token-expiration"
@@ -39,7 +39,7 @@
 		</div>
 
 		<!--- Created Token COPY UI --->
-		<div class="api-token-secret" x-show="createdRawToken" x-cloak>
+		<div class="cb-api-token-secret" x-show="createdRawToken" x-cloak>
 			<strong>Copy this token now</strong>
 			<p>This value is shown only once and cannot be recovered later.</p>
 			<code x-text="createdRawToken"></code>
@@ -51,7 +51,7 @@
 	</div>
 
 	<!--- Modal Footer --->
-	<div class="ui-modal__footer">
+	<div class="cb-ui-modal__footer">
 		<!--- Cancel --->
 		<button
 			type="button"

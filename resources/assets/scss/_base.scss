@@ -115,7 +115,7 @@ body {
 // ============================================================
 
 // Gradient text effect
-.text-gradient {
+.cb-text-gradient {
     background: var(--bl-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -123,16 +123,16 @@ body {
 }
 
 // Gradient background
-.bg-gradient-brand {
+.cb-bg-gradient-brand {
     background: var(--bl-gradient);
 }
 
 // Surface background (responds to theme)
-.bg-surface {
+.cb-bg-surface {
     background-color: var(--app-surface);
 }
 
 // Elevated surface (one step above surface)
-.bg-surface-raised {
+.cb-bg-surface-raised {
     background-color: var(--app-surface-raised);
 }

@@ -1,10 +1,10 @@
 // ============================================================
 // Footer Component
 // Appears at the bottom of the main content area in the admin layout.
-// BEM: .app-footer, .app-footer__copy, .app-footer__sep, .app-footer__link
+// BEM: .cb-app-footer, .cb-app-footer__copy, .cb-app-footer__sep, .cb-app-footer__link
 // ============================================================
 
-.app-footer {
+.cb-app-footer {
     display: flex;
     align-items: center;
     gap: 0.5rem;

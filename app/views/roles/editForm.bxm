@@ -1,40 +1,40 @@
 <bx:output>
 <form
-	class="role-editor"
+	class="cb-role-editor"
 	@submit="saveRole( $event )"
 >
 	<!--- Form Body --->
-	<div class="drawer-form-body">
+	<div class="cb-drawer-form-body">
 		<!--- Role Name --->
-		<div class="form-field">
+		<div class="cb-form-field">
 			<label for="role-name">Role name</label>
 			<input id="role-name" type="text" x-model.trim="form.role" required maxlength="255" autocomplete="off">
 		</div>
 		<!--- Role Description --->
-		<div class="form-field">
+		<div class="cb-form-field">
 			<label for="role-description">Description</label>
 			<textarea id="role-description" rows="3" x-model.trim="form.description"></textarea>
 		</div>
 		<!--- Permissions Chooser --->
-		<div class="drawer-section-heading">
+		<div class="cb-drawer-section-heading">
 			<div>
 				<strong>Permissions</strong><small x-text="form.permissionIds.length + ' selected'"></small>
 			</div>
 		</div>
-		<div class="role-permission-groups">
+		<div class="cb-role-permission-groups">
 			<template x-for="group in permissionGroups" :key="group.key">
-				<section class="role-permission-group">
+				<section class="cb-role-permission-group">
 					<!--- Group Label --->
 					<button
 						type="button"
 						title="Check/Uncheck all permissions in this group"
-						class="role-permission-group__toggle"
+						class="cb-role-permission-group__toggle"
 						@click="togglePermissionGroup( group )"
 						x-text="group.label"></button>
 
 					<!--- Permissions in the group --->
 					<template x-for="permission in group.permissions" :key="permission.permissionId">
-						<label class="permission-choice">
+						<label class="cb-permission-choice">
 							<input
 								type="checkbox"
 								:checked="hasPermission( permission.permissionId )"
@@ -54,7 +54,7 @@
 	</div>
 
 	<!--- Form Actions on Drawer --->
-	<div class="drawer-form-actions">
+	<div class="cb-drawer-form-actions">
 		<button
 			type="button"
 			class="btn btn-light"

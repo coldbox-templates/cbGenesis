@@ -1,10 +1,10 @@
 <bx:output>
 <div x-data='usersForm( #forAttribute( prc.users )# )'>
-	<div class="page-header admin-page-heading">
+	<div class="cb-page-header cb-admin-page-heading">
 		<div>
-			<p class="eyebrow">Security</p>
-			<h2 class="page-title">User Management</h2>
-			<p class="page-subtitle">Manage user access with mock roles and a-la-carte permissions.</p>
+			<p class="cb-eyebrow">Security</p>
+			<h2 class="cb-page-title">User Management</h2>
+			<p class="cb-page-subtitle">Manage user access with mock roles and a-la-carte permissions.</p>
 		</div>
 		<button type="button" class="btn btn-primary">
 			<i class="ph-duotone ph-plus" aria-hidden="true"></i>
@@ -12,15 +12,15 @@
 		</button>
 	</div>
 
-	<section class="content-card admin-workbench">
-		<div class="content-card-header admin-toolbar">
-			<div class="segmented-control" aria-label="User filters">
+	<section class="cb-content-card cb-admin-workbench">
+		<div class="cb-content-card-header cb-admin-toolbar">
+			<div class="cb-segmented-control" aria-label="User filters">
 				<button type="button" :class="statusFilter === 'all' ? 'active' : ''" @click="statusFilter = 'all'">All Users</button>
 				<button type="button" :class="statusFilter === 'active' ? 'active' : ''" @click="statusFilter = 'active'">Active</button>
 				<button type="button" :class="statusFilter === 'pending' ? 'active' : ''" @click="statusFilter = 'pending'">Pending</button>
 				<button type="button" :class="statusFilter === 'locked' ? 'active' : ''" @click="statusFilter = 'locked'">Locked</button>
 			</div>
-			<div class="admin-search">
+			<div class="cb-admin-search">
 				<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
 				<input x-model.debounce.150ms="query" type="search" placeholder="Search users..." aria-label="Search users">
 			</div>
@@ -40,8 +40,8 @@
 					<template x-for="user in filteredUsers" :key="user.userId">
 						<tr>
 							<td>
-								<div class="identity-cell">
-									<span class="avatar-token" x-text="user.initials"></span>
+								<div class="cb-identity-cell">
+									<span class="cb-avatar-token" x-text="user.initials"></span>
 									<span>
 										<strong x-text="user.name"></strong>
 										<small x-text="user.email"></small>
@@ -49,18 +49,18 @@
 								</div>
 							</td>
 							<td>
-								<div class="chip-row">
+								<div class="cb-chip-row">
 									<template x-for="role in user.roles" :key="role">
-										<span class="chip chip-info" x-text="role"></span>
+										<span class="cb-chip cb-chip-info" x-text="role"></span>
 									</template>
 								</div>
 							</td>
-							<td><span class="chip chip-cyan" x-text="user.authMethod"></span></td>
-							<td><span class="chip" :class="'chip-' + user.status.toLowerCase()" x-text="user.status"></span></td>
+							<td><span class="cb-chip cb-chip-cyan" x-text="user.authMethod"></span></td>
+							<td><span class="cb-chip" :class="'cb-chip-' + user.status.toLowerCase()" x-text="user.status"></span></td>
 						</tr>
 					</template>
 					<tr x-show="filteredCount === 0" x-cloak>
-						<td colspan="4" class="empty-state">No users found</td>
+						<td colspan="4" class="cb-empty-state">No users found</td>
 					</tr>
 				</tbody>
 			</table>

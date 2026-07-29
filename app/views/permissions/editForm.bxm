@@ -8,11 +8,11 @@
 	<input type="hidden" name="csrf" id="csrf" x-model="csrfToken">
 
 	<!--- Modal Body --->
-	<div class="ui-modal__body">
-		<small x-show="formError" x-text="formError" class="delete-confirmation__error"></small>
+	<div class="cb-ui-modal__body">
+		<small x-show="formError" x-text="formError" class="cb-delete-confirmation__error"></small>
 
 		<!--- Permission --->
-		<div class="form-field">
+		<div class="cb-form-field">
 			<label for="permission-name" x-text="editingPermission ? 'Permission' : 'Permission'"></label>
 			<input
 				id="permission-name"
@@ -26,7 +26,7 @@
 		</div>
 
 		<!--- Description --->
-		<div class="form-field">
+		<div class="cb-form-field">
 			<label for="permission-description">Description <span>(optional)</span></label>
 			<textarea
 				id="permission-description"
@@ -38,7 +38,7 @@
 	</div>
 
 	<!--- Modal Footer --->
-	<div class="ui-modal__footer">
+	<div class="cb-ui-modal__footer">
 		<button type="button" class="btn btn-secondary" @click="closeModal()">Cancel</button>
 		<button type="submit" class="btn btn-primary" :disabled="submitting || !form.permission.trim()">
 			<i class="ph-duotone" :class="editingPermission ? 'ph-floppy-disk' : 'ph-plus'" aria-hidden="true"></i>

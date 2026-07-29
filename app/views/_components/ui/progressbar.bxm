@@ -40,20 +40,20 @@
 	localPercent = ( localValue / localMax ) * 100
 	localAriaLabel = len( trim( args.ariaLabel ) ) ? args.ariaLabel : args.label
 	localClasses = len( trim( args.classes ) ) ? " " & args.classes : ""
-	localIndicatorClass = localIndeterminate ? "ui-progressbar__indicator ui-progressbar__indicator--indeterminate" : "ui-progressbar__indicator"
+	localIndicatorClass = localIndeterminate ? "cb-ui-progressbar__indicator cb-ui-progressbar__indicator--indeterminate" : "cb-ui-progressbar__indicator"
 	localValueAttributes = localIndeterminate ? "" : " aria-valuenow='#numberFormat( localValue, '0.00' )#' aria-valuemax='#numberFormat( localMax, '0.00' )#'"
 </bx:script>
 
 <bx:output>
 <div
-	class="ui-progressbar ui-progressbar--#localVariant# ui-progressbar--#localSize##localClasses#"
+	class="cb-ui-progressbar cb-ui-progressbar--#localVariant# cb-ui-progressbar--#localSize##localClasses#"
 	role="progressbar"
 	aria-label="#encodeForHTMLAttribute( localAriaLabel )##localValueAttributes#"
 	style="--progress-value: #numberFormat( localPercent, '0.00' )#%;">
 	<bx:if localShowLabel>
-		<span class="ui-progressbar__label">#encodeForHTML( args.label )#</span>
+		<span class="cb-ui-progressbar__label">#encodeForHTML( args.label )#</span>
 	</bx:if>
-	<div class="ui-progressbar__track">
+	<div class="cb-ui-progressbar__track">
 		<span class="#localIndicatorClass#"></span>
 	</div>
 </div>

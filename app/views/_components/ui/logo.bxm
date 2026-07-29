@@ -23,11 +23,11 @@
 <bx:param name="args.size" default="#localSize#"/>
 
 <bx:output>
-<span class="brand-logo brand-logo--#encodeForHTMLAttribute( args.variant )##(
+<span class="cb-brand-logo cb-brand-logo--#encodeForHTMLAttribute( args.variant )##(
 	len( args.classes ) ? " " & args.classes : ""
 )#"
       aria-label="#encodeForHTMLAttribute( prc.settings.cbAppname )#">
-	<img class="brand-logo__mark"
+	<img class="cb-brand-logo__mark"
 		 src="#prc.settings.cbAppLogo#"
 		 width="#encodeForHTMLAttribute( args.size )#"
 		 height="#encodeForHTMLAttribute( args.size )#"

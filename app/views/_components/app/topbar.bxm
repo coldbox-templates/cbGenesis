@@ -1,8 +1,8 @@
 <!--- Admin Header / Topbar Component
-    Renders the sticky top bar: sidebar toggle, breadcrumb, theme toggle,
+    Renders the sticky top bar: cb-sidebar toggle, breadcrumb, theme toggle,
     notifications, and user dropdown.
 
-    Usage (from Admin layout, inside .main-wrapper):
+    Usage (from Admin layout, inside .cb-main-wrapper):
         #view( "_components/app/topbar" )#
 
     Reads from prc (populated by protected handlers):
@@ -11,11 +11,11 @@
         prc.authUser.name       — display name in dropdown
         prc.authUser.email      — email shown below name in dropdown --->
 <bx:output>
-<header class="topbar" id="topbar">
+<header class="cb-topbar" id="cb-topbar">
 
-    <!--- ── Left: sidebar toggle + breadcrumb ──────────────── --->
-    <div class="topbar-left" id="topbar-left">
-        <button class="topbar-toggle"
+    <!--- ── Left: cb-sidebar toggle + breadcrumb ──────────────── --->
+    <div class="cb-topbar-left" id="cb-topbar-left">
+        <button class="cb-topbar-toggle"
                 @click="$store.sidebar.toggle()"
                 :aria-label="$store.sidebar.collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
                 :title="$store.sidebar.collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
@@ -29,11 +29,11 @@
     <!--- ── Right: action buttons + user dropdown ───────────── --->
     <!--- Using <ul>/<li> so sub-components (notificationBell etc.) can each
         return a <li> and slot in without breaking the flex layout. --->
-    <ul class="topbar-right" id="topbar-right">
+    <ul class="cb-topbar-right" id="cb-topbar-right">
 
         <!--- Theme toggle --->
         <li>
-            <button class="topbar-btn"
+            <button class="cb-topbar-btn"
                     x-cloak
                     @click="$store.theme.toggle()"
                     :aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
@@ -44,8 +44,8 @@
         </li>
 
         <!--- Vertical divider --->
-        <li class="topbar-divider-item" role="separator" aria-hidden="true">
-            <span class="topbar-divider"></span>
+        <li class="cb-topbar-divider-item" role="separator" aria-hidden="true">
+            <span class="cb-topbar-divider"></span>
         </li>
 
         <!--- User dropdown --->
@@ -54,22 +54,22 @@
 
 				<!--- User button --->
                 <button
-					class="topbar-user-btn"
-					id="topbarUserMenu"
+					class="cb-topbar-user-btn"
+					id="cb-topbarUserMenu"
 					data-bs-toggle="dropdown"
 					aria-expanded="false"
 				>
 
-                    <span class="topbar-user-avatar">
+                    <span class="cb-topbar-user-avatar">
                         #( prc.authUser.getInitials() )#
                     </span>
 
-                    <i class="ph-duotone ph-caret-down topbar-user-chevron" aria-hidden="true"></i>
+                    <i class="ph-duotone ph-caret-down cb-topbar-user-chevron" aria-hidden="true"></i>
                 </button>
 
 				<!--- User dropdown menu --->
                 <ul class="dropdown-menu dropdown-menu-end"
-                    aria-labelledby="topbarUserMenu">
+                    aria-labelledby="cb-topbarUserMenu">
 
 					<!--- User Email --->
                     <li>

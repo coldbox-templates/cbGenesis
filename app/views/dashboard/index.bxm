@@ -1,9 +1,25 @@
 <bx:output>
 <!--- ── Page header ────────────────────────────────────────────────── --->
-<div class="page-header">
-    <h2 class="page-title">Dashboard</h2>
-    <p class="page-subtitle">
+<div class="cb-page-header">
+    <h2 class="cb-page-title">Dashboard</h2>
+    <p class="cb-page-subtitle">
         Welcome back, #encodeForHTML( prc.authUser.getFullName() )#.
     </p>
 </div>
+
+<section class="cb-dashboard-canvas" aria-labelledby="dashboard-canvas-title">
+    <div class="cb-dashboard-canvas-icon" aria-hidden="true">
+        <i class="ph-duotone ph-squares-four"></i>
+    </div>
+    <h3 class="cb-dashboard-canvas-title" id="dashboard-canvas-title">
+        Make this dashboard yours
+    </h3>
+    <p class="cb-dashboard-canvas-copy">
+        Add cards, activity feeds, and quick actions here when you are ready to build out your workspace.
+    </p>
+    <button class="cb-dashboard-add-button" type="button" disabled>
+        <i class="ph-bold ph-plus" aria-hidden="true"></i>
+        Add dashboard item
+    </button>
+</section>
 </bx:output>

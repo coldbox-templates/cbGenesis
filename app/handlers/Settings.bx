@@ -1,7 +1,7 @@
 /**
  * Global settings handler.
  */
-@secured
+@secured( "settings:admin,settings:read" )
 class extends="BaseSecureHandler" {
 
 	@inject
@@ -23,6 +23,7 @@ class extends="BaseSecureHandler" {
 		event.setView( "settings/index" )
 	}
 
+	@secured( "settings:admin,settings:write" )
 	function save( event, rc, prc ) {
 		try {
 			settingService.bulkSave( rc )
@@ -40,7 +41,7 @@ class extends="BaseSecureHandler" {
 	@secured( "settings:admin" )
 	function clearTemplateCache( event, rc, prc ) {
 		getCache( "template" ).clearAll()
-		flash.put( "messages", { type: "success", message: "Template cache cleared." } )
+		flash.put( "messages", { type: "success", message: "Action ran successfully: template cache cleared." } )
 		relocate( "settings" )
 	}
 
@@ -49,7 +50,7 @@ class extends="BaseSecureHandler" {
 		getCache( "sessions" ).clearAll()
 		flash.put( "messages", {
 			type   : "success",
-			message: "Sessions cache cleared. Active sessions, flash messages, and password reset tokens were removed."
+			message: "Action ran successfully: sessions cache cleared. Active sessions, flash messages, and password reset tokens were removed."
 		} )
 		relocate( "settings" )
 	}
@@ -59,7 +60,7 @@ class extends="BaseSecureHandler" {
 		var count = securityService.revokeAllRememberTokens()
 		flash.put( "messages", {
 			type   : "success",
-			message: "Revoked [#count#] remembered browser login(s)."
+			message: "Action ran successfully: revoked [#count#] remembered browser login(s)."
 		} )
 		relocate( "settings" )
 	}

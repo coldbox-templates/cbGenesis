@@ -1,9 +1,9 @@
 <!--- Sidebar Brand Component
-    App-specific sidebar brand wrapper. Uses the reusable UI logo primitive and
-    owns the sidebar link/name behavior.
+    App-specific cb-sidebar brand wrapper. Uses the reusable UI logo primitive and
+    owns the cb-sidebar link/name behavior.
 
     Usage:
-        #view( "_components/app/sidebar-brand" )#
+		#view( "_components/app/sidebar-brand" )#
 
     Args:
         href    : string — brand link target (default: "/dashboard")
@@ -14,13 +14,13 @@
 <bx:output>
 <a
 	href="#encodeForHTMLAttribute( args.href )#"
-	class="sidebar-brand"
+	class="cb-sidebar-brand"
 	aria-label="#encodeForHTMLAttribute( prc.settings.cbAppname )# dashboard"
 >
 	#view(
 		view: "_components/ui/logo",
-		args: { variant: args.variant, classes: "sidebar-brand-logo" }
+		args: { variant: args.variant, classes: "cb-sidebar-brand-logo" }
 	)#
-	<span class="sidebar-brand-name">#encodeForHTML( prc.settings.cbAppname )#</span>
+	<span class="cb-sidebar-brand-name">#encodeForHTML( prc.settings.cbAppname )#</span>
 </a>
 </bx:output>

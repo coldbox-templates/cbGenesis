@@ -21,13 +21,13 @@
 <!--- Vite CSS + JS --->
 <script>
     (() => {
-		// Prevent FOUC (Flash of Unstyled Content) by setting the theme and sidebar collapsed state before CSS loads
+		// Prevent FOUC (Flash of Unstyled Content) by setting the theme and cb-sidebar collapsed state before CSS loads
         var t = localStorage.getItem( "theme" ) ||
                 ( matchMedia( "(prefers-color-scheme: dark)" ).matches ? "dark" : "light" );
         document.documentElement.setAttribute( "data-bs-theme", t );
 
-		// Set sidebar collapsed state from localStorage
-		var collapsed = localStorage.getItem( "sidebar-collapsed" ) === "true";
+		// Set cb-sidebar collapsed state from localStorage
+		var collapsed = localStorage.getItem( "cb-sidebar-collapsed" ) === "true";
         document.documentElement.setAttribute( "data-sidebar-collapsed", collapsed ? "true" : "false" );
     })();
 </script>

@@ -8,24 +8,24 @@
 	)#
 </head>
 <body
-	class="auth-body"
+    class="cb-auth-body"
 	x-data
 	x-init="$store.theme.init()">
 
-    <div class="auth-center-wrapper">
+    <div class="cb-auth-center-wrapper">
 
         <!--- ── Card ─────────────────────────────────────────────── --->
-        <div class="auth-card">
+        <div class="cb-auth-card">
 
             <!--- Logo --->
-            <div class="auth-card-logo">
-                <a href="/" class="auth-logo-link">
+            <div class="cb-auth-card-logo">
+                <a href="/" class="cb-auth-logo-link">
                     #view( "_components/ui/logo" )#
                 </a>
             </div>
 
             <!--- View content — inject the login/register/forgot-password form --->
-            <div class="auth-card-body">
+            <div class="cb-auth-card-body">
                 #view()#
             </div>
 

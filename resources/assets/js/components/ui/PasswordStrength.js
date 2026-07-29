@@ -72,10 +72,10 @@ export function passwordStrength() {
 		get labelClass() {
 			return [
 				"",
-				"strength-weak",
-				"strength-fair",
-				"strength-good",
-				"strength-strong",
+				"cb-strength-weak",
+				"cb-strength-fair",
+				"cb-strength-good",
+				"cb-strength-strong",
 			][ this.score ] ?? "";
 		},
 

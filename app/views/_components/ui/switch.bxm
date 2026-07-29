@@ -24,14 +24,14 @@
 
 <bx:output>
 <div
-	class="switch#args.classes.len() ? " " & args.classes : ""#"
+	class="cb-switch#args.classes.len() ? " " & args.classes : ""#"
 	x-data="switchComponent( {
 		checked: #localIsTrue#,
 		name: '#encodeForHTMLAttribute( localName )#',
 		trueValue: '#encodeForHTMLAttribute( args.trueValue )#',
 		falseValue: '#encodeForHTMLAttribute( args.falseValue )#'
 	} )"
-	:class="checked ? 'switch--true' : 'switch--false'"
+	:class="checked ? 'cb-switch--true' : 'cb-switch--false'"
 >
 	<bx:if len( localName )>
 		<input
@@ -42,13 +42,13 @@
 
 	<button
 		type="button"
-		class="switch__button"
+		class="cb-switch__button"
 		@click="toggle()"
 		:aria-label="ariaLabel"
 		:aria-pressed="checked ? 'true' : 'false'"
 	>
-		<span class="switch__track" aria-hidden="true">
-			<span class="switch__knob"></span>
+		<span class="cb-switch__track" aria-hidden="true">
+			<span class="cb-switch__knob"></span>
 		</span>
 	</button>
 </div>

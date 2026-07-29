@@ -1,5 +1,5 @@
 <!--- Main Navigation Sidebar Component
-    Renders the fixed sidebar with brand logo, nav sections, and user footer.
+    Renders the fixed cb-sidebar with brand logo, nav sections, and user footer.
     Alpine detects the active link from window.location.pathname (client-side).
 
     Usage (from Admin layout):
@@ -11,14 +11,14 @@
         prc.authUser.role     — role label --->  
 <bx:output>
 <aside
-	class="sidebar"
-	id="sidebar"
-    :class="{ 'sidebar-collapsed': $store.sidebar.collapsed,
-        	  'sidebar-open':      $store.sidebar.open }"
+	class="cb-sidebar"
+	id="cb-sidebar"
+    :class="{ 'cb-sidebar-collapsed': $store.sidebar.collapsed,
+                'cb-sidebar-open':       $store.sidebar.open }"
     aria-label="Main navigation">
 
     <!--- ── Brand ──────────────────────────────────────────── --->  
-    <div class="sidebar-header" id="sidebar-header">
+    <div class="cb-sidebar-header" id="cb-sidebar-header">
         #view( "_components/app/sidebar-brand" )#
     </div>
 
@@ -27,71 +27,71 @@
         without a round-trip to the server. Add :class="isActive('/path')" to
         each anchor for automatic highlighting. --->  
     <nav
-		class="sidebar-nav"
-		id="sidebar-nav"
+		class="cb-sidebar-nav"
+		id="cb-sidebar-nav"
         x-data="{ path: window.location.pathname }"
         aria-label="Main navigation">
 
         <!--- Main Items --->  
-        <div class="sidebar-nav-section">
-            <span class="sidebar-nav-label">Main</span>
-            <ul class="sidebar-nav-list">
+        <div class="cb-sidebar-nav-section">
+            <span class="cb-sidebar-nav-label">Main</span>
+            <ul class="cb-sidebar-nav-list">
                 <li>
                     <a href="#event.route( "dashboard" )#"
-                       class="sidebar-nav-item"
-                       @click="$store.sidebar.close()"
+                       class="cb-sidebar-nav-item"
+                        @click="$store.sidebar.close()"
                        :class="path === '/' || #event.routeIs( "dashboard" )# ? 'active' : ''"
                        title="Dashboard"
 					>
-                        <i class="ph-duotone ph-house sidebar-nav-icon" aria-hidden="true"></i>
-                        <span class="sidebar-nav-text">Dashboard</span>
+                        <i class="ph-duotone ph-house cb-sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="cb-sidebar-nav-text">Dashboard</span>
                     </a>
                 </li>
             </ul>
         </div>
 
         <!--- Management Items --->  
-        <div class="sidebar-nav-section">
-            <span class="sidebar-nav-label">Management</span>
-            <ul class="sidebar-nav-list">
+        <div class="cb-sidebar-nav-section">
+            <span class="cb-sidebar-nav-label">Management</span>
+            <ul class="cb-sidebar-nav-list">
                 <li>
                     <a href="#event.route( "users" )#"
-                       class="sidebar-nav-item"
-                       @click="$store.sidebar.close()"
+                       class="cb-sidebar-nav-item"
+                        @click="$store.sidebar.close()"
                        :class="#event.routeIs( "users" )# ? 'active' : ''"
                        title="Users">
-                        <i class="ph-duotone ph-users sidebar-nav-icon" aria-hidden="true"></i>
-                        <span class="sidebar-nav-text">Users</span>
+                        <i class="ph-duotone ph-users cb-sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="cb-sidebar-nav-text">Users</span>
                     </a>
                 </li>
                 <li>
                     <a href="#event.route( "roles" )#"
-                       class="sidebar-nav-item"
-                       @click="$store.sidebar.close()"
+                       class="cb-sidebar-nav-item"
+                        @click="$store.sidebar.close()"
                        :class="#event.routeIs( "roles" )# ? 'active' : ''"
                        title="Roles">
-                        <i class="ph-duotone ph-identification-badge sidebar-nav-icon" aria-hidden="true"></i>
-                        <span class="sidebar-nav-text">Roles</span>
+                        <i class="ph-duotone ph-identification-badge cb-sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="cb-sidebar-nav-text">Roles</span>
                     </a>
                 </li>
                 <li>
                     <a href="#event.route( "permissions" )#"
-                       class="sidebar-nav-item"
-                       @click="$store.sidebar.close()"
+                       class="cb-sidebar-nav-item"
+                        @click="$store.sidebar.close()"
                        :class="#event.routeIs( "permissions" )# ? 'active' : ''"
                        title="Permissions">
-                        <i class="ph-duotone ph-key sidebar-nav-icon" aria-hidden="true"></i>
-                        <span class="sidebar-nav-text">Permissions</span>
+                        <i class="ph-duotone ph-key cb-sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="cb-sidebar-nav-text">Permissions</span>
                     </a>
                 </li>
                 <li>
                     <a href="#event.route( "settings" )#"
-                       class="sidebar-nav-item"
-                       @click="$store.sidebar.close()"
+                       class="cb-sidebar-nav-item"
+                        @click="$store.sidebar.close()"
                        :class="#event.routeIs( "settings" )# ? 'active' : ''"
                        title="Settings">
-                        <i class="ph-duotone ph-gear sidebar-nav-icon" aria-hidden="true"></i>
-                        <span class="sidebar-nav-text">Settings</span>
+                        <i class="ph-duotone ph-gear cb-sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="cb-sidebar-nav-text">Settings</span>
                     </a>
                 </li>
             </ul>

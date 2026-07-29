@@ -1,11 +1,11 @@
 // ============================================================
 // Auth Form Components
-// Applied inside .auth-card and .auth-split-form-inner
+// Applied inside .cb-auth-card and .cb-auth-split-form-inner
 // ============================================================
 
 // ---- Heading block ----
 
-.auth-heading {
+.cb-auth-heading {
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: -0.03em;
@@ -13,13 +13,13 @@
     margin-bottom: 0.25rem;
 }
 
-.auth-subheading {
+.cb-auth-subheading {
     font-size: 0.9375rem;
     color: var(--app-text-muted);
     margin-bottom: 1.75rem;
 }
 
-.auth-link {
+.cb-auth-link {
     color: #{$bl-cyan-dark};
     font-weight: 500;
     text-decoration: none;
@@ -32,8 +32,8 @@
 
 // ---- Form controls — theme-aware overrides ----
 
-.auth-card,
-.auth-split-form-inner {
+.cb-auth-card,
+.cb-auth-split-form-inner {
 
     .form-label {
         font-size: 0.875rem;
@@ -133,7 +133,7 @@
 
 // ---- "Or" divider ----
 
-.auth-divider {
+.cb-auth-divider {
     display: flex;
     align-items: center;
     gap: 0.75rem;

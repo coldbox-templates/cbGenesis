@@ -1,10 +1,10 @@
 // ============================================================
 // Toggle Switch Component
-// Reusable on/off toggle rendered via BXM component: ui/switch.bxm
+// Reusable on/off toggle rendered via BXM component: ui/cb-switch.bxm
 // Uses a styled checkbox input for accessibility.
 // ============================================================
 
-.bx-switch {
+.cb-bx-switch {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -40,10 +40,10 @@
     }
 
     // Checked state
-    input:checked + .bx-switch__track {
+    input:checked + .cb-bx-switch__track {
         background: $bl-cyan-dark;
 
-        .bx-switch__thumb {
+        .cb-bx-switch__thumb {
             transform: translateX(1.25rem);
         }
     }

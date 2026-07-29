@@ -3,8 +3,8 @@
 
 	<!--- Title --->
     <div class="text-center mb-4">
-        <h1 class="auth-heading">Welcome back</h1>
-        <p class="auth-subheading">Sign in to your account to continue</p>
+        <h1 class="cb-auth-heading">Welcome back</h1>
+        <p class="cb-auth-subheading">Sign in to your account to continue</p>
     </div>
 
 	<!--- Flash Messages--->
@@ -87,7 +87,7 @@
 	<bx:if prc.settings.cbAllowRegistration>
     <p class="text-center mb-0">
         Don't have an account?
-        <a href="#event.buildLink( "auth/register" )#" class="auth-link">Create one</a>
+        <a href="#event.buildLink( "auth/register" )#" class="cb-auth-link">Create one</a>
     </p>
 	</bx:if>
 

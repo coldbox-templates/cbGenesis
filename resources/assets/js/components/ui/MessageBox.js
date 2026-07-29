@@ -1,7 +1,7 @@
 /**
  * MessageBox Alpine Component
  *
- * Manages visibility and optional auto-dismiss for .messagebox elements.
+ * Manages visibility and optional auto-dismiss for .cb-messagebox elements.
  * Registered in App.js as Alpine.data("messageBox", messageBox).
  *
  * Usage in BXM:

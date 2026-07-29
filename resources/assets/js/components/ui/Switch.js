@@ -1,5 +1,5 @@
 /**
- * Converts common form values into a boolean switch state.
+ * Converts common form values into a boolean cb-switch state.
  *
  * @param {*} value Value to convert.
  * @returns {boolean} Normalized boolean value.
@@ -27,17 +27,17 @@ function coerceBoolean( value ) {
 }
 
 /**
- * Alpine.js switch component.
+ * Alpine.js cb-switch component.
  *
  * Keeps a boolean toggle in sync with a hidden field so forms submit the
  * current state without relying on visible checkbox markup.
  *
  * @param {Object} options Component configuration.
- * @param {*} options.checked Initial switch state.
+ * @param {*} options.checked Initial cb-switch state.
  * @param {string} options.name Form field name used in the accessible label.
  * @param {string} options.trueValue Value submitted when enabled.
  * @param {string} options.falseValue Value submitted when disabled.
- * @returns {Object} Alpine switch state and computed form values.
+ * @returns {Object} Alpine cb-switch state and computed form values.
  */
 export function switchComponent( {
 	checked = false,
@@ -52,7 +52,7 @@ export function switchComponent( {
 		falseValue,
 
 		/**
-		 * Inverts the current switch state.
+		 * Inverts the current cb-switch state.
 		 *
 		 * @returns {void}
 		 */
@@ -72,7 +72,7 @@ export function switchComponent( {
 		/**
 		 * Returns an accessible label describing the current state.
 		 *
-		 * @returns {string} Accessible switch label.
+		 * @returns {string} Accessible cb-switch label.
 		 */
 		get ariaLabel() {
 			return this.name ? `${ this.name } ${ this.checked ? "enabled" : "disabled" }` : `Switch ${ this.checked ? "enabled" : "disabled" }`;

@@ -1,12 +1,12 @@
 // ============================================================
 // Messagebox Component
 // Themed, dismissible alert messages powered by Alpine.
-// BEM: .messagebox, .messagebox--{type}
-//      .messagebox__icon  .messagebox__body  .messagebox__title
-//      .messagebox__text  .messagebox__dismiss
+// BEM: .cb-messagebox, .cb-messagebox--{type}
+//      .cb-messagebox__icon  .cb-messagebox__body  .cb-messagebox__title
+//      .cb-messagebox__text  .cb-messagebox__dismiss
 // ============================================================
 
-.messagebox {
+.cb-messagebox {
     position: relative;
     display: flex;
     align-items: flex-start;
@@ -25,7 +25,7 @@
         border-color: rgba($bl-cyan, 0.22);
         border-left-color: $bl-cyan;
 
-        .messagebox__icon { color: $bl-cyan-dark; }
+        .cb-messagebox__icon { color: $bl-cyan-dark; }
     }
 
     &--success {
@@ -33,7 +33,7 @@
         border-color: rgba($bl-success, 0.22);
         border-left-color: $bl-success;
 
-        .messagebox__icon { color: $bl-success; }
+        .cb-messagebox__icon { color: $bl-success; }
     }
 
     &--warning {
@@ -41,7 +41,7 @@
         border-color: rgba($bl-warning, 0.28);
         border-left-color: $bl-warning;
 
-        .messagebox__icon { color: darken($bl-warning, 12%); }
+        .cb-messagebox__icon { color: darken($bl-warning, 12%); }
     }
 
     &--error {
@@ -49,7 +49,7 @@
         border-color: rgba($bl-danger, 0.22);
         border-left-color: $bl-danger;
 
-        .messagebox__icon { color: $bl-danger; }
+        .cb-messagebox__icon { color: $bl-danger; }
     }
 
     // ---- Parts ----
@@ -109,32 +109,32 @@
 // ---- Dark mode ----
 
 [data-bs-theme="dark"] {
-    .messagebox {
+    .cb-messagebox {
         &--info {
             background: rgba($bl-cyan, 0.1);
             border-color: rgba($bl-cyan, 0.3);
-            .messagebox__icon { color: lighten($bl-cyan, 5%); }
+            .cb-messagebox__icon { color: lighten($bl-cyan, 5%); }
         }
 
         &--success {
             background: rgba($bl-success, 0.1);
             border-color: rgba($bl-success, 0.3);
-            .messagebox__icon { color: lighten($bl-success, 10%); }
+            .cb-messagebox__icon { color: lighten($bl-success, 10%); }
         }
 
         &--warning {
             background: rgba($bl-warning, 0.1);
             border-color: rgba($bl-warning, 0.3);
-            .messagebox__icon { color: lighten($bl-warning, 5%); }
+            .cb-messagebox__icon { color: lighten($bl-warning, 5%); }
         }
 
         &--error {
             background: rgba($bl-danger, 0.1);
             border-color: rgba($bl-danger, 0.3);
-            .messagebox__icon { color: lighten($bl-danger, 10%); }
+            .cb-messagebox__icon { color: lighten($bl-danger, 10%); }
         }
 
-        .messagebox__dismiss:hover {
+        .cb-messagebox__dismiss:hover {
             background: rgba(255, 255, 255, 0.08);
         }
     }

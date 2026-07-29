@@ -6,43 +6,43 @@
 >
 
 	<!--- Header --->
-	<div class="page-header admin-page-heading">
+	<div class="cb-page-header cb-admin-page-heading">
 		<div>
-			<p class="eyebrow">My Profile</p>
-			<h2 class="page-title">Account Settings</h2>
-			<p class="page-subtitle">My profile information and preferences.</p>
+			<p class="cb-eyebrow">My Profile</p>
+			<h2 class="cb-page-title">Account Settings</h2>
+			<p class="cb-page-subtitle">My profile information and preferences.</p>
 		</div>
 	</div>
 
-	<div class="profile-layout">
+	<div class="cb-profile-layout">
 
 		<!--- Profile Hero --->
-		<section class="content-card profile-hero">
-			<div class="profile-hero-cover"></div>
-			<div class="profile-hero-body">
-				<div class="profile-orb small" data-profile-initials>#encodeForHTML( prc.authUser.getInitials() )#</div>
+		<section class="cb-content-card cb-profile-hero">
+			<div class="cb-profile-hero-cover"></div>
+			<div class="cb-profile-hero-body">
+				<div class="cb-profile-orb small" data-profile-initials>#encodeForHTML( prc.authUser.getInitials() )#</div>
 				<h3 data-profile-name>#encodeForHTML( prc.authUser.getFullName() )#</h3>
 			</div>
 		</section>
 
 		<!--- Access Summary --->
-		<section class="content-card form-card access-summary-card">
-			<div class="content-card-header">
+		<section class="cb-content-card form-card cb-access-summary-card">
+			<div class="cb-content-card-header">
 				<div>
-					<h3 class="content-card-title">
+					<h3 class="cb-content-card-title">
 						<i class="ph-duotone ph-shield-check" aria-hidden="true"></i>
 						Assigned Access
 					</h3>
-					<p class="content-card-subtitle">Roles and direct permissions assigned to your account.</p>
+					<p class="cb-content-card-subtitle">Roles and direct permissions assigned to your account.</p>
 				</div>
 			</div>
-			<div class="access-summary-grid">
+			<div class="cb-access-summary-grid">
 				<div>
 					<h4>Roles</h4>
-					<div class="chip-row">
+					<div class="cb-chip-row">
 						<bx:if prc.authUser.getRoles().len()>
 							<bx:loop array="#prc.authUser.getRoles()#" item="role">
-								<span class="chip chip-info">#encodeForHTML( role.getRole() )#</span>
+								<span class="cb-chip cb-chip-info">#encodeForHTML( role.getRole() )#</span>
 							</bx:loop>
 						<bx:else>
 							<span class="text-muted">No roles assigned.</span>
@@ -51,10 +51,10 @@
 				</div>
 				<div>
 					<h4>Direct Permissions</h4>
-					<div class="chip-row">
+					<div class="cb-chip-row">
 						<bx:if prc.authUser.getPermissions().len()>
 							<bx:loop array="#prc.authUser.getPermissions()#" item="permission">
-								<span class="chip chip-cyan">#encodeForHTML( permission.getPermission() )#</span>
+								<span class="cb-chip cb-chip-cyan">#encodeForHTML( permission.getPermission() )#</span>
 							</bx:loop>
 						<bx:else>
 							<span class="text-muted">No direct permissions assigned.</span>
@@ -65,7 +65,7 @@
 		</section>
 
 		<!--- Profile Tabs --->
-		<div class="segmented-control profile-tabs" role="tablist" aria-label="Profile settings">
+		<div class="cb-segmented-control profile-tabs" role="tablist" aria-label="Profile settings">
 			<!--- PII --->
 			<button
 				type="button"
@@ -105,7 +105,7 @@
 
 		<!--- MessageBox --->
 		#view(
-			view = "_components/ui/messagebox",
+					view = "_components/ui/messagebox",
 			args = {
 				dynamic          : true,
 				messageExpression: "notice.message",
@@ -115,11 +115,11 @@
 		)#
 
 		<!--- Profile Tab --->
-		<section class="content-card form-card" x-show="activeTab === 'profile'" x-cloak>
+		<section class="cb-content-card form-card" x-show="activeTab === 'profile'" x-cloak>
 
 			<!--- Content Header --->
-			<div class="content-card-header">
-				<h3 class="content-card-title">Personal Information</h3>
+			<div class="cb-content-card-header">
+				<h3 class="cb-content-card-title">Personal Information</h3>
 			</div>
 
 			<!--- Profile Form --->
@@ -129,9 +129,9 @@
 				<input type="hidden" name="csrf" :value="csrfToken">
 
 				<!--- Grid --->
-				<div class="form-grid">
+				<div class="cb-form-grid">
 					<label for="firstName">
-						<span class="field-label">First Name <span class="required-mark" aria-hidden="true">*</span></span>
+						<span class="cb-field-label">First Name <span class="required-mark" aria-hidden="true">*</span></span>
 						<input
 							id="firstName"
 							name="firstName"
@@ -143,7 +143,7 @@
 						<span class="invalid-feedback" x-show="profile.errors.firstName" x-text="profile.errors.firstName"></span>
 					</label>
 					<label for="lastName">
-						<span class="field-label">Last Name <span class="required-mark" aria-hidden="true">*</span></span>
+						<span class="cb-field-label">Last Name <span class="required-mark" aria-hidden="true">*</span></span>
 						<input
 							id="lastName"
 							name="lastName"
@@ -154,7 +154,7 @@
 							autocomplete="family-name">
 						<span class="invalid-feedback" x-show="profile.errors.lastName" x-text="profile.errors.lastName"></span>
 					</label>
-					<label class="span-2" for="email"><span class="field-label">Email Address <span class="required-mark" aria-hidden="true">*</span></span>
+					<label class="cb-span-2" for="email"><span class="cb-field-label">Email Address <span class="required-mark" aria-hidden="true">*</span></span>
 						<input
 							id="email"
 							name="email"
@@ -165,7 +165,7 @@
 							autocomplete="email">
 						<span class="invalid-feedback" x-show="profile.errors.email" x-text="profile.errors.email"></span>
 					</label>
-					<label class="span-2" for="biography">Biography <span class="optional-label"></span>
+					<label class="cb-span-2" for="biography">Biography <span class="optional-label"></span>
 						<textarea
 							id="biography"
 							name="biography"
@@ -175,7 +175,7 @@
 						<span class="invalid-feedback" x-show="profile.errors.biography" x-text="profile.errors.biography"></span>
 					</label>
 				</div>
-				<div class="form-actions">
+				<div class="cb-form-actions">
 					<button type="submit" class="btn btn-primary" :disabled="loading || !profileDirty || !profileValid">
 						<span x-show="loading !== 'profile'"><i class="ph-duotone ph-check"></i> Save Profile</span>
 						<span x-show="loading === 'profile'" x-cloak><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...</span>
@@ -185,8 +185,8 @@
 		</section>
 
 		<!--- Password --->
-		<section class="content-card form-card profile-password-card" x-show="activeTab === 'password'" x-cloak>
-			<div class="content-card-header"><h3 class="content-card-title">Change Password</h3></div>
+		<section class="cb-content-card form-card cb-profile-password-card" x-show="activeTab === 'password'" x-cloak>
+			<div class="cb-content-card-header"><h3 class="cb-content-card-title">Change Password</h3></div>
 
 			<form
 				method="post"
@@ -196,7 +196,7 @@
 				<!--- CSRF Field --->
 				<input type="hidden" name="csrf" :value="csrfToken">
 
-				<div class="form-grid password-form-grid">
+				<div class="cb-form-grid password-form-grid">
 
 					#view(
 						view = "_components/auth/passwordInput",
@@ -205,7 +205,7 @@
 							name        : "currentPassword",
 							model       : "password.currentPassword",
 							label       : "Current Password",
-							classes     : "span-2",
+							classes     : "cb-span-2",
 							inputClassExpression: "password.errors.currentPassword ? 'is-invalid' : ''",
 							errorMessage: ""
 						}
@@ -216,7 +216,7 @@
 						x-show="password.errors.currentPassword"
 						x-text="password.errors.currentPassword"></span>
 
-					<div class="span-2">
+					<div class="cb-span-2">
 						#view(
 							view = "_components/ui/passwordMeter",
 							args = {
@@ -230,7 +230,7 @@
 					</div>
 
 					<!--- Confirm New Password --->
-					<label class="span-2" for="passwordConfirm">Confirm New Password
+					<label class="cb-span-2" for="passwordConfirm">Confirm New Password
 						<input
 							id="passwordConfirm"
 							name="passwordConfirm"
@@ -246,7 +246,7 @@
 					</label>
 				</div>
 				<!--- Form Actions --->
-				<div class="form-actions">
+				<div class="cb-form-actions">
 					<button type="submit" class="btn btn-primary" :disabled="loading || !passwordValid">
 						<span x-show="loading !== 'password'"><i class="ph-duotone ph-lock"></i> Change Password</span>
 						<span x-show="loading === 'password'" x-cloak>
@@ -258,17 +258,17 @@
 		</section>
 
 		<!--- API Tokens --->
-		<section class="content-card form-card api-tokens-card" x-show="activeTab === 'api-tokens'" x-cloak>
+		<section class="cb-content-card form-card cb-api-tokens-card" x-show="activeTab === 'api-tokens'" x-cloak>
 
 			<!--- Header --->
-			<div class="content-card-header">
+			<div class="cb-content-card-header">
 				<div>
-					<h3 class="content-card-title">
+					<h3 class="cb-content-card-title">
 						<i class="ph-duotone ph-key" aria-hidden="true"></i>
 						API Tokens
-						<span class="count-pill" x-text="apiTokens.length" aria-label="API token count"></span>
+						<span class="cb-count-pill" x-text="apiTokens.length" aria-label="API token count"></span>
 					</h3>
-					<p class="content-card-subtitle">Create tokens for integrations that access your account.</p>
+					<p class="cb-content-card-subtitle">Create tokens for integrations that access your account.</p>
 				</div>
 				<button
 					type="button"
@@ -355,17 +355,17 @@
 								<td><code x-text="token.tokenSnapshot"></code></td>
 								<td>
 									<span
-										class="chip"
-										:class="tokenExpiringSoon( token.expiration ) ? 'chip-locked' : ''"
+										class="cb-chip"
+										:class="tokenExpiringSoon( token.expiration ) ? 'cb-chip-locked' : ''"
 										x-text="token.expiration ? formatTokenDate( token.expiration ) : 'Never expires'"></span>
 								</td>
-								<td class="muted-cell" x-text="token.lastUsed ? formatTokenDate( token.lastUsed ) : 'Never used'"></td>
-								<td class="muted-cell" x-text="formatTokenDate( token.createdDate )"></td>
+								<td class="cb-muted-cell" x-text="token.lastUsed ? formatTokenDate( token.lastUsed ) : 'Never used'"></td>
+								<td class="cb-muted-cell" x-text="formatTokenDate( token.createdDate )"></td>
 								<td>
-									<div class="api-token-actions">
+									<div class="cb-api-token-actions">
 										<button
 											type="button"
-											class="icon-button"
+											class="cb-icon-button"
 											title="Edit token"
 											aria-label="Edit token"
 											@click="openEditTokenModal( token )">
@@ -373,7 +373,7 @@
 										</button>
 										<button
 											type="button"
-											class="icon-button danger"
+											class="cb-icon-button danger"
 											title="Delete token"
 											aria-label="Delete token"
 											@click="confirmDeleteToken( token )">
@@ -386,7 +386,7 @@
 					</tbody>
 				</table>
 			</div>
-			<p class="text-muted api-token-empty" x-show="!apiTokens.length" x-cloak>No API tokens have been created.</p>
+			<p class="text-muted cb-api-token-empty" x-show="!apiTokens.length" x-cloak>No API tokens have been created.</p>
 		</section>
 
 		#view(

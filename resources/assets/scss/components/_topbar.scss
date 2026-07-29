@@ -1,12 +1,12 @@
 // ============================================================
 // Topbar Component
-// The sticky topbar shell (container), its internal parts,
+// The sticky cb-topbar shell (container), its internal parts,
 // and all child components (toggle, buttons, breadcrumb, user menu).
 // ============================================================
 
 // ---- Topbar shell ----
 
-.topbar {
+.cb-topbar {
     position: sticky;
     top: 0;
     height: $topbar-height;
@@ -21,7 +21,7 @@
     gap: 1rem;
 }
 
-.topbar-right {
+.cb-topbar-right {
     display: flex;
     align-items: center;
     gap: 0.375rem;
@@ -38,7 +38,7 @@
 
 // ---- Sidebar toggle (hamburger / collapse) ----
 
-.topbar-toggle {
+.cb-topbar-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -62,7 +62,7 @@
 
 // ---- Generic icon button (theme toggle, notifications, etc.) ----
 
-.topbar-btn {
+.cb-topbar-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -86,7 +86,7 @@
 }
 
 // Notification dot badge
-.topbar-btn-badge {
+.cb-topbar-btn-badge {
     position: absolute;
     top: 5px;
     right: 5px;
@@ -99,13 +99,13 @@
 
 // ---- Thin vertical divider ----
 
-.topbar-divider-item {
+.cb-topbar-divider-item {
     display: flex;
     align-items: center;
     padding: 0 0.125rem;
 }
 
-.topbar-divider {
+.cb-topbar-divider {
     width: 1px;
     height: 1.25rem;
     background: var(--app-border);
@@ -116,7 +116,7 @@
 
 // ---- Left container: toggle + breadcrumb ----
 
-.topbar-left {
+.cb-topbar-left {
     display: flex;
     align-items: center;
     gap: 0.625rem;
@@ -127,7 +127,7 @@
 
 // ---- Breadcrumb trail ----
 
-.topbar-breadcrumb {
+.cb-topbar-breadcrumb {
     display: flex;
     align-items: center;
     gap: 0;
@@ -138,7 +138,7 @@
 	padding-left: 0px;
 }
 
-.topbar-breadcrumb-item {
+.cb-topbar-breadcrumb-item {
     display: flex;
     align-items: center;
     color: var(--app-text-muted);
@@ -168,7 +168,7 @@
 
 // ---- User dropdown trigger ----
 
-.topbar-user-btn {
+.cb-topbar-user-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -193,7 +193,7 @@
     }
 }
 
-.topbar-user-avatar {
+.cb-topbar-user-avatar {
     width: 28px;
     height: 28px;
     border-radius: 50%;
@@ -207,7 +207,7 @@
     flex-shrink: 0;
 }
 
-.topbar-user-name {
+.cb-topbar-user-name {
     max-width: 110px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -218,7 +218,7 @@
     }
 }
 
-.topbar-user-chevron {
+.cb-topbar-user-chevron {
     font-size: 0.75rem;
     color: var(--app-text-muted);
     transition: transform 0.15s ease;
@@ -228,13 +228,13 @@
     }
 }
 
-.topbar-user-btn.show .topbar-user-chevron {
+.cb-topbar-user-btn.show .cb-topbar-user-chevron {
     transform: rotate(180deg);
 }
 
 // ---- Dropdown menu (overrides Bootstrap for theme support) ----
 
-.topbar .dropdown-menu {
+.cb-topbar .dropdown-menu {
     background: var(--app-surface);
     border-color: var(--app-border);
     box-shadow: $box-shadow-lg;

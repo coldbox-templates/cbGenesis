@@ -5,11 +5,11 @@
 		#forAttribute( prc.permissionCatalog )#,
 		"#csrfToken()#"
 	)'>
-	<div class="page-header admin-page-heading">
+	<div class="cb-page-header cb-admin-page-heading">
 		<div>
-			<p class="eyebrow">Security</p>
-			<h2 class="page-title">Roles</h2>
-			<p class="page-subtitle">Define role bundles and tune their exact permissions.</p>
+			<p class="cb-eyebrow">Security</p>
+			<h2 class="cb-page-title">Roles</h2>
+			<p class="cb-page-subtitle">Define role bundles and tune their exact permissions.</p>
 		</div>
 		<button
 			type="button"
@@ -22,29 +22,29 @@
 	</div>
 
 	<!--- Roles Layout --->
-	<div class="roles-layout">
-		<section class="content-card role-list-panel">
+	<div class="cb-roles-layout">
+		<section class="cb-content-card cb-role-list-panel">
 
 			<!--- Roles Header --->
-			<div class="content-card-header">
-				<h3 class="content-card-title">Roles</h3>
-				<span class="count-pill" x-text="filteredCount"></span>
+			<div class="cb-content-card-header">
+				<h3 class="cb-content-card-title">Roles</h3>
+				<span class="cb-count-pill" x-text="filteredCount"></span>
 			</div>
 
 			<!--- Roles Toolbar --->
-			<div class="catalog-toolbar">
-				<div class="admin-search wide">
+			<div class="cb-catalog-toolbar">
+				<div class="cb-admin-search cb-wide">
 					<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
 					<input x-model.debounce.150ms="query" type="search" placeholder="Filter roles..." aria-label="Filter roles">
 				</div>
 			</div>
 
 			<!--- Role Listing --->
-			<div class="role-list">
+			<div class="cb-role-list">
 				<template x-for="role in filteredRoles" :key="role.roleId">
 					<button
 						type="button"
-						class="role-list-item"
+						class="cb-role-list-item"
 						:class="selectedRole?.roleId === role.roleId ? 'active' : ''"
 						@click="selectRole( role )"
 						>
@@ -53,7 +53,7 @@
 					</button>
 				</template>
 				<div
-					class="empty-state"
+					class="cb-empty-state"
 					x-show="filteredRoles.length === 0"
 					x-cloak
 				>
@@ -65,18 +65,18 @@
 
 		<!--- Role Details Section when Clicked --->
 		<section
-			class="content-card role-summary-panel"
+			class="cb-content-card cb-role-summary-panel"
 			x-show="selectedRole"
 			x-cloak
 		>
-			<div class="content-card-header matrix-heading">
+			<div class="cb-content-card-header cb-matrix-heading">
 				<!--- Role Header Section --->
 				<div>
-					<h3 class="content-card-title" x-text="selectedRole?.role"></h3>
+					<h3 class="cb-content-card-title" x-text="selectedRole?.role"></h3>
 					<p x-text="selectedRole?.description || 'No description provided'"></p>
 				</div>
 				<!--- Role Actions --->
-				<div class="page-actions">
+				<div class="cb-page-actions">
 					<!--- Edit Role --->
 					<button
 						type="button"
@@ -99,28 +99,28 @@
 			</div>
 
 			<!--- Role Permissions --->
-			<div class="role-detail-section role-permissions-section">
-				<div class="role-section-header">
+			<div class="cb-role-detail-section cb-role-permissions-section">
+				<div class="cb-role-section-header">
 					<h4>Permissions</h4>
-					<span class="count-pill" x-text="selectedRole?.permissions.length"></span>
+					<span class="cb-count-pill" x-text="selectedRole?.permissions.length"></span>
 				</div>
-				<div class="chip-row">
+				<div class="cb-chip-row">
 					<template
 						x-for="permission in ( selectedRole?.permissions || [] )"
 						:key="permission.permissionId">
-						<span class="chip chip-info" x-text="permission.permission"></span>
+						<span class="cb-chip cb-chip-info" x-text="permission.permission"></span>
 					</template>
 				</div>
 			</div>
 
 			<!--- Assigned Users --->
-			<div class="role-detail-section role-users-section">
-				<div class="role-section-header role-users-header">
+			<div class="cb-role-detail-section cb-role-users-section">
+				<div class="cb-role-section-header cb-role-users-header">
 					<div>
 						<h4>Assigned users</h4>
 						<span x-text="filteredUsers.length + ' of ' + assignedUsers.length"></span>
 					</div>
-					<div class="admin-search role-users-search">
+					<div class="cb-admin-search cb-role-users-search">
 						<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
 						<input
 							x-model.debounce.150ms="userQuery"
@@ -130,7 +130,7 @@
 					</div>
 				</div>
 
-				<div class="role-users-loading" x-show="loadingUsers" x-cloak>
+				<div class="cb-role-users-loading" x-show="loadingUsers" x-cloak>
 					#view( view: "_components/ui/progressbar", args: {
 						label        : "Loading users...",
 						ariaLabel    : "Loading assigned users",
@@ -142,18 +142,18 @@
 
 				<!--- Role Users Error --->
 				<div
-					class="role-users-status role-users-error"
+					class="cb-role-users-status cb-role-users-error"
 					x-show="usersError"
 					x-text="usersError"
 					x-cloak></div>
 
 				<!--- Role Users --->
 				<div
-					class="role-users-list"
+					class="cb-role-users-list"
 					x-show="!loadingUsers && !usersError"
 					x-cloak>
 					<template x-for="user in filteredUsers" :key="user.userId">
-						<div class="role-user-row">
+						<div class="cb-role-user-row">
 							<div>
 								<strong x-text="user.firstName + ' ' + user.lastName"></strong>
 								<span x-text="user.email"></span>
@@ -171,7 +171,7 @@
 						</div>
 					</template>
 					<div
-						class="role-users-status"
+						class="cb-role-users-status"
 						x-show="filteredUsers.length === 0">
 						<span x-text="assignedUsers.length ? 'No users match this filter.' : 'No users are assigned to this role.'"></span>
 					</div>
@@ -183,7 +183,7 @@
 		#view(
 			view: "_components/ui/drawer",
 			args: {
-				id: "role-editor-drawer",
+				id: "cb-role-editor-drawer",
 				title: "Role",
 				openExpression: "drawerOpen",
 				closeExpression: "closeDrawer()",

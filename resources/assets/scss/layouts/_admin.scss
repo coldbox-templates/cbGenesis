@@ -1,17 +1,17 @@
 // ============================================================
 // Admin Shell Layout
-// Structure: fixed sidebar (left) + scrollable main wrapper
-//            sticky topbar (inside main wrapper)
+// Structure: fixed cb-sidebar (left) + scrollable main wrapper
+//            sticky cb-topbar (inside main wrapper)
 // ============================================================
 
-.admin-body {
+.cb-admin-body {
     overflow-x: hidden;
     background-color: var(--app-bg);
 }
 
-// ---- Mobile sidebar backdrop ----
+// ---- Mobile cb-sidebar backdrop ----
 
-.sidebar-overlay {
+.cb-sidebar-overlay {
     display: none;
     position: fixed;
     inset: 0;
@@ -25,21 +25,21 @@
     }
 }
 
-// ---- Main wrapper (everything right of the sidebar) ----
+// ---- Main wrapper (everything right of the cb-sidebar) ----
 
-.main-wrapper {
+.cb-main-wrapper {
     margin-left: $sidebar-width;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     transition: $layout-transition;
 
-    // When sidebar collapses to icon strip
-    &.sidebar-collapsed-ml {
+    // When cb-sidebar collapses to icon strip
+    &.cb-sidebar-collapsed-ml {
         margin-left: $sidebar-width-collapsed;
     }
 
-    // Mobile: sidebar is an overlay, no margin needed
+    // Mobile: cb-sidebar is an overlay, no margin needed
     @media (max-width: 991.98px) {
         margin-left: 0 !important;
     }
@@ -49,7 +49,7 @@
 
 // ---- Page content area ----
 
-.main-content {
+.cb-main-content {
     flex: 1;
     padding: 1.75rem;
 

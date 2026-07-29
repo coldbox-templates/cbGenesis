@@ -3,7 +3,7 @@
 // Reusable logo mark. App-specific brand labels live in app components.
 // ============================================================
 
-.brand-logo {
+.cb-brand-logo {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -20,7 +20,7 @@
 // Theme-toggle morphing SVG (used in header partial)
 // ============================================================
 
-.icon-theme-toggle {
+.cb-icon-theme-toggle {
     transform-origin: center;
     overflow: visible;
     transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);

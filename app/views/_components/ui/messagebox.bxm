@@ -52,25 +52,25 @@
 <bx:if args.dynamic>
     <bx:output>
     <div
-        class="messagebox#( len( args.classes ) ? " " & args.classes : "" )#"
-        :class="#encodeForHTMLAttribute( args.typeExpression )# ? 'messagebox--' + #encodeForHTMLAttribute( args.typeExpression )# : ''"
+        class="cb-messagebox#( len( args.classes ) ? " " & args.classes : "" )#"
+        :class="#encodeForHTMLAttribute( args.typeExpression )# ? 'cb-messagebox--' + #encodeForHTMLAttribute( args.typeExpression )# : ''"
         x-show="#encodeForHTMLAttribute( args.messageExpression )#"
         x-cloak
         role="alert"
         aria-live="polite">
 
         <i
-            class="ph-duotone ph-info messagebox__icon"
+            class="ph-duotone ph-info cb-messagebox__icon"
             :class="#encodeForHTMLAttribute( args.typeExpression )# === 'success' ? 'ph-check-circle' : (#encodeForHTMLAttribute( args.typeExpression )# === 'warning' ? 'ph-warning' : (#encodeForHTMLAttribute( args.typeExpression )# === 'error' ? 'ph-x-circle' : 'ph-info'))"
             aria-hidden="true"></i>
 
-        <div class="messagebox__body">
-            <p class="messagebox__text" x-text="#encodeForHTMLAttribute( args.messageExpression )#"></p>
+        <div class="cb-messagebox__body">
+            <p class="cb-messagebox__text" x-text="#encodeForHTMLAttribute( args.messageExpression )#"></p>
         </div>
 
         <button
             type="button"
-            class="messagebox__dismiss"
+            class="cb-messagebox__dismiss"
             @click="#encodeForHTMLAttribute( args.dismissAction )#"
             aria-label="Dismiss">
             <i class="ph-duotone ph-x" aria-hidden="true"></i>
@@ -90,7 +90,7 @@
     <bx:set localIcon = localIcons[ localType ]>
 
     <bx:output>
-    <div class="messagebox messagebox--#encodeForHTMLAttribute( localType )##(
+    <div class="cb-messagebox cb-messagebox--#encodeForHTMLAttribute( localType )##(
 	len( args.classes ) ? " " & args.classes : ""
 )#"
          x-data="messageBox({ autoDismiss: #javaCast( "int", val( args.autoDismiss ) )# })"
@@ -99,18 +99,18 @@
          role="alert"
          aria-live="polite">
 
-        <i class="ph-duotone #encodeForHTMLAttribute( localIcon )# messagebox__icon" aria-hidden="true"></i>
+        <i class="ph-duotone #encodeForHTMLAttribute( localIcon )# cb-messagebox__icon" aria-hidden="true"></i>
 
-        <div class="messagebox__body">
+        <div class="cb-messagebox__body">
             <bx:if len( trim( args.title ) )>
-                <p class="messagebox__title">#encodeForHTML( args.title )#</p>
+                <p class="cb-messagebox__title">#encodeForHTML( args.title )#</p>
             </bx:if>
-            <p class="messagebox__text">#encodeForHTML( args.message )#</p>
+            <p class="cb-messagebox__text">#encodeForHTML( args.message )#</p>
         </div>
 
         <bx:if args.dismissible>
             <button type="button"
-                    class="messagebox__dismiss"
+                    class="cb-messagebox__dismiss"
                     @click="dismiss()"
                     aria-label="Dismiss">
                 <i class="ph-duotone ph-x" aria-hidden="true"></i>

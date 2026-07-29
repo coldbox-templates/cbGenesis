@@ -10,8 +10,8 @@
 <bx:param name="args.split" default="true"/>
 
 <bx:output>
-<div class="auth-#( args.split ? "split-" : "" )#footer">
-	<button class="btn-theme-toggle"
+<div class="cb-auth-#( args.split ? "split-" : "" )#footer">
+	<button class="cb-btn-theme-toggle"
 			x-cloak
 			@click="$store.theme.toggle()"
 			:aria-label="$store.theme.mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">

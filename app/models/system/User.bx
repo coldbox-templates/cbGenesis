@@ -395,7 +395,7 @@ class extends="app.models.BaseEntity" {
 	 */
 	boolean function hasPermission( required permission ){
 		return getAllPermissions()
-			.intersect( inflatePermissions( arguments.permission ) ).len() > 0
+			.intersection( inflatePermissions( arguments.permission ) ).len() > 0
 	}
 
 	/**
@@ -479,8 +479,10 @@ class extends="app.models.BaseEntity" {
 	private set function inflatePermissions( required permission ){
 		// Get the user's permissions as an array of permission strings
 		if( isSimpleValue( arguments.permission ) ){
-			arguments.permission = listToSet( arguments.permission )
-		} else if( isArray( arguments.permission ) ){
+			arguments.permission = arguments.permission.listToArray()
+		}
+		// Convert the array to a set for easier processing
+		if( isArray( arguments.permission ) ){
 			arguments.permission = arguments.permission.toSet()
 		} else if( !isBoxSet( arguments.permission ) ){
 			throw( type="InvalidArgumentException", message="Permission must be a string, list, set or array" )

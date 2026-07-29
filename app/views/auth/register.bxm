@@ -3,8 +3,8 @@
 
 	<!--- Form Title --->
     <div class="text-center mb-4">
-        <h1 class="auth-heading">Create your account</h1>
-        <p class="auth-subheading">Join us today — it only takes a minute</p>
+        <h1 class="cb-auth-heading">Create your account</h1>
+        <p class="cb-auth-subheading">Join us today — it only takes a minute</p>
     </div>
 
     <!--- Flash Messages --->
@@ -149,7 +149,7 @@
 
     <p class="text-center mb-0">
         Already have an account?
-        <a href="#event.buildLink( "login" )#" class="auth-link">Sign in</a>
+        <a href="#event.buildLink( "login" )#" class="cb-auth-link">Sign in</a>
     </p>
 
 </div>

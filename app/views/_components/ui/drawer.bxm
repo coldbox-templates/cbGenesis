@@ -7,7 +7,7 @@
 
 <bx:output>
 <div id="#encodeForHTMLAttribute( args.id )#"
-	class="ui-drawer"
+	class="cb-ui-drawer"
 	x-data="drawer()"
 	x-show="#args.openExpression#"
 	x-cloak
@@ -18,20 +18,20 @@
 	@click.self="#args.closeExpression#"
 	@keydown.escape.window="#args.closeExpression#">
 	<div
-		class="ui-drawer__panel"
-		x-transition:enter="ui-drawer__panel--transition"
-		x-transition:enter-start="ui-drawer__panel--from-right"
-		x-transition:enter-end="ui-drawer__panel--visible"
-		x-transition:leave="ui-drawer__panel--transition"
-		x-transition:leave-start="ui-drawer__panel--visible"
-		x-transition:leave-end="ui-drawer__panel--from-right">
+		class="cb-ui-drawer__panel"
+		x-transition:enter="cb-ui-drawer__panel--transition"
+		x-transition:enter-start="cb-ui-drawer__panel--from-right"
+		x-transition:enter-end="cb-ui-drawer__panel--visible"
+		x-transition:leave="cb-ui-drawer__panel--transition"
+		x-transition:leave-start="cb-ui-drawer__panel--visible"
+		x-transition:leave-end="cb-ui-drawer__panel--from-right">
 
 		<!--- Header --->
-		<div class="ui-drawer__header">
+		<div class="cb-ui-drawer__header">
 			<h2 id="#encodeForHTMLAttribute( args.id )#-title">#encodeForHTML( args.title )#</h2>
 			<button
 				type="button"
-				class="ui-drawer__close"
+				class="cb-ui-drawer__close"
 				@click="#args.closeExpression#"
 				aria-label="Close drawer">
 				<i class="ph-duotone ph-x" aria-hidden="true"></i>
