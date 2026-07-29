@@ -37,7 +37,7 @@ class extends="cborm.models.VirtualEntityService" {
 	 *
 	 * @return The validated sort order.
 	 */
-	protected string function ensureSortOrder(
+	public string function ensureSortOrder(
 		required sortOrder,
 		required sortMap,
 		string defaultSortOrder = "lastName asc"
