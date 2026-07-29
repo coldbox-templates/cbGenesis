@@ -44,6 +44,19 @@ class extends="app.models.BaseService" {
 	@inject( "@cbSecurity" )
 	property name="cbSecurity";
 
+	static{
+		SORT_MAP = {
+			"firstName" : "firstName",
+			"lastName"  : "lastName",
+			"email"     : "email",
+			"isActive"  : "isActive",
+			"isPasswordReset" : "isPasswordReset",
+			"is2FactorAuth" : "is2FactorAuth",
+			"verifiedAt": "verifiedAt"
+		}
+		DEFAULT_SORT_ORDER = "lastName asc"
+	}
+
 	/**
 	 * Constructor
 	 */
@@ -158,6 +171,23 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
+	 * This function takes an incoming sort order from a form,
+	 * and returns only valid sort orders.
+	 * If the sort order is invalid, it will default to lastName asc.
+	 *
+	 * @sortOrder The sort order to validate
+	 *
+	 * @return The validated sort order
+	 */
+	string function ensureSortOrder( string sortOrder ) {
+		return super.ensureSortOrder(
+			sortOrder: arguments.sortOrder,
+			sortMap: static.SORT_MAP,
+			defaultSortOrder: static.DEFAULT_SORT_ORDER
+		)
+	}
+
+	/**
 	 * Search users across different criteria with pagination
 	 *
 	 * @searchTerm The search term to look for in: firstName, lastName, email
@@ -178,10 +208,13 @@ class extends="app.models.BaseService" {
 		boolean isActive,
 		boolean isVerified,
 		roleId,
-		sortOrder = "lastName asc",
+		sortOrder = static.DEFAULT_SORT_ORDER,
 		propertyList = ""
 	) {
 		var results = { "count": 0, "records": [] }
+
+		// Validate the sort order
+		arguments.sortOrder = ensureSortOrder( arguments.sortOrder )
 
 		// If the property list is an array, convert it to a list for the criteria builder
 		if( isArray( arguments.propertyList ) ) {
