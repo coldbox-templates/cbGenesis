@@ -1,138 +1,146 @@
 /**
- * Mock user management handler.
+ * Manages users and their roles and permissions.
  */
-@secured
+@secured( "users:admin,users:read" )
 class extends="BaseSecureHandler" {
 
+	@inject
+	property name="userService";
+
+	@inject
+	property name="permissionService";
+
+	@inject
+	property name="roleService";
+
+	// Present the users list view
 	function index( event, rc, prc ) {
-		prc.title = "Users";
-		setMockSecurityData( prc );
-		event.setView( "users/index" );
+		var pagination = getPagination( rc.page ?: 1, rc.limit ?: 25 )
+		prc.title = "Users"
+		// Initial Lookups
+		prc.roles = roleService.list().map( .getMemento )
+		// Initial Search
+		prc.users = userService.search(
+			searchTerm: rc.search ?: "",
+			isActive: true,
+			offset: pagination.offset,
+			max: pagination.limit,
+			sortOrder: rc.sortOrder ?: ""
+		).map( .getMemento )
+
+		event.setView( "users/index" )
 	}
 
-	function detail( event, rc, prc ) {
-		prc.title = "User Detail";
-		prc.authUser = getMockAuthUser();
-		setMockSecurityData( prc );
+	// Retrieve user listings
+	@remote( "Retrieve user listings remotely via AJAX" )
+	function search( event, rc, prc ) {
+		var pagination = getPagination( rc.page ?: 1, rc.limit ?: 25 )
+		// Search
+		prc.users = userService.search(
+			searchTerm: rc.search ?: "",
+			offset: pagination.offset,
+			max: pagination.limit,
+			sortOrder: rc.sortOrder ?: ""
+			isActive: rc.isActive ?: null,
+			isVerified: rc.isVerified ?: null
+		).map( .getMemento )
 
-		var selectedUserIndex = prc.users.find( ( user ) => user.userId == ( rc.id ?: "usr-brad" ) );
-		prc.selectedUser = selectedUserIndex ? prc.users[ selectedUserIndex ] : prc.users[ 2 ];
-
-		event.setLayout( "Admin" );
-		event.setView( "users/detail" );
+		event.getResponse().withData( prc.users )
 	}
 
-	private void function setMockSecurityData( prc ) {
-		prc.roles = [
-			{
-				"roleId"     : "role-super-admin",
-				"role"       : "Super Admin",
-				"description": "Full system access"
-			},
-			{
-				"roleId"     : "role-admin",
-				"role"       : "Admin",
-				"description": "Manages users, content, and settings"
-			},
-			{
-				"roleId"     : "role-developer",
-				"role"       : "Developer",
-				"description": "Build and deployment access"
-			},
-			{
-				"roleId"     : "role-viewer",
-				"role"       : "Viewer",
-				"description": "Read-only access"
-			}
-		];
+	// Create a new user
+	@remote( "Create a new user remotely via AJAX" )
+	@secured( "users:admin,users:write" )
+	function create( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = userService
+				.new()
+				.populate( rc )
+				.validateOrFail()
+			userService.create( prc.user )
+			response.setData( data: prc.user.getMemento(), message: "User created successfully." )
+		}
+		catch( ValidationException error ){
+			response.setErrorMessage(
+				message: "User validation errors",
+				statusCode: 422,
+				data : prc.user.getValidationResult().getAllErrorsAsStruct()
+			)
+		}
+		catch ( any error ) {
+			log.error( "Error saving user: #error.message#", error )
+			response.setErrorMessage(
+				message: "User could not be saved: #error.message & error.detail#",
+				statusCode: 500
+			)
+		}
 
-		prc.permissions = [
-			{
-				"permissionId": "perm-users-read",
-				"permission"  : "users:read",
-				"description" : "View users"
-			},
-			{
-				"permissionId": "perm-users-write",
-				"permission"  : "users:write",
-				"description" : "Create and update users"
-			},
-			{
-				"permissionId": "perm-roles-read",
-				"permission"  : "roles:read",
-				"description" : "View roles"
-			},
-			{
-				"permissionId": "perm-settings-read",
-				"permission"  : "settings:read",
-				"description" : "View global settings"
-			},
-			{
-				"permissionId": "perm-audit-read",
-				"permission"  : "audit:read",
-				"description" : "View audit events"
-			},
-			{
-				"permissionId": "perm-reports-export",
-				"permission"  : "reports:export",
-				"description" : "Export reports"
-			}
-		];
-
-		prc.users = [
-			{
-				"userId"     : "usr-luis",
-				"name"       : "Luis Majano",
-				"email"      : "luis@ortussolutions.com",
-				"initials"   : "LM",
-				"status"     : "Active",
-				"authMethod" : "Passkey",
-				"lastLogin"  : "Just now",
-				"roles"      : [ "Super Admin"],
-				"permissions": [ "users:read", "users:write", "settings:read", "audit:read", "reports:export"]
-			},
-			{
-				"userId"     : "usr-brad",
-				"name"       : "Brad Wood",
-				"email"      : "brad@ortussolutions.com",
-				"initials"   : "BW",
-				"status"     : "Active",
-				"authMethod" : "TOTP",
-				"lastLogin"  : "2 min ago",
-				"roles"      : [ "Admin"],
-				"permissions": [ "reports:export", "apitokens"]
-			},
-			{
-				"userId"     : "usr-jacob",
-				"name"       : "Jacob Beers",
-				"email"      : "jacob@ortussolutions.com",
-				"initials"   : "JB",
-				"status"     : "Pending",
-				"authMethod" : "None",
-				"lastLogin"  : "Never",
-				"roles"      : [ "Developer"],
-				"permissions": []
-			},
-			{
-				"userId"     : "usr-unknown",
-				"name"       : "Unknown User",
-				"email"      : "bad@actor.io",
-				"initials"   : "XX",
-				"status"     : "Locked",
-				"authMethod" : "None",
-				"lastLogin"  : "5 failed attempts",
-				"roles"      : [],
-				"permissions": []
-			}
-		];
+		return response
 	}
 
-	private struct function getMockAuthUser() {
-		return {
-			"name"    : "Luis Majano",
-			"email"   : "luis@ortussolutions.com",
-			"role"    : "Super Admin",
-			"initials": "LM"
-		};
+	// Show a specific user detail page
+	@secured( "users:read" )
+	function show( event, rc, prc ) {
+		// Get the user to manage
+		prc.user = userService
+			.getOrFail( rc.userId ?: "" )
+			.getMemento()
+		// Lookups
+		prc.roles = roleService.list().map( .getMemento )
+		prc.permissions = permissionService.list().map( .getMemento )
 	}
+
+	// Update an existing user
+	@remote( "Update an existing user remotely via AJAX" )
+	@secured( "users:admin,users:write" )
+	function update( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = userService
+				.getOrFail( rc.userId ?: "" )
+				.populate( rc )
+				.validateOrFail()
+				.save()
+			response.setData( data: prc.user.getMemento(), message: "User updated successfully." )
+		}
+		catch( ValidationException error ){
+			response.setErrorMessage(
+				message: "User validation errors",
+				statusCode: 422,
+				data : prc.user.getValidationResult().getAllErrorsAsStruct()
+			)
+		}
+		catch ( any error ) {
+			log.error( "Error saving user: #error.message#", error )
+			response.setErrorMessage(
+				message: "User could not be saved: #error.message & error.detail#",
+				statusCode: 500
+			)
+		}
+
+		return response
+	}
+
+	// Delete a user
+	@remote( "Delete a user remotely via AJAX" )
+	@secured( "users:admin,users:delete" )
+	function delete( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = userService
+				.getOrFail( rc.userId ?: "" )
+				.delete()
+			response.addMessage( "User deleted successfully." )
+		} catch ( any error ) {
+			log.error( "Error deleting user with ID [#rc.userId#]: #error.message#", error )
+			response.setErrorMessage(
+				message: "User could not be deleted: #error.message & error.detail#",
+				statusCode: 500
+			)
+		}
+
+		return response
+	}
+
 }

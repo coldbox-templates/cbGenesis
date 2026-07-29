@@ -30,4 +30,38 @@ class extends="coldbox.system.RestHandler"{
 		}
 	}
 
+	/**
+	 * Ensures that the provided sort direction is valid (either "asc" or "desc").
+	 * If the provided direction is invalid, it defaults to "asc".
+	 *
+	 * @direction The sort direction to validate.
+	 *
+	 * @return string The validated sort direction ("asc" or "desc").
+	 */
+	private string function ensureSortDirection( required string direction ){
+		var dir = lcase( arguments.direction ).trim()
+		if ( dir != "asc" && dir != "desc" ) {
+			dir = "asc"
+		}
+		return dir
+	}
+
+	/**
+	 * This function is to receive a page number so we can do pagination.
+	 * It should return a offset and max so we can pass to any service.
+	 *
+	 * @page The current page number (1-based index).
+	 * @limit The maximum number of items per page (default: 25).
+	 *
+	 * @return struct A structure containing the calculated offset and limit for pagination.
+	 */
+	private struct function getPagination( required numeric page, numeric limit = 25 ) {
+		arguments.page = max( 1, arguments.page )
+		arguments.limit = max( 1, arguments.limit )
+
+		var offset = ( arguments.page - 1 ) * arguments.limit
+
+		return { offset: offset, limit: arguments.limit }
+	}
+
 }

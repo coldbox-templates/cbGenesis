@@ -35,6 +35,16 @@ class extends="coldbox.system.testing.BaseModelTest" {
 						expect( model ).toBeComponent();
 					}
 				);
+				it(
+					"normalizes valid sort orders and rejects invalid input",
+					function() {
+						expect( model.ensureSortOrder( "lastName" ) ).toBe( "lastName asc" );
+						expect( model.ensureSortOrder( " EMAIL DESC " ) ).toBe( "email desc" );
+						expect( model.ensureSortOrder( "verifiedAt asc" ) ).toBe( "verifiedAt asc" );
+						expect( model.ensureSortOrder( "email desc, password" ) ).toBe( "lastName asc" );
+						expect( model.ensureSortOrder( "unknown asc" ) ).toBe( "lastName asc" );
+					}
+				);
 			}
 		);
 	}

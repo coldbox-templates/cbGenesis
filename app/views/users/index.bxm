@@ -1,38 +1,60 @@
 <bx:output>
+<!--- Users Component --->
 <div x-data='usersForm( #forAttribute( prc.users )# )'>
+
+	<!--- Header --->
 	<div class="cb-page-header cb-admin-page-heading">
 		<div>
 			<p class="cb-eyebrow">Security</p>
 			<h2 class="cb-page-title">User Management</h2>
-			<p class="cb-page-subtitle">Manage user access with mock roles and a-la-carte permissions.</p>
+			<p class="cb-page-subtitle">Manage users and their roles in the system. You can invite new users, assign roles, and manage their access.</p>
 		</div>
+		<!--- Invite a new user to the system --->
 		<button type="button" class="btn btn-primary">
 			<i class="ph-duotone ph-plus" aria-hidden="true"></i>
 			Invite User
 		</button>
 	</div>
 
+	<!--- Users Table --->
 	<section class="cb-content-card cb-admin-workbench">
+
+		<!--- Users Table Header --->
 		<div class="cb-content-card-header cb-admin-toolbar">
+			<!--- User Filters --->
 			<div class="cb-segmented-control" aria-label="User filters">
-				<button type="button" :class="statusFilter === 'all' ? 'active' : ''" @click="statusFilter = 'all'">All Users</button>
-				<button type="button" :class="statusFilter === 'active' ? 'active' : ''" @click="statusFilter = 'active'">Active</button>
-				<button type="button" :class="statusFilter === 'pending' ? 'active' : ''" @click="statusFilter = 'pending'">Pending</button>
-				<button type="button" :class="statusFilter === 'locked' ? 'active' : ''" @click="statusFilter = 'locked'">Locked</button>
+				<button
+					type="button"
+					:class="statusFilter === 'all' ? 'active' : ''"
+					@click="statusFilter = 'all'">All
+					Users</button>
+				<button
+					type="button"
+					:class="statusFilter === 'active' ? 'active' : ''"
+					@click="statusFilter = 'active'">Active</button>
+				<button
+					type="button"
+					:class="statusFilter === 'pending' ? 'active' : ''"
+					@click="statusFilter = 'pending'">Pending</button>
+				<button
+					type="button"
+					:class="statusFilter === 'locked' ? 'active' : ''"
+					@click="statusFilter = 'locked'">Locked</button>
 			</div>
+			<!--- Search Users --->
 			<div class="cb-admin-search">
 				<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
 				<input x-model.debounce.150ms="query" type="search" placeholder="Search users..." aria-label="Search users">
 			</div>
 		</div>
 
+		<!--- Users Table --->
 		<div class="cb-table-wrap">
 			<table class="cb-table">
 				<thead>
 					<tr>
 						<th scope="col">User</th>
 						<th scope="col">Roles</th>
-						<th scope="col">2FA</th>
 						<th scope="col">Status</th>
 					</tr>
 				</thead>
@@ -55,10 +77,13 @@
 									</template>
 								</div>
 							</td>
-							<td><span class="cb-chip cb-chip-cyan" x-text="user.authMethod"></span></td>
-							<td><span class="cb-chip" :class="'cb-chip-' + user.status.toLowerCase()" x-text="user.status"></span></td>
+							<td>
+								<span class="cb-chip" :class="'cb-chip-' + user.status.toLowerCase()" x-text="user.status"></span>
+							</td>
 						</tr>
 					</template>
+
+					<!--- If No Users Found --->
 					<tr x-show="filteredCount === 0" x-cloak>
 						<td colspan="4" class="cb-empty-state">No users found</td>
 					</tr>

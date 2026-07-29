@@ -338,6 +338,16 @@ class extends="app.models.BaseEntity" {
 	}
 
 	/**
+	 * Delete the user
+	 *
+	 * @return User
+	 */
+	User function delete() {
+		variables.userService.delete( this )
+		return this
+	}
+
+	/**
 	 * Validate if a user is logged in or not
 	 */
 	boolean function isLoggedIn() {
