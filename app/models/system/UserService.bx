@@ -213,6 +213,7 @@ class extends="app.models.BaseService" {
 	 * @isActive   If passed, active, inactive or all users
 	 * @isVerified If passed, verified or unverified users
 	 * @roleId     If passed, the role Id to filter the users on
+	 * @excludeRoleId If passed, excludes users assigned to the role Id
 	 * @sortOrder  The sort ordering to do. Defaults to sort by name
 	 * @propertyList The list or array of properties to include in the results as a projection instead of ORM Objects
 	 *
@@ -225,6 +226,7 @@ class extends="app.models.BaseService" {
 		boolean isActive,
 		boolean isVerified,
 		string roleId,
+		string excludeRoleId = "",
 		string sortOrder = static.DEFAULT_SORT_ORDER,
 		any propertyList = ""
 	) {
@@ -253,6 +255,7 @@ class extends="app.models.BaseService" {
 			.when( !isNull( arguments.isVerified ), ( c ) => isVerified ? c.isNotNull( "verifiedAt" ) : c.isNull( "verifiedAt" )  )
 			// Role Filters
 			.when( !isNull( arguments.roleId ) && len( arguments.roleId ), ( c ) => c.eq( "roles.roleId", roleId ) )
+			.when( len( arguments.excludeRoleId ), ( c ) => c.ne( "roles.roleId", excludeRoleId ) )
 
 		// Run Results
 		results.count = c.count( "userId" )

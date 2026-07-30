@@ -150,23 +150,29 @@ class extends="BaseSecureHandler" {
 		event.getResponse().setData( data: prc.users.records )
 	}
 
-	@remote( "List users available for a role" )
+	@remote( "List users available for a role, only active and verified" )
 	function availableUsers( event, rc, prc ) {
-		prc.users = userResults( userService.searchSummaries(
-			searchTerm  = rc.search ?: "",
-			offset      = rc.offset ?: 0,
-			max         = rc.max ?: 25,
-			propertyList: [ "userId", "firstName", "lastName", "email" ]
-		) )
+		prc.users = userService.search(
+			searchTerm    : rc.search ?: "",
+			offset        : 0,
+			max           : min( 10, max( 1, rc.max ?: 10 ) ),
+			isActive      : true,
+			isVerified    : true,
+			excludeRoleId : rc.roleId ?: "",
+			propertyList  : [ "userId", "firstName", "lastName", "email" ]
+		)
 		event.getResponse().setData( data: prc.users.records )
 	}
 
 	@remote( "Assign a user to a role" )
 	function addUser( event, rc, prc ) {
-		prc.user = userService
-			.getOrFail( rc.userId ?: "" )
-			.addRole( roleService.getOrFail( rc.roleId ?: "" ) )
-			.save()
+		prc.role = roleService.getOrFail( rc.roleId ?: "" )
+		prc.user = userService.getOrFail( rc.userId ?: "" )
+
+		if( !prc.user.hasRole( prc.role ) ){
+			prc.user.addRole( prc.role ).save()
+		}
+
 		event.getResponse().setData(
 			data: prc.user.getMemento(),
 			message: "User assigned successfully."

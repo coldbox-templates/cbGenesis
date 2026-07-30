@@ -77,6 +77,14 @@
 				</div>
 				<!--- Role Actions --->
 				<div class="cb-page-actions">
+					<!--- Assign Users --->
+					<button
+						type="button"
+						class="btn btn-primary"
+						@click="openAssignUsers()">
+						<i class="ph-duotone ph-user-plus" aria-hidden="true"></i>
+						Assign User
+					</button>
 					<!--- Edit Role --->
 					<button
 						type="button"
@@ -198,6 +206,15 @@
 			openExpression : "confirmDeleteOpen",
 			closeExpression: "cancelDelete()",
 			contentView    : "roles/deleteConfirm"
+		} )#
+
+		<!--- Assign Users Modal --->
+		#view( view: "_components/ui/modal", args: {
+			id             : "role-assign-users-modal",
+			title          : "Assign Users",
+			openExpression : "assignModalOpen",
+			closeExpression: "closeAssignUsers()",
+			contentView    : "roles/assignUsers"
 		} )#
 	</div>
 </div>

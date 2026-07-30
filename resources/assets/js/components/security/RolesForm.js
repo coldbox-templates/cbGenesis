@@ -18,14 +18,21 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 		userQuery         : "",
 		selectedRole      : null,
 		assignedUsers     : [],
+		availableUsers    : [],
+		selectedUsers     : [],
 		loadingUsers      : false,
+		loadingAvailable  : false,
 		removingUserId    : null,
+		assigningUsers    : false,
 		drawerOpen        : false,
+		assignModalOpen   : false,
 		confirmDeleteOpen : false,
 		submitting        : false,
 		deleting          : false,
 		error             : "",
 		usersError        : "",
+		assignError       : "",
+		assignmentQuery   : "",
 		form              : {
 			role          : "",
 			description   : "",
@@ -87,6 +94,30 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 		},
 
 		/**
+		 * Returns available users that have not already been selected.
+		 *
+		 * @returns {Array} Users available for selection.
+		 */
+		get selectableUsers() {
+			const selectedIds = this.selectedUsers.map( ( user ) => user.userId );
+			return this.availableUsers.filter( ( user ) => !selectedIds.includes( user.userId ) );
+		},
+
+		/**
+		 * Returns the display name for a user result.
+		 *
+		 * @param {Object} user User result.
+		 * @returns {string} User's full name or email.
+		 */
+		userName( user ) {
+			const name = [
+				user.firstName,
+				user.lastName
+			].filter( Boolean ).join( " " );
+			return name || user.email || "Unnamed user";
+		},
+
+		/**
 		 * Opens the role drawer with an empty create form.
 		 *
 		 * @returns {void}
@@ -113,6 +144,134 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 		},
 
 		/**
+		 * Opens the assignment modal with an empty search and selection.
+		 *
+		 * @returns {void}
+		 */
+		openAssignUsers() {
+			if ( !this.selectedRole ) return;
+			this.assignmentQuery = "";
+			this.availableUsers = [];
+			this.selectedUsers = [];
+			this.assignError = "";
+			this.assignModalOpen = true;
+		},
+
+		/**
+		 * Closes the assignment modal unless assignments are being saved.
+		 *
+		 * @param {boolean} force Whether to close during an active submission.
+		 * @returns {void}
+		 */
+		closeAssignUsers( force = false ) {
+			if ( this.assigningUsers && !force ) return;
+			this.assignModalOpen = false;
+			this.assignmentQuery = "";
+			this.availableUsers = [];
+			this.selectedUsers = [];
+			this.assignError = "";
+		},
+
+		/**
+		 * Searches active, verified users who are not assigned to the selected role.
+		 *
+		 * @returns {Promise<void>}
+		 */
+		async searchAvailableUsers() {
+			if ( !this.assignModalOpen || !this.selectedRole ) return;
+			const search = this.assignmentQuery.trim();
+			if ( search.length < 2 ) {
+				this.availableUsers = [];
+				return;
+			}
+			this.loadingAvailable = true;
+			this.assignError = "";
+			try {
+				const params = new URLSearchParams( { search, max: "10" } );
+				const response = await fetch( `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }/available-users?${ params.toString() }`, { headers: { Accept: "application/json" }, } );
+				const result = await response.json();
+				if ( !response.ok || result.error ) throw new Error( result.messages || "Users could not be loaded." );
+				if ( this.assignModalOpen && this.selectedRole && this.assignmentQuery.trim() === search ) {
+					this.availableUsers = result.data || [];
+				}
+			} catch ( error ) {
+				this.assignError = error.message || "Users could not be loaded.";
+			} finally {
+				this.loadingAvailable = false;
+			}
+		},
+
+		/**
+		 * Adds a user to the pending assignment selection.
+		 *
+		 * @param {Object} user User to select.
+		 * @returns {void}
+		 */
+		selectUserForAssignment( user ) {
+			if ( this.selectedUsers.some( ( selectedUser ) => selectedUser.userId === user.userId ) ) return;
+			this.selectedUsers = [
+				...this.selectedUsers,
+				user
+			];
+			this.assignmentQuery = "";
+			this.availableUsers = [];
+		},
+
+		/**
+		 * Removes a user from the pending assignment selection.
+		 *
+		 * @param {Object} user User to remove.
+		 * @returns {void}
+		 */
+		removeUserFromAssignment( user ) {
+			this.selectedUsers = this.selectedUsers.filter( ( selectedUser ) => selectedUser.userId !== user.userId );
+		},
+
+		/**
+		 * Assigns each selected user to the current role and refreshes the list.
+		 * Successful users are removed from the pending selection if any request fails.
+		 *
+		 * @returns {Promise<void>}
+		 */
+		async assignSelectedUsers( event ) {
+			event.preventDefault();
+			if ( !this.selectedRole || !this.selectedUsers.length || this.assigningUsers ) return;
+			this.assigningUsers = true;
+			this.assignError = "";
+			const selectedUsers = [ ...this.selectedUsers ];
+			const results = await Promise.allSettled( selectedUsers.map( async( user ) => {
+				const response = await fetch( `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }/users/${ encodeURIComponent( user.userId ) }`, {
+					method  : "POST",
+					headers : { "Content-Type": "application/x-www-form-urlencoded" },
+					body    : new URLSearchParams( { csrf: this.csrfToken } ),
+				} );
+				const result = await response.json();
+				if ( !response.ok || result.error ) throw new Error( result.messages || `Could not assign ${ this.userName( user ) }.` );
+				return user;
+			} ) );
+			const failedUsers = results
+				.map( ( result, index ) => result.status === "rejected" ? {
+					user  : selectedUsers[ index ],
+					error : result.reason,
+				} : null )
+				.filter( Boolean );
+			try {
+				await this.loadRoleUsers( this.selectedRole );
+				const assignedCount = selectedUsers.length - failedUsers.length;
+				this.selectedUsers = failedUsers.map( ( failedUser ) => failedUser.user );
+				if ( failedUsers.length ) {
+					this.assignError = `${ assignedCount } user${ assignedCount === 1 ? "" : "s" } assigned. ${ failedUsers.map( ( failedUser ) => failedUser.error?.message || "Assignment failed." ).join( " " ) }`;
+				} else {
+					this.closeAssignUsers( true );
+				}
+			} catch ( error ) {
+				this.assignError = error.message || "Users could not be refreshed.";
+			} finally {
+				this.assigningUsers = false;
+			}
+		},
+
+		/**
 		 * Loads users assigned to a role through the remote handler action.
 		 *
 		 * @param {Object} role Role whose users should be loaded.
@@ -124,7 +283,11 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 				const response = await fetch( `/roles/${ encodeURIComponent( role.roleId ) }/users` );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Users could not be loaded." );
-				if ( this.selectedRole?.roleId === role.roleId ) this.assignedUsers = result.data || [];
+				if ( this.selectedRole?.roleId === role.roleId ) {
+					this.assignedUsers = result.data || [];
+					this.selectedRole.usersCount = this.assignedUsers.length;
+					this.roles = this.roles.map( ( currentRole ) => currentRole.roleId === role.roleId ? this.selectedRole : currentRole );
+				}
 			} catch ( error ) {
 				if ( this.selectedRole?.roleId === role.roleId ) this.usersError = error.message || "Users could not be loaded.";
 			} finally {

@@ -1,0 +1,90 @@
+<form
+	class="cb-role-assign-form"
+	@submit="assignSelectedUsers( $event )"
+	x-init="$watch( 'assignmentQuery', () => searchAvailableUsers() )">
+	<!--- Modal Header --->
+	<div class="cb-ui-modal__body">
+
+		<!--- Modal Instructions --->
+		<p class="cb-role-assign-instructions">Search by name or email to find users to assign to this role.</p>
+
+		<!--- Find Users --->
+		<div class="cb-form-field">
+			<label for="role-user-search">Find users</label>
+			<div class="cb-admin-search cb-wide">
+				<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+				<input
+					id="role-user-search"
+					x-model.debounce.250ms="assignmentQuery"
+					type="search"
+					placeholder="Type a name or email..."
+					aria-describedby="role-user-search-help">
+			</div>
+			<small id="role-user-search-help">Type at least two characters to search.</small>
+		</div>
+
+		<!--- Search Results --->
+		<div class="cb-role-assign-results" x-show="assignmentQuery.trim().length >= 2" x-cloak>
+			<div class="cb-role-assign-loading" x-show="loadingAvailable" x-cloak>
+				<i class="ph-duotone ph-spinner-gap" aria-hidden="true"></i>
+				<span>Searching users...</span>
+			</div>
+			<div class="cb-role-assign-user-list" x-show="!loadingAvailable && !assignError">
+				<template x-for="( user, index ) in selectableUsers" :key="( user.userId || user.email || userName( user ) ) + '-' + index">
+					<button type="button" class="cb-role-assign-user" @click="selectUserForAssignment( user )">
+						<span>
+							<strong x-text="userName( user )"></strong>
+							<small x-text="user.email"></small>
+						</span>
+						<span class="cb-role-assign-action" aria-hidden="true">
+							<i class="ph-duotone ph-user-plus"></i>
+							<span>Add</span>
+						</span>
+					</button>
+				</template>
+				<div class="cb-role-assign-status" x-show="selectableUsers.length === 0" x-cloak>No matching users found.</div>
+			</div>
+		</div>
+
+		<!--- Selected Users --->
+		<div class="cb-role-assign-selected" x-show="selectedUsers.length" x-cloak>
+			<div class="cb-role-assign-section-heading">
+				<h3>Selected users</h3>
+				<span class="cb-count-pill" x-text="selectedUsers.length"></span>
+			</div>
+			<div class="cb-role-assign-selected-list">
+				<template x-for="( user, index ) in selectedUsers" :key="( user.userId || user.email || userName( user ) ) + '-' + index">
+					<div class="cb-role-assign-selected-user">
+						<span>
+							<strong x-text="userName( user )"></strong>
+							<small x-text="user.email"></small>
+						</span>
+						<button type="button" class="cb-role-assign-remove" @click="removeUserFromAssignment( user )" :aria-label="'Remove ' + userName( user )" title="Remove user">
+							<i class="ph-duotone ph-x" aria-hidden="true"></i>
+						</button>
+					</div>
+				</template>
+			</div>
+		</div>
+
+		<!--- Error Message --->
+		<div class="cb-role-assign-error" x-show="assignError" x-text="assignError" x-cloak></div>
+	</div>
+
+	<!--- Modal Footer --->
+	<div class="cb-ui-modal__footer">
+		<button
+			type="button"
+			class="btn btn-secondary"
+			@click="closeAssignUsers()">
+			Cancel
+		</button>
+		<button
+			type="submit"
+			class="btn btn-primary"
+			:disabled="!selectedUsers.length || assigningUsers">
+			<i class="ph-duotone ph-user-plus" aria-hidden="true"></i>
+			<span x-text="assigningUsers ? 'Assigning...' : 'Assign'"></span>
+		</button>
+	</div>
+</form>
