@@ -26,14 +26,10 @@ class extends="app.models.BaseService" {
 	@inject( "provider:settingService" )
 	property name="settingService";
 
-	@inject( "wirebox" )
-	property name="wirebox";
+	@inject( "provider:RoleService" )
+	property name="roleService";
 
-	@inject( "logbox:logger:{this}" )
-	property name="log";
 
-	@inject( "QueryBuilder@qb" )
-	property name="qb";
 
 	@inject( "coldbox:RequestService" )
 	property name="requestService";
@@ -267,6 +263,31 @@ class extends="app.models.BaseService" {
 		}
 
 		results.records = c.list( offset: arguments.offset, max: arguments.max, sortOrder: arguments.sortOrder )
+
+		// If we have a property list, then we will need to get the roles for each user and add them to the struct
+		if ( len( arguments.propertyList ) && results.records.len() ) {
+			var userIds = results.records.map( ( user ) -> user.userId )
+			var roleRows = roleService
+				.newCriteria()
+				.createAlias( "users", "user" )
+				.isIn( "user.userId", userIds )
+				.withProjections( property: "user.userId:userId,role:roleName" )
+				.asStruct()
+				.list()
+			var rolesByUser = {}
+
+			roleRows.each( ( roleRow ) => {
+				if ( !structKeyExists( rolesByUser, roleRow.userId ) ) {
+					rolesByUser[ roleRow.userId ] = []
+				}
+
+				rolesByUser[ roleRow.userId ].append( roleRow.roleName )
+			} )
+
+			results.records.each( ( user ) => {
+				user.roles = structKeyExists( rolesByUser, user.userId ) ? rolesByUser[ user.userId ] : []
+			} )
+		}
 
 		return results
 	}
