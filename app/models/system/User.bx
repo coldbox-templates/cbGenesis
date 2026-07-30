@@ -362,15 +362,6 @@ class extends="app.models.BaseEntity" {
 	}
 
 	/**
-	 * Check if the user has a specific role
-	 *
-	 * @roleName The name of the role to check
-	 */
-	boolean function hasRole( required roleName ) {
-		return arrayContains( getRoleNames(), arguments.roleName )
-	}
-
-	/**
 	 * Get's all the permissions attached to this user from roles and a-la-carte permissions
 	 *
 	 * @return array An array of permission strings
@@ -434,7 +425,7 @@ class extends="app.models.BaseEntity" {
 	 * So hibernate can clear relationships if set.
 	 */
 	User function setPermissions( required array permissions ) {
-		if ( hasPermissions() ) {
+		if ( hasPermission() ) {
 			variables.permissions.clear()
 			variables.permissions.addAll( arguments.permissions )
 		} else {
@@ -448,7 +439,7 @@ class extends="app.models.BaseEntity" {
 	 * So hibernate can clear relationships if set.
 	 */
 	User function setRoles( required array roles ) {
-		if ( hasRoles() ) {
+		if ( hasRole() ) {
 			variables.roles.clear()
 			variables.roles.addAll( arguments.roles )
 		} else {

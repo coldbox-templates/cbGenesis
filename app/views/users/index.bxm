@@ -1,6 +1,6 @@
 <bx:output>
 <!--- Users Component --->
-<div x-data='usersForm( #forAttribute( prc.users )# )'>
+<div x-data='usersForm( #forAttribute( prc.payload )#, "#csrfToken()#" )' x-init="refreshUsers()">
 
 	<!--- Header --->
 	<div class="cb-page-header cb-admin-page-heading">
@@ -10,11 +10,19 @@
 			<p class="cb-page-subtitle">Manage users and their roles in the system. You can invite new users, assign roles, and manage their access.</p>
 		</div>
 		<!--- Invite a new user to the system --->
-		<button type="button" class="btn btn-primary">
+		<button type="button" class="btn btn-primary" @click="openInvite()">
 			<i class="ph-duotone ph-plus" aria-hidden="true"></i>
 			Invite User
 		</button>
 	</div>
+
+	#view( view: "_components/ui/messagebox", args: {
+		dynamic          : true,
+		messageExpression: "feedbackMessage",
+		typeExpression   : "feedbackType",
+		dismissAction    : "clearFeedback()",
+		classes          : "cb-users-feedback"
+	} )#
 
 	<!--- Users Table --->
 	<section class="cb-content-card cb-admin-workbench">
@@ -25,26 +33,25 @@
 			<div class="cb-segmented-control" aria-label="User filters">
 				<button
 					type="button"
-					:class="statusFilter === 'all' ? 'active' : ''"
-					@click="statusFilter = 'all'">All
-					Users</button>
-				<button
-					type="button"
 					:class="statusFilter === 'active' ? 'active' : ''"
-					@click="statusFilter = 'active'">Active</button>
+					@click="setStatusFilter( 'active' )">Active <span class="cb-tab-count" x-text="counts.active"></span></button>
 				<button
 					type="button"
 					:class="statusFilter === 'pending' ? 'active' : ''"
-					@click="statusFilter = 'pending'">Pending</button>
+					@click="setStatusFilter( 'pending' )">Pending <span class="cb-tab-count" x-text="counts.pending"></span></button>
 				<button
 					type="button"
-					:class="statusFilter === 'locked' ? 'active' : ''"
-					@click="statusFilter = 'locked'">Locked</button>
+					:class="statusFilter === 'inactive' ? 'active' : ''"
+					@click="setStatusFilter( 'inactive' )">Inactive <span class="cb-tab-count" x-text="counts.inactive"></span></button>
+				<button
+					type="button"
+					:class="statusFilter === 'all' ? 'active' : ''"
+					@click="setStatusFilter( 'all' )">All <span class="cb-tab-count" x-text="counts.all"></span></button>
 			</div>
 			<!--- Search Users --->
-			<div class="cb-admin-search">
+			<div class="cb-admin-search cb-wide">
 				<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
-				<input x-model.debounce.150ms="query" type="search" placeholder="Search users..." aria-label="Search users">
+				<input x-model="query" @input.debounce.250ms="refreshUsers()" type="search" placeholder="Search users..." aria-label="Search users">
 			</div>
 		</div>
 
@@ -53,13 +60,15 @@
 			<table class="cb-table">
 				<thead>
 					<tr>
-						<th scope="col">User</th>
-						<th scope="col">Roles</th>
-						<th scope="col">Status</th>
+						<th scope="col"><button type="button" class="cb-table-sort-button" :class="sortClass( 'lastName' )" @click="sortBy( 'lastName' )">Name <i class="ph-bold" :class="sortIcon( 'lastName' )" aria-hidden="true"></i></button></th>
+						<th scope="col"><button type="button" class="cb-table-sort-button" :class="sortClass( 'createdDate' )" @click="sortBy( 'createdDate' )">Created On <i class="ph-bold" :class="sortIcon( 'createdDate' )" aria-hidden="true"></i></button></th>
+						<th scope="col"><button type="button" class="cb-table-sort-button" :class="sortClass( 'verifiedAt' )" @click="sortBy( 'verifiedAt' )">Verified On <i class="ph-bold" :class="sortIcon( 'verifiedAt' )" aria-hidden="true"></i></button></th>
+						<th scope="col"><button type="button" class="cb-table-sort-button" :class="sortClass( 'isActive' )" @click="sortBy( 'isActive' )">Status <i class="ph-bold" :class="sortIcon( 'isActive' )" aria-hidden="true"></i></button></th>
+						<th scope="col"><span class="visually-hidden">Actions</span></th>
 					</tr>
 				</thead>
 				<tbody>
-					<template x-for="user in filteredUsers" :key="user.userId">
+					<template x-for="user in users" :key="user.userId">
 						<tr>
 							<td>
 								<div class="cb-identity-cell">
@@ -71,25 +80,69 @@
 								</div>
 							</td>
 							<td>
-								<div class="cb-chip-row">
-									<template x-for="role in user.roles" :key="role">
-										<span class="cb-chip cb-chip-info" x-text="role"></span>
-									</template>
-								</div>
+								<span class="cb-muted-cell" x-text="user.createdDate ? formatDate( user.createdDate ) : '-' "></span>
+							</td>
+							<td>
+								<span class="cb-muted-cell" x-text="user.verifiedAt ? formatDate( user.verifiedAt ) : 'Pending'"></span>
 							</td>
 							<td>
 								<span class="cb-chip" :class="'cb-chip-' + user.status.toLowerCase()" x-text="user.status"></span>
 							</td>
+							<td>
+								<div class="cb-table-actions">
+									<a :href="user.detailUrl" :aria-label="'Manage ' + user.name" title="Manage user"><i class="ph-duotone ph-arrow-square-out" aria-hidden="true"></i></a>
+									<button type="button" @click="confirmDelete( user )" :aria-label="'Delete ' + user.name" title="Delete user"><i class="ph-duotone ph-trash" aria-hidden="true"></i></button>
+								</div>
+							</td>
 						</tr>
 					</template>
 
+					<!--- Loading state --->
+					<tr x-show="loading" x-cloak>
+						<td colspan="5">
+							#view( view: "_components/ui/progressbar", args: {
+								label        : "Loading users...",
+								ariaLabel    : "Loading users",
+								indeterminate: true,
+								variant      : "cyan",
+								size         : "sm"
+							} )#
+						</td>
+					</tr>
+
 					<!--- If No Users Found --->
-					<tr x-show="filteredCount === 0" x-cloak>
-						<td colspan="4" class="cb-empty-state">No users found</td>
+					<tr x-show="!loading && users.length === 0" x-cloak>
+						<td colspan="5" class="cb-empty-state">No users found</td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
+		<div class="cb-pagination" x-show="total > 0" x-cloak>
+			<button type="button" class="btn btn-light btn-sm" @click="previousPage()" :disabled="page <= 1"><i class="ph-bold ph-caret-left" aria-hidden="true"></i> Previous</button>
+			<span x-text="'Page ' + page + ' of ' + pageCount"></span>
+			<button type="button" class="btn btn-light btn-sm" @click="nextPage()" :disabled="page >= pageCount">Next <i class="ph-bold ph-caret-right" aria-hidden="true"></i></button>
+		</div>
 	</section>
+
+	#view( view: "_components/ui/drawer", args: {
+		id: "cb-user-invite-drawer",
+		title: "Invite User",
+		openExpression: "inviteOpen",
+		closeExpression: "closeInvite()",
+		contentView: "users/inviteForm"
+	} )#
+
+	<div class="cb-ui-modal" x-show="deleteTarget" x-cloak x-transition.opacity role="dialog" aria-modal="true" aria-labelledby="cb-user-delete-title" @click.self="cancelDelete()" @keydown.escape.window="cancelDelete()">
+		<div class="cb-ui-modal__dialog">
+			<div class="cb-ui-modal__header"><h2 id="cb-user-delete-title">Delete user?</h2><button type="button" class="cb-ui-modal__close" @click="cancelDelete()" aria-label="Close confirmation"><i class="ph-duotone ph-x" aria-hidden="true"></i></button></div>
+			<div class="cb-ui-modal__body">
+				<p>You are about to delete <strong x-text="deleteTarget?.name"></strong>.</p>
+				<p class="cb-danger-callout"><i class="ph-duotone ph-warning" aria-hidden="true"></i> All relationships belonging to this user will be cascaded and permanently removed.</p>
+				<p>Are you sure you want to continue?</p>
+				<p class="cb-form-error" x-show="error" x-text="error"></p>
+			</div>
+			<div class="cb-ui-modal__footer"><button type="button" class="btn btn-light" @click="cancelDelete()">Cancel</button><button type="button" class="btn btn-danger" @click="deleteUser()" :disabled="deleting"><i class="ph-duotone ph-trash" aria-hidden="true"></i><span x-text="deleting ? 'Deleting...' : 'Delete user'"></span></button></div>
+		</div>
+	</div>
 </div>
 </bx:output>

@@ -19,6 +19,7 @@
 	@keydown.escape.window="#args.closeExpression#">
 	<div
 		class="cb-ui-drawer__panel"
+		x-trap.noscroll="#args.openExpression#"
 		x-transition:enter="cb-ui-drawer__panel--transition"
 		x-transition:enter-start="cb-ui-drawer__panel--from-right"
 		x-transition:enter-end="cb-ui-drawer__panel--visible"

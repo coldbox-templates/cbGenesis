@@ -17,6 +17,15 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
+	 * Retrieves all roles for use in lookups, returning only the roleId and role properties.
+	 *
+	 * @return array An array of structs containing roleId and role properties for each role.
+	 */
+	array function getAllForLookup(){
+		return getAll( properties: "roleId as roleId,role as role" )
+	}
+
+	/**
 	 * Deletes a role and removes it from all users.
 	 *
 	 * @role The role to be deleted.

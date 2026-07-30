@@ -49,6 +49,7 @@ class extends="app.models.BaseService" {
 			"firstName" : "firstName",
 			"lastName"  : "lastName",
 			"email"     : "email",
+			"createdDate" : "createdDate",
 			"isActive"  : "isActive",
 			"isPasswordReset" : "isPasswordReset",
 			"is2FactorAuth" : "is2FactorAuth",
@@ -160,8 +161,12 @@ class extends="app.models.BaseService" {
 	) {
 		// bcrypt the password if new user or change requested
 		if ( !arguments.user.isLoaded() || arguments.passwordChange ) {
+			// Setup the password with bcrypt
 			arguments.user.setPassword( BCryptHash( arguments.user.getPassword() ) )
-			securityService.revokeRememberTokensForUser( arguments.user.getId() )
+			// Revoke tokens if the user is changing their password
+			if( arguments.user.isLoaded() ){
+				securityService.revokeRememberTokensForUser( arguments.user.getId() )
+			}
 		}
 
 		arguments.entity = arguments.user
@@ -188,6 +193,22 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
+	 * This returns a struct report of the user counts according to state:
+	 * - all
+	 * - active
+	 * - pending
+	 * - inactive
+	 */
+	struct function userCountsReport() {
+		return {
+			all: count(),
+			active: count( "isActive = ? AND verifiedAt IS NOT NULL", [ true ] ),
+			pending: count( "isActive = ? AND verifiedAt IS NULL", [ true ] ),
+			inactive: count( "isActive = ?", [ false ] )
+		}
+	}
+
+	/**
 	 * Search users across different criteria with pagination
 	 *
 	 * @searchTerm The search term to look for in: firstName, lastName, email
@@ -197,19 +218,19 @@ class extends="app.models.BaseService" {
 	 * @isVerified If passed, verified or unverified users
 	 * @roleId     If passed, the role Id to filter the users on
 	 * @sortOrder  The sort ordering to do. Defaults to sort by name
-	 * @propertyList The list of properties to include in the results as a projection instead of ORM Objects
+	 * @propertyList The list or array of properties to include in the results as a projection instead of ORM Objects
 	 *
 	 * @return     struct of { count:numeric, records:array }
 	 */
 	struct function search(
-		searchTerm = "",
+		string searchTerm = "",
 		numeric offset = 0,
 		numeric max = 25,
 		boolean isActive,
 		boolean isVerified,
-		roleId,
-		sortOrder = static.DEFAULT_SORT_ORDER,
-		propertyList = ""
+		string roleId,
+		string sortOrder = static.DEFAULT_SORT_ORDER,
+		any propertyList = ""
 	) {
 		var results = { "count": 0, "records": [] }
 
@@ -242,8 +263,7 @@ class extends="app.models.BaseService" {
 
 		// If we have a property list, then we will use projections to return a struct instead of ORM objects
 		if ( len( arguments.propertyList ) ) {
-			c.withProjections( property: arguments.propertyList )
-				.asStruct()
+			c.withProjections( property: arguments.propertyList ).asStruct()
 		}
 
 		results.records = c.list( offset: arguments.offset, max: arguments.max, sortOrder: arguments.sortOrder )

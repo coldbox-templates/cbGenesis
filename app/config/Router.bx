@@ -45,6 +45,7 @@ class {
 		)
 
 		// User Routes
+		route( "users/search", "Users.search" )
 		resources(
 			resource:"users",
 			parameterName: "userId"

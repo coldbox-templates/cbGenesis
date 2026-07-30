@@ -4,6 +4,8 @@ import "tippy.js/dist/tippy.css";
 import * as bootstrap from "bootstrap";
 import "@phosphor-icons/web/duotone";
 
+import "./AlpinePlugins.js";
+
 // ============================================================
 // Alpine Stores Registration
 // ============================================================

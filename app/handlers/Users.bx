@@ -15,20 +15,13 @@ class extends="BaseSecureHandler" {
 
 	// Present the users list view
 	function index( event, rc, prc ) {
-		var pagination = getPagination( rc.page ?: 1, rc.limit ?: 25 )
 		prc.title = "Users"
-		// Initial Lookups
-		prc.roles = roleService.list().map( .getMemento )
-		// Initial Search
-		prc.users = userService.search(
-			searchTerm: rc.search ?: "",
-			isActive: true,
-			offset: pagination.offset,
-			max: pagination.limit,
-			sortOrder: rc.sortOrder ?: ""
-		)
-		prc.users.records.map( .getMemento )
-
+		prc.payload = {
+			records: [],
+			count: 0,
+			counts: userService.userCountsReport(),
+			roles: roleService.getAllForLookup()
+		}
 		event.setView( "users/index" )
 	}
 
@@ -36,17 +29,30 @@ class extends="BaseSecureHandler" {
 	@remote( "Retrieve user listings remotely via AJAX" )
 	function search( event, rc, prc ) {
 		var pagination = getPagination( rc.page ?: 1, rc.limit ?: 25 )
-		// Search
 		prc.users = userService.search(
 			searchTerm: rc.search ?: "",
 			offset: pagination.offset,
 			max: pagination.limit,
 			sortOrder: rc.sortOrder ?: "",
 			isActive: rc.isActive ?: null,
-			isVerified: rc.isVerified ?: null
+			isVerified: rc.isVerified ?: null,
+			propertyList= [
+				"userId",
+				"firstName",
+				"lastName",
+				"email",
+				"isActive",
+				"isPasswordReset",
+				"is2FactorAuth",
+				"createdDate",
+				"verifiedAt"
+			]
 		)
-		prc.users.records.map( .getMemento )
-		event.getResponse().withData( prc.users )
+		event.getResponse().withData( {
+			records: prc.users.records,
+			count: prc.users.count,
+			counts: userService.userCountsReport()
+		} )
 	}
 
 	// Create a new user
@@ -55,15 +61,17 @@ class extends="BaseSecureHandler" {
 	function create( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
+			var selectedRole = roleService.getOrFail( rc.roleId ?: "" )
 			prc.user = userService
 				.new()
 				.populate( rc )
+				.setRoles( [ selectedRole ] )
 				.validateOrFail()
 			userService.create( prc.user )
 			response.setData( data: prc.user.getMemento(), message: "User created successfully." )
 		}
 		catch( ValidationException error ){
-			response.setErrorMessage(
+			response.failure(
 				message: "User validation errors",
 				statusCode: 422,
 				data : prc.user.getValidationResult().getAllErrorsAsStruct()
@@ -71,7 +79,7 @@ class extends="BaseSecureHandler" {
 		}
 		catch ( any error ) {
 			log.error( "Error saving user: #error.message#", error )
-			response.setErrorMessage(
+			response.failure(
 				message: "User could not be saved: #error.message & error.detail#",
 				statusCode: 500
 			)
@@ -106,7 +114,7 @@ class extends="BaseSecureHandler" {
 			response.setData( data: prc.user.getMemento(), message: "User updated successfully." )
 		}
 		catch( ValidationException error ){
-			response.setErrorMessage(
+			response.failure(
 				message: "User validation errors",
 				statusCode: 422,
 				data : prc.user.getValidationResult().getAllErrorsAsStruct()
@@ -114,7 +122,7 @@ class extends="BaseSecureHandler" {
 		}
 		catch ( any error ) {
 			log.error( "Error saving user: #error.message#", error )
-			response.setErrorMessage(
+			response.failure(
 				message: "User could not be saved: #error.message & error.detail#",
 				statusCode: 500
 			)
@@ -135,7 +143,7 @@ class extends="BaseSecureHandler" {
 			response.addMessage( "User deleted successfully." )
 		} catch ( any error ) {
 			log.error( "Error deleting user with ID [#rc.userId#]: #error.message#", error )
-			response.setErrorMessage(
+			response.failure(
 				message: "User could not be deleted: #error.message & error.detail#",
 				statusCode: 500
 			)

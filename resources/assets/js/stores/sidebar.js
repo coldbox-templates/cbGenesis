@@ -1,19 +1,11 @@
 import Alpine from "alpinejs";
 
-function getSavedCollapsedState() {
-	try {
-		return localStorage.getItem( "sidebar-collapsed" ) === "true";
-	} catch ( error ) {
-		return false;
-	}
-}
-
 function syncCollapsedState( collapsed ) {
 	document.documentElement.setAttribute( "data-sidebar-collapsed", collapsed ? "true" : "false" );
 }
 
 Alpine.store( "sidebar", {
-	collapsed : getSavedCollapsedState(),
+	collapsed : Alpine.$persist( false ).as( "cbGenesis-sidebar-collapsed" ),
 	open      : false,
 
 	init() {
@@ -23,7 +15,6 @@ Alpine.store( "sidebar", {
 	toggle() {
 		if ( window.innerWidth >= 992 ) {
 			this.collapsed = !this.collapsed;
-			localStorage.setItem( "sidebar-collapsed", String( this.collapsed ) );
 			syncCollapsedState( this.collapsed );
 		} else {
 			this.open = !this.open;

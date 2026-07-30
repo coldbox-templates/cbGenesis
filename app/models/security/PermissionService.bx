@@ -13,4 +13,13 @@ class extends="app.models.BaseService" {
 		return this;
 	}
 
+	/**
+	 * Retrieves all permissions for use in lookups, returning only the permissionId and permission properties.
+	 *
+	 * @return array An array of structs containing permissionId and permission properties for each permission.
+	 */
+	array function getAllForLookup(){
+		return getAll( properties: "permissionId as permissionId,permission as permission" )
+	}
+
 }
