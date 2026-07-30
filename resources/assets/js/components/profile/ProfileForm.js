@@ -173,7 +173,7 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			this.createdRawToken = "";
 			this.tokenCopied = false;
 			this.tokenModalOpen = true;
-			this.$nextTick( () => this.$root.querySelector( "#api-token-label" )?.focus() );
+			this.$focus( "#api-token-label" );
 		},
 
 		/**
@@ -193,7 +193,7 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			this.createdRawToken = "";
 			this.tokenCopied = false;
 			this.tokenModalOpen = true;
-			this.$nextTick( () => this.$root.querySelector( "#api-token-label" )?.focus() );
+			this.$focus( "#api-token-label" );
 		},
 
 		/**
@@ -315,11 +315,9 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 		 * @returns {Promise<void>}
 		 */
 		async copyCreatedToken() {
-			if ( !this.createdRawToken || !navigator.clipboard ) return;
-			try {
-				await navigator.clipboard.writeText( this.createdRawToken );
+			if ( await this.$copy( this.createdRawToken ) ) {
 				this.tokenCopied = true;
-			} catch ( error ) {
+			} else {
 				this.notice = { type: "error", message: "The token could not be copied. Select and copy it manually." };
 			}
 		},
@@ -367,7 +365,7 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			return Boolean(
 				this.profile.firstName.trim()
 				&& this.profile.lastName.trim()
-				&& /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( this.profile.email.trim() )
+				&& this.$isEmail( this.profile.email )
 			);
 		},
 
@@ -391,12 +389,7 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 		 * @returns {boolean} Whether the password meets all strength requirements.
 		 */
 		get passwordStrengthValid() {
-			const value = this.password.newPassword;
-			return value.length >= 8
-				&& /[A-Z]/.test( value )
-				&& /[a-z]/.test( value )
-				&& /[0-9]/.test( value )
-				&& /[^A-Za-z0-9]/.test( value );
+			return this.$passwordMeetsPolicy( this.password.newPassword );
 		},
 
 		/**

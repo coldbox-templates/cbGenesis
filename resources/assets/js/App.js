@@ -65,8 +65,41 @@ Alpine.data( "passwordStrength", passwordStrength );
 // Alpine Magic Properties Registration
 // ============================================================
 import { formatDate, formatDateTime } from "./utils/dateFormat.js";
+import { countLabel } from "./utils/countLabel.js";
+import { passwordMeetsPolicy } from "./utils/passwordPolicy.js";
 Alpine.magic( "formatDate", () => formatDate );
 Alpine.magic( "formatDateTime", () => formatDateTime );
+Alpine.magic( "countLabel", () => countLabel );
+Alpine.magic( "isEmail", () => ( value ) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( String( value ?? "" ).trim() ) );
+Alpine.magic( "passwordMeetsPolicy", () => passwordMeetsPolicy );
+
+/**
+ * Focuses a descendant after Alpine has applied the current state change.
+ *
+ * @param {Element} element Element from which the Alpine component root is resolved.
+ * @returns {Function} Focus helper accepting a descendant selector.
+ */
+Alpine.magic( "focus", ( element ) => ( selector ) => {
+	const root = element.closest( "[x-data]" ) || element;
+	Alpine.nextTick( () => root.querySelector( selector )?.focus() );
+} );
+
+/**
+ * Copies text through the browser clipboard API when it is available.
+ *
+ * @param {string} value Text to copy.
+ * @returns {Promise<boolean>} Whether the text was copied successfully.
+ */
+Alpine.magic( "copy", () => async( value ) => {
+	if ( !value || !navigator.clipboard ) return false;
+
+	try {
+		await navigator.clipboard.writeText( value );
+		return true;
+	} catch {
+		return false;
+	}
+} );
 
 // ============================================================
 // Global Alpine Initialization

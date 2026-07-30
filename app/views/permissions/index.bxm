@@ -50,7 +50,7 @@
 		</div>
 		<span
 			class="cb-muted-cell"
-			x-text="filteredCount + (filteredCount === 1 ? ' permission' : ' permissions')"></span>
+			x-text="$countLabel( filteredCount, 'permission' )"></span>
 	</div>
 
 	<!--- Permission Grid --->
@@ -62,7 +62,7 @@
 					<div>
 						<span class="cb-permission-icon"><i class="ph-duotone ph-key" aria-hidden="true"></i></span>
 						<h3 class="cb-content-card-title" x-text="group.label"></h3>
-						<span class="cb-count-pill" x-text="group.permissions.length" :aria-label="group.permissions.length + (group.permissions.length === 1 ? ' permission' : ' permissions')"></span>
+						<span class="cb-count-pill" x-text="group.permissions.length" :aria-label="$countLabel( group.permissions.length, 'permission' )"></span>
 					</div>
 					<i class="ph-duotone ph-folder-open cb-permission-group-icon" aria-hidden="true"></i>
 				</div>

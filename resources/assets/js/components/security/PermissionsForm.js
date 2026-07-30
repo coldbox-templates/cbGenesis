@@ -85,7 +85,7 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 			this.editingPermission = null;
 			this.formError = "";
 			this.modalOpen = true;
-			this.$nextTick( () => this.$root.querySelector( "#permission-name" )?.focus() );
+			this.$focus( "#permission-name" );
 		},
 
 		/**
@@ -100,7 +100,7 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 			this.form.permission = permission.permission || "";
 			this.form.description = permission.description || "";
 			this.modalOpen = true;
-			this.$nextTick( () => this.$root.querySelector( "#permission-name" )?.focus() );
+			this.$focus( "#permission-name" );
 		},
 
 		/**

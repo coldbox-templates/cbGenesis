@@ -49,7 +49,7 @@
 						@click="selectRole( role )"
 						>
 						<strong x-text="role.role"></strong>
-						<span x-text="role.usersCount + ' users · ' + role.permissions.length + ' permissions'"></span>
+						<span x-text="$countLabel( role.usersCount, 'user' ) + ' · ' + $countLabel( role.permissions.length, 'permission' )"></span>
 					</button>
 				</template>
 				<div
@@ -118,7 +118,7 @@
 				<div class="cb-role-section-header cb-role-users-header">
 					<div>
 						<h4>Assigned users</h4>
-						<span x-text="filteredUsers.length + ' of ' + assignedUsers.length"></span>
+						<span x-text="$countLabel( filteredUsers.length, 'matching user' ) + ' of ' + $countLabel( assignedUsers.length, 'assigned user' )"></span>
 					</div>
 					<div class="cb-admin-search cb-role-users-search">
 						<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>

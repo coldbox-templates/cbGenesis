@@ -1,3 +1,5 @@
+import { passwordRequirements } from "../../utils/passwordPolicy.js";
+
 /**
  * Alpine.js component: passwordStrength
  *
@@ -33,13 +35,7 @@ export function passwordStrength() {
 			const p = this.password;
 			if ( !p ) return 0;
 
-			const rules = [
-				p.length >= 8,
-				/[A-Z]/.test( p ),
-				/[a-z]/.test( p ),
-				/[0-9]/.test( p ),
-				/[^A-Za-z0-9]/.test( p ),
-			];
+			const rules = Object.values( passwordRequirements( p ) );
 			const passed = rules.filter( Boolean ).length;
 
 			if ( !rules[0] )    return 1;          // < 8 chars → always weak
@@ -85,14 +81,7 @@ export function passwordStrength() {
 		 * @returns {Object} Requirement names mapped to completion states.
 		 */
 		get requirements() {
-			const p = this.password;
-			return {
-				length    : p.length >= 8,
-				uppercase : /[A-Z]/.test( p ),
-				lowercase : /[a-z]/.test( p ),
-				number    : /[0-9]/.test( p ),
-				special   : /[^A-Za-z0-9]/.test( p ),
-			};
+			return passwordRequirements( this.password );
 		},
 
 		/**

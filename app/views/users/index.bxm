@@ -58,7 +58,7 @@
 				class="cb-muted-cell"
 				x-show="query.trim()"
 				x-cloak
-				x-text="total + ( total === 1 ? ' matching user' : ' matching users' )"></span>
+				x-text="$countLabel( total, 'matching user', 'matching users' )"></span>
 		</div>
 
 		<!--- Users Table --->
