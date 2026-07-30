@@ -27,10 +27,20 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 		notice       : "",
 		form         : { firstName: "", lastName: "", email: "", roleId: "" },
 
+		/**
+		 * Calculates the number of pages in the current table result set.
+		 *
+		 * @returns {number} Number of pages available for the current result set.
+		 */
 		get pageCount() {
 			return Math.max( 1, Math.ceil( this.total / this.limit ) );
 		},
 
+		/**
+		 * Determines whether the invitation form has all required values.
+		 *
+		 * @returns {boolean} Whether all required invitation fields are populated.
+		 */
 		get inviteReady() {
 			return [
 				this.form.firstName,
@@ -40,29 +50,59 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			].every( ( value ) => String( value || "" ).trim().length > 0 );
 		},
 
+		/**
+		 * Returns the highest-priority feedback message for the page.
+		 *
+		 * @returns {string} Current error or success message for the page.
+		 */
 		get feedbackMessage() {
 			return this.error || this.notice;
 		},
 
+		/**
+		 * Selects the messagebox style for the current feedback state.
+		 *
+		 * @returns {string} Messagebox style based on the current feedback state.
+		 */
 		get feedbackType() {
 			return this.error ? "error" : "success";
 		},
 
+		/**
+		 * Clears the current page error and success messages.
+		 *
+		 * @returns {void}
+		 */
 		clearFeedback() {
 			this.error = "";
 			this.notice = "";
 		},
 
+		/**
+		 * Selects a visibility tab and reloads its first page.
+		 *
+		 * @param {string} filter Visibility filter to apply.
+		 */
 		setStatusFilter( filter ) {
 			this.statusFilter = filter;
 			this.page = 1;
 			this.refreshUsers();
 		},
 
+		/**
+		 * Loads the current page from the users search endpoint.
+		 *
+		 * The existing rows and result total are cleared while the request is in
+		 * progress. Request failures are stored in the component error state.
+		 *
+		 * @returns {Promise<void>}
+		 */
 		async refreshUsers() {
 			if ( this.loading ) return;
 			this.loading = true;
 			this.error = "";
+			this.users = [];
+			this.total = 0;
 			try {
 				const params = new URLSearchParams( {
 					page      : String( this.page ),
@@ -82,7 +122,6 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Users could not be loaded." );
 				this.users = ( result.data?.records || [] ).map( normalizeUser );
 				this.total = Number( result.data?.count || 0 );
-				this.counts = result.data?.counts || this.counts;
 			} catch ( error ) {
 				this.error = error.message || "Users could not be loaded.";
 			} finally {
@@ -90,6 +129,11 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			}
 		},
 
+		/**
+		 * Changes the active sort column and reloads the first page.
+		 *
+		 * @param {string} column User field to sort by.
+		 */
 		sortBy( column ) {
 			const [
 				currentColumn,
@@ -101,39 +145,77 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			this.refreshUsers();
 		},
 
+		/**
+		 * Returns the active sort CSS class for a table column.
+		 *
+		 * @param {string} column User field to inspect.
+		 * @returns {string} Active class or an empty string.
+		 */
 		sortClass( column ) {
 			return this.sortOrder.startsWith( `${ column } ` ) ? "is-active" : "";
 		},
 
+		/**
+		 * Returns the sort icon class for a table column.
+		 *
+		 * @param {string} column User field to inspect.
+		 * @returns {string} Icon class representing the current direction.
+		 */
 		sortIcon( column ) {
 			if ( !this.sortOrder.startsWith( `${ column } ` ) ) return "ph-arrows-down-up";
-			return this.sortOrder.endsWith( " desc" ) ? "ph-arrow-down" : "ph-arrow-up";
+			return this.sortOrder.endsWith( " desc" ) ? "ph-caret-down" : "ph-caret-up";
 		},
 
+		/**
+		 * Moves to the previous page and reloads the listing when one is available.
+		 *
+		 * @returns {void}
+		 */
 		previousPage() {
 			if ( this.page <= 1 ) return;
 			this.page--;
 			this.refreshUsers();
 		},
 
+		/**
+		 * Moves to the next page and reloads the listing when one is available.
+		 *
+		 * @returns {void}
+		 */
 		nextPage() {
 			if ( this.page >= this.pageCount ) return;
 			this.page++;
 			this.refreshUsers();
 		},
 
+		/**
+		 * Opens the invitation drawer with a cleared invitation form and errors.
+		 *
+		 * @returns {void}
+		 */
 		openInvite() {
 			this.form = { firstName: "", lastName: "", email: "", roleId: "" };
 			this.error = "";
 			this.inviteOpen = true;
 		},
 
+		/**
+		 * Closes the invitation drawer unless a submission is in progress.
+		 *
+		 * @param {boolean} force Whether to close during submission.
+		 */
 		closeInvite( force = false ) {
 			if ( this.submitting && !force ) return;
 			this.inviteOpen = false;
 			this.error = "";
 		},
 
+		/**
+		 * Submits a new-user invitation and refreshes the listing on success.
+		 *
+		 * @param {SubmitEvent} event Form submit event.
+		 * @returns {Promise<void>}
+		 */
 		async inviteUser( event ) {
 			if ( event ) event.preventDefault();
 			if ( this.submitting || !this.inviteReady ) return;
@@ -162,17 +244,37 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			}
 		},
 
+		/**
+		 * Selects a user and opens the delete confirmation dialog.
+		 *
+		 * @param {Object} user User record selected for deletion.
+		 * @returns {void}
+		 */
 		confirmDelete( user ) {
 			this.deleteTarget = user;
 			this.error = "";
 		},
 
+		/**
+		 * Closes the delete confirmation unless deletion is in progress.
+		 *
+		 * @param {boolean} force Whether to close during deletion.
+		 */
 		cancelDelete( force = false ) {
 			if ( this.deleting && !force ) return;
 			this.deleteTarget = null;
 			this.error = "";
 		},
 
+		/**
+		 * Deletes the selected user and refreshes the current listing.
+		 *
+		 * The request is skipped when no user is selected or another deletion is
+		 * active. Server and network failures are stored in the component error
+		 * state rather than thrown to the caller.
+		 *
+		 * @returns {Promise<void>}
+		 */
 		async deleteUser() {
 			if ( !this.deleteTarget || this.deleting ) return;
 			this.deleting = true;
@@ -196,13 +298,15 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			}
 		},
 
-		formatDate( value ) {
-			const date = new Date( value );
-			return Number.isNaN( date.getTime() ) ? value : new Intl.DateTimeFormat( undefined, { dateStyle: "medium" } ).format( date );
-		},
 	};
 }
 
+/**
+ * Normalizes server user data for display in the listing.
+ *
+ * @param {Object} user User data returned by the server.
+ * @returns {Object} User with derived display fields.
+ */
 function normalizeUser( user = {} ) {
 	const name = user.fullName || [
 		user.firstName,
@@ -218,10 +322,21 @@ function normalizeUser( user = {} ) {
 	return { ...user, name, roles, status, initials, detailUrl: `/users/${ encodeURIComponent( user.userId ) }` };
 }
 
+/**
+ * Generates a temporary password for a new invitation.
+ *
+ * @returns {string} Temporary password meeting the invitation password policy.
+ */
 function temporaryPassword() {
 	return `Invite-${ crypto.randomUUID().replaceAll( "-", "" ).slice( 0, 20 ) }a1!`;
 }
 
+/**
+ * Converts server validation errors into a displayable message.
+ *
+ * @param {Object} errors Validation error map returned by the server.
+ * @returns {string} Human-readable validation message.
+ */
 function validationMessage( errors = {} ) {
 	return Object.values( errors ).flat().map( ( error ) => error.message || error ).join( " " ) || "Please check the invitation details.";
 }

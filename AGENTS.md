@@ -441,3 +441,11 @@ This project has access to the following Model Context Protocol (MCP) documentat
 ### Deployment
 
 <!-- Document deployment process, environments, CI/CD pipeline -->
+
+### JavaScript Documentation
+
+- All JavaScript files must be well documented.
+- Document every exported function, Alpine component, component method, helper, event handler, store, and other public or reusable API with concise JSDoc.
+- Document parameters, return values, expected state, side effects, and important failure behavior where applicable.
+- Add short comments for non-obvious control flow, browser behavior, framework integration, and business rules; do not leave complex logic undocumented.
+- Keep documentation accurate when behavior changes, and use descriptive names so comments explain intent rather than restating syntax.

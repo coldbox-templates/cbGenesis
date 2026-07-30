@@ -160,7 +160,11 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			}
 		},
 
-		/** Opens the create-token modal with a clean form. */
+		/**
+		 * Opens the create-token modal with a clean form.
+		 *
+		 * @returns {void}
+		 */
 		openCreateTokenModal() {
 			this.tokenModalMode = "create";
 			this.editingToken = null;
@@ -305,7 +309,11 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			}
 		},
 
-		/** Copies the newly-created raw token to the clipboard. */
+		/**
+		 * Copies the newly-created raw token to the clipboard.
+		 *
+		 * @returns {Promise<void>}
+		 */
 		async copyCreatedToken() {
 			if ( !this.createdRawToken || !navigator.clipboard ) return;
 			try {
@@ -340,13 +348,21 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			return String( value ?? "" ).trim();
 		},
 
-		/** Indicates whether profile fields differ from their initial values. */
+		/**
+		 * Indicates whether profile fields differ from their initial values.
+		 *
+		 * @returns {boolean} Whether unsaved profile changes exist.
+		 */
 		get profileDirty() {
 			const current = this.profileValues();
 			return Object.keys( current ).some( key => current[ key ] !== this.profile.initial[ key ] );
 		},
 
-		/** Indicates whether the required profile fields are valid. */
+		/**
+		 * Indicates whether the required profile fields are valid.
+		 *
+		 * @returns {boolean} Whether names and email pass validation.
+		 */
 		get profileValid() {
 			return Boolean(
 				this.profile.firstName.trim()
@@ -355,7 +371,11 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			);
 		},
 
-		/** Indicates whether the password form can be submitted. */
+		/**
+		 * Indicates whether the password form can be submitted.
+		 *
+		 * @returns {boolean} Whether current password, strength, and confirmation pass.
+		 */
 		get passwordValid() {
 			return Boolean(
 				this.password.currentPassword
@@ -365,7 +385,11 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			);
 		},
 
-		/** Indicates whether the new password meets the strength policy. */
+		/**
+		 * Indicates whether the new password meets the strength policy.
+		 *
+		 * @returns {boolean} Whether the password meets all strength requirements.
+		 */
 		get passwordStrengthValid() {
 			const value = this.password.newPassword;
 			return value.length >= 8
@@ -387,19 +411,33 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 				: "Passwords do not match.";
 		},
 
-		/** Clears server-side password errors while the user edits the password. */
+		/**
+		 * Clears server-side password errors while the user edits the password.
+		 *
+		 * @param {string} value New password value.
+		 * @returns {void}
+		 */
 		setNewPassword( value ) {
 			this.password.newPassword = value;
 			this.password.errors.password = "";
 		},
 
-		/** Updates the confirmation value and its validation error. */
+		/**
+		 * Updates the confirmation value and its validation error.
+		 *
+		 * @param {string} value Password confirmation value.
+		 * @returns {void}
+		 */
 		setPasswordConfirmation( value ) {
 			this.password.passwordConfirm = value;
 			this.password.errors.passwordConfirm = this.passwordConfirmationError;
 		},
 
-		/** Clears the global notice. */
+		/**
+		 * Clears the global profile page notice.
+		 *
+		 * @returns {void}
+		 */
 		clearNotice() {
 			this.notice = { type: "", message: "" };
 		},
@@ -418,7 +456,13 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			return String( value ?? "" );
 		},
 
-		/** Copies server validation errors into an Alpine state object. */
+		/**
+		 * Copies server validation errors into an Alpine state object.
+		 *
+		 * @param {Object} target State object receiving error messages.
+		 * @param {Object} errors Server validation error map.
+		 * @returns {void}
+		 */
 		applyErrors( target, errors = {} ) {
 			for ( const field of Object.keys( errors ) ) {
 				target[ field ] = this.fieldError( errors, field );
@@ -472,21 +516,36 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			}
 		},
 
-		/** Prevents invalid profile submissions and submits valid profile changes. */
+		/**
+		 * Prevents invalid profile submissions and submits valid profile changes.
+		 *
+		 * @param {SubmitEvent} event Form submit event.
+		 * @returns {void}
+		 */
 		submitProfile( event ) {
 			event.preventDefault();
 			if ( !this.profileDirty || !this.profileValid || this.loading ) return;
 			this.submit( event.currentTarget, "/profile", "profile" );
 		},
 
-		/** Prevents invalid password submissions and submits valid password changes. */
+		/**
+		 * Prevents invalid password submissions and submits valid password changes.
+		 *
+		 * @param {SubmitEvent} event Form submit event.
+		 * @returns {void}
+		 */
 		submitPassword( event ) {
 			event.preventDefault();
 			if ( !this.passwordValid || this.loading ) return;
 			this.submit( event.currentTarget, "/profile/password", "password" );
 		},
 
-		/** Updates the profile hero after a successful profile save. */
+		/**
+		 * Updates the profile hero after a successful profile save.
+		 *
+		 * @param {Object} profile Updated profile data from the server.
+		 * @returns {void}
+		 */
 		updateProfileHero( profile ) {
 			const name = [
 				profile.firstName,

@@ -4,6 +4,9 @@ import "tippy.js/dist/tippy.css";
 import * as bootstrap from "bootstrap";
 import "@phosphor-icons/web/duotone";
 
+// ============================================================
+// Alpine Plugins Registration
+// ============================================================
 import "./AlpinePlugins.js";
 
 // ============================================================
@@ -13,10 +16,8 @@ import "./stores/theme.js";
 import "./stores/sidebar.js";
 
 // ============================================================
-// Alpine Component Registrations
+// Alpine Global Component Registrations
 // ============================================================
-
-// App Components
 import { sidebarBrand }     from "./components/app/SidebarBrand.js";
 import { footer }           from "./components/app/Footer.js";
 import { adminBody }        from "./components/app/AdminBody.js";
@@ -24,8 +25,9 @@ Alpine.data( "adminBody", adminBody );
 Alpine.data( "sidebarBrand", sidebarBrand );
 Alpine.data( "footer", footer );
 
-// Form Components
-import { passwordStrength } from "./components/ui/PasswordStrength.js";
+// ============================================================
+// Alpine Form Components Registration
+// ============================================================
 import { authForm }         from "./components/auth/AuthForm.js";
 import { registerForm }     from "./components/auth/RegisterForm.js";
 import { forgotPasswordForm } from "./components/auth/ForgotPasswordForm.js";
@@ -35,7 +37,6 @@ import { permissionsForm } from "./components/security/permissionsForm.js";
 import { rolesForm }         from "./components/security/RolesForm.js";
 import { usersForm }         from "./components/security/UsersForm.js";
 import { profileForm }       from "./components/profile/ProfileForm.js";
-Alpine.data( "passwordStrength", passwordStrength );
 Alpine.data( "authForm", authForm );
 Alpine.data( "registerForm", registerForm );
 Alpine.data( "forgotPasswordForm", forgotPasswordForm );
@@ -46,16 +47,26 @@ Alpine.data( "rolesForm", rolesForm );
 Alpine.data( "usersForm", usersForm );
 Alpine.data( "profileForm", profileForm );
 
-
-// UI Components
+// ============================================================
+// Alpine UI Components Registration
+// ============================================================
 import { messageBox }       from "./components/ui/MessageBox.js";
 import { passwordMeter }    from "./components/ui/PasswordMeter.js";
 import { switchComponent }  from "./components/ui/Switch.js";
 import { drawer }           from "./components/ui/Drawer.js";
+import { passwordStrength } from "./components/ui/PasswordStrength.js";
 Alpine.data( "messageBox", messageBox );
 Alpine.data( "passwordMeter", passwordMeter );
 Alpine.data( "switchComponent", switchComponent );
 Alpine.data( "drawer", drawer );
+Alpine.data( "passwordStrength", passwordStrength );
+
+// ============================================================
+// Alpine Magic Properties Registration
+// ============================================================
+import { formatDate, formatDateTime } from "./utils/dateFormat.js";
+Alpine.magic( "formatDate", () => formatDate );
+Alpine.magic( "formatDateTime", () => formatDateTime );
 
 // ============================================================
 // Global Alpine Initialization
@@ -64,4 +75,57 @@ window.Alpine    = Alpine;
 window.tippy     = tippy;
 window.bootstrap = bootstrap;
 
+
+// ============================================================
+// Global Tooltip Initialization
+// ============================================================
+
+/**
+ * Initializes or refreshes Tippy instances declared with data-tooltip.
+ *
+ * @param {Document|HTMLElement} root Root whose descendant tooltips should be processed.
+ * @returns {void}
+ */
+function initializeTooltips( root = document ) {
+	root.querySelectorAll( "[data-tooltip]" ).forEach( ( element ) => {
+		if ( element._tippy ) {
+			element._tippy.setContent( element.getAttribute( "data-tooltip" ) );
+			return;
+		}
+		tippy( element, { content: element.getAttribute( "data-tooltip" ), placement: "top" } );
+	} );
+}
+
+window.initializeTooltips = initializeTooltips;
+
+/**
+ * Watches Alpine-rendered DOM for tooltip elements and content updates.
+ *
+ * @type {MutationObserver}
+ */
+const tooltipObserver = new MutationObserver( ( mutations ) => {
+	mutations.forEach( ( mutation ) => {
+		if ( mutation.type === "attributes" ) {
+			initializeTooltips( mutation.target.parentElement || mutation.target );
+			return;
+		}
+		mutation.addedNodes.forEach( ( node ) => {
+			if ( node.nodeType !== Node.ELEMENT_NODE ) return;
+			if ( node.matches( "[data-tooltip]" ) ) initializeTooltips( node.parentElement );
+			initializeTooltips( node );
+		} );
+	} );
+} );
+
+tooltipObserver.observe( document.body, {
+	childList       : true,
+	subtree         : true,
+	attributes      : true,
+	attributeFilter : [ "data-tooltip" ]
+} );
+
+
+// ============================================================
+// Now we can start up the engines
+// ============================================================
 Alpine.start();
