@@ -52,13 +52,11 @@ class extends="BaseSecureHandler" {
 	@remote( "Save the authenticated user's profile remotely via AJAX" )
 	function save( event, rc, prc ) {
 		var response = event.getResponse()
+		param rc.preferences = "{}"
 		try {
 			prc.profile = prc.authUser
-				.setFirstName( rc.firstName ?: "" )
-				.setLastName( rc.lastName ?: "" )
-				.setEmail( rc.email ?: "" )
-				.setBiography( rc.biography ?: "" )
-				.validateOrFail( fields: "firstName,lastName,email,biography" )
+				.populate( rc )
+				.validateOrFail( profiles: "update" )
 				.save()
 			response.setData(
 				data: prc.profile.getMemento(),

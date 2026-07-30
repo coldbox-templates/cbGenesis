@@ -3,6 +3,7 @@
 	class="profile-page"
 	x-data='profileForm( #forAttribute( prc.profile.getMemento() )#, "#csrfToken()#" )'
 	@profile-password-changed.window="setNewPassword( $event.detail.value )"
+	@preferences-submit.window="submitPreferences( $event.detail )"
 >
 
 	<!--- Header --->
@@ -76,6 +77,18 @@
 			>
 				<i class="ph-duotone ph-user" aria-hidden="true"></i>
 				Profile
+			</button>
+
+			<!--- Preferences --->
+			<button
+				type="button"
+				role="tab"
+				:class="activeTab === 'preferences' ? 'active' : ''"
+				:aria-selected="activeTab === 'preferences'"
+				@click="activeTab = 'preferences'"
+			>
+				<i class="ph-duotone ph-sliders-horizontal" aria-hidden="true"></i>
+				Preferences
 			</button>
 
 			<!--- Password --->
@@ -179,6 +192,78 @@
 					<button type="submit" class="btn btn-primary" :disabled="loading || !profileDirty || !profileValid">
 						<span x-show="loading !== 'profile'"><i class="ph-duotone ph-check"></i> Save Profile</span>
 						<span x-show="loading === 'profile'" x-cloak><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...</span>
+					</button>
+				</div>
+			</form>
+		</section>
+
+		<!--- Preferences --->
+		<section
+			class="cb-content-card form-card cb-preferences-card"
+			x-data='preferencesForm( #forAttribute( prc.authUser.getAllPreferences() )# )'
+			x-show="activeTab === 'preferences'"
+			x-cloak
+		>
+			<div class="cb-content-card-header">
+				<div>
+					<h3 class="cb-content-card-title">
+						<i class="ph-duotone ph-sliders-horizontal" aria-hidden="true"></i>
+						Preferences
+					</h3>
+					<p class="cb-content-card-subtitle">Store personal settings as editable name and value pairs.</p>
+				</div>
+				<button type="button" class="btn btn-primary btn-sm" @click="addPreference()">
+					<i class="ph-duotone ph-plus" aria-hidden="true"></i>
+					Add Preference
+				</button>
+			</div>
+
+			<form method="post" action="#event.buildLink( "profile" )#" @submit="submit">
+				<input type="hidden" name="csrf" value="#csrfToken()#">
+				<div class="cb-preferences-list" x-show="preferences.length" x-cloak>
+					<div class="cb-preferences-heading" aria-hidden="true">
+						<span>Name</span>
+						<span>Value</span>
+						<span class="visually-hidden">Actions</span>
+					</div>
+					<template x-for="preference in preferences" :key="preference.id">
+						<div class="cb-preference-row" :data-preference-id="preference.id">
+							<label>
+								<span class="visually-hidden">Preference name</span>
+								<input
+									class="cb-preference-input"
+									type="text"
+									x-model.trim="preference.name"
+									placeholder="e.g. theme"
+									autocomplete="off">
+							</label>
+							<label>
+								<span class="visually-hidden">Preference value</span>
+								<input
+									class="cb-preference-input"
+									type="text"
+									x-model="preference.value"
+									placeholder="e.g. dark">
+							</label>
+							<button
+								type="button"
+								class="cb-icon-button cb-preference-remove danger"
+								title="Remove preference"
+								aria-label="Remove preference"
+								@click="removePreference( preference.id )">
+								<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+							</button>
+						</div>
+					</template>
+				</div>
+				<p class="text-muted cb-preferences-empty" x-show="!preferences.length">No preferences have been added.</p>
+				<p class="invalid-feedback d-block" x-show="error" x-text="error"></p>
+				<div class="cb-form-actions">
+					<button type="submit" class="btn btn-primary" :disabled="submitting || !preferencesDirty">
+						<span x-show="!submitting"><i class="ph-duotone ph-check"></i> Save Preferences</span>
+						<span x-show="submitting" x-cloak>
+							<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...
+						</span>
 					</button>
 				</div>
 			</form>

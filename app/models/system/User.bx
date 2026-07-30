@@ -172,7 +172,14 @@ class extends="app.models.BaseEntity" {
 	 */
 	this.population = {
 		exclude: [
-			"userId", "lastLogin", "verifiedAt", "isActive"
+			"userId",
+			"lastLogin",
+			"verifiedAt",
+			"isActive",
+			"roles",
+			"permissions",
+			"apiTokens",
+			"rememberTokens"
 		]
 	}
 

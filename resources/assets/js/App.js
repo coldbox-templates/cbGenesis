@@ -37,6 +37,7 @@ import { permissionsForm } from "./components/security/permissionsForm.js";
 import { rolesForm }         from "./components/security/RolesForm.js";
 import { usersForm }         from "./components/security/UsersForm.js";
 import { profileForm }       from "./components/profile/ProfileForm.js";
+import { preferencesForm }   from "./components/profile/PreferencesForm.js";
 Alpine.data( "authForm", authForm );
 Alpine.data( "registerForm", registerForm );
 Alpine.data( "forgotPasswordForm", forgotPasswordForm );
@@ -46,6 +47,7 @@ Alpine.data( "permissionsForm", permissionsForm );
 Alpine.data( "rolesForm", rolesForm );
 Alpine.data( "usersForm", usersForm );
 Alpine.data( "profileForm", profileForm );
+Alpine.data( "preferencesForm", preferencesForm );
 
 // ============================================================
 // Alpine UI Components Registration
