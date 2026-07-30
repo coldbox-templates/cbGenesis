@@ -82,6 +82,11 @@
 									<span>
 										<strong x-text="user.name"></strong>
 										<small x-text="user.email"></small>
+										<span class="cb-chip-row mt-1" x-show="user.roles.length" x-cloak>
+											<template x-for="( role, roleIndex ) in user.roles" :key="user.userId + '-' + role + '-' + roleIndex">
+												<span class="cb-chip cb-chip-info" x-text="role"></span>
+											</template>
+										</span>
 									</span>
 								</div>
 							</td>
