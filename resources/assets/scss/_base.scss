@@ -136,3 +136,14 @@ body {
 .cb-bg-surface-raised {
     background-color: var(--app-surface-raised);
 }
+
+// ============================================================
+// Form Controls — Global Overrides
+// ============================================================
+
+// Taller select to match text input height across the app
+.cb-form-select {
+    @extend .form-select;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+}

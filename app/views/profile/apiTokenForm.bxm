@@ -34,7 +34,7 @@
 				x-model="tokenForm.expirationPreset"
 				@change="setTokenExpirationPreset()"
 				:disabled="tokenModalMode !== 'create'"
-				class="cb-form-control">
+				class="cb-form-select">
 				<option value="">Never expires</option>
 				<option value="30">30 days</option>
 				<option value="60">60 days</option>
