@@ -15,6 +15,7 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 		csrfToken,
 		query        : "",
 		statusFilter : "active",
+		roleFilter   : "",
 		sortOrder    : "lastName asc",
 		page         : 1,
 		limit        : 25,
@@ -90,6 +91,17 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 		},
 
 		/**
+		 * Selects a role filter and reloads its first page.
+		 *
+		 * @param {string} roleId Role ID to filter by, or an empty string for all roles.
+		 */
+		setRoleFilter( roleId ) {
+			this.roleFilter = roleId;
+			this.page = 1;
+			this.refreshUsers();
+		},
+
+		/**
 		 * Loads the current page from the users search endpoint.
 		 *
 		 * The existing rows and result total are cleared while the request is in
@@ -116,6 +128,7 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 				}
 				if ( filter === "active" ) params.set( "isVerified", "true" );
 				if ( filter === "pending" ) params.set( "isVerified", "false" );
+				if ( this.roleFilter ) params.set( "roleId", this.roleFilter );
 
 				const response = await fetch( `/users/search?${ params.toString() }`, { headers: { Accept: "application/json" } } );
 				const result = await response.json();
@@ -143,27 +156,6 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			this.sortOrder = `${ column } ${ direction }`;
 			this.page = 1;
 			this.refreshUsers();
-		},
-
-		/**
-		 * Returns the active sort CSS class for a table column.
-		 *
-		 * @param {string} column User field to inspect.
-		 * @returns {string} Active class or an empty string.
-		 */
-		sortClass( column ) {
-			return this.sortOrder.startsWith( `${ column } ` ) ? "is-active" : "";
-		},
-
-		/**
-		 * Returns the sort icon class for a table column.
-		 *
-		 * @param {string} column User field to inspect.
-		 * @returns {string} Icon class representing the current direction.
-		 */
-		sortIcon( column ) {
-			if ( !this.sortOrder.startsWith( `${ column } ` ) ) return "ph-arrows-down-up";
-			return this.sortOrder.endsWith( " desc" ) ? "ph-caret-down" : "ph-caret-up";
 		},
 
 		/**

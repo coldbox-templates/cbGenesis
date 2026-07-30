@@ -36,6 +36,7 @@ class extends="BaseSecureHandler" {
 			sortOrder: rc.sortOrder ?: "",
 			isActive: rc.isActive ?: null,
 			isVerified: rc.isVerified ?: null,
+			roleId: rc.roleId ?: null,
 			propertyList= [
 				"userId",
 				"firstName",

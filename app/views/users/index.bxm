@@ -48,6 +48,17 @@
 					:class="statusFilter === 'all' ? 'active' : ''"
 					@click="setStatusFilter( 'all' )">All <span class="cb-tab-count" x-text="counts.all"></span></button>
 			</div>
+			<!--- Filter Users by Role --->
+			<select
+				class="cb-admin-role-filter"
+				x-model="roleFilter"
+				@change="setRoleFilter( $event.target.value )"
+				aria-label="Filter users by role">
+				<option value="">All Roles</option>
+				<template x-for="role in roles" :key="role.roleId">
+					<option :value="role.roleId" x-text="role.role"></option>
+				</template>
+			</select>
 			<!--- Search Users --->
 			<div class="cb-admin-search cb-wide">
 				<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
@@ -66,11 +77,41 @@
 			<table class="cb-table">
 				<thead>
 					<tr>
-						<th scope="col"><button type="button" class="cb-table-sort-button" :class="sortClass( 'lastName' )" @click="sortBy( 'lastName' )">Name <i class="ph-bold" :class="sortIcon( 'lastName' )" aria-hidden="true"></i></button></th>
-						<th scope="col"><button type="button" class="cb-table-sort-button" :class="sortClass( 'createdDate' )" @click="sortBy( 'createdDate' )">Created On <i class="ph-bold" :class="sortIcon( 'createdDate' )" aria-hidden="true"></i></button></th>
-						<th scope="col"><button type="button" class="cb-table-sort-button" :class="sortClass( 'verifiedAt' )" @click="sortBy( 'verifiedAt' )">Verified On <i class="ph-bold" :class="sortIcon( 'verifiedAt' )" aria-hidden="true"></i></button></th>
-						<th scope="col"><button type="button" class="cb-table-sort-button" :class="sortClass( 'isActive' )" @click="sortBy( 'isActive' )">Status <i class="ph-bold" :class="sortIcon( 'isActive' )" aria-hidden="true"></i></button></th>
-						<th scope="col"><span class="visually-hidden">Actions</span></th>
+						<th
+							scope="col"><button
+							type="button"
+							class="cb-table-sort-button"
+							:class="$sortClass( sortOrder, 'lastName' )"
+							@click="sortBy( 'lastName' )">
+							Name <i class="ph-duotone" :class="$sortIcon( sortOrder, 'lastName' )" aria-hidden="true"></i></button>
+						</th>
+						<th
+							scope="col"><button
+							type="button"
+							class="cb-table-sort-button"
+							:class="$sortClass( sortOrder, 'createdDate' )"
+							@click="sortBy( 'createdDate' )">
+							Created On <i class="ph-duotone" :class="$sortIcon( sortOrder, 'createdDate' )" aria-hidden="true"></i></button>
+						</th>
+						<th
+							scope="col"><button
+							type="button"
+							class="cb-table-sort-button"
+							:class="$sortClass( sortOrder, 'verifiedAt' )"
+							@click="sortBy( 'verifiedAt' )">
+							Verified On <i class="ph-duotone" :class="$sortIcon( sortOrder, 'verifiedAt' )" aria-hidden="true"></i></button>
+						</th>
+						<th
+							scope="col"><button
+							type="button"
+							class="cb-table-sort-button"
+							:class="$sortClass( sortOrder, 'isActive' )"
+							@click="sortBy( 'isActive' )">
+							Status <i class="ph-duotone" :class="$sortIcon( sortOrder, 'isActive' )" aria-hidden="true"></i></button>
+						</th>
+						<th scope="col">
+							<span class="visually-hidden">Actions</span>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -134,13 +175,28 @@
 				</tbody>
 			</table>
 		</div>
+
+		<!--- Pagination --->
 		<div class="cb-pagination" x-show="total > 0" x-cloak>
-			<button type="button" class="btn btn-light btn-sm" @click="previousPage()" :disabled="page <= 1"><i class="ph-bold ph-caret-left" aria-hidden="true"></i> Previous</button>
+			<button
+				type="button"
+				class="btn btn-light btn-sm"
+				@click="previousPage()"
+				:disabled="page <= 1">
+				<i class="ph-bold ph-caret-left" aria-hidden="true"></i> Previous
+			</button>
 			<span x-text="'Page ' + page + ' of ' + pageCount"></span>
-			<button type="button" class="btn btn-light btn-sm" @click="nextPage()" :disabled="page >= pageCount">Next <i class="ph-bold ph-caret-right" aria-hidden="true"></i></button>
+			<button
+				type="button"
+				class="btn btn-light btn-sm"
+				@click="nextPage()"
+				:disabled="page >= pageCount">
+				Next <i class="ph-bold ph-caret-right" aria-hidden="true"></i>
+			</button>
 		</div>
 	</section>
 
+	<!--- Invite Drawer --->
 	#view( view: "_components/ui/drawer", args: {
 		id: "cb-user-invite-drawer",
 		title: "Invite User",
@@ -149,17 +205,13 @@
 		contentView: "users/inviteForm"
 	} )#
 
-	<div class="cb-ui-modal" x-show="deleteTarget" x-cloak x-transition.opacity role="dialog" aria-modal="true" aria-labelledby="cb-user-delete-title" @click.self="cancelDelete()" @keydown.escape.window="cancelDelete()">
-		<div class="cb-ui-modal__dialog">
-			<div class="cb-ui-modal__header"><h2 id="cb-user-delete-title">Delete user?</h2><button type="button" class="cb-ui-modal__close" @click="cancelDelete()" aria-label="Close confirmation"><i class="ph-duotone ph-x" aria-hidden="true"></i></button></div>
-			<div class="cb-ui-modal__body">
-				<p>You are about to delete <strong x-text="deleteTarget?.name"></strong>.</p>
-				<p class="cb-danger-callout"><i class="ph-duotone ph-warning" aria-hidden="true"></i> All relationships belonging to this user will be cascaded and permanently removed.</p>
-				<p>Are you sure you want to continue?</p>
-				<p class="cb-form-error" x-show="error" x-text="error"></p>
-			</div>
-			<div class="cb-ui-modal__footer"><button type="button" class="btn btn-light" @click="cancelDelete()">Cancel</button><button type="button" class="btn btn-danger" @click="deleteUser()" :disabled="deleting"><i class="ph-duotone ph-trash" aria-hidden="true"></i><span x-text="deleting ? 'Deleting...' : 'Delete user'"></span></button></div>
-		</div>
-	</div>
+	<!--- Delete User Modal --->
+	#view( view: "_components/ui/modal", args: {
+		id            : "cb-user-delete-modal",
+		title         : "Delete user?",
+		openExpression: "deleteTarget",
+		closeExpression: "cancelDelete()",
+		contentView   : "users/deleteConfirm"
+	} )#
 </div>
 </bx:output>

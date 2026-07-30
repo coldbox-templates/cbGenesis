@@ -1,0 +1,25 @@
+<bx:output>
+<div class="cb-ui-modal__body cb-delete-confirmation">
+	<i class="ph-duotone ph-warning" aria-hidden="true"></i>
+	<p>You are about to delete <strong x-text="deleteTarget?.name"></strong>.</p>
+	<p class="cb-danger-callout"><i class="ph-duotone ph-warning" aria-hidden="true"></i> All relationships belonging to this user will be cascaded and permanently removed.</p>
+	<p>Are you sure you want to continue?</p>
+	<p class="cb-form-error" x-show="error" x-text="error"></p>
+</div>
+
+<div class="cb-ui-modal__footer">
+	<button
+		type="button"
+		class="btn btn-secondary"
+		@click="cancelDelete()"
+		:disabled="deleting">Cancel</button>
+	<button
+		type="button"
+		class="btn btn-danger"
+		@click.prevent="deleteUser()"
+		:disabled="deleting">
+		<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+		<span x-text="deleting ? 'Deleting...' : 'Delete user'"></span>
+	</button>
+</div>
+</bx:output>

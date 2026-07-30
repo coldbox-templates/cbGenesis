@@ -50,7 +50,6 @@ class extends="app.models.BaseEntity" {
 	@fkcolumn( "FK_roleId" )
 	@linktable( "role_permissions" )
 	@inversejoincolumn( "FK_permissionId" )
-	@singularName( "permission" )
 	property
 		name="permissions"
 		type="array";

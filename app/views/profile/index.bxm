@@ -373,14 +373,13 @@
 								<button
 									type="button"
 									class="cb-table-sort-button"
-									:class="tokenSortKey === 'label' ? 'is-active' : ''"
+									:class="$sortClass( tokenSortKey + ' ' + tokenSortDirection, 'label' )"
 									:title="'Sort by label ' + ( tokenSortKey === 'label' && tokenSortDirection === 'desc' ? 'ascending' : 'descending' )"
 									@click="sortTokens( 'label' )">
 									Label
 									<i
 										class="ph-duotone"
-										:class="tokenSortDirection === 'desc' ? 'ph-caret-down' : 'ph-caret-up'"
-										x-show="tokenSortKey === 'label'"
+										:class="$sortIcon( tokenSortKey + ' ' + tokenSortDirection, 'label' )"
 										aria-hidden="true"></i>
 								</button>
 							</th>
@@ -389,14 +388,13 @@
 								<button
 									type="button"
 									class="cb-table-sort-button"
-									:class="tokenSortKey === 'expiration' ? 'is-active' : ''"
+									:class="$sortClass( tokenSortKey + ' ' + tokenSortDirection, 'expiration' )"
 									:title="'Sort by expiration ' + ( tokenSortKey === 'expiration' && tokenSortDirection === 'desc' ? 'ascending' : 'descending' )"
 									@click="sortTokens( 'expiration' )">
 									Expiration
 									<i
 										class="ph-duotone"
-										:class="tokenSortDirection === 'desc' ? 'ph-caret-down' : 'ph-caret-up'"
-										x-show="tokenSortKey === 'expiration'"
+										:class="$sortIcon( tokenSortKey + ' ' + tokenSortDirection, 'expiration' )"
 										aria-hidden="true"></i>
 								</button>
 							</th>
@@ -404,14 +402,13 @@
 								<button
 									type="button"
 									class="cb-table-sort-button"
-									:class="tokenSortKey === 'lastUsed' ? 'is-active' : ''"
+									:class="$sortClass( tokenSortKey + ' ' + tokenSortDirection, 'lastUsed' )"
 									:title="'Sort by last used ' + ( tokenSortKey === 'lastUsed' && tokenSortDirection === 'desc' ? 'ascending' : 'descending' )"
 									@click="sortTokens( 'lastUsed' )">
 									Last Used
 									<i
 										class="ph-duotone"
-										:class="tokenSortDirection === 'desc' ? 'ph-caret-down' : 'ph-caret-up'"
-										x-show="tokenSortKey === 'lastUsed'"
+										:class="$sortIcon( tokenSortKey + ' ' + tokenSortDirection, 'lastUsed' )"
 										aria-hidden="true"></i>
 								</button>
 							</th>
@@ -419,14 +416,13 @@
 								<button
 									type="button"
 									class="cb-table-sort-button"
-									:class="tokenSortKey === 'createdDate' ? 'is-active' : ''"
+									:class="$sortClass( tokenSortKey + ' ' + tokenSortDirection, 'createdDate' )"
 									:title="'Sort by created date ' + ( tokenSortKey === 'createdDate' && tokenSortDirection === 'desc' ? 'ascending' : 'descending' )"
 									@click="sortTokens( 'createdDate' )">
 									Created
 									<i
 										class="ph-duotone"
-										:class="tokenSortDirection === 'desc' ? 'ph-caret-down' : 'ph-caret-up'"
-										x-show="tokenSortKey === 'createdDate'"
+										:class="$sortIcon( tokenSortKey + ' ' + tokenSortDirection, 'createdDate' )"
 										aria-hidden="true"></i>
 								</button>
 							</th>

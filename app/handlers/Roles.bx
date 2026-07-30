@@ -73,7 +73,7 @@ class extends="BaseSecureHandler" {
 			response.setData( data: prc.role.getMemento(), message: "Role created successfully." )
 		}
 		catch( ValidationException error ){
-			response.setErrorMessage(
+			response.failure(
 				message: "Role validation errors",
 				statusCode: 422,
 				data : prc.role.getValidationResult().getAllErrorsAsStruct()
@@ -81,7 +81,7 @@ class extends="BaseSecureHandler" {
 		}
 		catch ( any error ) {
 			log.error( "Error saving role: #error.message#", error )
-			response.setErrorMessage(
+			response.failure(
 				message: "Role could not be saved: #error.message & error.detail#",
 				statusCode: 500
 			)
@@ -102,7 +102,7 @@ class extends="BaseSecureHandler" {
 			response.setData( data: prc.role.getMemento(), message: "Role saved successfully." )
 		}
 		catch( ValidationException error ){
-			response.setErrorMessage(
+			response.failure(
 				message: "Role validation errors",
 				statusCode: 422,
 				data : prc.role.getValidationResult().getAllErrorsAsStruct()
@@ -110,7 +110,7 @@ class extends="BaseSecureHandler" {
 		}
 		catch ( any error ) {
 			log.error( "Error saving role: #error.message#", error )
-			response.setErrorMessage(
+			response.failure(
 				message: "Role could not be saved: #error.message & error.detail#",
 				statusCode: 500
 			)
@@ -129,7 +129,7 @@ class extends="BaseSecureHandler" {
 			response.addMessage( "Role deleted successfully." )
 		} catch ( any error ) {
 			log.error( "Error deleting role with ID [#rc.roleId#]: #error.message#", error )
-			response.setErrorMessage(
+			response.failure(
 				message: "Role could not be deleted: #error.message & error.detail#",
 				statusCode: 500
 			)

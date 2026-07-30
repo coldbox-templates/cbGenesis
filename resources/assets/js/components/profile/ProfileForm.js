@@ -468,20 +468,17 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 		 * @param {HTMLFormElement} form Form being submitted.
 		 * @param {string} endpoint Fallback endpoint when the form has no action.
 		 * @param {string} owner State group receiving loading and validation state.
-		 *
 		 * @returns {Promise<void>}
 		 */
-		async submit( form, endpoint, owner, additionalFields = {} ) {
+		async submit( form, endpoint, owner ) {
 			this.clearNotice();
 			this.loading = owner;
 			owner === "profile" ? this.profile.errors = {} : this.password.errors = {};
 
 			try {
-				const formData = new FormData( form );
-				Object.entries( additionalFields ).forEach( entry => formData.set( entry[ 0 ], entry[ 1 ] ) );
 				const response = await fetch( form.action || endpoint, {
 					method      : "POST",
-					body        : formData,
+					body        : new FormData( form ),
 					credentials : "same-origin",
 					headers     : { Accept: "application/json" },
 				} );
@@ -495,7 +492,7 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 				}
 
 				this.notice = { type: "success", message: payload.messages || "Changes saved successfully." };
-				if ( owner === "profile" || owner === "preferences" ) {
+				if ( owner === "profile" ) {
 					this.profile.initial = this.profileValues();
 					this.profile.errors = {};
 					this.updateProfileHero( payload.data ?? {} );
@@ -534,22 +531,6 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 			event.preventDefault();
 			if ( !this.passwordValid || this.loading ) return;
 			this.submit( event.currentTarget, "/profile/password", "password" );
-		},
-
-		/**
-		 * Saves preferences through the existing profile endpoint.
-		 *
-		 * @param {Object} detail Serialized preferences and originating form.
-		 * @returns {void}
-		 */
-		submitPreferences( detail ) {
-			if ( this.loading ) return;
-			this.submit( detail.form, "/profile", "preferences", {
-				...this.profileValues(),
-				preferences : detail.preferences,
-			} ).then( () => {
-				if ( this.notice.type === "success" ) detail.markSaved?.();
-			} ).finally( () => detail.setSubmitting?.( false ) );
 		},
 
 		/**
