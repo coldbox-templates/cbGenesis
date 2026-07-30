@@ -9,6 +9,9 @@
 @threadSafe
 class extends="app.models.BaseService" {
 
+	@inject( "SettingService" )
+	property name="settingService";
+
 	/**
 	 * Initialize the API token service.
 	 *
@@ -34,6 +37,7 @@ class extends="app.models.BaseService" {
 	 * @return The raw token and safe token metadata: rawToken:string, token:APIToken
 	 */
 	struct function createToken( required APIToken apiToken ) {
+		validateExpiration( arguments.apiToken.getExpiration() )
 		var rawToken = arguments.apiToken.getToken()
 		arguments.apiToken.setToken( bcryptHash( rawToken ) )
 
@@ -42,6 +46,28 @@ class extends="app.models.BaseService" {
 		return {
 			rawToken: rawToken,
 			token: arguments.apiToken
+		}
+	}
+
+	/**
+	 * Ensure a token expiration does not exceed the configured maximum validity.
+	 *
+	 * @expiration The expiration date to validate.
+	 *
+	 * @throws APIToken.InvalidExpiration when the expiration exceeds the maximum validity.
+	 */
+	private void function validateExpiration( any expiration ) {
+		if ( isNull( arguments.expiration ) ) {
+			return
+		}
+
+		var maxMonths = settingService.getSetting( "cbApiTokenMaxValidityMonths" )
+		var maxDate = dateAdd( "m", maxMonths, now() )
+		if ( dateCompare( dateFormat( arguments.expiration, "yyyy-mm-dd" ), dateFormat( maxDate, "yyyy-mm-dd" ) ) > 0 ) {
+			throw(
+				type    = "APIToken.InvalidExpiration",
+				message = "API token expiration cannot be more than #maxMonths# months from today."
+			)
 		}
 	}
 

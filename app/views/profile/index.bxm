@@ -1,7 +1,7 @@
 <bx:output>
 <div
 	class="profile-page"
-	x-data='profileForm( #forAttribute( prc.profile.getMemento() )#, "#csrfToken()#" )'
+	x-data='profileForm( #forAttribute( prc.profile.getMemento() )#, "#csrfToken()#", #prc.apiTokenMaxValidityMonths# )'
 	@profile-password-changed.window="setNewPassword( $event.detail.value )"
 	@preferences-submit.window="submitPreferences( $event.detail )"
 >

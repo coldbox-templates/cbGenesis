@@ -9,7 +9,7 @@
  *
  * @returns {Object} Alpine profile form state and handlers.
  */
-export function profileForm( initialProfile = {}, csrfToken = "" ) {
+export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxValidityMonths = 12 ) {
 	return {
 		activeTab : "profile",
 		loading   : "",
@@ -42,9 +42,11 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 		deleteTokenLoading : false,
 		createdRawToken    : "",
 		tokenCopied        : false,
+		apiTokenMaxValidityMonths,
 		tokenForm          : {
-			label      : "",
-			expiration : "",
+			label            : "",
+			expirationPreset : "",
+			expiration       : "",
 		},
 
 		/**
@@ -64,6 +66,53 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 		 */
 		get tokenFormValid() {
 			return Boolean( this.tokenForm.label.trim() );
+		},
+
+		/**
+		 * Returns the latest date allowed for a custom token expiration.
+		 *
+		 * @returns {string} Maximum date in the native date-input format.
+		 */
+		get apiTokenMaxDate() {
+			const date = new Date();
+			date.setMonth( date.getMonth() + Number( this.apiTokenMaxValidityMonths || 12 ) );
+			return this.toDateInputValue( date );
+		},
+
+		/**
+		 * Converts a date to the local YYYY-MM-DD format used by date inputs.
+		 *
+		 * @param {Date} date Date to convert.
+		 * @returns {string} Local date-input value.
+		 */
+		toDateInputValue( date ) {
+			return [
+				date.getFullYear(),
+				String( date.getMonth() + 1 ).padStart( 2, "0" ),
+				String( date.getDate() ).padStart( 2, "0" )
+			].join( "-" );
+		},
+
+		/**
+		 * Applies a preset duration or reveals the custom expiration date.
+		 *
+		 * @returns {void}
+		 */
+		setTokenExpirationPreset() {
+			if ( this.tokenForm.expirationPreset === "custom" ) {
+				this.tokenForm.expiration = "";
+				return;
+			}
+			if ( !this.tokenForm.expirationPreset ) {
+				this.tokenForm.expiration = "";
+				return;
+			}
+			const date = new Date();
+			date.setDate( date.getDate() + Number( this.tokenForm.expirationPreset ) );
+			const expiration = this.toDateInputValue( date );
+			this.tokenForm.expiration = expiration <= this.apiTokenMaxDate
+				? expiration
+				: this.apiTokenMaxDate;
 		},
 
 		/**
@@ -168,7 +217,7 @@ export function profileForm( initialProfile = {}, csrfToken = "" ) {
 		openCreateTokenModal() {
 			this.tokenModalMode = "create";
 			this.editingToken = null;
-			this.tokenForm = { label: "", expiration: "" };
+			this.tokenForm = { label: "", expirationPreset: "", expiration: "" };
 			this.tokenErrors = {};
 			this.createdRawToken = "";
 			this.tokenCopied = false;

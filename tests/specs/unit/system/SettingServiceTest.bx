@@ -61,12 +61,15 @@ class extends="tests.resources.BaseIntegrationSpec" {
 
 			it( "defines a fourteen-day remembered-login default", () => {
 				expect( settingService.DEFAULTS.cbRememberMeDays ).toBe( 14 )
+				expect( settingService.DEFAULTS.cbApiTokenMaxValidityMonths ).toBe( 12 )
 			} )
 
 			it( "rejects invalid remembered-login durations", () => {
 				expect( () => settingService.bulkSave( { cbRememberMeDays: 0 } ) ).toThrow( "Setting.Invalid" )
 				expect( () => settingService.bulkSave( { cbRememberMeDays: 366 } ) ).toThrow( "Setting.Invalid" )
 				expect( () => settingService.bulkSave( { cbRememberMeDays: "not-a-number" } ) ).toThrow( "Setting.Invalid" )
+				expect( () => settingService.bulkSave( { cbApiTokenMaxValidityMonths: 0 } ) ).toThrow( "Setting.Invalid" )
+				expect( () => settingService.bulkSave( { cbApiTokenMaxValidityMonths: 121 } ) ).toThrow( "Setting.Invalid" )
 			} )
 
 			it( "searches settings through the criteria builder", () => {

@@ -201,6 +201,9 @@
 				<label>Keep Me Signed In (days)
 					<input type="number" name="cbRememberMeDays" min="1" max="365" step="1" value="#encodeForHTMLAttribute( prc.settings.cbRememberMeDays )#">
 				</label>
+				<label>API Token Maximum Validity (months)
+					<input type="number" name="cbApiTokenMaxValidityMonths" min="1" max="120" step="1" value="#encodeForHTMLAttribute( prc.settings.cbApiTokenMaxValidityMonths )#">
+				</label>
 				<label>Encryption Key
 					<input type="password" name="cbEncryptionKey" value="#encodeForHTMLAttribute( prc.settings.cbEncryptionKey )#" readonly>
 					<small>Generated at first run. Change only if you know what you are doing.</small>

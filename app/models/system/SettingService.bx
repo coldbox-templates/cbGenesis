@@ -47,6 +47,8 @@ class extends="app.models.BaseService" {
 			// Persistent browser-login duration in days
 			cbRememberMeDays          : 14,
 			cbAllowRememberMe		: true,
+			// Maximum API token validity in months
+			cbApiTokenMaxValidityMonths: 12,
 			// Mail Settings
 			cbMailHost               : "smtp.mailtrap.io",
 			cbMailPort               : 25,
@@ -294,6 +296,14 @@ class extends="app.models.BaseService" {
 			throw(
 				type   = "Setting.Invalid",
 				message = "Keep me signed in duration must be a whole number between 1 and 365 days."
+			)
+		}
+
+		var months = arguments.memento?.cbApiTokenMaxValidityMonths ?: this.DEFAULTS.cbApiTokenMaxValidityMonths
+		if ( !isNumeric( months ) || int( months ) != months || int( months ) < 1 || int( months ) > 120 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "API token maximum validity must be a whole number between 1 and 120 months."
 			)
 		}
 	}
