@@ -146,44 +146,44 @@ class extends="coldbox.system.EventHandler" output=true{
 			return register( argumentCollection: args )
 		}
 
-		// --- Validate ---
-		var args = arguments
-		validate(
-			target: rc,
-			constraints: {
-				firstName     : { required: true },
-				lastName      : { required: true },
-				email         : { required: true, type: "email", unique: { table: "users", column: "email" } },
-				password      : { required: true, min: prc.settings.cbMinPasswordLength },
-				passwordConfirm: { required: true, sameAs: "password" }
-			}
-		)
-		// Handle validation errors
-		.onError( results =>{
+		// Password + confirmation match validation
+		if ( rc.password != rc.passwordConfirm ) {
 			flash.put( "messages", {
 				type   : "error",
-				message: "Please correct the highlighted errors and try again." & results.getAllErrors().toList( '<br>' )
+				message: "Password and confirmation do not match."
 			} )
-			prc.validationErrors = results.getAllErrorsAsStruct()
-			register( argumentCollection: args )
-		})
-		// --- Create User ---
-		.onSuccess( results => {
-			prc.oUser = variables.userService.new( {
-				firstName: rc.firstName,
-				lastName : rc.lastName,
-				email    : rc.email,
-				password : rc.password
-			} )
-			userService.create( prc.oUser )
+			return register( argumentCollection: arguments )
+		}
 
-			flash.put( "messages", {
-				type   : "success",
-				message: "Your account was created. Check your email to finish the registration process."
-			} )
-
-			return relocate( "login" )
+		// --- Validate ---
+		var args = arguments
+		prc.oUser = variables.userService.new( {
+			firstName: rc.firstName,
+			lastName : rc.lastName,
+			email    : rc.email,
+			password : rc.password
 		} )
+		prc.oUser
+			.validate()
+			// Handle validation errors
+			.onError( results =>{
+				flash.put( "messages", {
+					type   : "error",
+					message: "Please correct the highlighted errors and try again." & results.getAllErrors().toList( '<br>' )
+				} )
+				prc.validationErrors = results.getAllErrorsAsStruct()
+				register( argumentCollection: args )
+			})
+			// --- Create User ---
+			.onSuccess( results => {
+				userService.create( prc.oUser )
+				flash.put( "messages", {
+					type   : "success",
+					message: "Your account was created. Check your email to finish the registration process."
+				} )
+
+				return relocate( "login" )
+			} )
 	}
 
 	// ============================================================

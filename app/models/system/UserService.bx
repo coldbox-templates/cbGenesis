@@ -329,8 +329,8 @@ class extends="app.models.BaseService" {
 			appName: settings.cbAppName,
 			appNameInitial: left( settings.cbAppName, 1 ),
 			linkTimeout: settings.cbPasswordResetExpiration,
-			linkToken: event.buildLink( "/resetPassword?token=#token#" ),
-			forgotLink: event.buildLink( "/forgotPassword" ),
+			linkToken: event.buildLink( "reset-password?token=#token#" ),
+			forgotLink: event.buildLink( "forgot-password" ),
 			issuedBy: "",
 			issuedEmail: ""
 		}
