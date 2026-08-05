@@ -26,6 +26,9 @@ class extends="app.models.BaseService" {
 	@inject( "provider:settingService" )
 	property name="settingService";
 
+	@inject
+	property name="userActionTokenService";
+
 	@inject( "provider:RoleService" )
 	property name="roleService";
 
@@ -103,7 +106,7 @@ class extends="app.models.BaseService" {
 		var oUser = retrieveUserByUsername( arguments.username )
 
 		// If the user is not loaded or the user has not been verified, then we cannot log in
-		if ( !oUser.isLoaded() || !oUser.isEmailVerified() ) {
+		if ( !oUser.isLoaded() || !oUser.isEmailVerified() || isNull( oUser.getPassword() ) || !len( oUser.getPassword() ) ) {
 			return false
 		}
 
@@ -127,19 +130,32 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
-	 * Create a new user in the system.  The user is created but it is NOT verified.
-	 * The user must verify it's email first.
+	 * Create a new user in the system and send them an invitation email.  The user is created but it is NOT verified.
 	 *
 	 * @user The user to create
 	 *
 	 * @return Mail results: { error: boolean, errorArray: array }
 	 */
-	struct function create( required user ) {
+	struct function createRegistration( required user ) {
 		transaction {
-			// Save it first
 			save( arguments.user )
-			// Send Account Creation Email
-			return sendNewUserEmail( arguments.user )
+			return sendRegistrationVerificationEmail( arguments.user )
+		}
+	}
+
+	/**
+	 * Create a new user in the system and send them an invitation email.  The user is created but it is NOT verified.
+	 *
+	 * @user The user to create
+	 *
+	 * @return Mail results: { error: boolean, errorArray: array }
+	 */
+	struct function createInvitation( required user ) {
+		// Clear the password so that the user cannot log in until they set their own
+		arguments.user.setPassword( "" )
+		transaction {
+			save( arguments.user )
+			return sendInvitationEmail( arguments.user )
 		}
 	}
 
@@ -156,7 +172,7 @@ class extends="app.models.BaseService" {
 		boolean passwordChange = false
 	) {
 		// bcrypt the password if new user or change requested
-		if ( !arguments.user.isLoaded() || arguments.passwordChange ) {
+		if ( ( !arguments.user.isLoaded() || arguments.passwordChange ) && len( arguments.user.getPassword() ) ) {
 			// Setup the password with bcrypt
 			arguments.user.setPassword( BCryptHash( arguments.user.getPassword() ) )
 			// Revoke tokens if the user is changing their password
@@ -309,18 +325,55 @@ class extends="app.models.BaseService" {
 		}
 	}
 
+
 	/**
-	 * Sends a new user their reminder to reset their password and log in to their account
-	 * This also generates the reset token
+	 * Send a purpose-bound registration verification email to a user.
 	 *
-	 * @user The new user to send the welcome email to
+	 * @user The user to send the registration verification to
 	 *
-	 * @return error:boolean,errorArray
+	 * @return Mail results: { error: boolean, errorArray: array }
 	 */
-	struct function sendNewUserEmail( required user ) {
-		var token = variables.securityService.generatePasswordResetToken( arguments.user );
+	struct function sendRegistrationVerificationEmail( required user ) {
 		var settings = variables.settingService.getAllSettings()
 		var event = variables.requestService.getContext()
+		var tokenResult = variables.userActionTokenService.issue(
+			user: arguments.user,
+			purpose: variables.userActionTokenService.PURPOSE_REGISTRATION,
+			expiresAt: dateAdd( "h", settings.cbRegistrationVerificationExpiration, now() )
+		)
+		var token = tokenResult.rawToken
+
+		var bodyTokens = {
+			name: arguments.user.getFullName(),
+			email: arguments.user.getEmail(),
+			appName: settings.cbAppName,
+			appNameInitial: left( settings.cbAppName, 1 ),
+			linkTimeout: settings.cbRegistrationVerificationExpiration & " hours",
+			linkToken: event.buildLink( "verify-registration?token=#token#" )
+		}
+
+		return variables.mailservice.newMail()
+			.configure( to: arguments.user.getEmail(), from: settings.cbDefaultEmail, subject: "Verify your " & settings.cbAppName & " account", bodyTokens: bodyTokens, type: "html" )
+			.setBody( variables.renderer.externalView( "/app/email_templates/registration_verification" ) )
+			.send().getResults()
+	}
+
+	/**
+	 * Send a purpose-bound invitation email to a user.
+	 *
+	 * @user The user to send the invitation to
+	 *
+	 * @return Mail results: { error: boolean, errorArray: array }
+	 */
+	struct function sendInvitationEmail( required user ) {
+		var settings = variables.settingService.getAllSettings()
+		var event = variables.requestService.getContext()
+		var tokenResult = variables.userActionTokenService.issue(
+			user: arguments.user,
+			purpose: variables.userActionTokenService.PURPOSE_INVITATION,
+			expiresAt: dateAdd( "d", settings.cbInvitationExpiration, now() )
+		)
+		var token = tokenResult.rawToken
 
 		// Prepare replacement tokens
 		var bodyTokens = {
@@ -328,11 +381,8 @@ class extends="app.models.BaseService" {
 			email: arguments.user.getEmail(),
 			appName: settings.cbAppName,
 			appNameInitial: left( settings.cbAppName, 1 ),
-			linkTimeout: settings.cbPasswordResetExpiration,
-			linkToken: event.buildLink( "reset-password?token=#token#" ),
-			forgotLink: event.buildLink( "forgot-password" ),
-			issuedBy: "",
-			issuedEmail: ""
+			linkTimeout: settings.cbInvitationExpiration & " days",
+			linkToken: event.buildLink( "activate-invitation?token=#token#" )
 		}
 
 		// Build email out
@@ -341,7 +391,7 @@ class extends="app.models.BaseService" {
 			.configure(
 				to: arguments.user.getEmail(),
 				from: settings.cbDefaultEmail,
-				subject: "A " & settings.cbAppName & " Account was created for you",
+				subject: "You have been invited to " & settings.cbAppName,
 				bodyTokens: bodyTokens,
 				type: "html"
 			)
@@ -361,6 +411,13 @@ class extends="app.models.BaseService" {
 	 * @return error:boolean,errorArray
 	 */
 	struct function sendPasswordReminder( required user, issuer ) {
+		// If the issuer is not null, then we will set the user to be in a password reset state.
+		// This will prevent them from logging in until they reset their password.
+		if ( !isNull( arguments.issuer ) ) {
+			arguments.user.setIsPasswordReset( true )
+			save( arguments.user )
+		}
+		// Generate a password reset token and send the email
 		var token = variables.securityService.generatePasswordResetToken( arguments.user )
 		var settings = variables.settingService.getAllSettings()
 		var event = variables.requestService.getContext()

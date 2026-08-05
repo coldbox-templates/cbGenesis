@@ -20,6 +20,9 @@ class extends="coldbox.system.EventHandler" output=true{
 	@inject
 	property name="userService";
 
+	@inject
+	property name="userActionTokenService";
+
 	/**
 	 * Execute before any handler action is called.  This is a good place to check for
 	 * authentication and authorization.
@@ -143,7 +146,7 @@ class extends="coldbox.system.EventHandler" output=true{
 				type   : "error",
 				message: "Invalid registration token detected. Page refreshed, try again."
 			} )
-			return register( argumentCollection: args )
+			return register( argumentCollection: arguments )
 		}
 
 		// Password + confirmation match validation
@@ -176,7 +179,7 @@ class extends="coldbox.system.EventHandler" output=true{
 			})
 			// --- Create User ---
 			.onSuccess( results => {
-				userService.create( prc.oUser )
+				userService.createRegistration( prc.oUser )
 				flash.put( "messages", {
 					type   : "success",
 					message: "Your account was created. Check your email to finish the registration process."
@@ -184,6 +187,67 @@ class extends="coldbox.system.EventHandler" output=true{
 
 				return relocate( "login" )
 			} )
+	}
+
+	/** Verify a self-registration email without changing the selected password. */
+	function verifyRegistration( event, rc, prc ) {
+		param rc.token = ""
+		try {
+			// This will throw an exception if the token is invalid, used, revoked, or expired
+			var actionToken = variables.userActionTokenService.resolve( rc.token, variables.userActionTokenService.PURPOSE_REGISTRATION )
+			var user = actionToken.getUser()
+			user.setVerifiedAt( now() )
+			variables.userService.save( user )
+			variables.userActionTokenService.consume( actionToken )
+			flash.put( "messages", { type: "success", message: "Your email has been verified. You can now sign in." } )
+			return relocate( "login" )
+		} catch ( any error ) {
+			flash.put( "messages", { type: "error", message: "This verification link is invalid or expired." } )
+			return relocate( "login" )
+		}
+	}
+
+	/** Display the password form for an administrator invitation. */
+	function activateInvitation( event, rc, prc ) {
+		param rc.token = ""
+		try {
+			// This will throw an exception if the token is invalid, used, revoked, or expired
+			prc.actionToken = variables.userActionTokenService.resolve( rc.token, variables.userActionTokenService.PURPOSE_INVITATION )
+			prc.oUser = prc.actionToken.getUser()
+			prc.token = rc.token
+			event.setView( "auth/activateInvitation" )
+		} catch ( any error ) {
+			flash.put( "messages", { type: "error", message: "This invitation link is invalid or expired." } )
+			return relocate( "login" )
+		}
+	}
+
+	/** Set the initial password and complete an administrator invitation. */
+	function doActivateInvitation( event, rc, prc ) {
+		param rc.token = ""
+		param rc.password = ""
+		param rc.passwordConfirm = ""
+		param rc.csrf = ""
+
+		// --- CSRF Verify + Password Confirmation ---
+		if ( !csrfVerify( rc.csrf ) || rc.password != rc.passwordConfirm ) {
+			flash.put( "messages", { type: "error", message: "Please provide matching passwords and try again." } )
+			return relocate( "activate-invitation?token=#encodeForURL( rc.token )#" )
+		}
+
+		try {
+			// This will throw an exception if the token is invalid, used, revoked, or expired
+			var actionToken = variables.userActionTokenService.resolve( rc.token, variables.userActionTokenService.PURPOSE_INVITATION )
+			var user = actionToken.getUser()
+			user.setPassword( rc.password ).setVerifiedAt( now() ).setIsPasswordReset( false )
+			variables.userService.save( user, true )
+			variables.userActionTokenService.consume( actionToken )
+			flash.put( "messages", { type: "success", message: "Your account is ready. You can now sign in." } )
+			return relocate( "login" )
+		} catch ( any error ) {
+			flash.put( "messages", { type: "error", message: "This invitation link is invalid or expired." } )
+			return relocate( "login" )
+		}
 	}
 
 	// ============================================================
@@ -242,6 +306,7 @@ class extends="coldbox.system.EventHandler" output=true{
 				userService.sendPasswordReminder( prc.oUser )
 			}catch( EntityNotFound e ) {
 				// Don't reveal whether the email exists for security reasons
+				log.debug( "Password reminder requested for an unknown account." )
 			}
 
 			flash.put( "messages", {

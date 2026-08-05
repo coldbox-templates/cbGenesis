@@ -1,0 +1,31 @@
+<bx:output>
+<!--- Header --->
+<div class="text-center mb-4">
+    <h1 class="cb-auth-heading">Activate your account</h1>
+    <p class="cb-auth-subheading">Choose a password to finish setting up your account.</p>
+</div>
+
+<!--- Activation Form --->
+<form method="post" action="#event.buildLink( 'activate-invitation' )#" novalidate>
+
+	<!--- CSRF Field --->
+	#csrfField()#
+
+	<!--- Activation Token Field --->
+    <input type="hidden" name="token" value="#encodeForHTMLAttribute( prc.token )#">
+
+	<!--- Password Field --->
+    #view(
+		view: "_components/ui/passwordMeter",
+		args: { id: "password", name: "password", label: "Password", classes: "mb-3", labelClass: "form-label", inputClasses: "form-control" }
+	)#
+	<!--- Password Confirmation Field --->
+    <div class="mb-4">
+        <label for="passwordConfirm" class="form-label">Confirm password</label>
+        <input type="password" id="passwordConfirm" name="passwordConfirm" class="form-control" required autocomplete="new-password">
+    </div>
+
+	<!--- Submit Button --->
+    <button type="submit" class="btn btn-primary w-100">Activate account</button>
+</form>
+</bx:output>

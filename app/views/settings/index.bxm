@@ -193,10 +193,18 @@
 			</div>
 			<div class="cb-form-grid">
 				<label>Minimum Password Length
-					<input type="number" name="cbMinPasswordLength" value="#encodeForHTMLAttribute( prc.settings.cbMinPasswordLength )#">
+					<input type="number" name="cbMinPasswordLength" min="1" step="1" value="#encodeForHTMLAttribute( prc.settings.cbMinPasswordLength )#">
 				</label>
 				<label>Password Reset Expiration (minutes)
-					<input type="number" name="cbPasswordResetExpiration" value="#encodeForHTMLAttribute( prc.settings.cbPasswordResetExpiration )#">
+					<input type="number" name="cbPasswordResetExpiration" min="1" step="1" value="#encodeForHTMLAttribute( prc.settings.cbPasswordResetExpiration )#">
+				</label>
+				<label>Registration Verification Expiration (hours)
+					<input type="number" name="cbRegistrationVerificationExpiration" min="1" step="1" value="#encodeForHTMLAttribute( prc.settings.cbRegistrationVerificationExpiration )#">
+					<small>How long a self-registration verification link remains valid.</small>
+				</label>
+				<label>Administrator Invitation Expiration (days)
+					<input type="number" name="cbInvitationExpiration" min="1" step="1" value="#encodeForHTMLAttribute( prc.settings.cbInvitationExpiration )#">
+					<small>How long an administrator invitation link remains valid.</small>
 				</label>
 				<label>Keep Me Signed In (days)
 					<input type="number" name="cbRememberMeDays" min="1" max="365" step="1" value="#encodeForHTMLAttribute( prc.settings.cbRememberMeDays )#">

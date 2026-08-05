@@ -67,8 +67,8 @@ class extends="BaseSecureHandler" {
 				.new()
 				.populate( rc )
 				.setRoles( [ selectedRole ] )
-				.validateOrFail()
-			userService.create( prc.user )
+				.validateOrFail( profiles: "invitation" )
+			userService.createInvitation( prc.user )
 			response.setData( data: prc.user.getMemento(), message: "User created successfully." )
 		}
 		catch( ValidationException error ){

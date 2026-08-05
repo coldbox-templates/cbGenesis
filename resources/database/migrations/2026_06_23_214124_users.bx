@@ -12,7 +12,7 @@ class {
 			table.string( "firstName" )
 			table.string( "lastName" )
 			table.string( "email" ).unique()
-			table.string( "password" )
+			table.string( "password" ).nullable()
 			table.text( "biography" ).default( "" )
 			table.datetime( "verifiedAt" ).nullable()
 			table.datetime( "lastLogin" ).nullable()
@@ -65,6 +65,7 @@ class {
 				.onDelete( "CASCADE" )
 		} )
 
+		// User Remember Tokens
 		schema.create( "user_remember_tokens", ( table ) => {
 			table.guid( "rememberTokenId" ).primaryKey()
 			table.guid( "FK_userId" )
@@ -108,6 +109,26 @@ class {
 			table.index( "isActive", "idx_tokenActive" )
 			table.index( "expiration", "idx_tokenExpiration" )
 		} )
+
+		// Purpose-bound, single-use hashes for registration, invitations, password actions, or whatever you want.
+        schema.create( "user_action_tokens", ( table ) => {
+            table.guid( "tokenId" ).primaryKey()
+            table.guid( "FK_userId" )
+            table.string( "tokenHash", 128 ).unique()
+            table.string( "purpose", 64 )
+            table.datetime( "expiresAt" )
+            table.datetime( "usedAt" ).nullable()
+            table.datetime( "revokedAt" ).nullable()
+            table.timestamps()
+
+            table.foreignKey( "FK_userId" )
+                .references( "userId" )
+                .onTable( "users" )
+                .onDelete( "CASCADE" )
+
+            table.index( [ "FK_userId", "purpose" ], "idx_actionTokenUserPurpose" )
+            table.index( [ "purpose", "expiresAt" ], "idx_actionTokenPurposeExpiration" )
+        } )
     }
 
     function down( schema, qb ) {
@@ -115,6 +136,7 @@ class {
 		schema.dropIfExists( "user_roles" )
 		schema.dropIfExists( "user_permissions" )
 		schema.dropIfExists( "user_remember_tokens" )
+		schema.dropIfExists( "user_action_tokens" )
 		schema.dropIfExists( "users" )
     }
 

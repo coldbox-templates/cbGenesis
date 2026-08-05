@@ -20,16 +20,28 @@ class {
 			( event, rc, prc ) -> "Ok!"
 		)
 
-		// Dashboard
+		/**
+		 * --------------------------------------------------------------------------
+		 * Dashboard Routing
+		 * --------------------------------------------------------------------------
+		 */
 		route( "dashboard", "Dashboard.index" )
 
-		// Permission Resources
+		/**
+		 * --------------------------------------------------------------------------
+		 * Permissions Routing
+		 * --------------------------------------------------------------------------
+		 */
 		resources(
 			resource:"permissions",
 			parameterName: "permissionId"
 		)
 
-		// Role Routes
+		/**
+		 * --------------------------------------------------------------------------
+		 * Roles Routing
+		 * --------------------------------------------------------------------------
+		 */
 		route( "/roles/:roleId/available-users", "Roles.availableUsers" )
 		// Add and remove users from a role
 		route( "/roles/:roleId/users/:userId" ).withHandler( "Roles" ).toAction({
@@ -44,14 +56,22 @@ class {
 			parameterName: "roleId"
 		)
 
-		// User Routes
+		/**
+		 * --------------------------------------------------------------------------
+		 * Users Routing
+		 * --------------------------------------------------------------------------
+		 */
 		route( "users/search", "Users.search" )
 		resources(
 			resource:"users",
 			parameterName: "userId"
 		)
 
-		// Profile Routes
+		/**
+		 * --------------------------------------------------------------------------
+		 * Profile Routing
+		 * --------------------------------------------------------------------------
+		 */
 		post( "profile/password", "Profile.doPasswordChange" )
 		route( "profile/api-tokens/:tokenId" ).withHandler( "Profile" ).toAction({
 			POST  : "updateToken",
@@ -66,18 +86,24 @@ class {
 			POST: "save"
 		})
 
-		// Setting Admin Actions
+		/**
+		 * --------------------------------------------------------------------------
+		 * Admin Settings Routing
+		 * --------------------------------------------------------------------------
+		 */
 		post( "settings/clear-template-cache", "Settings.clearTemplateCache" )
 		post( "settings/clear-sessions-cache", "Settings.clearSessionsCache" )
 		post( "settings/revoke-remember-tokens", "Settings.revokeRememberTokens" )
-
-		// Settings Resources
 		route( "settings" ).withHandler( "Settings" ).toAction({
 			GET: "index",
 			POST: "save"
 		})
 
-		// Auth Routes
+		/**
+		 * --------------------------------------------------------------------------
+		 * Authentication Routing
+		 * --------------------------------------------------------------------------
+		 */
 		route( "login" ).withHandler( "Auth" ).toAction({
 			GET: "login",
 			POST: "doLogin"
@@ -85,6 +111,11 @@ class {
 		route( "register" ).withHandler( "Auth" ).toAction({
 			GET: "register",
 			POST: "doRegister"
+		})
+		route( "verify-registration", "Auth.verifyRegistration" )
+		route( "activate-invitation" ).withHandler( "Auth" ).toAction({
+			GET: "activateInvitation",
+			POST: "doActivateInvitation"
 		})
 		post( pattern = "logout", target = "Auth.logout" )
 		route( "forgot-password" ).withHandler( "Auth" ).toAction({

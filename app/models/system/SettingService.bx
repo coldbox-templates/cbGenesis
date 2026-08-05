@@ -44,6 +44,10 @@ class extends="app.models.BaseService" {
 			cbMinPasswordLength      : 8,
 			// Password reset expiration time in minutes,
 			cbPasswordResetExpiration: 60,
+			// Administrator invitation expiration time in days
+			cbInvitationExpiration   : 7,
+			// Self-registration verification expiration time in hours
+			cbRegistrationVerificationExpiration: 24,
 			// Persistent browser-login duration in days
 			cbRememberMeDays          : 14,
 			cbAllowRememberMe		: true,
@@ -287,8 +291,27 @@ class extends="app.models.BaseService" {
 	 * Validates the settings memento for any invalid values.  This is usually done before saving the settings.
 	 *
 	 * @memento The struct of settings
+	 *
+	 * @throws "Setting.Invalid" if any setting is invalid.
 	 */
 	private void function validateSettings( required struct memento ) {
+		// Validate the cbInvitationExpiration setting to be a whole number greater than zero
+		var invitationExpiration = arguments.memento.keyExists( "cbInvitationExpiration" ) ? arguments.memento.cbInvitationExpiration : this.DEFAULTS.cbInvitationExpiration
+		if ( !isNumeric( invitationExpiration ) || int( invitationExpiration ) != invitationExpiration || int( invitationExpiration ) < 1 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "Administrator invitation expiration must be a whole number greater than zero days."
+			)
+		}
+
+		// Validate the cbRegistrationVerificationExpiration setting to be a whole number greater than zero
+		var registrationVerificationExpiration = arguments.memento.keyExists( "cbRegistrationVerificationExpiration" ) ? arguments.memento.cbRegistrationVerificationExpiration : this.DEFAULTS.cbRegistrationVerificationExpiration
+		if ( !isNumeric( registrationVerificationExpiration ) || int( registrationVerificationExpiration ) != registrationVerificationExpiration || int( registrationVerificationExpiration ) < 1 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "Registration verification expiration must be a whole number greater than zero hours."
+			)
+		}
 
 		// Validate the cbRememberMeDays setting to be a whole number between 1 and 365
 		var days = arguments.memento?.cbRememberMeDays ?: this.DEFAULTS.cbRememberMeDays

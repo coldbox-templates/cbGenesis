@@ -1,0 +1,99 @@
+/**
+ * A purpose-bound token used for account lifecycle actions.
+ * Only the hash is persisted; the raw token is returned once to the caller.
+ */
+@persistent( true )
+@table( "user_action_tokens" )
+class extends="app.models.BaseEntity" {
+
+	@fieldType( "id" )
+	@generator( "uuid" )
+	property name="tokenId" setter="false";
+
+	@notNull( true )
+	@unique( true )
+	property name="tokenHash" default="";
+
+	@notNull( true )
+	property name="purpose" default="";
+
+	@notNull( true )
+	property name="expiresAt" type="date";
+
+	property name="usedAt" type="date";
+	property name="revokedAt" type="date";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Relationships
+	 * --------------------------------------------------------------------------
+	 */
+
+	@notNull( true )
+	@fieldType( "many-to-one" )
+	@class( "app.models.system.User" )
+	@fkColumn( "FK_userId" )
+	@lazy( "proxy" )
+	property name="user";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Validation Constraints
+	 * --------------------------------------------------------------------------
+	 * https://coldbox-validation.ortusbooks.com/overview/valid-constraints
+	 */
+
+	this.constraints = {
+		tokenHash: { required: true },
+		purpose: { required: true },
+		expiresAt: { required: true }
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Population Options
+	 * --------------------------------------------------------------------------
+	 */
+	this.population = {
+		exclude: [ "tokenId", "tokenHash", "usedAt", "revokedAt" ]
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Mementifier Options
+	 * --------------------------------------------------------------------------
+	 * https://forgebox.io/view/mementifier
+	 */
+	this.memento = {
+		defaultIncludes: [ "purpose", "expiresAt" ],
+		defaultExcludes: [],
+		neverInclude: [ "tokenHash" ]
+	}
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		super.init( "tokenId" )
+		variables.tokenHash = ""
+		variables.purpose = ""
+		variables.expiresAt = null
+		variables.usedAt = null
+		variables.revokedAt = null
+		return this
+	}
+
+	/**
+	 * Check if the token has expired.
+	 */
+	boolean function isExpired() {
+		return isNull( variables.expiresAt ) || dateCompare( variables.expiresAt, now(), "s" ) <= 0
+	}
+
+	/**
+	 * Check if the token is usable (not used, not revoked, and not expired).
+	 */
+	boolean function isUsable() {
+		return isNull( variables.usedAt ) && isNull( variables.revokedAt ) && !isExpired()
+	}
+}

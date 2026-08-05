@@ -132,6 +132,11 @@ class extends="app.models.BaseService"{
 
 		try {
 			var token = variables.rememberTokenService.validateToken( rawToken )
+			// If the user is in a password reset state, clear the remember-me cookie and return null
+			if ( token.getUser().getIsPasswordReset() ) {
+				clearRememberedUser()
+				return null
+			}
 			var user = variables.cbauth.login( token.getUser() )
 			// Rotate the token to prevent replay attacks
 			rotateRememberToken(

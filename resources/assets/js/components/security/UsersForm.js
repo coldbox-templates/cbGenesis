@@ -216,8 +216,7 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			try {
 				const body = new URLSearchParams( {
 					...this.form,
-					csrf     : this.csrfToken,
-					password : temporaryPassword(),
+					csrf : this.csrfToken,
 				} );
 				const response = await fetch( "/users", {
 					method  : "POST",
@@ -312,15 +311,6 @@ function normalizeUser( user = {} ) {
 	].filter( Boolean ).map( ( value ) => value.charAt( 0 ) ).join( "" ).toUpperCase() || name.charAt( 0 ).toUpperCase();
 
 	return { ...user, name, roles, status, initials, detailUrl: `/users/${ encodeURIComponent( user.userId ) }` };
-}
-
-/**
- * Generates a temporary password for a new invitation.
- *
- * @returns {string} Temporary password meeting the invitation password policy.
- */
-function temporaryPassword() {
-	return `Invite-${ crypto.randomUUID().replaceAll( "-", "" ).slice( 0, 20 ) }a1!`;
 }
 
 /**

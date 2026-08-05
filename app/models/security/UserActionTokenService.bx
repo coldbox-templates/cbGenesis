@@ -1,0 +1,107 @@
+/**
+ * Issues and validates lifecycle tokens for users.
+ */
+@singleton
+@threadSafe
+class extends="app.models.BaseService" {
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Token Purposes
+	 * --------------------------------------------------------------------------
+	 * Add new purposes here as needed for account lifecycle actions.
+	 */
+
+	static {
+		PURPOSE_REGISTRATION = "registration-verification"
+		PURPOSE_INVITATION = "invitation-activation"
+		PURPOSE_PASSWORD_RESET = "password-reset"
+		PURPOSE_FORCED_PASSWORD_CHANGE = "forced-password-change"
+	}
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		super.init( entityName: "UserActionToken" )
+		return this
+	}
+
+	/**
+	 * Issue a new raw token for a user. Only its SHA-256 hash is persisted.
+	 *
+	 * @user The user to associate with the token.
+	 * @purpose The purpose of the token (e.g., registration, invitation, password reset
+	 * @expiresAt The expiration date of the token.
+	 *
+	 * @return A struct containing the raw token and its persistent entity: { rawToken, token }
+	 */
+	struct function issue( required any user, required string purpose, required date expiresAt ) {
+		var rawToken = "bxt_" & generateSecretKey( "AES", 256 )
+		var token = new( {
+			tokenHash: hash( rawToken, "SHA-256" ),
+			purpose: arguments.purpose,
+			expiresAt: arguments.expiresAt,
+			user: arguments.user
+		} )
+
+		save( token )
+		return { rawToken: rawToken, token: token }
+	}
+
+	/**
+	 * Resolve a raw token only when its purpose and lifecycle state are valid.
+	 *
+	 * @rawToken The raw token value to resolve.
+	 * @purpose The expected purpose of the token.
+	 *
+	 * @throws "UserActionToken.Invalid" if the token is not found, used, revoked, or expired.
+	 *
+	 * @return The persistent UserActionToken entity if valid.
+	 */
+	UserActionToken function resolve( required string rawToken, required string purpose ) {
+		var token = findWhere( {
+			tokenHash: hash( arguments.rawToken, "SHA-256" ),
+			purpose: arguments.purpose
+		} )
+
+		if ( isNull( token ) || !token.isUsable() ) {
+			throw( type: "UserActionToken.Invalid", message: "Invalid or expired action token" )
+		}
+
+		return token
+	}
+
+	/**
+	 * Consume a token after the protected action succeeds.
+	 *
+	 * @token The UserActionToken entity to consume.
+	 *
+	 * @return The service instance for method chaining.
+	 */
+	UserActionTokenService function consume( required any token ) {
+		arguments.token.setUsedAt( now() )
+		save( entity: arguments.token )
+		return this
+	}
+
+	/**
+	 * Revoke active tokens for a user and purpose, used before issuing a replacement.
+	 *
+	 * @userId The ID of the user whose tokens should be revoked.
+	 * @purpose The purpose of the tokens to revoke.
+	 *
+	 * @return The number of tokens revoked.
+	 */
+	numeric function revokeForUser( required string userId, required string purpose ) {
+		var result = variables.qb
+			.table( "user_action_tokens" )
+			.where( "FK_userId", "=", arguments.userId )
+			.where( "purpose", "=", arguments.purpose )
+			.whereNull( "usedAt" )
+			.whereNull( "revokedAt" )
+			.update( { revokedAt: now() } )
+		ormClearSession()
+		return result?.result?.recordcount ?: 0
+	}
+}
