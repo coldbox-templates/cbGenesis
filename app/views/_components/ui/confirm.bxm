@@ -81,7 +81,7 @@
 		<div class="cb-ui-modal__footer">
 			<button
 				type="button"
-				class="btn btn-secondary"
+				class="btn btn-light"
 				@click="#args.closeExpression#; submitting = false"
 				:disabled="#args.disabledExpression# || submitting">#encodeForHTML( args.cancelLabel )#</button>
 			<button

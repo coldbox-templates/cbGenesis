@@ -58,7 +58,11 @@
 			<strong>Copy this token now</strong>
 			<p>This value is shown only once and cannot be recovered later.</p>
 			<code x-text="createdRawToken"></code>
-			<button type="button" class="btn btn-secondary btn-sm" @click="copyCreatedToken()">
+			<button
+				type="button"
+				class="btn btn-secondary btn-sm"
+				@click="copyCreatedToken()"
+			>
 				<i class="ph-duotone ph-copy" aria-hidden="true"></i>
 				<span x-text="tokenCopied ? 'Copied' : 'Copy Token'"></span>
 			</button>
@@ -70,7 +74,7 @@
 		<!--- Cancel --->
 		<button
 			type="button"
-			class="btn btn-secondary"
+			class="btn btn-light"
 			@click="closeTokenModal()"
 			:disabled="tokenSubmitting"
 			x-show="!createdRawToken">Cancel</button>

@@ -119,7 +119,7 @@ class extends="app.models.BaseService" {
 
 		return variables.qb
 			.from( "user_action_tokens" )
-			.select( "FK_userId AS userId, expiresAt" )
+			.select( "FK_userId AS userId, createdDate AS invitedAt, expiresAt" )
 			.whereIn( "FK_userId", arguments.userIds )
 			.where( "purpose", static.PURPOSE_INVITATION )
 			.orderByDesc( "expiresAt" )

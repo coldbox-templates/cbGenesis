@@ -153,12 +153,24 @@
 								x-show="statusFilter !== 'active'"
 								x-cloak>
 								<div class="d-flex flex-column gap-1">
-									<span class="cb-chip" :class="'cb-chip-' + user.invitationStatusClass" x-text="user.invitationStatus"></span>
+									<small
+										class="cb-muted-cell"
+										x-show="user.invitationInvitedAt"
+										x-cloak>
+										Invited:
+										<span
+											:data-tooltip="user.invitationInvitedAt ? $formatDateTime( user.invitationInvitedAt ) : null"
+											x-text="user.invitationInvitedAt ? $formatDate( user.invitationInvitedAt ) : '-' "></span>
+									</small>
 									<small
 										class="cb-muted-cell"
 										x-show="user.invitationExpiresAt"
-										x-cloak
-										x-text="user.invitationStatus === 'Accepted' ? 'Accepted' : 'Expires ' + $formatDate( user.invitationExpiresAt )"></small>
+										x-cloak>
+										Expires:
+										<span
+											:data-tooltip="user.invitationExpiresAt ? $formatDateTime( user.invitationExpiresAt ) : null"
+											x-text="user.invitationExpiresAt ? $formatDate( user.invitationExpiresAt ) : '-' "></span>
+									</small>
 								</div>
 							</td>
 							<td>

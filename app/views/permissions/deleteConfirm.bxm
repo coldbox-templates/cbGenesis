@@ -12,7 +12,7 @@
 <div class="cb-ui-modal__footer">
 	<button
 		type="button"
-		class="btn btn-secondary"
+		class="btn btn-light"
 		@click="cancelDelete()"
 		:disabled="deleteSubmitting">Cancel</button>
 	<button
