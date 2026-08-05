@@ -1,5 +1,7 @@
 <bx:output>
-<div x-data="registerForm">
+<div
+	x-data="registerForm"
+	data-email-check-url="#encodeForHTMLAttribute( event.buildLink( "register/check-email" ) )#">
 
 	<!--- Form Title --->
     <div class="text-center mb-4">
@@ -74,12 +76,27 @@
 				id="email"
 				name="email"
 				class="form-control"
+				:class="emailClass"
 				x-model="email"
+				@input="emailChanged"
+				@blur="checkEmailAvailability"
 				value="#encodeForHTMLAttribute( rc.email ?: "" )#"
 				autocomplete="email"
 				placeholder="you@example.com"
 				required
 				>
+			<div class="form-text" x-show="emailChecking" x-cloak>
+				<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+				Checking email availability…
+			</div>
+			<div class="valid-feedback d-block" x-show="emailAvailable" x-cloak role="status">
+				<i class="ph-duotone ph-check-circle me-1" aria-hidden="true"></i>
+				Email is available.
+			</div>
+			<div class="invalid-feedback d-block" x-show="emailUnavailable" x-cloak role="alert">
+				Email is already in use.
+			</div>
+			<div class="invalid-feedback d-block" x-show="emailCheckError" x-cloak x-text="emailCheckError" role="alert"></div>
         </div>
 
 		<!--- Password Meter --->

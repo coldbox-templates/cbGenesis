@@ -116,6 +116,29 @@ class extends="coldbox.system.EventHandler" output=true{
 		event.setView( "auth/register" )
 	}
 
+	/**
+	 * Check whether an email address can be used for self-registration.
+	 *
+	 * This endpoint intentionally returns only availability information and is
+	 * safe to call before authentication from the public registration form.
+	 */
+	function checkEmailAvailability( event, rc, prc ) {
+		param rc.email = ""
+		var email = trim( rc.email )
+
+		if ( !isValid( "email", email ) ) {
+			return renderData(
+				type: "json",
+				data: { available: false, valid: false }
+			)
+		}
+
+		return {
+			available: !variables.userService.isEmailInUse( email ),
+			valid    : true
+		}
+	}
+
 	// ============================================================
 	// Register — POST
 	// ============================================================

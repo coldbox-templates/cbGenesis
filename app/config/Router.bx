@@ -108,6 +108,7 @@ class {
 			GET: "login",
 			POST: "doLogin"
 		})
+		route( "register/check-email", "Auth.checkEmailAvailability" )
 		route( "register" ).withHandler( "Auth" ).toAction({
 			GET: "register",
 			POST: "doRegister"
