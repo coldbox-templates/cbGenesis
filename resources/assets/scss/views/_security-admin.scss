@@ -220,13 +220,16 @@
 }
 
 .cb-table-wrap {
-	overflow-x: auto;
+	// Allow Bootstrap/Popper dropdown menus to escape the table bounds.
+	// The table's min-width still keeps the layout usable on narrow screens.
+	overflow: visible;
 }
 
 .cb-table {
 	width: 100%;
 	min-width: 860px;
 	border-collapse: collapse;
+	position: relative;
 
 	th,
 	td {
@@ -248,9 +251,23 @@
 		background: var(--app-surface);
 		transition: background-color 120ms ease;
 
+		// Keep an open Bootstrap dropdown above neighboring table rows.
+		&:has(.dropdown.show) {
+			position: relative;
+			z-index: 10;
+		}
+
 		&:hover {
 			background: var(--app-surface-raised);
 		}
+	}
+
+	.dropdown {
+		position: relative;
+	}
+
+	.dropdown-menu {
+		z-index: 1060;
 	}
 }
 

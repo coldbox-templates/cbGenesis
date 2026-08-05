@@ -283,9 +283,10 @@ class extends="app.models.BaseService" {
 
 		results.records = c.list( offset: arguments.offset, max: arguments.max, sortOrder: arguments.sortOrder )
 
-		// If we have a property list, then we will need to get the roles for each user and add them to the struct
+		// If we have a property list, then we will need to do some additional processing to get the roles and invitation details for each user
 		if ( len( arguments.propertyList ) && results.records.len() ) {
-			var userIds = results.records.map( ( user ) -> user.userId )
+			// --- Get all Roles for the user
+			var userIds = results.records.map( user -> user.userId )
 			var roleRows = roleService
 				.newCriteria()
 				.createAlias( "users", "user" )
@@ -299,12 +300,30 @@ class extends="app.models.BaseService" {
 				if ( !structKeyExists( rolesByUser, roleRow.userId ) ) {
 					rolesByUser[ roleRow.userId ] = []
 				}
-
 				rolesByUser[ roleRow.userId ].append( roleRow.roleName )
 			} )
 
 			results.records.each( ( user ) => {
 				user.roles = structKeyExists( rolesByUser, user.userId ) ? rolesByUser[ user.userId ] : []
+			} )
+			// -- Get all Invitation Details for the user
+			var invitationRows = variables.userActionTokenService.getInvitationDetails( userIds )
+			var invitationsByUser = {}
+			invitationRows.each( ( invitation ) => {
+				if ( !structKeyExists( invitationsByUser, invitation.userId ) ) {
+					invitationsByUser[ invitation.userId ] = invitation
+				}
+			} )
+
+			results.records.each( ( user ) => {
+				var invitation = invitationsByUser[ user.userId ] ?: {}
+				user.invitationExpiresAt = invitation.expiresAt ?: null
+				user.invitationStatus = user.verifiedAt != null
+					? "Accepted"
+					: structKeyExists( invitation, "expiresAt" )
+						? dateCompare( invitation.expiresAt, now(), "s" ) <= 0 ? "Expired" : "Invited"
+						: "Not invited"
+				user.canResendInvitation = isNull( user.verifiedAt ) && [ "Invited", "Expired" ].contains( user.invitationStatus )
 			} )
 		}
 
@@ -359,7 +378,7 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
-	 * Send a purpose-bound invitation email to a user.
+	 * Send a purpose-bound invitation email to a user, it automatically generates a new invitation token for the mail.
 	 *
 	 * @user The user to send the invitation to
 	 *
@@ -400,6 +419,29 @@ class extends="app.models.BaseService" {
 			)
 			.send()
 			.getResults()
+	}
+
+	/**
+	 * Revoke the current invitation and send a replacement invitation email.
+	 *
+	 * @user The unverified user to invite again.
+	 *
+	 * @throws "UserInvitation.AlreadyAccepted" if the user has already accepted their invitation.
+	 *
+	 * @return Mail results: { error: boolean, errorArray: array }
+	 */
+	struct function resendInvitation( required user ) {
+		if ( arguments.user.isEmailVerified() ) {
+			throw( type: "UserInvitation.AlreadyAccepted", message: "This user has already accepted their invitation." )
+		}
+
+		transaction {
+			variables.userActionTokenService.revokeForUser(
+				userId: arguments.user.getUserId(),
+				purpose: variables.userActionTokenService.PURPOSE_INVITATION
+			)
+			return sendInvitationEmail( arguments.user )
+		}
 	}
 
 	/**

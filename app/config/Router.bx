@@ -62,6 +62,7 @@ class {
 		 * --------------------------------------------------------------------------
 		 */
 		route( "users/search", "Users.search" )
+		route( "users/:userId/invitation" ).withHandler( "Users" ).toAction({ POST: "resendInvitation" })
 		resources(
 			resource:"users",
 			parameterName: "userId"

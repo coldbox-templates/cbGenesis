@@ -104,4 +104,25 @@ class extends="app.models.BaseService" {
 		ormClearSession()
 		return result?.result?.recordcount ?: 0
 	}
+
+	/**
+	 * Return the latest non-consumed invitation token for each user.
+	 *
+	 * @userIds The user identifiers to inspect.
+	 *
+	 * @return An array of projected invitation token records.
+	 */
+	array function getInvitationDetails( required array userIds ) {
+		if ( !arguments.userIds.len() ) {
+			return []
+		}
+
+		return variables.qb
+			.from( "user_action_tokens" )
+			.select( "FK_userId AS userId, expiresAt" )
+			.whereIn( "FK_userId", arguments.userIds )
+			.where( "purpose", static.PURPOSE_INVITATION )
+			.orderByDesc( "expiresAt" )
+			.get()
+	}
 }

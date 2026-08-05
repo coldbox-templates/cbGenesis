@@ -8,25 +8,26 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 	const initialPayload = payload && !Array.isArray( payload ) ? payload : { records: payload };
 
 	return {
-		users        : ( initialPayload.records || [] ).map( normalizeUser ),
-		roles        : initialPayload.roles || [],
-		total        : Number( initialPayload.count || 0 ),
-		counts       : initialPayload.counts || { active: 0, pending: 0, inactive: 0, all: 0 },
+		users           : ( initialPayload.records || [] ).map( normalizeUser ),
+		roles           : initialPayload.roles || [],
+		total           : Number( initialPayload.count || 0 ),
+		counts          : initialPayload.counts || { active: 0, pending: 0, inactive: 0, all: 0 },
 		csrfToken,
-		query        : "",
-		statusFilter : "active",
-		roleFilter   : "",
-		sortOrder    : "lastName asc",
-		page         : 1,
-		limit        : 25,
-		loading      : false,
-		submitting   : false,
-		deleting     : false,
-		inviteOpen   : false,
-		deleteTarget : null,
-		error        : "",
-		notice       : "",
-		form         : { firstName: "", lastName: "", email: "", roleId: "" },
+		query           : "",
+		statusFilter    : "active",
+		roleFilter      : "",
+		sortOrder       : "lastName asc",
+		page            : 1,
+		limit           : 25,
+		loading         : false,
+		submitting      : false,
+		deleting        : false,
+		resendingUserId : null,
+		inviteOpen      : false,
+		deleteTarget    : null,
+		error           : "",
+		notice          : "",
+		form            : { firstName: "", lastName: "", email: "", roleId: "" },
 
 		/**
 		 * Calculates the number of pages in the current table result set.
@@ -35,6 +36,15 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 		 */
 		get pageCount() {
 			return Math.max( 1, Math.ceil( this.total / this.limit ) );
+		},
+
+		/**
+		 * Calculates the number of columns currently rendered by the users table.
+		 *
+		 * @returns {number} Visible table column count for the selected status filter.
+		 */
+		get visibleColumnCount() {
+			return this.statusFilter === "active" || this.statusFilter === "pending" ? 5 : 6;
 		},
 
 		/**
@@ -236,6 +246,33 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 		},
 
 		/**
+		 * Re-sends an invitation and refreshes the listing when complete.
+		 *
+		 * @param {Object} user Unverified user whose invitation should be replaced.
+		 * @returns {Promise<void>}
+		 */
+		async resendInvitation( user ) {
+			if ( !user?.canResendInvitation || this.resendingUserId ) return;
+			this.resendingUserId = user.userId;
+			this.error = "";
+			try {
+				const response = await fetch( `/users/${ encodeURIComponent( user.userId ) }/invitation`, {
+					method  : "POST",
+					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+					body    : new URLSearchParams( { csrf: this.csrfToken } ),
+				} );
+				const result = await response.json();
+				if ( !response.ok || result.error ) throw new Error( result.messages || "Invitation could not be sent." );
+				this.notice = "Invitation sent successfully.";
+				await this.refreshUsers();
+			} catch ( error ) {
+				this.error = error.message || "Invitation could not be sent.";
+			} finally {
+				this.resendingUserId = null;
+			}
+		},
+
+		/**
 		 * Selects a user and opens the delete confirmation dialog.
 		 *
 		 * @param {Object} user User record selected for deletion.
@@ -305,12 +342,16 @@ function normalizeUser( user = {} ) {
 	].filter( Boolean ).join( " " ) || user.email || "Unknown user";
 	const roles = ( user.roles || [] ).map( ( role ) => typeof role === "string" ? role : role.role || role.name ).filter( Boolean );
 	const status = !user.isActive ? "Inactive" : user.verifiedAt ? "Active" : "Pending";
+	const invitationStatus = user.verifiedAt
+		? "Accepted"
+		: user.invitationStatus || "Not invited";
+	const invitationStatusClass = invitationStatus.toLowerCase().replaceAll( " ", "-" );
 	const initials = [
 		user.firstName,
 		user.lastName
 	].filter( Boolean ).map( ( value ) => value.charAt( 0 ) ).join( "" ).toUpperCase() || name.charAt( 0 ).toUpperCase();
 
-	return { ...user, name, roles, status, initials, detailUrl: `/users/${ encodeURIComponent( user.userId ) }` };
+	return { ...user, name, roles, status, invitationStatus, invitationStatusClass, initials, detailUrl: `/users/${ encodeURIComponent( user.userId ) }` };
 }
 
 /**

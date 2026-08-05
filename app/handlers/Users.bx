@@ -89,6 +89,27 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
+	// Re-send an invitation to an unverified user
+	@remote( "Re-send a user invitation remotely via AJAX" )
+	@secured( "users:admin,users:write" )
+	function resendInvitation( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = userService.getOrFail( rc.userId ?: "" )
+			userService.resendInvitation( prc.user )
+			response.setData( data: {}, message: "Invitation sent successfully." )
+		}
+		catch ( any error ) {
+			log.error( "Error re-sending invitation for user [#rc.userId#]: #error.message#", error )
+			response.failure(
+				message: "Invitation could not be sent: #error.message#",
+				statusCode: 400
+			)
+		}
+
+		return response
+	}
+
 	// Show a specific user detail page
 	@secured( "users:read" )
 	function show( event, rc, prc ) {

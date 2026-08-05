@@ -77,16 +77,16 @@
 			<table class="cb-table">
 				<thead>
 					<tr>
-						<th
-							scope="col"><button
-							type="button"
-							class="cb-table-sort-button"
-							:class="$sortClass( sortOrder, 'lastName' )"
-							@click="sortBy( 'lastName' )">
-							Name <i class="ph-duotone" :class="$sortIcon( sortOrder, 'lastName' )" aria-hidden="true"></i></button>
+						<th scope="col">
+							<button
+								type="button"
+								class="cb-table-sort-button"
+								:class="$sortClass( sortOrder, 'lastName' )"
+								@click="sortBy( 'lastName' )">
+								Name <i class="ph-duotone" :class="$sortIcon( sortOrder, 'lastName' )" aria-hidden="true"></i>
+							</button>
 						</th>
-						<th
-							scope="col"><button
+						<th scope="col"><button
 							type="button"
 							class="cb-table-sort-button"
 							:class="$sortClass( sortOrder, 'createdDate' )"
@@ -94,6 +94,8 @@
 							Created On <i class="ph-duotone" :class="$sortIcon( sortOrder, 'createdDate' )" aria-hidden="true"></i></button>
 						</th>
 						<th
+							x-show="statusFilter !== 'pending'"
+							x-cloak
 							scope="col"><button
 							type="button"
 							class="cb-table-sort-button"
@@ -102,6 +104,10 @@
 							Verified On <i class="ph-duotone" :class="$sortIcon( sortOrder, 'verifiedAt' )" aria-hidden="true"></i></button>
 						</th>
 						<th
+							x-show="statusFilter !== 'active'"
+							x-cloak
+							scope="col">Invitation</th>
+						<th
 							scope="col"><button
 							type="button"
 							class="cb-table-sort-button"
@@ -109,9 +115,7 @@
 							@click="sortBy( 'isActive' )">
 							Status <i class="ph-duotone" :class="$sortIcon( sortOrder, 'isActive' )" aria-hidden="true"></i></button>
 						</th>
-						<th scope="col">
-							<span class="visually-hidden">Actions</span>
-						</th>
+						<th scope="col">Actions</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -137,19 +141,64 @@
 									:data-tooltip="user.createdDate ? $formatDateTime( user.createdDate ) : null"
 									x-text="user.createdDate ? $formatDate( user.createdDate ) : '-' "></span>
 							</td>
-							<td>
+							<td
+								x-show="statusFilter !== 'pending'"
+								x-cloak>
 								<span
 									class="cb-muted-cell"
 									:data-tooltip="user.verifiedAt ? $formatDateTime( user.verifiedAt ) : null"
 									x-text="user.verifiedAt ? $formatDate( user.verifiedAt ) : 'Pending'"></span>
 							</td>
+							<td
+								x-show="statusFilter !== 'active'"
+								x-cloak>
+								<div class="d-flex flex-column gap-1">
+									<span class="cb-chip" :class="'cb-chip-' + user.invitationStatusClass" x-text="user.invitationStatus"></span>
+									<small
+										class="cb-muted-cell"
+										x-show="user.invitationExpiresAt"
+										x-cloak
+										x-text="user.invitationStatus === 'Accepted' ? 'Accepted' : 'Expires ' + $formatDate( user.invitationExpiresAt )"></small>
+								</div>
+							</td>
 							<td>
 								<span class="cb-chip" :class="'cb-chip-' + user.status.toLowerCase()" x-text="user.status"></span>
 							</td>
 							<td>
-								<div class="cb-table-actions">
-									<a :href="user.detailUrl" :aria-label="'Manage ' + user.name" title="Manage user"><i class="ph-duotone ph-arrow-square-out" aria-hidden="true"></i></a>
-									<button type="button" @click="confirmDelete( user )" :aria-label="'Delete ' + user.name" title="Delete user"><i class="ph-duotone ph-trash" aria-hidden="true"></i></button>
+								<div class="dropdown">
+									<button
+										type="button"
+										class="btn btn-sm btn-light"
+										data-bs-toggle="dropdown"
+										aria-expanded="false"
+										:aria-label="'Actions for ' + user.name">
+										<i class="ph-duotone ph-dots-three-outline" aria-hidden="true"></i>
+										<span class="visually-hidden">Actions</span>
+									</button>
+									<ul class="dropdown-menu dropdown-menu-end">
+										<li>
+											<a class="dropdown-item" :href="user.detailUrl">
+												<i class="ph-duotone ph-arrow-square-out" aria-hidden="true"></i> Manage user
+											</a>
+										</li>
+										<li x-show="user.canResendInvitation" x-cloak>
+											<button
+												type="button"
+												class="dropdown-item"
+												@click="resendInvitation( user )"
+												:disabled="resendingUserId === user.userId"
+											>
+												<i class="ph-duotone ph-paper-plane-tilt" aria-hidden="true"></i>
+												<span x-text="resendingUserId === user.userId ? 'Sending...' : 'Resend invitation'"></span>
+											</button>
+										</li>
+										<li>
+											<hr class="dropdown-divider">
+										</li>
+										<li>
+											<button type="button" class="dropdown-item text-danger" @click="confirmDelete( user )"><i class="ph-duotone ph-trash" aria-hidden="true"></i> Delete user</button>
+										</li>
+									</ul>
 								</div>
 							</td>
 						</tr>
@@ -157,7 +206,7 @@
 
 					<!--- Loading state --->
 					<tr x-show="loading" x-cloak>
-						<td colspan="5">
+						<td :colspan="visibleColumnCount">
 							#view( view: "_components/ui/progressbar", args: {
 								label        : "Loading users...",
 								ariaLabel    : "Loading users",
@@ -170,7 +219,9 @@
 
 					<!--- If No Users Found --->
 					<tr x-show="!loading && users.length === 0" x-cloak>
-						<td colspan="5" class="cb-empty-state">No users found</td>
+						<td
+							:colspan="visibleColumnCount"
+							class="cb-empty-state">No users found</td>
 					</tr>
 				</tbody>
 			</table>
