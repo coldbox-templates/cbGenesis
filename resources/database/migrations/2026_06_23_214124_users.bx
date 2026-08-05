@@ -94,9 +94,8 @@ class {
 			table.string( "label" )
 			table.string( "token", 64 ).unique()
 			table.string( "tokenSnapshot", 11 )
-			table.datetime( "createdDate" ).withCurrent()
-			table.datetime( "modifiedDate" )
 			table.boolean( "isActive" ).default( true )
+			table.timestamps()
 			table.datetime( "expiration" ).nullable()
 			table.datetime( "lastUsed" ).nullable()
 
@@ -114,12 +113,13 @@ class {
         schema.create( "user_action_tokens", ( table ) => {
             table.guid( "tokenId" ).primaryKey()
             table.guid( "FK_userId" )
+			table.boolean( "isActive" ).default( true )
+			table.timestamps()
             table.string( "tokenHash", 128 ).unique()
             table.string( "purpose", 64 )
             table.datetime( "expiresAt" )
             table.datetime( "usedAt" ).nullable()
             table.datetime( "revokedAt" ).nullable()
-            table.timestamps()
 
             table.foreignKey( "FK_userId" )
                 .references( "userId" )
