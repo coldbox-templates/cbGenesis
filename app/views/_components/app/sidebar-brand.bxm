@@ -17,10 +17,19 @@
 	class="cb-sidebar-brand"
 	aria-label="#encodeForHTMLAttribute( prc.settings.cbAppname )# dashboard"
 >
+	<!--- Brand Logo --->
 	#view(
 		view: "_components/ui/logo",
 		args: { variant: args.variant, classes: "cb-sidebar-brand-logo" }
 	)#
-	<span class="cb-sidebar-brand-name">#encodeForHTML( prc.settings.cbAppname )#</span>
+	<!--- Brand Copy --->
+	<span class="cb-sidebar-brand-copy">
+		<!--- Brand Name --->
+		<strong class="cb-sidebar-brand-name">#encodeForHTML( prc.settings.cbAppname )#</strong>
+		<!--- Brand Tag Line --->
+		<bx:if prc.settings.cbAppBrandTagline.len()>
+			<small class="cb-sidebar-brand-tagline">#encodeForHTML( prc.settings.cbAppBrandTagline )#</small>
+		</bx:if>
+	</span>
 </a>
 </bx:output>

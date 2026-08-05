@@ -111,6 +111,14 @@ html[data-sidebar-collapsed="true"] .cb-main-wrapper {
     transition: justify-content 0.15s ease;
 }
 
+.cb-sidebar-brand-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    gap: 0.08rem;
+}
+
 .cb-sidebar-collapsed .cb-sidebar-brand {
     justify-content: center;
     width: auto;
@@ -126,6 +134,7 @@ html[data-sidebar-collapsed="true"] .cb-main-wrapper {
 }
 
 .cb-sidebar-brand-name {
+    display: block;
     font-size: 1rem;
     font-weight: 700;
     color: var(--sidebar-text);
@@ -135,9 +144,26 @@ html[data-sidebar-collapsed="true"] .cb-main-wrapper {
     transition: opacity 0.15s ease, width 0.15s ease;
 }
 
+.cb-sidebar-brand-tagline {
+    display: block;
+    overflow: hidden;
+    color: var(--sidebar-text-muted);
+    font-size: 0.64rem;
+    font-weight: 600;
+    letter-spacing: 0.015em;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: opacity 0.15s ease, width 0.15s ease;
+}
+
 .cb-sidebar-collapsed .cb-sidebar-brand-name {
     opacity: 0;
     width: 0;
+}
+
+.cb-sidebar-collapsed .cb-sidebar-brand-copy {
+    display: none;
 }
 
 // ============================================================
