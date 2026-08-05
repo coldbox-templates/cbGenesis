@@ -9,6 +9,10 @@
 </head>
 <body class="cb-auth-body" x-data x-init="$store.theme.init()">
 
+    <!--- Global UI components --->
+    #view( "_components/ui/globalProgress" )#
+    #view( "_components/ui/globalToast" )#
+
     <div class="cb-auth-split-wrapper">
 
         <!--- ── Left panel: brand illustration ───────────────────── --->

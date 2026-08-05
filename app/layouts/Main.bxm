@@ -11,6 +11,10 @@
 </head>
 <body x-data x-init="$store.theme.init()">
 
+    <!--- Global UI components --->
+    #view( "_components/ui/globalProgress" )#
+    #view( "_components/ui/globalToast" )#
+
     <div id="app">
         #view()#
     </div>

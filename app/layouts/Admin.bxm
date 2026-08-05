@@ -11,6 +11,10 @@
 	x-data
 	x-init="$store.theme.init()">
 
+	<!--- Global UI components --->
+    #view( "_components/ui/globalProgress" )#
+    #view( "_components/ui/globalToast" )#
+
     <!--- ── Mobile sidebar backdrop ──────────────────────────────── --->
     <div class="cb-sidebar-overlay"
          x-cloak
