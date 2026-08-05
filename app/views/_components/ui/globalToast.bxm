@@ -38,7 +38,11 @@
 <bx:output>
 <div
 	class="cb-global-toasts toast-container position-fixed p-3"
-	x-data="globalToast({ duration: #javaCast( 'int', args.duration )#, position: '#encodeForHTMLAttribute( args.position )#', maxVisible: #javaCast( 'int', args.maxVisible )# })"
+	x-data="globalToast( {
+		duration: #args.duration castAs int#,
+		position: '#encodeForHTMLAttribute( args.position )#',
+		maxVisible: #args.maxVisible castAs int#
+	})"
 	:class="`cb-global-toasts--${ _config.position }`"
 	aria-live="polite"
 	aria-atomic="true">
