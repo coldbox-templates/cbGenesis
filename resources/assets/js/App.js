@@ -55,11 +55,15 @@ import { passwordMeter }    from "./components/ui/PasswordMeter.js";
 import { switchComponent }  from "./components/ui/Switch.js";
 import { drawer }           from "./components/ui/Drawer.js";
 import { passwordStrength } from "./components/ui/PasswordStrength.js";
+import { globalProgress, progress } from "./components/ui/GlobalProgress.js";
+import { globalToast, toast } from "./components/ui/GlobalToast.js";
 Alpine.data( "messageBox", messageBox );
 Alpine.data( "passwordMeter", passwordMeter );
 Alpine.data( "switchComponent", switchComponent );
 Alpine.data( "drawer", drawer );
 Alpine.data( "passwordStrength", passwordStrength );
+Alpine.data( "globalProgress", globalProgress );
+Alpine.data( "globalToast", globalToast );
 
 // ============================================================
 // Alpine Magic Properties Registration
@@ -75,6 +79,12 @@ Alpine.magic( "sortClass", () => sortClass );
 Alpine.magic( "sortIcon", () => sortIcon );
 Alpine.magic( "isEmail", () => ( value ) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( String( value ?? "" ).trim() ) );
 Alpine.magic( "passwordMeetsPolicy", () => passwordMeetsPolicy );
+Alpine.magic( "toast", () => toast );
+Alpine.magic( "progress", () => ( {
+	start : ( detail = {} ) => progress( "start", detail ),
+	stop  : () => progress( "stop" ),
+	set   : ( value ) => progress( "set", value ),
+} ) );
 
 /**
  * Focuses a descendant after Alpine has applied the current state change.
@@ -110,6 +120,12 @@ Alpine.magic( "copy", () => async( value ) => {
 window.Alpine    = Alpine;
 window.tippy     = tippy;
 window.bootstrap = bootstrap;
+window.$toast = toast;
+window.$progress = {
+	start : ( detail = {} ) => progress( "start", detail ),
+	stop  : () => progress( "stop" ),
+	set   : ( value ) => progress( "set", value ),
+};
 
 
 // ============================================================

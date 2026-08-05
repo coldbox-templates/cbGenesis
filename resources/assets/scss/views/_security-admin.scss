@@ -271,6 +271,49 @@
 	}
 }
 
+// On compact screens, preserve the two actions users need most: identity and
+// the actions menu. Dates, invitation metadata, and status remain available in
+// the user detail view without forcing horizontal table scrolling.
+@media (max-width: 767.98px) {
+	.cb-table {
+		min-width: 0;
+
+		.cb-users-secondary-column {
+			display: none;
+		}
+
+		.cb-users-info-column,
+		.cb-users-actions-column {
+			width: auto;
+		}
+
+		.cb-users-info-column {
+			width: 100%;
+		}
+
+		th,
+		td {
+			padding: 0.85rem 0.75rem;
+		}
+
+		.cb-users-actions-column {
+			width: 3.5rem;
+			text-align: right;
+		}
+
+		.cb-identity-cell {
+			gap: 0.6rem;
+
+			strong {
+				max-width: 11rem;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+		}
+	}
+}
+
 .cb-table-sort-button {
 	display: inline-flex;
 	align-items: center;
