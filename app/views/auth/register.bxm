@@ -89,14 +89,27 @@
 				<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
 				Checking email availability…
 			</div>
-			<div class="valid-feedback d-block" x-show="emailAvailable" x-cloak role="status">
+			<div
+				class="valid-feedback"
+				x-show="emailAvailable"
+				x-cloak
+				role="status">
 				<i class="ph-duotone ph-check-circle me-1" aria-hidden="true"></i>
 				Email is available.
 			</div>
-			<div class="invalid-feedback d-block" x-show="emailUnavailable" x-cloak role="alert">
+			<div
+				class="invalid-feedback"
+				x-show="emailUnavailable"
+				x-cloak
+				role="alert">
 				Email is already in use.
 			</div>
-			<div class="invalid-feedback d-block" x-show="emailCheckError" x-cloak x-text="emailCheckError" role="alert"></div>
+			<div
+				class="invalid-feedback"
+				x-show="emailCheckError"
+				x-cloak
+				x-text="emailCheckError"
+				role="alert"></div>
         </div>
 
 		<!--- Password Meter --->
