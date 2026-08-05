@@ -38,12 +38,12 @@ class extends="app.models.BaseService" {
 	 */
 	struct function issue( required any user, required string purpose, required date expiresAt ) {
 		var rawToken = "bxt_" & generateSecretKey( "AES", 256 )
-		var token = new( {
+		var token = new( properties: {
 			tokenHash: hash( rawToken, "SHA-256" ),
 			purpose: arguments.purpose,
 			expiresAt: arguments.expiresAt,
 			user: arguments.user
-		} )
+		}, ignoreTargetLists: true )
 
 		save( token )
 		return { rawToken: rawToken, token: token }
