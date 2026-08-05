@@ -1,3 +1,35 @@
+<!--- Drawer Component
+	Renders a reusable right-side Alpine-powered drawer with an optional nested
+	ColdBox view for the drawer body.
+
+	Usage:
+		#view( view: "_components/ui/drawer", args: {
+			id             : "user-details-drawer",
+			title          : "User Details",
+			openExpression : "drawerOpen",
+			closeExpression: "closeDrawer()",
+			contentView    : "users/_details",
+			contentArgs    : { user: selectedUser }
+		} )#
+
+	Args:
+		id              : string — unique drawer id                         (default: "drawer")
+		title           : string — visible drawer title                      (default: "Drawer")
+		openExpression  : string — Alpine expression controlling visibility  (default: "false")
+		closeExpression : string — Alpine expression used to close           (default: "closeDrawer()")
+		contentView     : string — optional nested view path for the body     (default: "")
+		contentArgs     : struct — arguments passed to the nested content view (default: {})
+
+	Behavior:
+		- The drawer opens and closes from the supplied Alpine expression.
+		- Clicking the backdrop, pressing Escape, or clicking the close button
+		  evaluates closeExpression.
+		- The panel is rendered from the right with explicit enter and leave
+		  transitions, and x-trap.noscroll keeps focus in the open drawer while
+		  preventing the page behind it from scrolling.
+		- If contentView is provided, it is rendered inside the panel with
+		  contentArgs passed to it.
+--->
 <bx:param name="args.id" default="drawer"/>
 <bx:param name="args.title" default="Drawer"/>
 <bx:param name="args.openExpression" default="false"/>
@@ -19,6 +51,7 @@
 	@keydown.escape.window="#args.closeExpression#">
 	<div
 		class="cb-ui-drawer__panel"
+		x-show="#args.openExpression#"
 		x-trap.noscroll="#args.openExpression#"
 		x-transition:enter="cb-ui-drawer__panel--transition"
 		x-transition:enter-start="cb-ui-drawer__panel--from-right"

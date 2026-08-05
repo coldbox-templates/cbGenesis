@@ -1,0 +1,39 @@
+<!--- Global Progress Component
+	Renders a fixed, accessible progress indicator controlled by the global
+	Alpine progress event API. Include this component once in the application
+	layout so any page or JavaScript module can report long-running work.
+
+	Usage:
+		#view( view: "_components/ui/globalProgress" )#
+
+	Args:
+		This component does not accept view arguments.
+
+	Public API:
+		$progress.start( { message: "Loading..." } ) — show the indicator and
+			optionally set the accessible status message.
+		$progress.stop()                         — hide the indicator.
+		$progress.set( value )                   — set the progress value from
+			0 to 100 while the indicator is visible.
+
+	Behavior:
+		- The progress bar is hidden until a start event is received.
+		- The current message is exposed through visually hidden status text and
+			aria-live="polite" for assistive technologies.
+		- The bar width is updated from the current numeric value.
+--->
+<bx:output>
+<div
+	class="cb-global-progress"
+	x-data="globalProgress()"
+	x-show="visible"
+	x-cloak
+	x-transition.opacity
+	role="status"
+	aria-live="polite">
+	<span class="visually-hidden" x-text="_message"></span>
+	<div class="cb-global-progress__track">
+		<div class="cb-global-progress__bar" :style="`width: ${ value }%`"></div>
+	</div>
+</div>
+</bx:output>

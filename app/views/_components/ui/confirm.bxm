@@ -27,7 +27,8 @@
 		confirmLabel      : string — confirm button label                 (default: "Confirm")
 		confirmClass      : string — button modifier class                (default: "btn-primary")
 		confirmIcon       : string — optional confirm button icon class   (default: "")
-		disabledExpression: string — Alpine expression disabling buttons  (default: "false") --->
+		disabledExpression: string — Alpine expression disabling buttons  (default: "false")
+--->
 <bx:param name="args.id" default="confirm"/>
 <bx:param name="args.title" default="Confirm Action"/>
 <bx:param name="args.message" default="Are you sure you want to continue?"/>

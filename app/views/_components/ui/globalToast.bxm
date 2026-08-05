@@ -1,0 +1,71 @@
+<!--- Global Toast Component
+	Renders a global stack of Bootstrap-styled toast notifications backed by the
+	Alpine globalToast component. Include this component once in the application
+	layout to receive notifications from any page or JavaScript module.
+
+	Usage:
+		#view( view: "_components/ui/globalToast", args: {
+			duration  : 5000,
+			position  : "top-end",
+			maxVisible: 4
+		} )#
+
+	Args:
+		duration   : numeric — default display time in milliseconds; use 0 or a
+		             negative value to keep toasts visible until dismissed (default: 5000)
+		position   : string — toast stack position; supported values are
+		             "top-start", "top-center", "top-end", "bottom-start",
+		             "bottom-center", and "bottom-end" (default: "top-end")
+		maxVisible : numeric — maximum number of toasts retained in the stack;
+		             oldest toasts are removed when the limit is exceeded (default: 4)
+
+	Public API:
+		window.$toast( message, type, options ) — dispatch a toast:show event.
+		Supported types are "info", "success", "warning", and "error".
+		Options may include title and duration overrides.
+
+	Behavior:
+		- Notifications are received through the toast:show browser event and
+			rendered declaratively from the Alpine items collection.
+		- Toasts may be dismissed manually with the close button or automatically
+			after the configured duration.
+		- Error notifications use Bootstrap's danger context and each type gets
+			its corresponding Phosphor icon.
+--->
+<bx:param name="args.duration" default="5000"/>
+<bx:param name="args.position" default="top-end"/>
+<bx:param name="args.maxVisible" default="4"/>
+<bx:output>
+<div
+	class="cb-global-toasts toast-container position-fixed p-3"
+	x-data="globalToast({ duration: #javaCast( 'int', args.duration )#, position: '#encodeForHTMLAttribute( args.position )#', maxVisible: #javaCast( 'int', args.maxVisible )# })"
+	:class="`cb-global-toasts--${ _config.position }`"
+	aria-live="polite"
+	aria-atomic="true">
+
+	<template x-for="item in items" :key="item.id">
+		<div
+			class="toast show cb-global-toast"
+			role="alert"
+			:class="`text-bg-${ bootstrapType( item.type ) }`">
+			<!--- Toast Header --->
+			<div class="toast-header" :class="`text-bg-${ bootstrapType( item.type ) }`">
+				<i
+					class="ph-duotone me-2"
+					:class="icon( item.type )"
+					aria-hidden="true"></i>
+				<strong
+					class="me-auto"
+					x-text="item.title || item.type.charAt( 0 ).toUpperCase() + item.type.slice( 1 )"></strong>
+				<button
+					type="button"
+					class="btn-close btn-close-white"
+					@click="dismiss( item.id )"
+					aria-label="Dismiss notification">
+				</button>
+			</div>
+			<div class="toast-body" x-text="item.message"></div>
+		</div>
+	</template>
+</div>
+</bx:output>
