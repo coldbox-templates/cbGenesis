@@ -8,7 +8,7 @@ class extends="BaseSecureHandler" {
 	property name="securityService";
 
 	function preHandler( event, rc, prc ) {
-		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
+		if ( event.getHTTPMethod() != "GET" && !csrfVerify( rc.csrf ?: "" ) ) {
 			flash.put( "messages", {
 				type   : "error",
 				message: "Invalid security token detected."
@@ -21,6 +21,94 @@ class extends="BaseSecureHandler" {
 	function index( event, rc, prc ) {
 		prc.title = "Settings"
 		event.setView( "settings/index" )
+	}
+
+	function registry( event, rc, prc ) {
+		prc.title = "Settings Registry"
+		prc.payload = { records: [], count: 0, counts: { active: 0, inactive: 0, all: 0 } }
+		event.setView( "settings/registry" )
+	}
+
+	@remote( "Retrieve settings registry records remotely via AJAX" )
+	@secured( "settings:admin,settings:read" )
+	function registrySearch( event, rc, prc ) {
+		var response = event.getResponse()
+		var pagination = getPagination( rc.page ?: 1, rc.limit ?: 25 )
+		prc.settings = settingService.search(
+			search: rc.search ?: "",
+			isActive: rc.isActive ?: "",
+			sortOrder: rc.sortOrder ?: "name asc",
+			max: pagination.limit,
+			offset: pagination.offset,
+			currentUser: securityService.getCurrentUser()
+		)
+		return response.setData( data: {
+			records: prc.settings.records,
+			count: prc.settings.count,
+			counts: settingService.settingsCountsReport()
+		} )
+	}
+
+	@remote( "Create a settings registry record remotely via AJAX" )
+	@secured( "settings:admin,settings:write" )
+	function createRegistry( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var name = trim( rc.name ?: "" )
+			var isActive = isBoolean( rc.isActive ?: "" ) ? booleanFormat( rc.isActive ) : false
+			if ( !reFind( "^[A-Za-z][A-Za-z0-9_.-]{0,254}$", name ) ) throw( message: "Setting names may contain letters, numbers, dots, underscores, and hyphens." )
+			prc.setting = settingService.new( { name: name, value: toString( rc.value ?: "" ), isActive: isActive } ).validateOrFail().save()
+			settingService.flushSettingsCache()
+			return response.setData( data: prc.setting.getMemento(), message: "Setting created successfully." )
+		} catch ( ValidationException error ) {
+			return response.failure( message: "Setting validation failed.", statusCode: 422, data: structKeyExists( prc, "setting" ) ? prc.setting.getValidationResult().getAllErrorsAsStruct() : {} )
+		} catch ( any error ) {
+			return response.failure( message: error.message, statusCode: 400 )
+		}
+	}
+
+	@remote( "Update a settings registry record remotely via AJAX" )
+	@secured( "settings:admin,settings:write" )
+	function updateRegistry( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var name = trim( rc.name ?: "" )
+			if ( !reFind( "^[A-Za-z][A-Za-z0-9_.-]{0,254}$", name ) ) throw( message: "Setting names may contain letters, numbers, dots, underscores, and hyphens." )
+			prc.setting = settingService.getOrFail( rc.settingId ?: "" ).setName( name ).setValue( toString( rc.value ?: "" ) ).validateOrFail().save()
+			settingService.flushSettingsCache()
+			return response.setData( data: prc.setting.getMemento(), message: "Setting updated successfully." )
+		} catch ( ValidationException error ) {
+			return response.failure( message: "Setting validation failed.", statusCode: 422, data: structKeyExists( prc, "setting" ) ? prc.setting.getValidationResult().getAllErrorsAsStruct() : {} )
+		} catch ( any error ) {
+			return response.failure( message: error.message, statusCode: 400 )
+		}
+	}
+
+	@remote( "Toggle a settings registry record remotely via AJAX" )
+	@secured( "settings:admin,settings:write" )
+	function toggleRegistryStatus( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var setting = settingService.getOrFail( rc.settingId ?: "" )
+			var updated = settingService.toggleStatus( setting, isBoolean( rc.isActive ?: "" ) ? booleanFormat( rc.isActive ) : false )
+			settingService.flushSettingsCache()
+			return response.setData( data: updated, message: "Setting status updated successfully." )
+		} catch ( any error ) {
+			return response.failure( message: error.message, statusCode: 400 )
+		}
+	}
+
+	@remote( "Delete a settings registry record remotely via AJAX" )
+	@secured( "settings:admin,settings:write" )
+	function deleteRegistry( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			settingService.getOrFail( rc.settingId ?: "" ).delete()
+			settingService.flushSettingsCache()
+			return response.setData( data: {}, message: "Setting deleted successfully." )
+		} catch ( any error ) {
+			return response.failure( message: error.message, statusCode: 400 )
+		}
 	}
 
 	@secured( "settings:admin,settings:write" )
@@ -62,6 +150,13 @@ class extends="BaseSecureHandler" {
 			type   : "success",
 			message: "Action ran successfully: revoked [#count#] remembered browser login(s)."
 		} )
+		relocate( "settings" )
+	}
+
+	@secured( "settings:admin" )
+	function flushSettingsCache( event, rc, prc ) {
+		settingService.flushSettingsCache()
+		flash.put( "messages", { type: "success", message: "Action ran successfully: settings cache flushed and configuration overrides reloaded." } )
 		relocate( "settings" )
 	}
 

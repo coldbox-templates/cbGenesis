@@ -18,19 +18,23 @@
 <bx:param name="args.trueValue" default="true"/>
 <bx:param name="args.falseValue" default="false"/>
 <bx:param name="args.classes" default=""/>
+<bx:param name="args.bind" default=""/>
 
 <bx:set localIsTrue = !!args.value>
 <bx:set localName = len( trim( args.name ?: "" ) ) ? trim( args.name ) : trim( args.model ?: "" )>
+<bx:set localBinding = trim( args.bind ?: "" )>
+<bx:set localEffect = localBinding.len() ? localBinding & " = checked" : "">
 
 <bx:output>
 <div
 	class="cb-switch#args.classes.len() ? " " & args.classes : ""#"
 	x-data="switchComponent( {
-		checked: #localIsTrue#,
+		checked: #localBinding.len() ? localBinding : localIsTrue#,
 		name: '#encodeForHTMLAttribute( localName )#',
 		trueValue: '#encodeForHTMLAttribute( args.trueValue )#',
 		falseValue: '#encodeForHTMLAttribute( args.falseValue )#'
 	} )"
+	x-effect="#encodeForHTMLAttribute( localEffect )#"
 	:class="checked ? 'cb-switch--true' : 'cb-switch--false'"
 >
 	<bx:if len( localName )>

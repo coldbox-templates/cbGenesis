@@ -92,9 +92,23 @@ class {
 		 * Admin Settings Routing
 		 * --------------------------------------------------------------------------
 		 */
+		// Setting Actions
 		post( "settings/clear-template-cache", "Settings.clearTemplateCache" )
 		post( "settings/clear-sessions-cache", "Settings.clearSessionsCache" )
 		post( "settings/revoke-remember-tokens", "Settings.revokeRememberTokens" )
+		post( "settings/flush-settings-cache", "Settings.flushSettingsCache" )
+		// Setting Registry
+		route( "settings/registry/search", "Settings.registrySearch" )
+		route( "settings/registry/:settingId/status" ).withHandler( "Settings" ).toAction({ POST: "toggleRegistryStatus" })
+		route( "settings/registry/:settingId" ).withHandler( "Settings" ).toAction({
+			PUT   : "updateRegistry",
+			DELETE: "deleteRegistry"
+		})
+		route( "settings/registry" ).withHandler( "Settings" ).toAction({
+			GET : "registry",
+			POST: "createRegistry"
+		})
+		// Settings Manager
 		route( "settings" ).withHandler( "Settings" ).toAction({
 			GET: "index",
 			POST: "save"

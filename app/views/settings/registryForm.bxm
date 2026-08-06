@@ -1,0 +1,10 @@
+<bx:output>
+<form class="cb-drawer-form" @submit="save( $event )">
+	<div class="cb-drawer-form-body">
+		<div class="cb-form-field"><label for="setting-name">Name</label><input id="setting-name" type="text" x-model.trim="form.name" required maxlength="255" pattern="[A-Za-z][A-Za-z0-9_.-]*" autocomplete="off"><small>Use letters, numbers, dots, underscores, or hyphens.</small></div>
+		<div class="cb-form-field"><label for="setting-value">Value</label><textarea id="setting-value" rows="8" x-model="form.value" required></textarea></div>
+		<div class="cb-form-field"><span>Active</span>#view( view = "_components/ui/switch", args = { name: "Active", bind: "form.isActive", classes: "mt-2" } )#</div>
+	</div>
+	<div class="cb-drawer-form-actions"><button type="button" class="btn btn-light" @click="closeDrawer()">Cancel</button><button type="submit" class="btn btn-primary" :disabled="submitting"><i class="ph-duotone ph-floppy-disk"></i> <span x-text="submitting ? 'Saving...' : 'Save setting'"></span></button></div>
+</form>
+</bx:output>

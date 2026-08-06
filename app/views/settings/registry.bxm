@@ -1,0 +1,198 @@
+<bx:output>
+<div
+	x-data='settingsRegistryForm( #forAttribute( prc.payload )#, "#csrfToken()#" )'
+	x-init="refresh()"
+	>
+
+	<!--- Header --->
+	<div class="cb-page-header cb-admin-page-heading">
+		<div>
+			<p class="cb-eyebrow">Settings</p>
+			<h2 class="cb-page-title">Settings Registry</h2>
+			<p class="cb-page-subtitle">Manage the raw database-backed settings used by the application.</p>
+		</div>
+		<button
+			type="button"
+			class="btn btn-primary"
+			@click="openCreate()">
+			<i class="ph-duotone ph-plus"></i> New Setting
+		</button>
+	</div>
+
+	<!--- Warning --->
+	<div class="alert alert-warning d-flex gap-2 align-items-start" role="note">
+		<i class="ph-duotone ph-warning-circle fs-4"></i>
+		<span>Deleting a cbGenesis default does not permanently remove it. The application preflight check recreates missing default settings.</span>
+	</div>
+
+	<!--- Content --->
+	<section class="cb-content-card cb-admin-workbench">
+		<!--- Toolbar --->
+		<div class="cb-content-card-header cb-admin-toolbar">
+			<div class="cb-segmented-control" aria-label="Setting filters">
+				<button
+					type="button"
+					:class="statusFilter === 'active' ? 'active' : ''"
+					@click="setStatusFilter( 'active' )">
+					Active <span class="cb-tab-count" x-text="counts.active"></span>
+				</button>
+				<button
+					type="button"
+					:class="statusFilter === 'inactive' ? 'active' : ''"
+					@click="setStatusFilter( 'inactive' )">
+					Inactive <span class="cb-tab-count" x-text="counts.inactive"></span>
+				</button>
+				<button
+					type="button"
+					:class="statusFilter === 'all' ? 'active' : ''"
+					@click="setStatusFilter( 'all' )">
+					All <span class="cb-tab-count" x-text="counts.all"></span>
+				</button>
+			</div>
+			<div class="cb-admin-search cb-wide">
+				<i class="ph-duotone ph-magnifying-glass"></i>
+				<input
+					type="search"
+					x-model="query"
+					@input.debounce.250ms="page = 1; refresh()"
+					placeholder="Search settings..."
+					aria-label="Search settings">
+			</div>
+		</div>
+		<!--- Table --->
+		<div class="cb-table-wrap">
+			<table class="cb-table">
+				<thead>
+					<tr>
+						<th>
+							<button
+								type="button"
+								class="cb-table-sort-button"
+								@click="sortBy( 'name' )">
+								Name <i class="ph-duotone ph-sort-ascending"></i>
+							</button>
+						</th>
+						<th>Value</th>
+						<th>Status</th>
+						<th class="text-center">Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					<template
+						x-for="( setting, settingIndex ) in records"
+						:key="( setting.settingId || setting.name || 'setting' ) + '-' + settingIndex">
+						<tr>
+							<td>
+								<strong x-text="setting.name"></strong>
+							</td>
+							<td>
+								<span class="text-break" x-text="setting.value"></span>
+							</td>
+							<td>
+								<span class="cb-chip" :class="setting.isActive ? 'cb-chip-success' : 'cb-chip-muted'" x-text="setting.isActive ? 'Active' : 'Inactive'"></span>
+							</td>
+							<td class="text-center">
+								<div class="dropdown">
+									<button type="button" class="btn btn-sm btn-light" data-bs-toggle="dropdown" aria-label="Setting actions">
+										<i class="ph-duotone ph-dots-three-outline"></i>
+									</button>
+									<ul class="dropdown-menu dropdown-menu-end">
+										<li>
+											<button
+												type="button"
+												class="dropdown-item"
+												@click="openEdit( setting )">
+												<i class="ph-duotone ph-pencil-simple"></i> Edit
+											</button>
+										</li>
+										<li>
+											<button
+												type="button"
+												class="dropdown-item"
+												@click="confirmStatus( setting )">
+												<i class="ph-duotone" :class="setting.isActive ? 'ph-toggle-left' : 'ph-toggle-right'"></i>
+												<span x-text="setting.isActive ? 'Disable' : 'Enable'"></span>
+											</button>
+										</li>
+										<li>
+											<hr class="dropdown-divider">
+										</li>
+										<li>
+											<button
+												type="button"
+												class="dropdown-item text-danger"
+												@click="confirmDelete( setting )">
+												<i class="ph-duotone ph-trash"></i> Delete
+											</button>
+										</li>
+									</ul>
+								</div>
+							</td>
+						</tr>
+					</template>
+
+					<!--- Nothing Found --->
+					<tr x-show="!loading && records.length === 0" x-cloak><td colspan="4" class="cb-empty-state">No settings found.</td></tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!--- Pagination --->
+		<div class="cb-pagination" x-show="total > 0" x-cloak>
+			<span>Page <strong x-text="page"></strong> of <strong x-text="pageCount"></strong> · <strong x-text="total"></strong> settings</span>
+			<div class="d-flex gap-2">
+				<button
+					type="button"
+					class="btn btn-sm btn-light"
+					@click="page--; refresh()"
+					:disabled="page <= 1 || loading">Previous</button>
+				<button
+					type="button"
+					class="btn btn-sm btn-light"
+					@click="nextPage()"
+					:disabled="page >= pageCount || loading">Next</button>
+			</div>
+		</div>
+	</section>
+
+	<!--- Edit Drawer --->
+	#view(
+		view: "_components/ui/drawer",
+		args: {
+			id: "settings-registry-drawer",
+			title: "Setting",
+			openExpression: "drawerOpen",
+			closeExpression: "closeDrawer()",
+			contentView: "settings/registryForm"
+		}
+	)#
+	<!--- Status Confirm --->
+	#view(
+		view: "_components/ui/confirm",
+		args: {
+			id: "settings-status-confirm",
+			title: "Change Setting Status",
+			messageExpression: "statusTarget ? ( statusTarget.isActive ? 'Enable ' + statusTarget.setting.name + '?' : 'Disable ' + statusTarget.setting.name + '?' ) : ''", openExpression: "statusOpen", closeExpression: "statusOpen = false",
+			confirmExpression: "saveStatus()",
+			confirmLabel: "Continue",
+			confirmClass: "btn-primary",
+			confirmIcon: "ph-check"
+		}
+	)#
+	<!--- Delete Confirm --->
+	#view(
+		view: "_components/ui/confirm",
+		args: {
+			id: "settings-delete-confirm",
+			title: "Delete Setting",
+			messageExpression: "deleteTarget ? 'Delete ' + deleteTarget.name + '? Missing cbGenesis defaults will be recreated during preflight.' : ''",
+			openExpression: "deleteOpen",
+			closeExpression: "deleteOpen = false",
+			confirmExpression: "deleteSetting()",
+			confirmLabel: "Delete",
+			confirmClass: "btn-danger",
+			confirmIcon: "ph-trash"
+		}
+	)#
+</div>
+</bx:output>

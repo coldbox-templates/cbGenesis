@@ -84,15 +84,29 @@
                         <span class="cb-sidebar-nav-text">Permissions</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#event.route( "settings" )#"
-                       class="cb-sidebar-nav-item"
-                        @click="$store.sidebar.close()"
-                       :class="#event.routeIs( "settings" )# ? 'active' : ''"
-                       title="Settings">
-                        <i class="ph-duotone ph-gear cb-sidebar-nav-icon" aria-hidden="true"></i>
-                        <span class="cb-sidebar-nav-text">Settings</span>
-                    </a>
+                <li x-data="{ expanded: #event.routeIs( "settings" )# || #event.routeIs( "settings/registry" )# }">
+                    <div class="cb-sidebar-nav-item-row">
+                        <a href="#event.route( "settings" )#"
+                           class="cb-sidebar-nav-item"
+                            @click="$store.sidebar.close()"
+                           :class="#event.routeIs( "settings" )# || #event.routeIs( "settings/registry" )# ? 'active' : ''"
+                           title="Settings">
+                            <i class="ph-duotone ph-gear cb-sidebar-nav-icon" aria-hidden="true"></i>
+                            <span class="cb-sidebar-nav-text">Settings</span>
+                        </a>
+                        <button type="button"
+                                class="cb-sidebar-nav-submenu-toggle"
+                                @click="expanded = !expanded"
+                                :aria-expanded="expanded.toString()"
+                                aria-controls="settings-submenu"
+                                aria-label="Toggle Settings submenu">
+                            <i class="ph-duotone" :class="expanded ? 'ph-caret-up' : 'ph-caret-down'" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <ul id="settings-submenu" class="cb-sidebar-nav-submenu" x-show="expanded" x-cloak>
+                        <li><a href="#event.route( "settings" )#" class="cb-sidebar-nav-subitem" :class="#event.routeIs( "settings" )# ? 'active' : ''"><i class="ph-duotone ph-sliders-horizontal" aria-hidden="true"></i><span>Manage</span></a></li>
+                        <li><a href="#event.route( "settings/registry" )#" class="cb-sidebar-nav-subitem" :class="#event.routeIs( "settings/registry" )# ? 'active' : ''"><i class="ph-duotone ph-list-dashes" aria-hidden="true"></i><span>Registry</span></a></li>
+                    </ul>
                 </li>
             </ul>
         </div>

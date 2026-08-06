@@ -348,7 +348,7 @@ class extends="app.models.BaseService" {
 	struct function search(
 		search         = "",
 		isCore         = "",
-		boolean isActive       = true,
+		any isActive           = "",
 		string sortOrder      = "name asc",
 		string propertyList   = "settingId,isActive,name,value",
 		numeric max    = 0,
@@ -359,7 +359,7 @@ class extends="app.models.BaseService" {
 
 		// cfformat-ignore-start
 		var c = newCriteria()
-           .eq( "this.isActive", arguments.isActive castAs boolean )
+           .when( isBoolean( arguments.isActive ), c => c.eq( "this.isActive", isActive castAs boolean ) )
            .when( !isNull( arguments.isCore ) && isBoolean( arguments.isCore ), c => {
                c.eq( "isCore", isCore castAs boolean )
            } )
@@ -378,6 +378,20 @@ class extends="app.models.BaseService" {
 			)
 
 		return results
+	}
+
+	/**
+	 * This returns a struct report of the settings counts according to state:
+	 * - all
+	 * - active
+	 * - inactive
+	 */
+	struct function settingsCountsReport() {
+		return {
+			all: count(),
+			active: count( "isActive = ?", [ true ] ),
+			inactive: count( "isActive = ?", [ false ] )
+		}
 	}
 
 	/**

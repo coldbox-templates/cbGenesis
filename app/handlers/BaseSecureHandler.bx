@@ -9,6 +9,10 @@ class extends="coldbox.system.RestHandler"{
 	@inject
 	property name="settingService";
 
+	/**
+	 * Pre-handler method that runs before any secure handler.
+	 * It sets the layout to "Admin" for all views rendered by this handler.
+	 */
 	function preHandler( event, rc, prc ) {
 		event.setLayout( "Admin" )
 	}

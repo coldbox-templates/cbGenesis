@@ -323,12 +323,23 @@
 			<div class="cb-settings-list">
 				<div class="cb-setting-row">
 					<div>
+						<strong>Settings Cache</strong>
+						<small>Reload database settings, configuration overrides, and environment overrides.</small>
+					</div>
+					<button
+						type="button"
+						class="btn btn-outline-secondary"
+						data-action="#event.buildLink( "settings/flush-settings-cache" )#"
+						@click="confirmMaintenance( $el.dataset.action )">Flush</button>
+				</div>
+				<div class="cb-setting-row">
+					<div>
 						<strong>Template Cache</strong>
 						<small>Clear cached views and event output.</small>
 					</div>
 					<button
 						type="button"
-						class="btn btn-outline-secondary"
+						class="btn btn-outline-danger"
 						data-action="#event.buildLink( "settings/clear-template-cache" )#"
 						@click="confirmMaintenance( $el.dataset.action )">Clear</button>
 				</div>
