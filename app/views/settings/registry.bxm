@@ -73,7 +73,7 @@
 							</button>
 						</th>
 						<th>Value</th>
-						<th>Status</th>
+						<th x-show="statusFilter === 'all'">Status</th>
 						<th class="text-center">Actions</th>
 					</tr>
 				</thead>
@@ -88,7 +88,7 @@
 							<td>
 								<span class="text-break" x-text="setting.value"></span>
 							</td>
-							<td>
+							<td x-show="statusFilter === 'all'">
 								<span class="cb-chip" :class="setting.isActive ? 'cb-chip-success' : 'cb-chip-muted'" x-text="setting.isActive ? 'Active' : 'Inactive'"></span>
 							</td>
 							<td class="text-center">
@@ -132,7 +132,7 @@
 					</template>
 
 					<!--- Nothing Found --->
-					<tr x-show="!loading && records.length === 0" x-cloak><td colspan="4" class="cb-empty-state">No settings found.</td></tr>
+					<tr x-show="!loading && records.length === 0" x-cloak><td :colspan="statusFilter === 'all' ? 4 : 3" class="cb-empty-state">No settings found.</td></tr>
 				</tbody>
 			</table>
 		</div>
