@@ -260,12 +260,13 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 				const assignedCount = selectedUsers.length - failedUsers.length;
 				this.selectedUsers = failedUsers.map( ( failedUser ) => failedUser.user );
 				if ( failedUsers.length ) {
-					this.assignError = `${ assignedCount } user${ assignedCount === 1 ? "" : "s" } assigned. ${ failedUsers.map( ( failedUser ) => failedUser.error?.message || "Assignment failed." ).join( " " ) }`;
+					window.$toast?.( `${ assignedCount } user${ assignedCount === 1 ? "" : "s" } assigned. ${ failedUsers.map( ( failedUser ) => failedUser.error?.message || "Assignment failed." ).join( " " ) }`, "error", { title: "Assignment partially failed" } );
 				} else {
+					window.$toast?.( `${ assignedCount } user${ assignedCount === 1 ? "" : "s" } assigned successfully.`, "success", { title: "Users assigned" } );
 					this.closeAssignUsers( true );
 				}
 			} catch ( error ) {
-				this.assignError = error.message || "Users could not be refreshed.";
+				window.$toast?.( error.message || "Users could not be refreshed.", "error", { title: "Assignment refresh failed" } );
 			} finally {
 				this.assigningUsers = false;
 			}
@@ -319,8 +320,9 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 				this.assignedUsers = this.assignedUsers.filter( ( assignedUser ) => assignedUser.userId !== user.userId );
 				this.selectedRole.usersCount = Math.max( 0, Number( this.selectedRole.usersCount || 0 ) - 1 );
 				this.roles = this.roles.map( ( role ) => role.roleId === this.selectedRole.roleId ? this.selectedRole : role );
+				window.$toast?.( `${ name } removed from ${ this.selectedRole.role }.`, "success", { title: "User removed" } );
 			} catch ( error ) {
-				this.usersError = error.message || "User could not be removed from the role.";
+				window.$toast?.( error.message || "User could not be removed from the role.", "error", { title: "User removal failed" } );
 			} finally {
 				this.removingUserId = null;
 			}
