@@ -44,12 +44,12 @@ class extends="app.models.BaseService" {
 	 *
 	 * @return The persistent RememberToken entity if valid.
 	 *
-	 * @throws "RememberToken.Invalid" if the token is not found, revoked, or expired.
+	 * @throws "RememberToken.Invalid" if the token is not found, invalid, or expired.
 	 */
 	RememberToken function validateToken( required string rawToken ) {
 		var token = findWhere( { token: hashToken( arguments.rawToken ) } )
 
-		// If the token is not found, revoked, or expired, throw an exception
+		// If the token is not found, invalid, or expired, throw an exception
 		if ( isNull( token ) ||
 			!token.getIsActive() ||
 			token.isExpired() ||
@@ -67,53 +67,52 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
-	 * Revoke a remembered-browser token.
+	 * Delete a remembered-browser token.
 	 *
-	 * @rawToken The raw token value to revoke.
+	 * @rawToken The raw token value to delete.
 	 *
-	 * @return True if the token was found and revoked, false if it was not found or already revoked.
+	 * @return True if the token was found and deleted, false if it was not found.
 	 */
 	boolean function revokeToken( required string rawToken ) {
 		var token = findWhere( { token: hashToken( arguments.rawToken ) } )
 
-		// If the token is not found or already revoked, return false
-		if ( isNull( token ) || !token.getIsActive() ) {
+		// If the token is not found, there is nothing to delete.
+		if ( isNull( token ) ) {
 			return false
 		}
 
-		save( token.setIsActive( false ) )
+		token.delete()
+		ormClearSession()
 
 		return true
 	}
 
 	/**
-	 * Revoke all active remembered-browser tokens.
+	 * Delete all remembered-browser tokens.
 	 *
-	 * @return The number of tokens revoked.
+	 * @return The number of tokens deleted.
 	 */
 	numeric function revokeAllTokens() {
 		var result = variables.qb
 			.table( "user_remember_tokens" )
-			.where( "isActive", "=", true )
-			.update( { isActive: false } )
+			.delete()
 		ormClearSession()
 
 		return result?.result?.recordcount ?: 0
 	}
 
 	/**
-	 * Revoke all active remembered-browser tokens for one user.
+	 * Delete all remembered-browser tokens for one user.
 	 *
-	 * @userId The user identifier whose remembered logins should be revoked.
+	 * @userId The user identifier whose remembered logins should be deleted.
 	 *
-	 * @return The number of tokens revoked.
+	 * @return The number of tokens deleted.
 	 */
 	numeric function revokeTokensForUser( required userId ) {
 		var result = variables.qb
 			.table( "user_remember_tokens" )
 			.where( "FK_userId", "=", arguments.userId )
-			.where( "isActive", "=", true )
-			.update( { isActive: false } )
+			.delete()
 		ormClearSession()
 
 		return result?.result?.recordcount ?: 0

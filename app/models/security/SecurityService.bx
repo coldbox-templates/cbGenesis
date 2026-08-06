@@ -165,7 +165,7 @@ class extends="app.models.BaseService"{
 		var days = variables.settingService.getSetting( "cbRememberMeDays" )
 
 		transaction{
-			// Revoke the old token and create a new one
+			// Delete the old token and create a new one
 			variables.rememberTokenService.revokeToken( arguments.rawToken )
 			// Create a new token and set the cookie
 			var tokenResult = createRememberToken( user: arguments.user, days: days )
@@ -176,14 +176,14 @@ class extends="app.models.BaseService"{
 	}
 
 	/**
-	 * Revoke a remembered browser credential.
+	 * Delete a remembered browser credential.
 	 */
 	boolean function revokeRememberToken( required string rawToken ) {
 		return variables.rememberTokenService.revokeToken( arguments.rawToken )
 	}
 
 	/**
-	 * Revoke the current browser's persistent login and clear its cookie.
+	 * Delete the current browser's persistent login and clear its cookie.
 	 */
 	SecurityService function clearRememberedUser() {
 		var rawToken = getRememberCookie()
@@ -195,18 +195,18 @@ class extends="app.models.BaseService"{
 	}
 
 	/**
-	 * Revoke all active persistent browser logins.
+	 * Delete all persistent browser logins.
 	 */
 	numeric function revokeAllRememberTokens() {
 		return variables.rememberTokenService.revokeAllTokens()
 	}
 
 	/**
-	 * Revoke remembered-browser credentials for one user without affecting other users.
+	 * Delete remembered-browser credentials for one user without affecting other users.
 	 *
-	 * @userId The user identifier whose remembered logins should be revoked.
+	 * @userId The user identifier whose remembered logins should be deleted.
 	 *
-	 * @return The number of tokens revoked.
+	 * @return The number of tokens deleted.
 	 */
 	numeric function revokeRememberTokensForUser( required userId ) {
 		return variables.rememberTokenService.revokeTokensForUser( arguments.userId )
