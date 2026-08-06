@@ -413,6 +413,7 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 			if ( this.submitting ) return;
 			this.submitting = true;
 			this.error = "";
+			const isCreating = !this.selectedRole;
 
 			// Prepare the submissions
 			const body = new URLSearchParams( {
@@ -445,10 +446,15 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 						...this.roles,
 						result.data
 					].sort( ( first, second ) => first.role.localeCompare( second.role ) );
+					window.$toast?.( "Role created successfully.", "success", { title: "Role created" } );
 				}
 				this.closeDrawer( true );
 			} catch ( error ) {
-				this.error = error.message || "Role could not be saved.";
+				if ( isCreating ) {
+					window.$toast?.( error.message || "Role could not be created.", "error", { title: "Role creation failed" } );
+				} else {
+					this.error = error.message || "Role could not be saved.";
+				}
 			} finally {
 				this.submitting = false;
 			}

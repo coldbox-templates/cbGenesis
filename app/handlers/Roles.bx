@@ -145,7 +145,7 @@ class extends="BaseSecureHandler" {
 			isActive: true,
 			isVerified: true,
 			roleId: rc.roleId ?: "",
-			propertyList: [ "userId", "firstName", "lastName", "email" ]
+			propertyList: [ "userId", "firstName", "lastName", "email", "verifiedAt", "lastLogin" ]
 		)
 		event.getResponse().setData( data: prc.users.records )
 	}

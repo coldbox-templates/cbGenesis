@@ -307,6 +307,7 @@ class extends="app.models.BaseService" {
 			results.records.each( ( user ) => {
 				user.roles = structKeyExists( rolesByUser, user.userId ) ? rolesByUser[ user.userId ] : []
 			} )
+
 			// -- Get all Invitation Details for the user
 			var invitationRows = variables.userActionTokenService.getInvitationDetails( userIds )
 			var invitationsByUser = {}
