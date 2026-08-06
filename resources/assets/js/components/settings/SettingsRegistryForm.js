@@ -1,3 +1,5 @@
+import { createRemoteListing } from "../../utils/listing.js";
+
 /**
  * Alpine component for managing database-backed application settings.
  *
@@ -7,16 +9,25 @@
  */
 export function settingsRegistryForm( payload = {}, csrfToken = "" ) {
 	return {
-		records      : payload.records || [],
+		...createRemoteListing( {
+			endpoint    : "/settings/registry/search",
+			defaultSort : "name asc",
+			buildParams : ( state ) => {
+				const params = {
+					page      : String( state.page ),
+					limit     : String( state.limit ),
+					search    : state.query.trim(),
+					sortOrder : state.sortOrder,
+				};
+				if ( state.statusFilter !== "all" ) params.isActive = state.statusFilter === "active" ? "true" : "false";
+				return params;
+			},
+		} ),
 		counts       : payload.counts || { active: 0, inactive: 0, all: 0 },
-		total        : Number( payload.count || 0 ),
 		csrfToken,
-		query        : "",
 		statusFilter : "active",
-		sortOrder    : "name asc",
-		page         : 1,
-		limit        : 25,
-		loading      : false,
+		records      : payload.records || [],
+		total        : Number( payload.count || 0 ),
 		submitting   : false,
 		deleting     : false,
 		drawerOpen   : false,
@@ -27,31 +38,6 @@ export function settingsRegistryForm( payload = {}, csrfToken = "" ) {
 		statusTarget : null,
 		form         : { name: "", value: "", isActive: true },
 
-		/** Returns the number of pages available for the current result set. */
-		get pageCount() {
-			return Math.max( 1, Math.ceil( this.total / this.limit ) );
-		},
-
-		/** Loads the current filtered registry page. */
-		async refresh() {
-			if ( this.loading ) return;
-			this.loading = true;
-			try {
-				const params = new URLSearchParams( { page: String( this.page ), limit: String( this.limit ), search: this.query.trim(), sortOrder: this.sortOrder, } );
-				if ( this.statusFilter !== "all" ) params.set( "isActive", this.statusFilter === "active" ? "true" : "false" );
-				const response = await fetch( `/settings/registry/search?${ params }`, { headers: { Accept: "application/json" } } );
-				const result = await response.json();
-				if ( !response.ok || result.error ) throw new Error( result.messages || "Settings could not be loaded." );
-				this.records = result.data?.records || [];
-				this.total = Number( result.data?.count || 0 );
-				this.counts = result.data?.counts || this.counts;
-			} catch ( error ) {
-				window.$toast?.( error.message || "Settings could not be loaded.", "error", { title: "Loading failed" } );
-			} finally {
-				this.loading = false;
-			}
-		},
-
 		/** Changes the active status filter and refreshes the first page. */
 		setStatusFilter( filter ) {
 			this.statusFilter = filter;
@@ -59,23 +45,6 @@ export function settingsRegistryForm( payload = {}, csrfToken = "" ) {
 			this.refresh();
 		},
 
-		/** Advances to the next registry page. */
-		nextPage() {
-			if ( this.page >= this.pageCount ) return;
-			this.page++;
-			this.refresh();
-		},
-
-		/** Changes the sort order and refreshes the first page. */
-		sortBy( column ) {
-			const [
-				currentColumn,
-				direction
-			] = this.sortOrder.split( " " );
-			this.sortOrder = `${ column } ${ currentColumn === column && direction === "asc" ? "desc" : "asc" }`;
-			this.page = 1;
-			this.refresh();
-		},
 
 		/** Opens the create drawer with a clean form. */
 		openCreate() {

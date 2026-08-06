@@ -1,3 +1,5 @@
+import { createRemoteListing } from "../../utils/listing.js";
+
 /**
  * Alpine component for filtering the user management listing.
  *
@@ -8,18 +10,34 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 	const initialPayload = payload && !Array.isArray( payload ) ? payload : { records: payload };
 
 	return {
+		...createRemoteListing( {
+			endpoint      : "/users/search",
+			recordsKey    : "users",
+			responseKey   : "records",
+			refreshMethod : "refreshUsers",
+			defaultSort   : "lastName asc",
+			normalize     : normalizeUser,
+			buildParams   : ( state ) => {
+				const params = {
+					page      : String( state.page ),
+					limit     : String( state.limit ),
+					search    : state.query.trim(),
+					sortOrder : state.sortOrder,
+				};
+				if ( state.statusFilter !== "all" ) params.isActive = state.statusFilter === "inactive" ? "false" : "true";
+				if ( state.statusFilter === "active" ) params.isVerified = "true";
+				if ( state.statusFilter === "pending" ) params.isVerified = "false";
+				if ( state.roleFilter ) params.roleId = state.roleFilter;
+				return params;
+			},
+		} ),
 		users            : ( initialPayload.records || [] ).map( normalizeUser ),
 		roles            : initialPayload.roles || [],
 		total            : Number( initialPayload.count || 0 ),
 		counts           : initialPayload.counts || { active: 0, pending: 0, inactive: 0, all: 0 },
 		csrfToken,
-		query            : "",
 		statusFilter     : "active",
 		roleFilter       : "",
-		sortOrder        : "lastName asc",
-		page             : 1,
-		limit            : 25,
-		loading          : false,
 		submitting       : false,
 		deleting         : false,
 		resendingUserId  : null,
@@ -28,18 +46,8 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 		statusTarget     : null,
 		statusSubmitting : false,
 		invitationError  : "",
-		error            : "",
 		notice           : "",
 		form             : { firstName: "", lastName: "", email: "", roleId: "" },
-
-		/**
-		 * Calculates the number of pages in the current table result set.
-		 *
-		 * @returns {number} Number of pages available for the current result set.
-		 */
-		get pageCount() {
-			return Math.max( 1, Math.ceil( this.total / this.limit ) );
-		},
 
 		/**
 		 * Calculates the number of columns currently rendered by the users table.
@@ -47,7 +55,8 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 		 * @returns {number} Visible table column count for the selected status filter.
 		 */
 		get visibleColumnCount() {
-			return this.statusFilter === "active" || this.statusFilter === "pending" ? 5 : 6;
+			if ( this.statusFilter === "active" ) return 4;
+			return this.statusFilter === "all" ? 6 : 5;
 		},
 
 		/**
@@ -119,85 +128,6 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			this.refreshUsers();
 		},
 
-		/**
-		 * Loads the current page from the users search endpoint.
-		 *
-		 * The existing rows and result total are cleared while the request is in
-		 * progress. Request failures are stored in the component error state.
-		 *
-		 * @returns {Promise<void>}
-		 */
-		async refreshUsers() {
-			if ( this.loading ) return;
-			this.loading = true;
-			this.error = "";
-			this.users = [];
-			this.total = 0;
-			try {
-				const params = new URLSearchParams( {
-					page      : String( this.page ),
-					limit     : String( this.limit ),
-					search    : this.query.trim(),
-					sortOrder : this.sortOrder,
-				} );
-				const filter = this.statusFilter;
-				if ( filter !== "all" ) {
-					params.set( "isActive", filter === "inactive" ? "false" : "true" );
-				}
-				if ( filter === "active" ) params.set( "isVerified", "true" );
-				if ( filter === "pending" ) params.set( "isVerified", "false" );
-				if ( this.roleFilter ) params.set( "roleId", this.roleFilter );
-
-				const response = await fetch( `/users/search?${ params.toString() }`, { headers: { Accept: "application/json" } } );
-				const result = await response.json();
-				if ( !response.ok || result.error ) throw new Error( result.messages || "Users could not be loaded." );
-				this.users = ( result.data?.records || [] ).map( normalizeUser );
-				this.total = Number( result.data?.count || 0 );
-				this.counts = result.data?.counts || this.counts;
-			} catch ( error ) {
-				this.error = error.message || "Users could not be loaded.";
-			} finally {
-				this.loading = false;
-			}
-		},
-
-		/**
-		 * Changes the active sort column and reloads the first page.
-		 *
-		 * @param {string} column User field to sort by.
-		 */
-		sortBy( column ) {
-			const [
-				currentColumn,
-				currentDirection
-			] = this.sortOrder.split( " " );
-			const direction = currentColumn === column && currentDirection === "asc" ? "desc" : "asc";
-			this.sortOrder = `${ column } ${ direction }`;
-			this.page = 1;
-			this.refreshUsers();
-		},
-
-		/**
-		 * Moves to the previous page and reloads the listing when one is available.
-		 *
-		 * @returns {void}
-		 */
-		previousPage() {
-			if ( this.page <= 1 ) return;
-			this.page--;
-			this.refreshUsers();
-		},
-
-		/**
-		 * Moves to the next page and reloads the listing when one is available.
-		 *
-		 * @returns {void}
-		 */
-		nextPage() {
-			if ( this.page >= this.pageCount ) return;
-			this.page++;
-			this.refreshUsers();
-		},
 
 		/**
 		 * Opens the invitation drawer with a cleared invitation form and errors.
