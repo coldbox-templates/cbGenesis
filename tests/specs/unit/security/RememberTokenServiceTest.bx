@@ -21,7 +21,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( token.getMemento() ).notToHaveKey( "token" )
 			} )
 
-			it( "rejects revoked and expired tokens", () => {
+			it( "deletes revoked tokens and rejects expired tokens", () => {
 				var user = createVerifiedUser()
 				var tokenData = rememberTokenService.createToken( user: user, days: 14 )
 				var expiredToken = rememberTokenService.new( {
@@ -32,28 +32,34 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				rememberTokenService.save( entity: expiredToken )
 
 				expect( rememberTokenService.revokeToken( tokenData.rawToken ) ).toBeTrue()
+				expect( isNull( rememberTokenService.findWhere( { token: tokenData.token.getToken() } ) ) ).toBeTrue()
+				expect( rememberTokenService.revokeToken( tokenData.rawToken ) ).toBeFalse()
 				expect( () => rememberTokenService.validateToken( tokenData.rawToken ) ).toThrow( "RememberToken.Invalid" )
 				expect( () => rememberTokenService.validateToken( "unknown-token" ) ).toThrow( "RememberToken.Invalid" )
 				expect( () => rememberTokenService.validateToken( hash( generateSecretKey( "AES", 256 ), "SHA-256" ) ) ).toThrow( "RememberToken.Invalid" )
 			} )
 
-			it( "revokes every active remembered browser", () => {
+			it( "deletes every remembered browser", () => {
 				var user = createVerifiedUser()
 				var firstToken = rememberTokenService.createToken( user: user, days: 14 )
 				var secondToken = rememberTokenService.createToken( user: user, days: 14 )
 
 				expect( rememberTokenService.revokeAllTokens() ).toBeGTE( 2 )
+				expect( isNull( rememberTokenService.findWhere( { token: firstToken.token.getToken() } ) ) ).toBeTrue()
+				expect( isNull( rememberTokenService.findWhere( { token: secondToken.token.getToken() } ) ) ).toBeTrue()
 				expect( () => rememberTokenService.validateToken( firstToken.rawToken ) ).toThrow( "RememberToken.Invalid" )
 				expect( () => rememberTokenService.validateToken( secondToken.rawToken ) ).toThrow( "RememberToken.Invalid" )
 			} )
 
-			it( "only revokes remembered browsers for the requested user", () => {
+			it( "only deletes remembered browsers for the requested user", () => {
 				var firstUser = createVerifiedUser()
 				var secondUser = createVerifiedUser()
 				var firstToken = rememberTokenService.createToken( user: firstUser, days: 14 )
 				var secondToken = rememberTokenService.createToken( user: secondUser, days: 14 )
 
 				expect( rememberTokenService.revokeTokensForUser( firstUser.getId() ) ).toBe( 1 )
+				expect( isNull( rememberTokenService.findWhere( { token: firstToken.token.getToken() } ) ) ).toBeTrue()
+				expect( isNull( rememberTokenService.findWhere( { token: secondToken.token.getToken() } ) ) ).toBeFalse()
 				expect( () => rememberTokenService.validateToken( firstToken.rawToken ) ).toThrow( "RememberToken.Invalid" )
 				expect( rememberTokenService.validateToken( secondToken.rawToken ).getUser().getId() ).toBe( secondUser.getId() )
 			} )
