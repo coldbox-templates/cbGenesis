@@ -178,7 +178,6 @@ class extends="app.models.BaseEntity" {
 			"userId",
 			"lastLogin",
 			"verifiedAt",
-			"isActive",
 			"roles",
 			"permissions",
 			"apiTokens",
