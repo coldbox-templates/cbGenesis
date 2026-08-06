@@ -15,7 +15,7 @@ class extends="app.models.BaseEntity" {
 	 * The unique identifier for the permission.
 	 */
 	@fieldType( "id" )
-	@generator( "GUID" )
+	@generator( "UUID" )
 	property
 		name="permissionId"
 		setter="false";
