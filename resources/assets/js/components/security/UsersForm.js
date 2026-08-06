@@ -153,6 +153,7 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Users could not be loaded." );
 				this.users = ( result.data?.records || [] ).map( normalizeUser );
 				this.total = Number( result.data?.count || 0 );
+				this.counts = result.data?.counts || this.counts;
 			} catch ( error ) {
 				this.error = error.message || "Users could not be loaded.";
 			} finally {
