@@ -55,14 +55,14 @@
 	align-items: center;
 
 	> .cb-segmented-control,
-	> .cb-admin-role-filter,
+	> .cb-filter-select,
 	> .cb-admin-search {
 		height: 3.5rem;
 		box-sizing: border-box;
 	}
 }
 
-.cb-admin-role-filter {
+.cb-filter-select {
 	min-width: 8.5rem;
 	box-sizing: border-box;
 	height: 3rem;
@@ -125,6 +125,17 @@
 	border-radius: $border-radius;
 	background: rgba($bl-danger, 0.08);
 	color: $bl-danger;
+}
+
+.cb-form-error,
+.form-error {
+	margin: 0;
+	padding: 0.7rem 0.8rem;
+	border: 1px solid rgba($bl-danger, 0.3);
+	border-radius: $border-radius;
+	background: rgba($bl-danger, 0.08);
+	color: $bl-danger;
+	font-size: 0.85rem;
 }
 
 .cb-drawer-section-title {
@@ -439,29 +450,19 @@
 	color: $bl-danger;
 }
 
-.cb-table-actions {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
+.cb-chip-danger {
+	background: rgba($bl-danger, 0.18);
+	color: $bl-danger;
+}
 
-	a,
-	button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border: 0;
-		border-radius: $border-radius;
-		background: transparent;
-		color: var(--app-text-muted);
-		text-decoration: none;
+.cb-chip-warning {
+	background: rgba($bl-warning, 0.18);
+	color: $bl-warning;
+}
 
-		&:hover {
-			background: var(--app-surface-raised);
-			color: var(--app-text);
-		}
-	}
+.cb-chip-muted {
+	background: var(--app-surface-raised);
+	color: var(--app-text-muted);
 }
 
 .cb-muted-cell {
@@ -990,47 +991,6 @@
 	background: var(--bl-gradient-soft);
 	color: $bl-cyan-dark;
 	font-size: 0.82rem;
-}
-
-.cb-permission-matrix {
-	min-width: 720px;
-
-	th:not(:first-child),
-	td:not(:first-child) {
-		text-align: center;
-	}
-}
-
-.cb-matrix-check {
-	display: inline-flex;
-	cursor: pointer;
-
-	input {
-		position: absolute;
-		opacity: 0;
-	}
-
-	span {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.2rem;
-		height: 1.2rem;
-		border-radius: $border-radius;
-		border: 2px solid var(--app-border);
-	}
-
-	input:checked + span {
-		border-color: $bl-success;
-		background: $bl-success;
-
-		&::after {
-			content: '✓';
-			color: #07101c;
-			font-size: 0.75rem;
-			font-weight: 900;
-		}
-	}
 }
 
 .cb-permission-grid {
@@ -1576,7 +1536,6 @@
 	}
 }
 
-.cb-compact-input,
 .cb-setting-row select,
 .cb-form-grid input,
 .cb-form-grid select,
@@ -1621,10 +1580,6 @@
 
 .cb-form-grid input[type="password"] {
 	padding-right: 2.75rem;
-}
-
-.cb-compact-input {
-	max-width: 5rem;
 }
 
 .cb-form-grid {

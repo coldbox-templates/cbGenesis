@@ -50,7 +50,7 @@
 		</div>
 
 		<!--- Form Errors Show Up Here --->
-		<p class="form-error" x-show="error" x-text="error" x-cloak></p>
+		<p class="cb-form-error" x-show="error" x-text="error" x-cloak></p>
 	</div>
 
 	<!--- Form Actions on Drawer --->

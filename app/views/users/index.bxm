@@ -50,7 +50,7 @@
 			</div>
 			<!--- Filter Users by Role --->
 			<select
-				class="cb-admin-role-filter"
+				class="cb-filter-select"
 				x-model="roleFilter"
 				@change="setRoleFilter( $event.target.value )"
 				aria-label="Filter users by role">
