@@ -13,6 +13,48 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="roleService";
 
+	@inject
+	property name="securityService";
+
+	@inject
+	property name="apiTokenService";
+
+	@inject
+	property name="userActionTokenService";
+
+	static{
+		csrfVerify = {
+			"update": true,
+			"updateProfile": true,
+			"setStatus": true,
+			"resetPassword": true,
+			"verify": true,
+			"revokeRememberTokens": true,
+			"addRole": true,
+			"removeRole": true,
+			"addPermission": true,
+			"removePermission": true,
+			"savePreferences": true,
+			"revokeToken": true,
+			"revokeAllTokens": true,
+			"resendInvitation": true
+		}
+	}
+
+	function preHandler( event, rc, prc ) {
+		if ( static.csrfVerify.keyExists( event.getCurrentAction() ) && !csrfVerify( rc.csrf ?: "" ) ) {
+			event.getResponse().addMessage( "Invalid or expired CSRF token." )
+			onAuthorizationFailure(
+				event: event,
+				rc: rc,
+				prc: prc,
+				abort: true,
+				exception: { type: "InvalidCSRF", message: "Invalid or expired CSRF token" }
+			)
+		}
+		super.preHandler( argumentCollection: arguments )
+	}
+
 	// Present the users list view
 	function index( event, rc, prc ) {
 		prc.title = "Users"
@@ -114,13 +156,212 @@ class extends="BaseSecureHandler" {
 	// Show a specific user detail page
 	@secured( "users:read" )
 	function show( event, rc, prc ) {
-		// Get the user to manage
-		prc.user = userService
-			.getOrFail( rc.userId ?: "" )
-			.getMemento()
-		// Lookups
-		prc.roles = roleService.list().map( .getMemento )
-		prc.permissions = permissionService.list().map( .getMemento )
+		prc.user = userService.getOrFail( rc.userId ?: "" )
+		prc.payload = buildDetailPayload( prc.user )
+		prc.title = "Manage #prc.user.getFullName()#"
+		event.setView( "users/detail" )
+	}
+
+	private struct function buildDetailPayload( required user ) {
+		var directPermissions = arguments.user.getPermissions().map( .getMemento )
+		var roles = arguments.user.getRoles().map( .getMemento )
+		var effectivePermissions = arguments.user.getAllPermissions().toArray().sort( "text" )
+		return {
+			user: {
+				userId: arguments.user.getUserId(),
+				firstName: arguments.user.getFirstName(),
+				lastName: arguments.user.getLastName(),
+				fullName: arguments.user.getFullName(),
+				email: arguments.user.getEmail(),
+				biography: arguments.user.getBiography(),
+				isActive: arguments.user.getIsActive(),
+				isVerified: arguments.user.isEmailVerified(),
+				verifiedAt: arguments.user.getVerifiedAt(),
+				isPasswordReset: arguments.user.getIsPasswordReset(),
+				lastLogin: arguments.user.getLastLogin(),
+				createdDate: arguments.user.getCreatedDate(),
+				preferences: arguments.user.getAllPreferences()
+			},
+			roles: roles,
+			directPermissions: directPermissions,
+			effectivePermissions: effectivePermissions,
+			apiTokens: apiTokenService.listForUser( arguments.user.getUserId() ).map( .getMemento ),
+			roleCatalog: roleService.findAllWhere( criteria: { isActive: true }, sortOrder: "role" ).map( .getMemento ),
+			permissionCatalog: permissionService.findAllWhere( criteria: { isActive: true }, sortOrder: "permission" ).map( .getMemento ),
+			csrf: csrfToken()
+		}
+	}
+
+	private any function getManagedUser( required rc ) {
+		return userService.getOrFail( arguments.rc.userId ?: "" )
+	}
+
+	private void function ensureNotSelf( required user, required prc ) {
+		if ( arguments.user.getUserId() == arguments.prc.authUser.getUserId() ) {
+			throw( type: "UserManagement.SelfAction", message: "This action cannot be performed on your own account." )
+		}
+	}
+
+	@remote( "Update a managed user's profile" )
+	@secured( "users:admin,users:write" )
+	function updateProfile( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = getManagedUser( rc )
+			prc.user
+				.setFirstName( rc.firstName ?: "" )
+				.setLastName( rc.lastName ?: "" )
+				.setEmail( rc.email ?: "" )
+				.setBiography( rc.biography ?: "" )
+				.validateOrFail( profiles: "update" )
+				.save()
+			response.setData( data: buildDetailPayload( prc.user ), message: "User profile saved successfully." )
+		} catch ( ValidationException error ) {
+			response.failure( message: "User validation errors", statusCode: 422, data: prc.user.getValidationResult().getAllErrorsAsStruct() )
+		} catch ( any error ) {
+			response.failure( message: "User profile could not be saved: #error.message#", statusCode: 400 )
+		}
+		return response
+	}
+
+	@remote( "Enable or disable a managed user" )
+	@secured( "users:admin,users:write" )
+	function setStatus( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = getManagedUser( rc )
+			if ( !isBoolean( rc.isActive ?: "" ) ) throw( type: "UserManagement.InvalidStatus", message: "A valid active state is required." )
+			if ( !javacast( "boolean", rc.isActive ) ) ensureNotSelf( prc.user, prc )
+			prc.user.setIsActive( javacast( "boolean", rc.isActive ) ).save()
+			response.setData( data: buildDetailPayload( prc.user ), message: "User status updated successfully." )
+		} catch ( any error ) {
+			response.failure( message: "User status could not be updated: #error.message#", statusCode: 400 )
+		}
+		return response
+	}
+
+	@remote( "Issue a password reset for a managed user" )
+	@secured( "users:admin" )
+	function resetPassword( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = getManagedUser( rc )
+			userService.sendPasswordReminder( prc.user, prc.authUser )
+			response.setData( data: buildDetailPayload( prc.user ), message: "Password reset instructions sent successfully." )
+		} catch ( any error ) {
+			response.failure( message: "Password reset could not be issued: #error.message#", statusCode: 400 )
+		}
+		return response
+	}
+
+	@remote( "Manually verify a managed user" )
+	@secured( "users:admin" )
+	function verify( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = getManagedUser( rc )
+			prc.user.setVerifiedAt( now() ).save()
+			userActionTokenService.revokeForUser( userId: prc.user.getUserId(), purpose: userActionTokenService.PURPOSE_INVITATION )
+			response.setData( data: buildDetailPayload( prc.user ), message: "User verified successfully." )
+		} catch ( any error ) {
+			response.failure( message: "User could not be verified: #error.message#", statusCode: 400 )
+		}
+		return response
+	}
+
+	@remote( "Revoke remembered sessions for a managed user" )
+	@secured( "users:admin" )
+	function revokeRememberTokens( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = getManagedUser( rc )
+			var revoked = securityService.revokeRememberTokensForUser( prc.user.getUserId() )
+			response.setData( data: { revoked: revoked }, message: "Remembered sessions revoked successfully." )
+		} catch ( any error ) {
+			response.failure( message: "Remembered sessions could not be revoked: #error.message#", statusCode: 400 )
+		}
+		return response
+	}
+
+	@remote( "Add a role to a managed user" )
+	@secured( "users:admin" )
+	function addRole( event, rc, prc ) {
+		try {
+			prc.user = getManagedUser( rc )
+			prc.role = roleService.getOrFail( rc.roleId ?: "" )
+			if ( !prc.user.hasRole( prc.role ) ) prc.user.addRole( prc.role ).save()
+			event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Role added successfully." )
+		} catch ( any error ) {
+			event.getResponse().failure( message: "Role could not be added: #error.message#", statusCode: 400 )
+		}
+	}
+
+	@remote( "Remove a role from a managed user" )
+	@secured( "users:admin" )
+	function removeRole( event, rc, prc ) {
+		try {
+			prc.user = getManagedUser( rc )
+			prc.role = roleService.getOrFail( rc.roleId ?: "" )
+			ensureNotSelf( prc.user, prc )
+			prc.user.removeRole( prc.role ).save()
+			event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Role removed successfully." )
+		} catch ( any error ) {
+			event.getResponse().failure( message: "Role could not be removed: #error.message#", statusCode: 400 )
+		}
+	}
+
+	@remote( "Add a direct permission to a managed user" )
+	@secured( "users:admin" )
+	function addPermission( event, rc, prc ) {
+		try {
+			prc.user = getManagedUser( rc )
+			prc.permission = permissionService.getOrFail( rc.permissionId ?: "" )
+			var permissions = prc.user.getPermissions()
+			if ( !permissions.some( p => p.getPermissionId() == prc.permission.getPermissionId() ) ) permissions.append( prc.permission )
+			prc.user.setPermissions( permissions ).save()
+			event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Direct permission added successfully." )
+		} catch ( any error ) {
+			event.getResponse().failure( message: "Permission could not be added: #error.message#", statusCode: 400 )
+		}
+	}
+
+	@remote( "Remove a direct permission from a managed user" )
+	@secured( "users:admin" )
+	function removePermission( event, rc, prc ) {
+		try {
+			prc.user = getManagedUser( rc )
+			var permissions = prc.user.getPermissions().filter( p => p.getPermissionId() != ( rc.permissionId ?: "" ) )
+			prc.user.setPermissions( permissions ).save()
+			event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Direct permission removed successfully." )
+		} catch ( any error ) {
+			event.getResponse().failure( message: "Permission could not be removed: #error.message#", statusCode: 400 )
+		}
+	}
+
+	@remote( "Save a managed user's preferences" )
+	@secured( "users:admin,users:write" )
+	function savePreferences( event, rc, prc ) {
+		prc.user = getManagedUser( rc )
+		prc.user.setPreferences( rc.preferences ?: "{}" ).save()
+		event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Preferences saved successfully." )
+	}
+
+	@remote( "Revoke one API token for a managed user" )
+	@secured( "users:admin" )
+	function revokeToken( event, rc, prc ) {
+		prc.user = getManagedUser( rc )
+		var token = apiTokenService.getOrFail( rc.tokenId ?: "" )
+		if ( token.getUser().getUserId() != prc.user.getUserId() ) throw( type: "APIToken.NotFound", message: "API token not found" )
+		apiTokenService.revokeToken( rc.tokenId )
+		event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "API token revoked successfully." )
+	}
+
+	@remote( "Revoke all API tokens for a managed user" )
+	@secured( "users:admin" )
+	function revokeAllTokens( event, rc, prc ) {
+		prc.user = getManagedUser( rc )
+		var revoked = apiTokenService.revokeAllForUser( prc.user.getUserId() )
+		event.getResponse().setData( data: { revoked: revoked }, message: "API tokens revoked successfully." )
 	}
 
 	// Update an existing user

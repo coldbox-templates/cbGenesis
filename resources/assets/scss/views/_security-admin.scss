@@ -348,6 +348,18 @@
 	align-items: center;
 	gap: 0.8rem;
 
+	.cb-user-detail-link {
+		color: inherit;
+		text-decoration: none;
+
+		&:hover,
+		&:focus-visible {
+			color: $bl-cyan;
+			text-decoration: underline;
+			text-underline-offset: 0.15rem;
+		}
+	}
+
 	strong,
 	small {
 		display: block;

@@ -63,6 +63,16 @@ class {
 		 */
 		route( "users/search", "Users.search" )
 		route( "users/:userId/invitation" ).withHandler( "Users" ).toAction({ POST: "resendInvitation" })
+		route( "users/:userId/profile" ).withHandler( "Users" ).toAction({ PUT: "updateProfile" })
+		route( "users/:userId/status" ).withHandler( "Users" ).toAction({ POST: "setStatus" })
+		route( "users/:userId/reset-password" ).withHandler( "Users" ).toAction({ POST: "resetPassword" })
+		route( "users/:userId/verify" ).withHandler( "Users" ).toAction({ POST: "verify" })
+		route( "users/:userId/revoke-remember-tokens" ).withHandler( "Users" ).toAction({ POST: "revokeRememberTokens" })
+	route( "users/:userId/roles/:roleId" ).withHandler( "Users" ).toAction({ POST: "addRole", DELETE: "removeRole" })
+		route( "users/:userId/permissions/:permissionId" ).withHandler( "Users" ).toAction({ POST: "addPermission", DELETE: "removePermission" })
+		route( "users/:userId/preferences" ).withHandler( "Users" ).toAction({ POST: "savePreferences" })
+		route( "users/:userId/tokens/revoke-all" ).withHandler( "Users" ).toAction({ POST: "revokeAllTokens" })
+		route( "users/:userId/tokens/:tokenId" ).withHandler( "Users" ).toAction({ DELETE: "revokeToken" })
 		resources(
 			resource:"users",
 			parameterName: "userId"

@@ -394,6 +394,13 @@ class extends="app.models.BaseEntity" {
 	}
 
 	/**
+	 * Invalidate the derived permission set after relationship changes.
+	 */
+	private void function clearPermissionCache() {
+		variables.allPermissions = javacast( "null", "" )
+	}
+
+	/**
 	 * Verifies if the user has a specific permission(s)
 	 *
 	 * If there are more than 1 permission, it's an OR check, meaning if the user has any of the permissions,
@@ -434,12 +441,13 @@ class extends="app.models.BaseEntity" {
 	 * So hibernate can clear relationships if set.
 	 */
 	User function setPermissions( required array permissions ) {
-		if ( hasPermission() ) {
+		if ( getPermissions().len() ) {
 			variables.permissions.clear()
 			variables.permissions.addAll( arguments.permissions )
 		} else {
 			variables.permissions = arguments.permissions
 		}
+		clearPermissionCache()
 		return this
 	}
 
@@ -448,12 +456,13 @@ class extends="app.models.BaseEntity" {
 	 * So hibernate can clear relationships if set.
 	 */
 	User function setRoles( required array roles ) {
-		if ( hasRole() ) {
+		if ( getRoles().len() ) {
 			variables.roles.clear()
 			variables.roles.addAll( arguments.roles )
 		} else {
 			variables.roles = arguments.roles
 		}
+		clearPermissionCache()
 		return this
 	}
 
@@ -462,6 +471,7 @@ class extends="app.models.BaseEntity" {
 	 */
 	User function clearRoles() {
 		variables.roles = []
+		clearPermissionCache()
 		return this
 	}
 

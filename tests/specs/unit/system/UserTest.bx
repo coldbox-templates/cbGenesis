@@ -189,6 +189,23 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				it( "has one-to-many relationship with apiTokens", () => {
 					expect( user.getApiTokens() ).toBeArray()
 				} )
+
+				it( "replaces roles and permissions while preserving effective permission checks", () => {
+					var role = createObject( "app.models.security.Role" )
+					var permission = createObject( "app.models.security.Permission" )
+					permission.setPermission( "users:read" )
+					role.setPermissions( [ permission ] )
+
+					user.setRoles( [ role ] )
+					expect( user.getRoles() ).toHaveLength( 1 )
+					expect( user.hasPermission( "users:read" ) ).toBeTrue()
+
+					user.setRoles( [] )
+					expect( user.getRoles() ).toBeEmpty()
+					expect( user.hasPermission( "users:read" ) ).toBeFalse()
+					user.setPermissions( [ permission ] )
+					expect( user.hasPermission( "users:read" ) ).toBeTrue()
+				} )
 			} )
 
 			describe( "memento", () => {

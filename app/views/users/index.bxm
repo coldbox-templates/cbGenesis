@@ -155,7 +155,9 @@
 								<div class="cb-identity-cell">
 									<span class="cb-avatar-token" x-text="user.initials"></span>
 									<span>
-										<strong x-text="user.name"></strong>
+											<a class="cb-user-detail-link" :href="user.detailUrl" :aria-label="'Manage ' + user.name">
+												<strong x-text="user.name"></strong>
+											</a>
 										<small x-text="user.email"></small>
 										<span class="cb-chip-row mt-1" x-show="user.roles.length" x-cloak>
 											<template x-for="( role, roleIndex ) in user.roles" :key="user.userId + '-' + role + '-' + roleIndex">
