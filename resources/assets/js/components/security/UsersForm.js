@@ -231,7 +231,6 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			if ( event ) event.preventDefault();
 			if ( this.submitting || !this.inviteReady ) return;
 			this.submitting = true;
-			this.error = "";
 			try {
 				const body = new URLSearchParams( {
 					...this.form,
@@ -245,10 +244,10 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( response.status === 422 ? validationMessage( result.data ) : result.messages || "User could not be invited." );
 				this.closeInvite( true );
-				this.notice = "Invitation sent successfully.";
+				window.$toast?.( "Invitation sent successfully.", "success", { title: "Invitation sent" } );
 				await this.refreshUsers();
 			} catch ( error ) {
-				this.error = error.message || "User could not be invited.";
+				window.$toast?.( error.message || "User could not be invited.", "error", { title: "Invitation failed" } );
 			} finally {
 				this.submitting = false;
 			}
@@ -263,7 +262,6 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 		async resendInvitation( user ) {
 			if ( !user?.canResendInvitation || this.resendingUserId ) return;
 			this.resendingUserId = user.userId;
-			this.error = "";
 			window.$progress?.start( { message: "Resending invitation..." } );
 			try {
 				const response = await fetch( `/users/${ encodeURIComponent( user.userId ) }/invitation`, {
@@ -273,13 +271,10 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 				} );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Invitation could not be sent." );
-				this.notice = "Invitation sent successfully.";
-				window.$toast?.( this.notice, "success", { title: "Invitation sent" } );
+				window.$toast?.( "Invitation sent successfully.", "success", { title: "Invitation sent" } );
 				await this.refreshUsers();
 			} catch ( error ) {
-				this.error = error.message || "Invitation could not be sent.";
-				this.invitationError = this.error;
-				window.$toast?.( this.error, "error", { title: "Invitation failed" } );
+				window.$toast?.( error.message || "Invitation could not be sent.", "error", { title: "Invitation failed" } );
 			} finally {
 				this.resendingUserId = null;
 				window.$progress?.stop();
