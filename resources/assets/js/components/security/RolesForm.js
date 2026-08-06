@@ -439,6 +439,7 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 				if ( this.selectedRole ) {
 					this.roles = this.roles.map( ( role ) => role.roleId === result.data.roleId ? result.data : role );
 					this.selectedRole = result.data;
+					window.$toast?.( "Role updated successfully.", "success", { title: "Role updated" } );
 				}
 				// If creating a new role, add it to the catalog and sort by name.
 				else {
@@ -453,7 +454,7 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 				if ( isCreating ) {
 					window.$toast?.( error.message || "Role could not be created.", "error", { title: "Role creation failed" } );
 				} else {
-					this.error = error.message || "Role could not be saved.";
+					window.$toast?.( error.message || "Role could not be updated.", "error", { title: "Role update failed" } );
 				}
 			} finally {
 				this.submitting = false;
@@ -504,8 +505,9 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 				this.selectedRole = null;
 				this.cancelDelete( true );
 				this.closeDrawer( true );
+				window.$toast?.( "Role deleted successfully.", "success", { title: "Role deleted" } );
 			} catch ( error ) {
-				this.error = error.message || "Role could not be deleted.";
+				window.$toast?.( error.message || "Role could not be deleted.", "error", { title: "Role deletion failed" } );
 			} finally {
 				this.deleting = false;
 			}
