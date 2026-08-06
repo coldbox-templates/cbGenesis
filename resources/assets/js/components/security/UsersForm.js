@@ -8,26 +8,29 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 	const initialPayload = payload && !Array.isArray( payload ) ? payload : { records: payload };
 
 	return {
-		users           : ( initialPayload.records || [] ).map( normalizeUser ),
-		roles           : initialPayload.roles || [],
-		total           : Number( initialPayload.count || 0 ),
-		counts          : initialPayload.counts || { active: 0, pending: 0, inactive: 0, all: 0 },
+		users            : ( initialPayload.records || [] ).map( normalizeUser ),
+		roles            : initialPayload.roles || [],
+		total            : Number( initialPayload.count || 0 ),
+		counts           : initialPayload.counts || { active: 0, pending: 0, inactive: 0, all: 0 },
 		csrfToken,
-		query           : "",
-		statusFilter    : "active",
-		roleFilter      : "",
-		sortOrder       : "lastName asc",
-		page            : 1,
-		limit           : 25,
-		loading         : false,
-		submitting      : false,
-		deleting        : false,
-		resendingUserId : null,
-		inviteOpen      : false,
-		deleteTarget    : null,
-		error           : "",
-		notice          : "",
-		form            : { firstName: "", lastName: "", email: "", roleId: "" },
+		query            : "",
+		statusFilter     : "active",
+		roleFilter       : "",
+		sortOrder        : "lastName asc",
+		page             : 1,
+		limit            : 25,
+		loading          : false,
+		submitting       : false,
+		deleting         : false,
+		resendingUserId  : null,
+		inviteOpen       : false,
+		deleteTarget     : null,
+		statusTarget     : null,
+		statusSubmitting : false,
+		invitationError  : "",
+		error            : "",
+		notice           : "",
+		form             : { firstName: "", lastName: "", email: "", roleId: "" },
 
 		/**
 		 * Calculates the number of pages in the current table result set.
@@ -87,6 +90,11 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 		clearFeedback() {
 			this.error = "";
 			this.notice = "";
+		},
+
+		/** Closes the resend invitation error dialog. */
+		closeInvitationError() {
+			this.invitationError = "";
 		},
 
 		/**
@@ -255,6 +263,7 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			if ( !user?.canResendInvitation || this.resendingUserId ) return;
 			this.resendingUserId = user.userId;
 			this.error = "";
+			window.$progress?.start( { message: "Resending invitation..." } );
 			try {
 				const response = await fetch( `/users/${ encodeURIComponent( user.userId ) }/invitation`, {
 					method  : "POST",
@@ -264,11 +273,71 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Invitation could not be sent." );
 				this.notice = "Invitation sent successfully.";
+				window.$toast?.( this.notice, "success", { title: "Invitation sent" } );
 				await this.refreshUsers();
 			} catch ( error ) {
 				this.error = error.message || "Invitation could not be sent.";
+				this.invitationError = this.error;
+				window.$toast?.( this.error, "error", { title: "Invitation failed" } );
 			} finally {
 				this.resendingUserId = null;
+				window.$progress?.stop();
+			}
+		},
+
+		/**
+		 * Opens the confirmation dialog for changing a user's active state.
+		 *
+		 * @param {Object} user User whose active state will change.
+		 * @param {boolean} isActive Active state to save.
+		 * @returns {void}
+		 */
+		confirmStatusChange( user, isActive ) {
+			this.statusTarget = { user, isActive };
+			this.error = "";
+		},
+
+		/**
+		 * Closes the active-state confirmation dialog unless a request is running.
+		 *
+		 * @param {boolean} force Whether to close while submitting.
+		 * @returns {void}
+		 */
+		cancelStatusChange( force = false ) {
+			if ( this.statusSubmitting && !force ) return;
+			this.statusTarget = null;
+			this.error = "";
+		},
+
+		/**
+		 * Saves only the requested active state and refreshes the current listing.
+		 *
+		 * @returns {Promise<void>}
+		 */
+		async saveStatusChange() {
+			if ( !this.statusTarget || this.statusSubmitting ) return;
+			const { user, isActive } = this.statusTarget;
+			this.statusSubmitting = true;
+			this.error = "";
+			window.$progress?.start( { message: isActive ? "Enabling user..." : "Disabling user..." } );
+			try {
+				const response = await fetch( `/users/${ encodeURIComponent( user.userId ) }`, {
+					method  : "PUT",
+					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+					body    : new URLSearchParams( { isActive: String( isActive ), csrf: this.csrfToken } ),
+				} );
+				const result = await response.json();
+				if ( !response.ok || result.error ) throw new Error( result.messages || "User status could not be changed." );
+				this.cancelStatusChange( true );
+				this.notice = isActive ? "User enabled successfully." : "User disabled successfully.";
+				window.$toast?.( this.notice, "success", { title: isActive ? "User enabled" : "User disabled" } );
+				await this.refreshUsers();
+			} catch ( error ) {
+				this.error = error.message || "User status could not be changed.";
+				window.$toast?.( this.error, "error", { title: "User status update failed" } );
+			} finally {
+				this.statusSubmitting = false;
+				window.$progress?.stop();
 			}
 		},
 

@@ -77,7 +77,7 @@
 			<table class="cb-table">
 				<thead>
 					<tr>
-						<th scope="col">
+						<th scope="col" class="cb-users-info-column">
 							<button
 								type="button"
 								class="cb-table-sort-button"
@@ -86,7 +86,7 @@
 								Name <i class="ph-duotone" :class="$sortIcon( sortOrder, 'lastName' )" aria-hidden="true"></i>
 							</button>
 						</th>
-						<th scope="col"><button
+						<th scope="col" class="cb-users-secondary-column"><button
 							type="button"
 							class="cb-table-sort-button"
 							:class="$sortClass( sortOrder, 'createdDate' )"
@@ -96,6 +96,7 @@
 						<th
 							x-show="statusFilter !== 'pending'"
 							x-cloak
+							class="cb-users-secondary-column"
 							scope="col"><button
 							type="button"
 							class="cb-table-sort-button"
@@ -106,8 +107,10 @@
 						<th
 							x-show="statusFilter !== 'active'"
 							x-cloak
+							class="cb-users-secondary-column"
 							scope="col">Invitation</th>
 						<th
+							class="cb-users-secondary-column"
 							scope="col"><button
 							type="button"
 							class="cb-table-sort-button"
@@ -115,13 +118,13 @@
 							@click="sortBy( 'isActive' )">
 							Status <i class="ph-duotone" :class="$sortIcon( sortOrder, 'isActive' )" aria-hidden="true"></i></button>
 						</th>
-						<th scope="col">Actions</th>
+						<th scope="col" class="cb-users-actions-column">Actions</th>
 					</tr>
 				</thead>
 				<tbody>
 					<template x-for="user in users" :key="user.userId">
 						<tr>
-							<td>
+							<td class="cb-users-info-column">
 								<div class="cb-identity-cell">
 									<span class="cb-avatar-token" x-text="user.initials"></span>
 									<span>
@@ -135,13 +138,14 @@
 									</span>
 								</div>
 							</td>
-							<td>
+							<td class="cb-users-secondary-column">
 								<span
 									class="cb-muted-cell"
 									:data-tooltip="user.createdDate ? $formatDateTime( user.createdDate ) : null"
 									x-text="user.createdDate ? $formatDate( user.createdDate ) : '-' "></span>
 							</td>
 							<td
+								class="cb-users-secondary-column"
 								x-show="statusFilter !== 'pending'"
 								x-cloak>
 								<span
@@ -150,6 +154,7 @@
 									x-text="user.verifiedAt ? $formatDate( user.verifiedAt ) : 'Pending'"></span>
 							</td>
 							<td
+								class="cb-users-secondary-column"
 								x-show="statusFilter !== 'active'"
 								x-cloak>
 								<div class="d-flex flex-column gap-1">
@@ -173,10 +178,10 @@
 									</small>
 								</div>
 							</td>
-							<td>
+							<td class="cb-users-secondary-column">
 								<span class="cb-chip" :class="'cb-chip-' + user.status.toLowerCase()" x-text="user.status"></span>
 							</td>
-							<td>
+							<td class="cb-users-actions-column">
 								<div class="dropdown">
 									<button
 										type="button"
@@ -202,6 +207,16 @@
 											>
 												<i class="ph-duotone ph-paper-plane-tilt" aria-hidden="true"></i>
 												<span x-text="resendingUserId === user.userId ? 'Sending...' : 'Resend invitation'"></span>
+											</button>
+										</li>
+										<li x-show="( statusFilter === 'active' || statusFilter === 'pending' ) && user.isActive" x-cloak>
+											<button type="button" class="dropdown-item" @click="confirmStatusChange( user, false )">
+												<i class="ph-duotone ph-user-minus" aria-hidden="true"></i> Disable user
+											</button>
+										</li>
+										<li x-show="statusFilter === 'inactive' && !user.isActive" x-cloak>
+											<button type="button" class="dropdown-item" @click="confirmStatusChange( user, true )">
+												<i class="ph-duotone ph-user-plus" aria-hidden="true"></i> Enable user
 											</button>
 										</li>
 										<li>
@@ -275,6 +290,24 @@
 		openExpression: "deleteTarget",
 		closeExpression: "cancelDelete()",
 		contentView   : "users/deleteConfirm"
+	} )#
+
+	<!--- Enable/Disable User Modal --->
+	#view( view: "_components/ui/modal", args: {
+		id             : "cb-user-status-modal",
+		title          : "Change user status?",
+		openExpression : "statusTarget",
+		closeExpression: "cancelStatusChange()",
+		contentView    : "users/statusConfirm"
+	} )#
+
+	<!--- Resend Invitation Error Modal --->
+	#view( view: "_components/ui/modal", args: {
+		id             : "cb-user-invitation-error-modal",
+		title          : "Invitation could not be sent",
+		openExpression : "invitationError",
+		closeExpression: "closeInvitationError()",
+		contentView    : "users/invitationError"
 	} )#
 </div>
 </bx:output>

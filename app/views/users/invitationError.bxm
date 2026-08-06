@@ -1,0 +1,3 @@
+<bx:output>
+<p class="mb-0" x-text="invitationError"></p>
+</bx:output>

@@ -1,0 +1,27 @@
+<bx:output>
+<div class="cb-ui-modal__body cb-delete-confirmation">
+	<i class="ph-duotone ph-warning" aria-hidden="true"></i>
+	<p>
+		<span x-show="statusTarget?.isActive">You are about to enable <strong x-text="statusTarget?.user?.name"></strong>.</span>
+		<span x-show="statusTarget && !statusTarget.isActive">You are about to disable <strong x-text="statusTarget?.user?.name"></strong>.</span>
+	</p>
+	<p>Are you sure you want to continue?</p>
+	<p class="cb-form-error" x-show="error" x-text="error"></p>
+</div>
+
+<div class="cb-ui-modal__footer">
+	<button
+		type="button"
+		class="btn btn-light"
+		@click="cancelStatusChange()"
+		:disabled="statusSubmitting">Cancel</button>
+	<button
+		type="button"
+		class="btn btn-primary"
+		@click.prevent="saveStatusChange()"
+		:disabled="statusSubmitting">
+		<i class="ph-duotone" :class="statusTarget?.isActive ? 'ph-user-plus' : 'ph-user-minus'" aria-hidden="true"></i>
+		<span x-text="statusSubmitting ? 'Saving...' : ( statusTarget?.isActive ? 'Enable user' : 'Disable user' )"></span>
+	</button>
+</div>
+</bx:output>
