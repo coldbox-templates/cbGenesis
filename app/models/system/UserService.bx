@@ -52,7 +52,8 @@ class extends="app.models.BaseService" {
 			"isActive"  : "isActive",
 			"isPasswordReset" : "isPasswordReset",
 			"is2FactorAuth" : "is2FactorAuth",
-			"verifiedAt": "verifiedAt"
+			"verifiedAt": "verifiedAt",
+			"lastLogin": "lastLogin"
 		}
 		DEFAULT_SORT_ORDER = "lastName asc"
 	}

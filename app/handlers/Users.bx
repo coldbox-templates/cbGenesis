@@ -46,7 +46,8 @@ class extends="BaseSecureHandler" {
 				"isPasswordReset",
 				"is2FactorAuth",
 				"createdDate",
-				"verifiedAt"
+				"verifiedAt",
+				"lastLogin"
 			]
 		)
 		event.getResponse().withData( {

@@ -68,12 +68,13 @@ Alpine.data( "globalToast", globalToast );
 // ============================================================
 // Alpine Magic Properties Registration
 // ============================================================
-import { formatDate, formatDateTime } from "./utils/dateFormat.js";
+import { formatDate, formatDateTime, formatRelativeDate } from "./utils/dateFormat.js";
 import { countLabel } from "./utils/countLabel.js";
 import { passwordMeetsPolicy } from "./utils/passwordPolicy.js";
 import { sortClass, sortIcon } from "./utils/sort.js";
 Alpine.magic( "formatDate", () => formatDate );
 Alpine.magic( "formatDateTime", () => formatDateTime );
+Alpine.magic( "relativeDate", () => formatRelativeDate );
 Alpine.magic( "countLabel", () => countLabel );
 Alpine.magic( "sortClass", () => sortClass );
 Alpine.magic( "sortIcon", () => sortIcon );
