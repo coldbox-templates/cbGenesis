@@ -328,13 +328,13 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 				} );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "User status could not be changed." );
+				const successMessage = isActive ? "User enabled successfully." : "User disabled successfully.";
 				this.cancelStatusChange( true );
-				this.notice = isActive ? "User enabled successfully." : "User disabled successfully.";
-				window.$toast?.( this.notice, "success", { title: isActive ? "User enabled" : "User disabled" } );
+				window.$toast?.( successMessage, "success", { title: isActive ? "User enabled" : "User disabled" } );
 				await this.refreshUsers();
 			} catch ( error ) {
-				this.error = error.message || "User status could not be changed.";
-				window.$toast?.( this.error, "error", { title: "User status update failed" } );
+				const errorMessage = error.message || "User status could not be changed.";
+				window.$toast?.( errorMessage, "error", { title: "User status update failed" } );
 			} finally {
 				this.statusSubmitting = false;
 				window.$progress?.stop();

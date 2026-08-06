@@ -210,12 +210,20 @@
 											</button>
 										</li>
 										<li x-show="( statusFilter === 'active' || statusFilter === 'pending' ) && user.isActive" x-cloak>
-											<button type="button" class="dropdown-item" @click="confirmStatusChange( user, false )">
+											<button
+												type="button"
+												class="dropdown-item"
+												@click="confirmStatusChange( user, false )"
+												:disabled="statusSubmitting">
 												<i class="ph-duotone ph-user-minus" aria-hidden="true"></i> Disable user
 											</button>
 										</li>
 										<li x-show="statusFilter === 'inactive' && !user.isActive" x-cloak>
-											<button type="button" class="dropdown-item" @click="confirmStatusChange( user, true )">
+											<button
+												type="button"
+												class="dropdown-item"
+												@click="confirmStatusChange( user, true )"
+												:disabled="statusSubmitting">
 												<i class="ph-duotone ph-user-plus" aria-hidden="true"></i> Enable user
 											</button>
 										</li>
