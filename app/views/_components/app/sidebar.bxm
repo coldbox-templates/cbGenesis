@@ -32,9 +32,8 @@
         x-data="{ path: window.location.pathname }"
         aria-label="Main navigation">
 
-        <!--- Main Items --->
+        <!--- Main Group --->
         <div class="cb-sidebar-nav-section">
-            <span class="cb-sidebar-nav-label">Main</span>
             <ul class="cb-sidebar-nav-list">
                 <li>
                     <a href="#event.route( "dashboard" )#"
@@ -50,9 +49,9 @@
             </ul>
         </div>
 
-        <!--- Management Items --->
+		<!--- Access Group --->
         <div class="cb-sidebar-nav-section">
-            <span class="cb-sidebar-nav-label">Management</span>
+            <span class="cb-sidebar-nav-label">Access</span>
             <ul class="cb-sidebar-nav-list">
                 <li>
                     <a href="#event.route( "users" )#"
@@ -84,6 +83,13 @@
                         <span class="cb-sidebar-nav-text">Permissions</span>
                     </a>
                 </li>
+            </ul>
+        </div>
+
+		<!--- System Group --->
+		<div class="cb-sidebar-nav-section">
+			<span class="cb-sidebar-nav-label">System</span>
+            <ul class="cb-sidebar-nav-list">
                 <li x-data="{ expanded: #event.routeIs( "settings" )# || #event.routeIs( "settings/registry" )# }">
                     <div class="cb-sidebar-nav-item-row">
                         <a href="#event.route( "settings" )#"
@@ -109,7 +115,7 @@
                     </ul>
                 </li>
             </ul>
-        </div>
+		</div>
 
     </nav>
     <!--- ── /Navigation ─────────────────────────────────────── --->
