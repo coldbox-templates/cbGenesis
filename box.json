@@ -31,7 +31,8 @@
         "cbsecurity":"^3",
         "vite-helpers":"^2",
         "cborm":"be",
-        "route-visualizer":"^2.2.0+2"
+        "route-visualizer":"^2.2.0+2",
+        "cbsecurity-passkeys":"^1.0.8"
     },
     "installPaths":{
         "coldbox":"lib/coldbox/",
@@ -41,7 +42,8 @@
         "cbsecurity":"lib/modules/cbsecurity/",
         "vite-helpers":"lib/modules/vite-helpers/",
         "cborm":"lib/modules/cborm/",
-        "route-visualizer":"lib/modules/route-visualizer/"
+        "route-visualizer":"lib/modules/route-visualizer/",
+        "cbsecurity-passkeys":"lib/modules/cbsecurity-passkeys/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",
