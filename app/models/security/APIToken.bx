@@ -24,10 +24,10 @@ class extends="app.models.BaseEntity" {
 	 */
 
 	/**
-	 * The primary key (UUID) for this token.
+	 * The primary key (GUID) for this token.
 	 */
 	@fieldType( "id" )
-	@generator( "uuid" )
+	@generator( "GUID" )
 	property
 		name="tokenId"
 		setter="false";

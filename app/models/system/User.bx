@@ -25,7 +25,7 @@ class extends="app.models.BaseEntity" {
 	 */
 
 	@fieldType( "id" )
-	@generator( "uuid" )
+	@generator( "GUID" )
 	property
 		name="userId"
 		setter="false";
