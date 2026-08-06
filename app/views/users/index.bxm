@@ -124,11 +124,13 @@
 							</button>
 						</th>
 						<th
-							x-show="statusFilter !== 'active'"
+							x-show="statusFilter !== 'active' && statusFilter !== 'inactive'"
 							x-cloak
 							class="cb-users-secondary-column"
 							scope="col">Invitation</th>
 						<th
+							x-show="statusFilter === 'all'"
+							x-cloak
 							class="cb-users-secondary-column"
 							scope="col">
 							<button
@@ -189,14 +191,15 @@
 							</td>
 							<td
 								class="cb-users-secondary-column"
-								x-show="statusFilter !== 'active'"
+								width="200"
+								x-show="statusFilter !== 'active' && statusFilter !== 'inactive'"
 								x-cloak>
 								<div class="d-flex flex-column gap-1">
 									<small
 										class="cb-muted-cell"
 										x-show="user.invitationInvitedAt"
 										x-cloak>
-										Invited:
+										<strong>Invited:</strong>
 										<span
 											:data-tooltip="user.invitationInvitedAt ? $formatDateTime( user.invitationInvitedAt ) : null"
 											x-text="user.invitationInvitedAt ? $formatDate( user.invitationInvitedAt ) : '-' "></span>
@@ -205,14 +208,17 @@
 										class="cb-muted-cell"
 										x-show="user.invitationExpiresAt"
 										x-cloak>
-										Expires:
+										<strong>Expires:</strong>
 										<span
 											:data-tooltip="user.invitationExpiresAt ? $formatDateTime( user.invitationExpiresAt ) : null"
 											x-text="user.invitationExpiresAt ? $formatDate( user.invitationExpiresAt ) : '-' "></span>
 									</small>
 								</div>
 							</td>
-							<td class="cb-users-secondary-column">
+							<td
+								class="cb-users-secondary-column"
+								x-show="statusFilter === 'all'"
+								x-cloak>
 								<span class="cb-chip" :class="'cb-chip-' + user.status.toLowerCase()" x-text="user.status"></span>
 							</td>
 							<td class="cb-users-actions-column text-center">
