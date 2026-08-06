@@ -9,7 +9,9 @@
 // ============================================================
 
 // 1. Brand tokens + Bootstrap variable overrides
+@use "sass:color";
 @import "variables";
+@import "abstracts/mixins";
 
 // 2. Bootstrap (picks up our variable overrides above)
 @import "bootstrap/scss/bootstrap";

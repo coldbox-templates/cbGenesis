@@ -19,6 +19,14 @@
     --app-text-muted:     #{$bl-text-light-muted};
     --app-text-inverse:   #ffffff;
 
+    // Semantic statuses and interaction roles
+    --app-info:           #{$bl-cyan-dark};
+    --app-success:        #{$bl-success};
+    --app-warning:        #{$bl-warning};
+    --app-danger:         #{$bl-danger};
+    --app-focus-ring:     rgba(0, 212, 240, 0.24);
+    --app-scrim:          rgba(7, 11, 24, 0.42);
+
     // Sidebar
     --sidebar-bg:             #ffffff;
     --sidebar-border:         #{$bl-light-200};
@@ -57,6 +65,14 @@
     --app-text:           #{$bl-text-dark-primary};
     --app-text-muted:     #{$bl-text-dark-muted};
     --app-text-inverse:   #{$bl-dark-900};
+
+    // Semantic statuses and interaction roles
+    --app-info:           #{$bl-cyan-light};
+    --app-success:        #{color.adjust($bl-success, $lightness: 10%)};
+    --app-warning:        #{color.adjust($bl-warning, $lightness: 8%)};
+    --app-danger:         #{color.adjust($bl-danger, $lightness: 10%)};
+    --app-focus-ring:     rgba(0, 212, 240, 0.32);
+    --app-scrim:          rgba(7, 11, 24, 0.58);
 
     // Sidebar
     --sidebar-bg:             #{$bl-dark-800};

@@ -1,0 +1,89 @@
+// ============================================================
+// Sass Abstractions
+// Shared maps and mixins for component variants and theme ergonomics.
+// ============================================================
+
+$status-colors: (
+	"info": $bl-cyan,
+	"success": $bl-success,
+	"warning": $bl-warning,
+	"danger": $bl-danger,
+	"error": $bl-danger
+) !default;
+
+$status-icon-colors: (
+	"info": $bl-cyan-dark,
+	"success": $bl-success,
+	"warning": color.adjust($bl-warning, $lightness: -12%),
+	"danger": $bl-danger,
+	"error": $bl-danger
+) !default;
+
+$status-icon-colors-dark: (
+	"info": color.adjust($bl-cyan, $lightness: 5%),
+	"success": color.adjust($bl-success, $lightness: 10%),
+	"warning": color.adjust($bl-warning, $lightness: 5%),
+	"danger": color.adjust($bl-danger, $lightness: 10%),
+	"error": color.adjust($bl-danger, $lightness: 10%)
+) !default;
+
+$password-strength-colors: (
+	1: $bl-danger,
+	2: $bl-warning,
+	3: $bl-cyan-dark,
+	4: $bl-success
+) !default;
+
+$password-strength-label-colors: (
+	"weak": $bl-danger,
+	"fair": $bl-warning,
+	"good": $bl-cyan-dark,
+	"strong": $bl-success
+) !default;
+
+$progressbar-variant-colors: (
+	"blue": $bl-blue,
+	"success": $bl-success,
+	"warning": $bl-warning,
+	"danger": $bl-danger
+) !default;
+
+$breakpoints: (
+	"xs": 0,
+	"sm": 576px,
+	"md": 768px,
+	"lg": 992px,
+	"xl": 1200px,
+	"xxl": 1400px
+) !default;
+
+@mixin status-messagebox-variants($background-alpha, $border-alpha, $icon-colors: $status-icon-colors) {
+	@each $name, $color in $status-colors {
+		&--#{$name} {
+			background: rgba($color, $background-alpha);
+			border-color: rgba($color, $border-alpha);
+			border-left-color: $color;
+
+			.cb-messagebox__icon {
+				color: map-get($icon-colors, $name);
+			}
+		}
+	}
+}
+
+@mixin focus-ring($color: $bl-cyan, $alpha: 0.24) {
+	outline: 2px solid rgba($color, $alpha);
+	outline-offset: 0;
+}
+
+@mixin media-down($breakpoint) {
+	$value: map-get($breakpoints, $breakpoint);
+
+	@if $value == null {
+		@error "Unknown breakpoint `#{$breakpoint}`. Available: #{map-keys($breakpoints)}.";
+	}
+
+	@media (max-width: calc(#{$value} - 0.02px)) {
+		@content;
+	}
+}

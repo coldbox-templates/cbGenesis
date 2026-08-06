@@ -52,10 +52,11 @@
 		}
 	}
 
-	&--blue .cb-ui-progressbar__indicator { background: $bl-blue; }
-	&--success .cb-ui-progressbar__indicator { background: $bl-success; }
-	&--warning .cb-ui-progressbar__indicator { background: $bl-warning; }
-	&--danger .cb-ui-progressbar__indicator { background: $bl-danger; }
+	@each $name, $color in $progressbar-variant-colors {
+		&--#{$name} .cb-ui-progressbar__indicator {
+			background: $color;
+		}
+	}
 }
 
 @keyframes cb-ui-progressbar-indeterminate {

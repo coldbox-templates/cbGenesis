@@ -20,37 +20,7 @@
 
     // ---- Type variants ----
 
-    &--info {
-        background: rgba($bl-cyan, 0.07);
-        border-color: rgba($bl-cyan, 0.22);
-        border-left-color: $bl-cyan;
-
-        .cb-messagebox__icon { color: $bl-cyan-dark; }
-    }
-
-    &--success {
-        background: rgba($bl-success, 0.07);
-        border-color: rgba($bl-success, 0.22);
-        border-left-color: $bl-success;
-
-        .cb-messagebox__icon { color: $bl-success; }
-    }
-
-    &--warning {
-        background: rgba($bl-warning, 0.08);
-        border-color: rgba($bl-warning, 0.28);
-        border-left-color: $bl-warning;
-
-        .cb-messagebox__icon { color: darken($bl-warning, 12%); }
-    }
-
-    &--error {
-        background: rgba($bl-danger, 0.07);
-        border-color: rgba($bl-danger, 0.22);
-        border-left-color: $bl-danger;
-
-        .cb-messagebox__icon { color: $bl-danger; }
-    }
+    @include status-messagebox-variants(0.07, 0.22);
 
     // ---- Parts ----
 
@@ -110,29 +80,7 @@
 
 [data-bs-theme="dark"] {
     .cb-messagebox {
-        &--info {
-            background: rgba($bl-cyan, 0.1);
-            border-color: rgba($bl-cyan, 0.3);
-            .cb-messagebox__icon { color: lighten($bl-cyan, 5%); }
-        }
-
-        &--success {
-            background: rgba($bl-success, 0.1);
-            border-color: rgba($bl-success, 0.3);
-            .cb-messagebox__icon { color: lighten($bl-success, 10%); }
-        }
-
-        &--warning {
-            background: rgba($bl-warning, 0.1);
-            border-color: rgba($bl-warning, 0.3);
-            .cb-messagebox__icon { color: lighten($bl-warning, 5%); }
-        }
-
-        &--error {
-            background: rgba($bl-danger, 0.1);
-            border-color: rgba($bl-danger, 0.3);
-            .cb-messagebox__icon { color: lighten($bl-danger, 10%); }
-        }
+        @include status-messagebox-variants(0.1, 0.3, $status-icon-colors-dark);
 
         .cb-messagebox__dismiss:hover {
             background: rgba(255, 255, 255, 0.08);
