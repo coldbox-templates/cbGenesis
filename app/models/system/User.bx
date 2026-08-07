@@ -149,6 +149,7 @@ class extends="app.models.BaseEntity" {
 	@cascade( "all-delete-orphan" )
 	@batchsize( "25" )
 	@orderby( "lastUsedTimestamp desc" )
+	@singularName( "passkey" )
 	property
 		name="passkeys"
 		type="array";
@@ -193,7 +194,8 @@ class extends="app.models.BaseEntity" {
 			"roles",
 			"permissions",
 			"apiTokens",
-			"rememberTokens"
+			"rememberTokens",
+			"passkeys"
 		]
 	}
 
@@ -242,6 +244,7 @@ class extends="app.models.BaseEntity" {
 		variables.permissions = []
 		variables.apiTokens = []
 		variables.rememberTokens = []
+		variables.passkeys = []
 
 		// preferences
 		setPreferences( {} )

@@ -3,10 +3,7 @@
  */
 @persistent( true )
 @table( "user_passkeys" )
-class
-	extends="app.models.BaseEntity"
-	implements="cbsecurity-passkeys.models.ICredentialRepository"
-{
+class extends="app.models.BaseEntity" implements="cbsecurity-passkeys.models.ICredentialRepository"{
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -79,6 +76,24 @@ class
 	@fkcolumn( "FK_userId" )
 	@lazy( "proxy" )
 	property name="user";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Mementifier Options
+	 * --------------------------------------------------------------------------
+	 * https://forgebox.io/view/mementifier
+	 */
+	this.memento = {
+		defaultIncludes: [ "lastUsedTimestamp", "clientDataJSONString" ],
+		defaultExcludes: [],
+		neverInclude   : [
+			"credentialId",
+			"publicKey",
+			"attestationObject",
+			"backupEligible",
+			"backupState"
+		]
+	}
 
 	/**
 	 * Constructor
