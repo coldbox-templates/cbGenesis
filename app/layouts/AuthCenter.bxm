@@ -2,10 +2,8 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="#prc.settings[ "cbDefaultTheme" ]#">
 <head>
-    #view(
-		view = "_components/app/includes",
-		args = { title: "Authentication" }
-	)#
+    #view( "_components/app/includes", { title: "Authentication" } )#
+	#view( "_components/auth/passkeys" )#
 </head>
 <body
     class="cb-auth-body"

@@ -129,6 +129,29 @@ class {
             table.index( [ "FK_userId", "purpose" ], "idx_actionTokenUserPurpose" )
             table.index( [ "purpose", "expiresAt" ], "idx_actionTokenPurposeExpiration" )
         } )
+
+		// User Passkeys
+		schema.create( "user_passkeys", ( table ) => {
+			table.guid( "passkeyId" ).primaryKey()
+			table.guid( "FK_userId" )
+			table.boolean( "isActive" ).default( true )
+			table.timestamps()
+			table.raw( "credentialId BLOB" )
+			table.raw( "publicKey BLOB" )
+			table.unsignedInteger( "signCount" )
+			table.bit( "backupEligible" )
+			table.bit( "backupState" )
+			table.raw( "attestationObject BLOB" )
+			table.text( "clientDataJSON" )
+			table.datetime( "lastUsedTimestamp" ).nullable()
+
+			table.foreignKey( "FK_userId" )
+                .references( "userId" )
+                .onTable( "users" )
+                .onDelete( "CASCADE" )
+
+			table.index( "FK_userId", "idx_passkeyUser" )
+		} );
     }
 
     function down( schema, qb ) {
@@ -137,6 +160,7 @@ class {
 		schema.dropIfExists( "user_permissions" )
 		schema.dropIfExists( "user_remember_tokens" )
 		schema.dropIfExists( "user_action_tokens" )
+		schema.dropIfExists( "user_passkeys" )
 		schema.dropIfExists( "users" )
     }
 

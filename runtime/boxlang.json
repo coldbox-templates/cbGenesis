@@ -99,7 +99,8 @@
 	// A collection of directories we will class load all Java *.jar files from
 	"javaLibraryPaths": [
 		"${boxlang-home}/lib",
-		"${user-dir}/runtime/lib"
+		"${user-dir}/runtime/lib",
+		"${user-dir}/lib/modules/cbsecurity-passkeys/lib"
 	],
 	// Logging Settings for the runtime
 	"logging": {

@@ -13,6 +13,9 @@
     "web":{
         "directoryBrowsing":true,
         "webroot":"public",
+        "http":{
+            "port":"8080"
+        },
         "rewrites":{
             "enable":true
         },

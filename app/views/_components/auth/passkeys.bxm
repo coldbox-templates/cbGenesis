@@ -1,0 +1,23 @@
+<script src="/modules/cbsecurity-passkeys/includes/passkeys.js"></script>
+<script type="module">
+    if ( await window.cbSecurity.passkeys.isSupported() ) {
+        await window.cbSecurity.passkeys.register(
+            // redirectLocation ("/")
+        );
+    }
+</script>
+<script type="module">
+    if ( await window.cbSecurity.passkeys.isSupported() ) {
+        await window.cbSecurity.passkeys.login(
+            // username (optional)
+            // redirectLocation ("/")
+            // additionalParams ({})
+        )
+    }
+</script>
+<script>
+    window.cbSecurity.passkeys.autocomplete(
+        // redirectLocation ("/")
+        // additionalParams ({})
+    );
+</script>

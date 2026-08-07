@@ -25,7 +25,7 @@ class extends="app.models.BaseEntity" {
 	 */
 
 	@fieldType( "id" )
-	@generator( "UUID" )
+	@generator( "uuid" )
 	property
 		name="userId"
 		setter="false";
@@ -139,6 +139,18 @@ class extends="app.models.BaseEntity" {
 	@singularName( "rememberToken" )
 	property
 		name="rememberTokens"
+		type="array";
+
+	@fieldtype( "one-to-many" )
+	@inverse( "true" )
+	@lazy( "extra" )
+	@class( "app.models.security.Passkey" )
+	@fkcolumn( "FK_userId" )
+	@cascade( "all-delete-orphan" )
+	@batchsize( "25" )
+	@orderby( "lastUsedTimestamp desc" )
+	property
+		name="passkeys"
 		type="array";
 
 	/**

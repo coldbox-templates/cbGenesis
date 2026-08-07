@@ -1,0 +1,306 @@
+/**
+ * A Passkey conforming implementation of the ICredentialRepository interface for the cbsecurity-passkeys module.
+ */
+@persistent( true )
+@table( "user_passkeys" )
+class
+	extends="app.models.BaseEntity"
+	implements="cbsecurity-passkeys.models.ICredentialRepository"
+{
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Injections
+	 * --------------------------------------------------------------------------
+	 */
+	@inject( "provider:userService" )
+	@persistent( false )
+	property name="userService";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Properties
+	 * --------------------------------------------------------------------------
+	 */
+
+	/**
+	 * The primary key (uuid) for this token.
+	 */
+	@fieldType( "id" )
+	@generator( "uuid" )
+	property
+		name="passkeyId"
+		setter="false";
+
+	@notnull( true )
+	@ormtype( "long" )
+	property name="signCount";
+
+	@notnull( false )
+	@ormtype( "timestamp" )
+	property name="lastUsedTimestamp";
+
+	@notnull( true )
+	@ormtype( "blob" )
+	property name="credentialId";
+
+	@notnull( true )
+	@ormtype( "blob" )
+	property name="publicKey";
+
+	@notnull( true )
+	@ormtype( "blob" )
+	property name="attestationObject";
+
+	@notnull( true )
+	@ormtype( "boolean" )
+	property name="backupEligible";
+
+	@notnull( true )
+	@ormtype( "boolean" )
+	property name="backupState";
+
+	@column( "clientDataJSON" )
+	@notnull( true )
+	@ormtype( "text" )
+	property
+		name="clientDataJSONString"
+		default="{}";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Relationships
+	 * --------------------------------------------------------------------------
+	 */
+
+	@notnull( true )
+	@fieldtype( "many-to-one" )
+	@class( "app.models.system.User" )
+	@fkcolumn( "FK_userId" )
+	@lazy( "proxy" )
+	property name="user";
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		super.init( "passkeyId" )
+
+		return this
+	}
+
+	/***********************************************************************
+	 *		   				GETTER OVERRIDES
+	 ***********************************************************************/
+
+	/**
+	 * Returns the clientDataJSON as a struct.
+	 */
+	public struct function getClientDataJSON() {
+		param variables._clientData = jsonDeserialize( this.clientDataJSONString() )
+		return variables._clientData
+	}
+
+	/***********************************************************************
+	 *		   PASSKEYS ICredentialRepository INTERFACE METHODS
+	 ***********************************************************************/
+
+	/**
+	 * Returns the username for a given user object.
+	 *
+	 * @user The User object for your application, retrieved from your AuthenticationService
+	 *
+	 * @return The username for the given user object.
+	 */
+	public string function getUsernameForUser( required any user ) {
+		return arguments.user.getEmail()
+	}
+
+	/**
+	 * Returns the display name for a given user object.
+	 *
+	 * @user The User object for your application, retrieved from your AuthenticationService
+	 *
+	 * @return The display name for the given user object.
+	 */
+	public string function getDisplayNameForUser( required any user ) {
+		return arguments.user.getFullName();
+	}
+
+	/**
+	 * This method MUST return binary data.
+	 *
+	 * @user The User object for your application, retrieved from your AuthenticationService
+	 *
+	 * @return The user handle for the given user object, as binary data.
+	 */
+	public any function getUserHandleForUser( required any user ) {
+		return toString( arguments.user.getUserID() ).getBytes();
+	}
+
+	/**
+	 * Returns all credential IDs for a given username.
+	 *
+	 * @username The username for which to retrieve credential IDs.
+	 *
+	 * @throws EntityNotFound if no user is found for the given username.
+	 *
+	 * @return An array of credential IDs (binary data) associated with the given username.
+	 */
+	public array function getCredentialIdsForUsername( required string username ) {
+		var userHandle = getUserHandleForUsername( arguments.username );
+
+		return this
+			.newCriteria()
+			.eq( "user.userId", toString( userHandle ) )
+			.withProjections( property = "credentialId" )
+			.list()
+	}
+
+	/**
+	 * This method MUST return binary data.
+	 *
+	 * @username The username for which to retrieve the user handle.
+	 *
+	 * @throws EntityNotFound if no user is found for the given username.
+	 *
+	 * @return The user handle for the given username, as binary data.
+	 */
+	public any function getUserHandleForUsername( required string username ) {
+		var user = variables.userService.retrieveUserByUsername( arguments.username )
+		return toString( user.getUserID() ).getBytes()
+	}
+
+	/**
+	 * `userHandle` is binary data, this is the userId
+	 *
+	 * @userHandle The user handle for which to retrieve the username.
+	 *
+	 * @throws EntityNotFound if no user is found for the given user handle.
+	 *
+	 * @return The username for the given user handle, or `null` if no user is found.
+	 */
+	public string function getUsernameForUserHandle( required any userHandle ) {
+		var user = variables.userService.retrieveUserById( toString( arguments.userHandle ) )
+		return user.getEmail()
+	}
+
+	/**
+	 * `credentialId` and `userHandle` are both binary data
+	 * Returns a struct with a `publicKey` and a `signatureCount` property.
+	 * `null` if no credential is found.
+	 *
+	 * @credentialId The credential ID for which to retrieve the public key and signature count.
+	 * @userHandle The user handle for which to retrieve the public key and signature count.
+	 *
+	 * @return A struct with a `publicKey` and a `signatureCount` property, or `null` if no credential is found.
+	 */
+	public any function lookup( required any credentialId, required any userHandle ) {
+		var passkey = this
+			.newCriteria()
+			.eq( "credentialId", arguments.credentialId )
+			.eq( "user.userId", toString( arguments.userHandle ) )
+			.get()
+
+		if ( isNull( passkey ) ) {
+			return null
+		}
+
+		return { "publicKey": passkey.getPublicKey(), "signatureCount": passkey.getSignCount() }
+	}
+
+	/**
+	 * `credentialId` is binary data.
+	 * Returns a struct with a `userHandle`, `publicKey` and a `signatureCount` property.
+	 *
+	 * @credentialId The credential ID for which to retrieve the user handle, public key and signature count.
+	 *
+	 * @return An array of structs with a `userHandle`, `publicKey` and a `signatureCount` property, or an empty array if no credentials are found.
+	 */
+	public array function lookupAll( required any credentialId ) {
+		return this
+			.newCriteria()
+			.eq( "credentialId", arguments.credentialId )
+			.list()
+			.map( passkey=> {
+				return {
+					"userHandle": toString(
+						passkey
+							.getUser()
+							.getUserId()
+					).getBytes(),
+					"publicKey": passkey.getPublicKey(),
+					"signatureCount": passkey.getSignCount()
+				}
+			} )
+	}
+
+	/**
+	 * Stores a new credential for a given user.
+	 *
+	 * @user The User object for your application, retrieved from your AuthenticationService
+	 * @credentialId The binary credentialId
+	 * @publicKey The binary public key
+	 * @signatureCount The numeric signature could
+	 * @isDiscoverable Boolean flag if this Passkey should be discoverable
+	 * @isBackupEligible Booelan flag if this Passkey is eligible for backup
+	 * @isBackedUp Boolean flag if this Passkey is backed up
+	 * @attestationObject Binary attestation object
+	 * @clientDataJson JSON string of client data
+	 *
+	 */
+	public void function storeCredentialForUser(
+		required any user,
+		required any credentialId,
+		required any publicKey,
+		required numeric signatureCount,
+		any isDiscoverable,
+		required boolean isBackupEligible,
+		required boolean isBackedUp,
+		required any attestationObject,
+		required string clientDataJson
+	) {
+		this.new( {
+			"user": arguments.user,
+			"credentialId": arguments.credentialId,
+			"publicKey": arguments.publicKey,
+			"signCount": arguments.signatureCount,
+			"backupEligible": arguments.isBackupEligible ?: false,
+			"backupState": arguments.isBackedUp,
+			"attestationObject": arguments.attestationObject,
+			"clientDataJSON": arguments.clientDataJson
+		} )
+		.save()
+	}
+
+	/**
+	 * Updates the signature count and backup state for a given credential and user.
+	 *
+	 * @user The User object for your application, retrieved from your AuthenticationService
+	 * @credentialId The binary credentialId
+	 * @signatureCount The numeric signature count
+	 * @isBackedUp Boolean flag if this Passkey is backed up
+	 * @lastUsedTimestamp The timestamp of the last use of this credential (optional, defaults to now)
+	 */
+	public void function updateCredentialForUser(
+		required any user,
+		required any credentialId,
+		required numeric signatureCount,
+		required boolean isBackedUp,
+		date lastUsedTimestamp = now()
+	) {
+		var passkeys = this
+			.newCriteria()
+			.eq( "credentialId", arguments.credentialId )
+			.eq( "user.userId", arguments.user.getUserId() )
+			.list()
+
+		for ( var passkey in passkeys ) {
+			passkey.setSignCount( arguments.signatureCount )
+			passkey.setBackupState( arguments.isBackedUp ? 1 : 0 )
+			passkey.setLastUsedTimestamp( arguments.lastUsedTimestamp )
+			passkey.save()
+		}
+	}
+
+}

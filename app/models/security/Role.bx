@@ -12,10 +12,10 @@ class extends="app.models.BaseEntity" {
 	 */
 
 	/**
-	 * The role ID (UUID) for this role.
+	 * The role ID (uuid) for this role.
 	 */
 	@fieldType( "id" )
-	@generator( "UUID" )
+	@generator( "uuid" )
 	property
 		name="roleId"
 		setter="false";
