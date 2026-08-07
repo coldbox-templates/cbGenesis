@@ -3,7 +3,7 @@
  */
 @persistent( true )
 @table( "user_passkeys" )
-class extends="app.models.BaseEntity" implements="cbsecurity-passkeys.models.ICredentialRepository"{
+class extends="app.models.BaseEntity"{
 
 	/**
 	 * --------------------------------------------------------------------------
