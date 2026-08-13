@@ -8,6 +8,7 @@
 			A permission is a specific action that can be performed in the system. Permissions are grouped into modules, which are then assigned to roles.
 		</p>
 	</div>
+	<bx:if prc.authUser.hasPermission( "permissions:write,permissions:admin" )>
 	<button
 		type="button"
 		class="btn btn-primary"
@@ -16,6 +17,7 @@
 		<i class="ph-duotone ph-plus" aria-hidden="true"></i>
 		New Permission
 	</button>
+	</bx:if>
 </div>
 
 <!--- Flash Messages--->
@@ -71,16 +73,21 @@
 					<template x-for="permission in group.permissions" :key="permission.permission">
 						<li>
 							<span>
+								<bx:if prc.authUser.hasPermission( "permissions:write,permissions:admin" )>
 								<button
 									type="button"
 									class="cb-permission-edit-trigger"
 									:title="'Edit ' + permission.permission"
 									@click="openEditModal( permission )"
 									x-text="permission.slug"></button>
+								<bx:else>
+								<strong x-text="permission.slug"></strong>
+								</bx:if>
 								<small x-text="permission.description || 'No description provided'"></small>
 								<code x-text="permission.permission"></code>
 							</span>
 							<div class="cb-permission-actions">
+								<bx:if prc.authUser.hasPermission( "permissions:write,permissions:admin" )>
 								<button
 									type="button"
 									class="cb-permission-edit"
@@ -89,6 +96,8 @@
 									@click="openEditModal( permission )">
 									<i class="ph-duotone ph-pencil-simple" aria-hidden="true"></i>
 								</button>
+								</bx:if>
+								<bx:if prc.authUser.hasPermission( "permissions:delete,permissions:admin" )>
 								<button
 									type="button"
 									class="cb-permission-delete"
@@ -97,6 +106,7 @@
 									@click="confirmDelete( permission )">
 									<i class="ph-duotone ph-trash" aria-hidden="true"></i>
 								</button>
+								</bx:if>
 							</div>
 						</li>
 					</template>

@@ -19,6 +19,7 @@
 			<h2 class="cb-page-title">Global Settings</h2>
 			<p class="cb-page-subtitle">Manage application branding, security, and email configuration.</p>
 		</div>
+		<bx:if prc.authUser.hasPermission( "settings:write,settings:admin" )>
 		<button
 			type="submit"
 			class="btn btn-primary"
@@ -30,6 +31,7 @@
 				Saving...
 			</span>
 		</button>
+		</bx:if>
 	</div>
 
 	<!--- Flash Messages--->
@@ -311,6 +313,7 @@
 	<!--- CSRF Field --->
 	#csrfField()#
 
+	<bx:if prc.authUser.hasPermission( "settings:admin" )>
 	<div class="cb-actions-stack">
 
 		<!--- Maintenance --->
@@ -369,6 +372,7 @@
 			</div>
 		</section>
 	</div>
+	</bx:if>
 
 	#view(
 		view = "_components/ui/confirm",

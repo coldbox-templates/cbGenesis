@@ -3,9 +3,6 @@
  *
  * Protected section of the application. Enforces authentication and
  * populates the view data used by the Admin layout and dashboard views.
- *
- * Replace the session-based mock auth check with cbsecurity's secure()
- * or annotation-based protection once the security layer is configured.
  */
 @secured
 class extends="BaseSecureHandler" {
@@ -13,5 +10,14 @@ class extends="BaseSecureHandler" {
 	function index( event, rc, prc ) {
 		prc.title = "Dashboard";
 		event.setView( "dashboard/index" )
+	}
+
+	/**
+	 * Landing page for cbsecurity's invalidAuthorizationEvent — reached when an
+	 * authenticated user attempts an action they don't have permission for.
+	 */
+	function notAuthorized( event, rc, prc ) {
+		prc.title = "Not Authorized";
+		event.setView( "dashboard/notAuthorized" )
 	}
 }

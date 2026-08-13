@@ -1,0 +1,19 @@
+<bx:output>
+<!--- ── Page header ────────────────────────────────────────────────── --->
+<div class="cb-page-header">
+    <h2 class="cb-page-title">Not Authorized</h2>
+    <p class="cb-page-subtitle">
+        You don't have permission to access that page or perform that action.
+    </p>
+</div>
+
+<section class="cb-empty-state" aria-labelledby="not-authorized-title">
+    <i class="ph-duotone ph-lock-simple" aria-hidden="true"></i>
+    <strong id="not-authorized-title">Access denied</strong>
+    <span>If you believe this is a mistake, contact an administrator to review your role and permissions.</span>
+    <a class="btn btn-primary" href="#event.route( "dashboard" )#">
+        <i class="ph-duotone ph-house" aria-hidden="true"></i>
+        Back to Dashboard
+    </a>
+</section>
+</bx:output>
