@@ -84,7 +84,10 @@ class extends="app.models.BaseEntity"{
 	 * https://forgebox.io/view/mementifier
 	 */
 	this.memento = {
-		defaultIncludes: [ "lastUsedTimestamp", "clientDataJSONString" ],
+		defaultIncludes: [
+			"lastUsedTimestamp",
+			"clientDataJSONString"
+		],
 		defaultExcludes: [],
 		neverInclude   : [
 			"credentialId",

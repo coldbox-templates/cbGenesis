@@ -114,6 +114,11 @@
 				<i class="ph-duotone ph-key" aria-hidden="true"></i>
 				API Tokens
 			</button>
+
+			<button type="button" role="tab" :class="activeTab === 'passkeys' ? 'active' : ''" :aria-selected="activeTab === 'passkeys'" @click="activeTab = 'passkeys'">
+				<i class="ph-duotone ph-fingerprint" aria-hidden="true"></i>
+				Passkeys
+			</button>
 		</div>
 
 		<!--- MessageBox --->
@@ -470,6 +475,36 @@
 			<p class="text-muted cb-api-token-empty" x-show="!apiTokens.length" x-cloak>No API tokens have been created.</p>
 		</section>
 
+		<!--- Passkeys Section --->
+		<section class="cb-content-card form-card" x-show="activeTab === 'passkeys'" x-cloak>
+			<div class="cb-content-card-header">
+				<div>
+					<h3 class="cb-content-card-title"><i class="ph-duotone ph-fingerprint" aria-hidden="true"></i> Passkeys <span class="cb-count-pill" x-text="passkeys.length"></span></h3>
+					<p class="cb-content-card-subtitle">Use a fingerprint, face scan, or device security key to sign in securely.</p>
+				</div>
+				<button type="button" class="btn btn-primary btn-sm" @click="registerPasskey()" :disabled="passkeyRegistering">
+					<span x-show="!passkeyRegistering"><i class="ph-duotone ph-plus" aria-hidden="true"></i> Register Passkey</span>
+					<span x-show="passkeyRegistering" x-cloak><span class="spinner-border spinner-border-sm me-1" role="status"></span> Waiting for device...</span>
+				</button>
+			</div>
+			<div class="cb-table-wrap" x-show="passkeys.length" x-cloak>
+				<table class="cb-table">
+					<thead><tr><th>Passkey</th><th>Last Used</th><th>Created</th><th class="actions-column"><span class="visually-hidden">Actions</span></th></tr></thead>
+					<tbody>
+						<template x-for="( passkey, index ) in passkeys" :key="`${ passkey.passkeyId || 'passkey' }-${ index }`">
+							<tr>
+								<td><strong x-text="passkey.label"></strong></td>
+								<td class="cb-muted-cell" x-text="formatTokenDate( passkey.lastUsed, 'Never used' )"></td>
+								<td class="cb-muted-cell" x-text="formatTokenDate( passkey.createdDate )"></td>
+								<td><button type="button" class="cb-icon-button danger" title="Remove passkey" aria-label="Remove passkey" @click="confirmDeletePasskey( passkey )"><i class="ph-duotone ph-trash" aria-hidden="true"></i></button></td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			</div>
+			<p class="text-muted cb-api-token-empty" x-show="!passkeys.length" x-cloak>No passkeys have been registered.</p>
+		</section>
+
 		#view(
 			view = "_components/ui/modal",
 			args = {
@@ -496,6 +531,24 @@
 				disabledExpression : "deleteTokenLoading"
 			}
 		)#
+
+		#view(
+			view = "_components/ui/confirm",
+			args = {
+				id: "passkey-delete-confirm",
+				title: "Remove Passkey",
+				messageExpression: "'Remove ' + ( selectedPasskey?.label || 'this passkey' ) + '?'",
+				openExpression: "confirmPasskeyOpen",
+				closeExpression: "cancelDeletePasskey()",
+				confirmExpression: "deletePasskey()",
+				confirmLabel: "Remove Passkey",
+				confirmClass: "btn-danger",
+				confirmIcon: "ph-trash",
+				disabledExpression: "deletePasskeyLoading"
+			}
+		)#
 	</div>
 </div>
 </bx:output>
+
+<script src="/modules/cbsecurity-passkeys/includes/passkeys.js"></script>

@@ -1,0 +1,70 @@
+/**
+ * Service for managing persisted WebAuthn passkeys.
+ *
+ * This service keeps profile-facing passkey operations scoped to the owning
+ * user. Credential material remains private to the passkey entity and module.
+ */
+@singleton
+@threadSafe
+class extends="app.models.BaseService" {
+
+	/**
+	 * Initialize the passkey service.
+	 *
+	 * @return The initialized service.
+	 */
+	function init() {
+		super.init( entityName: "Passkey" )
+		return this
+	}
+
+	/**
+	 * List passkeys belonging to one user.
+	 *
+	 * @userId The owning user's identifier.
+	 *
+	 * @return Passkey entities ordered from newest to oldest.
+	 */
+	array function listForUser( required string userId ) {
+		return newCriteria()
+			.isEq( "user.userId", arguments.userId )
+			.order( "createdDate", "desc" )
+			.list()
+	}
+
+	/**
+	 * Find a passkey belonging to a user.
+	 *
+	 * @passkeyId The passkey identifier.
+	 * @userId The owning user's identifier.
+	 *
+	 * @return The matching passkey or null when it does not belong to the user.
+	 */
+	any function findForUser( required string passkeyId, required string userId ) {
+		return newCriteria()
+			.isEq( "passkeyId", arguments.passkeyId )
+			.isEq( "user.userId", arguments.userId )
+			.get()
+	}
+
+	/**
+	 * Delete a passkey belonging to a user.
+	 *
+	 * @passkeyId The passkey identifier.
+	 * @userId The owning user's identifier.
+	 *
+	 * @throws Passkey.NotFound when the passkey is missing or owned by another user.
+	 */
+	void function deleteForUser( required string passkeyId, required string userId ) {
+		var passkey = findForUser( arguments.passkeyId, arguments.userId )
+
+		if ( isNull( passkey ) || !passkey.isLoaded() ) {
+			throw(
+				type    = "Passkey.NotFound",
+				message = "Passkey not found"
+			)
+		}
+
+		passkey.delete()
+	}
+}

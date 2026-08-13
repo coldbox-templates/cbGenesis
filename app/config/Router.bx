@@ -92,6 +92,12 @@ class {
 			GET : "listTokens",
 			POST: "createToken"
 		})
+		route( "profile/passkeys/:passkeyId" ).withHandler( "Profile" ).toAction({
+			DELETE: "deletePasskey"
+		})
+		route( "profile/passkeys" ).withHandler( "Profile" ).toAction({
+			GET: "listPasskeys"
+		})
 		route( "profile" ).withHandler( "Profile" ).toAction({
 			GET: "index",
 			POST: "save"

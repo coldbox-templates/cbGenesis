@@ -13,13 +13,17 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="apiTokenService";
 
+	@inject
+	property name="passkeyService";
+
 	static{
 		csrfVerify = {
 			"save"    : true,
 			"password": true,
 			"createToken": true,
 			"updateToken": true,
-			"deleteToken": true
+			"deleteToken": true,
+			"deletePasskey": true
 		}
 	}
 
@@ -129,6 +133,48 @@ class extends="BaseSecureHandler" {
 				.listForUser( prc.authUser.getId() )
 				.map( .getMemento )
 		)
+	}
+
+	/**
+	 * List safe metadata for the authenticated user's passkeys.
+	 */
+	@remote( "List the authenticated user's passkeys remotely via AJAX" )
+	function listPasskeys( event, rc, prc ) {
+		var passkeys = passkeyService.listForUser( prc.authUser.getId() )
+
+		event.getResponse().setData(
+			passkeys.map( ( item, index ) => {
+				return {
+					"passkeyId"   : item.getPasskeyId(),
+					"label"       : "Passkey #index + 1#",
+					"createdDate" : item.getCreatedDate(),
+					"lastUsed"   : item.getLastUsedTimestamp()
+				}
+			} )
+		)
+	}
+
+	/**
+	 * Permanently delete an authenticated user's passkey after confirmation.
+	 */
+	@remote( "Delete an authenticated user's passkey remotely via AJAX" )
+	function deletePasskey( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			passkeyService.deleteForUser(
+				passkeyId: rc.passkeyId ?: "",
+				userId   : prc.authUser.getId()
+			)
+			response.addMessage( "Passkey removed successfully." )
+		} catch ( any error ) {
+			log.error( "Error deleting passkey with ID [#rc.passkeyId#]: #error.message#", error )
+			response.setErrorMessage(
+				errorMessage: "Passkey could not be removed: #error.message & error.detail#",
+				statusCode: 500
+			)
+		}
+
+		return response
 	}
 
 	/**

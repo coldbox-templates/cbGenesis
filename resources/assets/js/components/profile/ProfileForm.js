@@ -29,21 +29,26 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			passwordConfirm : "",
 			errors          : {},
 		},
-		apiTokens          : [],
-		tokenSortKey       : "label",
-		tokenSortDirection : "asc",
-		tokenModalOpen     : false,
-		tokenModalMode     : "create",
-		editingToken       : null,
-		tokenSubmitting    : false,
-		tokenErrors        : {},
-		selectedToken      : null,
-		confirmTokenOpen   : false,
-		deleteTokenLoading : false,
-		createdRawToken    : "",
-		tokenCopied        : false,
+		apiTokens            : [],
+		passkeys             : [],
+		passkeyRegistering   : false,
+		selectedPasskey      : null,
+		confirmPasskeyOpen   : false,
+		deletePasskeyLoading : false,
+		tokenSortKey         : "label",
+		tokenSortDirection   : "asc",
+		tokenModalOpen       : false,
+		tokenModalMode       : "create",
+		editingToken         : null,
+		tokenSubmitting      : false,
+		tokenErrors          : {},
+		selectedToken        : null,
+		confirmTokenOpen     : false,
+		deleteTokenLoading   : false,
+		createdRawToken      : "",
+		tokenCopied          : false,
 		apiTokenMaxValidityMonths,
-		tokenForm          : {
+		tokenForm            : {
 			label            : "",
 			expirationPreset : "",
 			expiration       : "",
@@ -57,6 +62,7 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 		init() {
 			this.profile.initial = this.profileValues();
 			this.loadApiTokens();
+			this.loadPasskeys();
 		},
 
 		/**
@@ -206,6 +212,99 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 				this.apiTokens = payload.data || [];
 			} catch ( error ) {
 				this.notice = { type: "error", message: error.message || "API tokens could not be loaded." };
+			}
+		},
+
+		/**
+		 * Loads non-sensitive passkey metadata for the authenticated user.
+		 *
+		 * @returns {Promise<void>}
+		 */
+		async loadPasskeys() {
+			try {
+				const response = await fetch( "/profile/passkeys", {
+					credentials : "same-origin",
+					headers     : { Accept: "application/json" },
+				} );
+				const payload = await response.json();
+				if ( !response.ok || payload.error ) throw new Error( payload.messages || "Passkeys could not be loaded." );
+				this.passkeys = payload.data || [];
+			} catch ( error ) {
+				this.notice = { type: "error", message: error.message || "Passkeys could not be loaded." };
+			}
+		},
+
+		/**
+		 * Runs the cbsecurity-passkeys registration ceremony without leaving the profile page.
+		 *
+		 * @returns {Promise<void>}
+		 */
+		async registerPasskey() {
+			if ( this.passkeyRegistering ) return;
+			this.passkeyRegistering = true;
+			this.clearNotice();
+			try {
+				if ( !window.cbSecurity?.passkeys || !await window.cbSecurity.passkeys.isSupported() ) {
+					throw new Error( "This browser does not support passkeys." );
+				}
+				const optionsResponse = await fetch( "/cbsecurity/passkeys/registration/new", {
+					credentials : "same-origin",
+					headers     : { Accept: "application/json" },
+				} );
+				const optionsPayload = await optionsResponse.json();
+				if ( !optionsResponse.ok ) throw new Error( optionsPayload.message || "Passkey registration could not start." );
+				const options = typeof optionsPayload === "string" ? JSON.parse( optionsPayload ) : optionsPayload;
+				const credential = await window.webauthnJSON.create( options );
+				const response = await fetch( "/cbsecurity/passkeys/registration", {
+					method      : "POST",
+					credentials : "same-origin",
+					headers     : { "Content-Type": "application/json", Accept: "application/json" },
+					body        : JSON.stringify( { publicKeyCredentialJson: JSON.stringify( credential ) } ),
+				} );
+				const payload = await response.json();
+				if ( !response.ok ) throw new Error( payload.message || "Passkey could not be registered." );
+				await this.loadPasskeys();
+				this.notice = { type: "success", message: "Passkey registered successfully." };
+			} catch ( error ) {
+				this.notice = { type: "error", message: error.name === "NotAllowedError" ? "Passkey registration was cancelled." : ( error.message || "Passkey registration failed." ) };
+			} finally {
+				this.passkeyRegistering = false;
+			}
+		},
+
+		/** Opens the passkey removal confirmation dialog. */
+		confirmDeletePasskey( passkey ) {
+			this.selectedPasskey = passkey;
+			this.confirmPasskeyOpen = true;
+		},
+
+		/** Closes the passkey removal confirmation dialog. */
+		cancelDeletePasskey( force = false ) {
+			if ( this.deletePasskeyLoading && !force ) return;
+			this.confirmPasskeyOpen = false;
+			this.selectedPasskey = null;
+		},
+
+		/** Deletes the selected passkey after confirmation. */
+		async deletePasskey() {
+			if ( !this.selectedPasskey || this.deletePasskeyLoading ) return;
+			this.deletePasskeyLoading = true;
+			try {
+				const response = await fetch( `/profile/passkeys/${ encodeURIComponent( this.selectedPasskey.passkeyId ) }`, {
+					method      : "DELETE",
+					credentials : "same-origin",
+					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+					body        : new URLSearchParams( { csrf: this.csrfToken } ),
+				} );
+				const payload = await response.json();
+				if ( !response.ok || payload.error ) throw new Error( payload.messages || "Passkey could not be removed." );
+				this.passkeys = this.passkeys.filter( item => item.passkeyId !== this.selectedPasskey.passkeyId );
+				this.notice = { type: "success", message: payload.messages || "Passkey removed successfully." };
+				this.cancelDeletePasskey( true );
+			} catch ( error ) {
+				this.notice = { type: "error", message: error.message || "Passkey could not be removed." };
+			} finally {
+				this.deletePasskeyLoading = false;
 			}
 		},
 
