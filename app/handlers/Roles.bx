@@ -1,7 +1,7 @@
 /**
  * Role management handler.
  */
-@secured
+@secured( "roles:admin,roles:read" )
 class extends="BaseSecureHandler" {
 
 	@inject
@@ -62,6 +62,7 @@ class extends="BaseSecureHandler" {
 	}
 
 	@remote( "Create a role remotely via AJAX" )
+	@secured( "roles:admin,roles:write" )
 	function create( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -91,6 +92,7 @@ class extends="BaseSecureHandler" {
 	}
 
 	@remote( "Update a role remotely via AJAX" )
+	@secured( "roles:admin,roles:write" )
 	function update( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -120,6 +122,7 @@ class extends="BaseSecureHandler" {
 	}
 
 	@remote( "Delete a role remotely via AJAX" )
+	@secured( "roles:admin,roles:delete" )
 	function delete( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -165,6 +168,7 @@ class extends="BaseSecureHandler" {
 	}
 
 	@remote( "Assign a user to a role" )
+	@secured( "roles:admin" )
 	function addUser( event, rc, prc ) {
 		prc.role = roleService.getOrFail( rc.roleId ?: "" )
 		prc.user = userService.getOrFail( rc.userId ?: "" )
@@ -181,6 +185,7 @@ class extends="BaseSecureHandler" {
 	}
 
 	@remote( "Remove a user from a role" )
+	@secured( "roles:admin" )
 	function removeUser( event, rc, prc ) {
 		prc.role = roleService.getOrFail( rc.roleId ?: "" )
 		prc.user = userService

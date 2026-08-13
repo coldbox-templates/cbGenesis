@@ -10,10 +10,12 @@
 			<p class="cb-page-subtitle">Manage users and their roles in the system. You can invite new users, assign roles, and manage their access.</p>
 		</div>
 		<!--- Invite a new user to the system --->
+		<bx:if prc.authUser.hasPermission( "users:write,users:admin" )>
 		<button type="button" class="btn btn-primary" @click="openInvite()">
 			<i class="ph-duotone ph-plus" aria-hidden="true"></i>
 			Invite User
 		</button>
+		</bx:if>
 	</div>
 
 	#view( view: "_components/ui/messagebox", args: {
@@ -244,6 +246,7 @@
 												<i class="ph-duotone ph-arrow-square-out" aria-hidden="true"></i> Manage user
 											</a>
 										</li>
+										<bx:if prc.authUser.hasPermission( "users:write,users:admin" )>
 										<li x-show="user.canResendInvitation" x-cloak>
 											<button
 												type="button"
@@ -273,12 +276,15 @@
 												<i class="ph-duotone ph-user-plus" aria-hidden="true"></i> Enable user
 											</button>
 										</li>
+										</bx:if>
+										<bx:if prc.authUser.hasPermission( "users:delete,users:admin" )>
 										<li>
 											<hr class="dropdown-divider">
 										</li>
 										<li>
 											<button type="button" class="dropdown-item text-danger" @click="confirmDelete( user )"><i class="ph-duotone ph-trash" aria-hidden="true"></i> Delete user</button>
 										</li>
+										</bx:if>
 									</ul>
 								</div>
 							</td>

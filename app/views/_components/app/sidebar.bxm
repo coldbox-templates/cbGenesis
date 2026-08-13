@@ -50,9 +50,11 @@
         </div>
 
 		<!--- Access Group --->
+        <bx:if prc.authUser.hasPermission( "users:read,users:admin,roles:read,roles:admin,permissions:read,permissions:admin" )>
         <div class="cb-sidebar-nav-section">
             <span class="cb-sidebar-nav-label">Access</span>
             <ul class="cb-sidebar-nav-list">
+                <bx:if prc.authUser.hasPermission( "users:read,users:admin" )>
                 <li>
                     <a href="#event.route( "users" )#"
                        class="cb-sidebar-nav-item"
@@ -63,6 +65,8 @@
                         <span class="cb-sidebar-nav-text">Users</span>
                     </a>
                 </li>
+                </bx:if>
+                <bx:if prc.authUser.hasPermission( "roles:read,roles:admin" )>
                 <li>
                     <a href="#event.route( "roles" )#"
                        class="cb-sidebar-nav-item"
@@ -73,6 +77,8 @@
                         <span class="cb-sidebar-nav-text">Roles</span>
                     </a>
                 </li>
+                </bx:if>
+                <bx:if prc.authUser.hasPermission( "permissions:read,permissions:admin" )>
                 <li>
                     <a href="#event.route( "permissions" )#"
                        class="cb-sidebar-nav-item"
@@ -83,10 +89,13 @@
                         <span class="cb-sidebar-nav-text">Permissions</span>
                     </a>
                 </li>
+                </bx:if>
             </ul>
         </div>
+        </bx:if>
 
 		<!--- System Group --->
+		<bx:if prc.authUser.hasPermission( "settings:read,settings:admin" )>
 		<div class="cb-sidebar-nav-section">
 			<span class="cb-sidebar-nav-label">System</span>
             <ul class="cb-sidebar-nav-list">
@@ -116,6 +125,7 @@
                 </li>
             </ul>
 		</div>
+		</bx:if>
 
     </nav>
     <!--- ── /Navigation ─────────────────────────────────────── --->

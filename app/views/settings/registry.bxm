@@ -11,12 +11,14 @@
 			<h2 class="cb-page-title">Settings Registry</h2>
 			<p class="cb-page-subtitle">Manage the raw database-backed settings used by the application.</p>
 		</div>
+		<bx:if prc.authUser.hasPermission( "settings:write,settings:admin" )>
 		<button
 			type="button"
 			class="btn btn-primary"
 			@click="openCreate()">
 			<i class="ph-duotone ph-plus"></i> New Setting
 		</button>
+		</bx:if>
 	</div>
 
 	<!--- Warning --->
@@ -92,6 +94,7 @@
 								<span class="cb-chip" :class="setting.isActive ? 'cb-chip-success' : 'cb-chip-muted'" x-text="setting.isActive ? 'Active' : 'Inactive'"></span>
 							</td>
 							<td class="text-center">
+								<bx:if prc.authUser.hasPermission( "settings:write,settings:admin" )>
 								<div class="dropdown">
 									<button type="button" class="btn btn-sm btn-light" data-bs-toggle="dropdown" :aria-label="'Actions for ' + setting.name">
 										<i class="ph-duotone ph-dots-three-outline" aria-hidden="true"></i>
@@ -127,6 +130,7 @@
 										</li>
 									</ul>
 								</div>
+								</bx:if>
 							</td>
 						</tr>
 					</template>

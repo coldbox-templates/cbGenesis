@@ -11,6 +11,7 @@
 			<h2 class="cb-page-title">Roles</h2>
 			<p class="cb-page-subtitle">Define role bundles and tune their exact permissions.</p>
 		</div>
+		<bx:if prc.authUser.hasPermission( "roles:write,roles:admin" )>
 		<button
 			type="button"
 			class="btn btn-primary"
@@ -19,6 +20,7 @@
 			aria-hidden="true"></i>
 			New
 			Role</button>
+		</bx:if>
 	</div>
 
 	<!--- Roles Layout --->
@@ -78,6 +80,7 @@
 				<!--- Role Actions --->
 				<div class="cb-page-actions">
 					<!--- Assign Users --->
+					<bx:if prc.authUser.hasPermission( "roles:admin" )>
 					<button
 						type="button"
 						class="btn btn-primary"
@@ -85,7 +88,9 @@
 						<i class="ph-duotone ph-user-plus" aria-hidden="true"></i>
 						Assign User
 					</button>
+					</bx:if>
 					<!--- Edit Role --->
+					<bx:if prc.authUser.hasPermission( "roles:write,roles:admin" )>
 					<button
 						type="button"
 						class="btn btn-light"
@@ -94,7 +99,9 @@
 						<i class="ph-duotone ph-pencil-simple" aria-hidden="true"></i>
 						Edit
 					</button>
+					</bx:if>
 					<!--- Delete Role --->
+					<bx:if prc.authUser.hasPermission( "roles:delete,roles:admin" )>
 					<button
 						type="button"
 						class="btn btn-light"
@@ -103,6 +110,7 @@
 						<i class="ph-duotone ph-trash" aria-hidden="true"></i>
 						Delete
 					</button>
+					</bx:if>
 				</div>
 			</div>
 
