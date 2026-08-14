@@ -500,7 +500,7 @@ npm run lint:fix   # ESLint auto-fix
 | **Session auth** | cbauth with `CacheStorage@cbStorages` — server-side session cache |
 | **Password hashing** | bcrypt via `bx-password-encrypt` module |
 | **CSRF protection** | cbsecurity rotating token (30min), auto-verifier on state-changing routes |
-| **Handler security** | `@secured` annotation on handlers → firewall auto-redirects to login |
+| **Handler security** | `@secured` annotation on handlers → firewall redirects unauthenticated users to login, and authenticated users lacking a required permission to `dashboard.notAuthorized` |
 | **JWT support** | Configured for API access (AES-256, HS512, 60min, cache token storage) |
 | **Security headers** | XSS protection, frameOptions (DENY), referrerPolicy (same-origin) |
 | **API tokens** | SHA-256 hashed per-user tokens with expiration, daily purge scheduler |
@@ -524,6 +524,47 @@ component extends="BaseSecureHandler" secured {
 
 }
 ```
+
+### Permissions & Authorization
+
+Permission-based authorization sits on top of the authentication layer above. Every permission is a slug in the form `resource:action`, seeded by `resources/database/seeds/AdminData.bx`:
+
+| Resource | Actions |
+|----------|---------|
+| `users` | `read`, `write`, `delete`, `admin` |
+| `roles` | `read`, `write`, `delete`, `admin` |
+| `permissions` | `read`, `write`, `delete`, `admin` |
+| `settings` | `read`, `write`, `delete`, `admin` |
+
+`admin` is a superset — "full administration" of that resource — and is always OR'd alongside the specific action a route needs, so an `admin` permission satisfies any check for that resource. The seeder assigns all 16 permissions to a single `Administrator` role, which is granted to the seeded `admin@cbgenesis.com` user.
+
+**Enforce it on the handler (the real security boundary).** `@secured( "resource:action,resource:admin" )` on a handler class or action — a comma-separated list is an OR check, resolved by cbsecurity's `CBAuthValidator` against the authenticated user's permissions:
+
+```boxlang
+// app/handlers/Roles.bx
+@secured( "roles:admin,roles:read" )     // class-level: applies to index and any action without its own annotation
+class extends="BaseSecureHandler" {
+
+    @secured( "roles:admin,roles:write" )
+    function create( event, rc, prc ) { ... }
+
+    @secured( "roles:admin,roles:delete" )
+    function delete( event, rc, prc ) { ... }
+
+}
+```
+
+A user who fails an `@secured` check is redirected: unauthenticated → `login`; authenticated but missing the permission → `dashboard.notAuthorized` (configured via `invalidAuthorizationEvent` in `app/config/modules/cbsecurity.bx`).
+
+**Mirror it in the view (UX only — never the security boundary on its own).** `User.bx` exposes `hasPermission()` on `prc.authUser`, available in any view or layout rendered through a secured handler. Wrap navigation links and action buttons so the UI never offers something the handler would reject:
+
+```html
+<bx:if prc.authUser.hasPermission( "roles:write,roles:admin" )>
+    <button type="button" class="btn btn-primary" @click="openCreate()">New Role</button>
+</bx:if>
+```
+
+`hasPermission()` accepts a string, comma-list, or array and does an OR check; `hasAllPermissions()` does the AND equivalent. Both are cached per-request via `getAllPermissions()` (a-la-carte user permissions unioned with every permission from the user's roles). Every existing admin view (sidebar nav, Users/Roles/Permissions/Settings) already follows this pattern — treat it as the template for new secured modules.
 
 ---
 
@@ -687,24 +728,26 @@ component extends="tests.resources.BaseIntegrationSpec" {
 | `POST` | `/reset-password` | `Auth.doResetPassword` | Guest |
 | `POST` | `/logout` | `Auth.logout` | Auth |
 | `GET` | `/dashboard` | `Dashboard.index` | Auth |
-| `GET` | `/users` | `Users.index` | Auth |
-| `GET` | `/users/:id` | `Users.detail` | Auth |
-| `GET` | `/roles` | `Roles.index` | Auth |
-| `POST` | `/roles` | `Roles.create` | Auth |
-| `PUT` | `/roles/:id` | `Roles.update` | Auth |
-| `DELETE` | `/roles/:id` | `Roles.delete` | Auth |
-| `GET` | `/roles/:roleId/users` | `Roles.users` | Auth |
-| `POST` | `/roles/:roleId/users/:userId` | `Roles.addUser` | Auth |
-| `DELETE` | `/roles/:roleId/users/:userId` | `Roles.removeUser` | Auth |
-| `GET` | `/permissions` | `Permissions.index` | Auth |
-| `POST` | `/permissions` | `Permissions.create` | Auth |
-| `PUT` | `/permissions/:id` | `Permissions.update` | Auth |
-| `DELETE` | `/permissions/:id` | `Permissions.delete` | Auth |
+| `GET` | `/users` | `Users.index` | `users:read,users:admin` |
+| `GET` | `/users/:id` | `Users.show` | `users:read` |
+| `GET` | `/roles` | `Roles.index` | `roles:read,roles:admin` |
+| `POST` | `/roles` | `Roles.create` | `roles:write,roles:admin` |
+| `PUT` | `/roles/:id` | `Roles.update` | `roles:write,roles:admin` |
+| `DELETE` | `/roles/:id` | `Roles.delete` | `roles:delete,roles:admin` |
+| `GET` | `/roles/:roleId/users` | `Roles.users` | `roles:read,roles:admin` |
+| `POST` | `/roles/:roleId/users/:userId` | `Roles.addUser` | `roles:admin` |
+| `DELETE` | `/roles/:roleId/users/:userId` | `Roles.removeUser` | `roles:admin` |
+| `GET` | `/permissions` | `Permissions.index` | `permissions:read,permissions:admin` |
+| `POST` | `/permissions` | `Permissions.create` | `permissions:write,permissions:admin` |
+| `PUT` | `/permissions/:id` | `Permissions.update` | `permissions:write,permissions:admin` |
+| `DELETE` | `/permissions/:id` | `Permissions.delete` | `permissions:delete,permissions:admin` |
 | `GET` | `/profile` | `Profile.index` | Auth |
 | `POST` | `/profile` | `Profile.update` | Auth |
-| `GET` | `/settings` | `Settings.index` | Auth |
-| `POST` | `/settings` | `Settings.save` | Auth |
+| `GET` | `/settings` | `Settings.index` | `settings:read,settings:admin` |
+| `POST` | `/settings` | `Settings.save` | `settings:write,settings:admin` |
 | `GET` | `/healthcheck` | Returns `Ok!` | Public |
+
+"Auth" means any authenticated user; a permission slug means the firewall also requires `prc.authUser.hasPermission()` to pass (see [Permissions & Authorization](#authentication--security)) — failing that redirects to `dashboard.notAuthorized` instead of `login`.
 
 All routes support a catch-all convention pattern: `/:handler/:action?`
 
@@ -728,9 +771,10 @@ CB Genesis is designed as a launchpad. Here's how to extend it:
 
 ### Adding a New Permission
 
-1. Add the permission slug to the `AdminData` seeder
-2. Register it in the `SettingService` defaults
-3. Check it in handlers via `hasPermission()` or `@secured`
+1. Add the `resource:action` slug to `resources/database/seeds/AdminData.bx` and assign it to the appropriate role(s)
+2. Guard the handler action with `@secured( "resource:action,resource:admin" )` (comma = OR) — see [Permissions & Authorization](#authentication--security)
+3. Gate the matching button/link in the view with `<bx:if prc.authUser.hasPermission( "resource:action,resource:admin" )>` so the UI matches what the handler allows
+4. Re-run `box migrate seed` (or grant the permission to a role via the Roles admin page) so an existing database picks up the new slug
 
 ### Adding a Setting
 
