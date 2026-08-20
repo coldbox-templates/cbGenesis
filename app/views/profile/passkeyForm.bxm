@@ -1,0 +1,27 @@
+<bx:output>
+<form method="post" @submit="registerPasskey">
+	<div class="cb-ui-modal__body">
+		<div class="alert alert-danger" x-show="notice.message" x-text="notice.message" x-cloak></div>
+		<div class="cb-form-field">
+			<label for="passkey-label">Label <span class="required-mark" aria-hidden="true">*</span></label>
+			<input
+				id="passkey-label"
+				name="label"
+				type="text"
+				maxlength="100"
+				x-model.trim="passkeyLabel"
+				placeholder="MacBook Touch ID"
+				autocomplete="off"
+				required>
+			<small class="form-text">Choose a name that helps you recognize this device.</small>
+		</div>
+	</div>
+	<div class="cb-ui-modal__footer">
+		<button type="button" class="btn btn-light" @click="closePasskeyModal()" :disabled="passkeyRegistering">Cancel</button>
+		<button type="submit" class="btn btn-primary" :disabled="passkeyRegistering || !passkeyLabel.trim()">
+			<span x-show="!passkeyRegistering"><i class="ph-duotone ph-fingerprint" aria-hidden="true"></i> Continue</span>
+			<span x-show="passkeyRegistering" x-cloak><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Waiting for device...</span>
+		</button>
+	</div>
+</form>
+</bx:output>

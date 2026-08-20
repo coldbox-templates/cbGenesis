@@ -58,4 +58,19 @@
     }
 }
 
+.cb-passkey-required {
+    min-height: calc(100vh - 10rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .cb-auth-card {
+        width: min(100%, 26rem);
+    }
+
+    @media (max-width: 767.98px) {
+        min-height: calc(100vh - 8rem);
+    }
+}
+
 // ---- App footer (styles in components/_footer.scss, placed here by layout) ----

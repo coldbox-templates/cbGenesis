@@ -22,9 +22,10 @@
  */
 export function authForm() {
 	return {
-		loading  : false,
-		email    : "",
-		password : "",
+		loading        : false,
+		passkeyLoading : false,
+		email          : "",
+		password       : "",
 
 		/**
 		 * Returns true when both credentials contain non-whitespace values.
@@ -47,6 +48,19 @@ export function authForm() {
 				return;
 			}
 			this.loading = true;
+		},
+
+		/** Starts username-bound passkey authentication while retaining password fallback. */
+		async loginWithPasskey() {
+			if ( this.loading || this.passkeyLoading ) return;
+			if ( !window.cbSecurity?.passkeys || !await window.cbSecurity.passkeys.isSupported() ) return;
+			this.passkeyLoading = true;
+			try {
+				await window.cbSecurity.passkeys.login( this.email.trim(), "/dashboard" );
+			} catch ( error ) {
+				this.passkeyLoading = false;
+				if ( error.name !== "NotAllowedError" ) window.$toast?.error( error.message || "Passkey sign-in failed." );
+			}
 		},
 	};
 }

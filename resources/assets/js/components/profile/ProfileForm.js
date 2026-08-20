@@ -32,6 +32,8 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 		apiTokens            : [],
 		passkeys             : [],
 		passkeyRegistering   : false,
+		passkeyModalOpen     : false,
+		passkeyLabel         : "",
 		selectedPasskey      : null,
 		confirmPasskeyOpen   : false,
 		deletePasskeyLoading : false,
@@ -239,8 +241,29 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 		 *
 		 * @returns {Promise<void>}
 		 */
-		async registerPasskey() {
-			if ( this.passkeyRegistering ) return;
+		openPasskeyModal() {
+			this.passkeyLabel = "";
+			this.clearNotice();
+			this.passkeyModalOpen = true;
+			this.$focus( "#passkey-label" );
+		},
+
+		/** Closes the passkey label dialog unless registration is in progress. */
+		closePasskeyModal( force = false ) {
+			if ( this.passkeyRegistering && !force ) return;
+			this.passkeyModalOpen = false;
+			this.passkeyLabel = "";
+		},
+
+		/**
+		 * Registers a passkey and persists its label against the exact credential ID.
+		 *
+		 * @param {SubmitEvent} event Label form submit event.
+		 * @returns {Promise<void>}
+		 */
+		async registerPasskey( event ) {
+			event?.preventDefault();
+			if ( !this.passkeyLabel.trim() || this.passkeyRegistering ) return;
 			this.passkeyRegistering = true;
 			this.clearNotice();
 			try {
@@ -263,7 +286,22 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 				} );
 				const payload = await response.json();
 				if ( !response.ok ) throw new Error( payload.message || "Passkey could not be registered." );
+				const metadataResponse = await fetch( "/profile/passkeys", {
+					method      : "POST",
+					credentials : "same-origin",
+					headers     : { "Content-Type": "application/json", Accept: "application/json" },
+					body        : JSON.stringify( {
+						credentialId : credential.id,
+						label        : this.passkeyLabel.trim(),
+						csrf         : this.csrfToken,
+					} ),
+				} );
+				const metadataPayload = await metadataResponse.json();
+				if ( !metadataResponse.ok || metadataPayload.error ) {
+					throw new Error( metadataPayload.messages || "Passkey label could not be saved." );
+				}
 				await this.loadPasskeys();
+				this.closePasskeyModal( true );
 				this.notice = { type: "success", message: "Passkey registered successfully." };
 			} catch ( error ) {
 				this.notice = { type: "error", message: error.name === "NotAllowedError" ? "Passkey registration was cancelled." : ( error.message || "Passkey registration failed." ) };

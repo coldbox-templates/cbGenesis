@@ -3,6 +3,7 @@ import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import * as bootstrap from "bootstrap";
 import "@phosphor-icons/web/duotone";
+import "./passkeys.js";
 
 // ============================================================
 // Alpine Plugins Registration
@@ -39,6 +40,8 @@ import { rolesForm }         from "./components/security/RolesForm.js";
 import { usersForm }         from "./components/security/UsersForm.js";
 import { userDetailForm }    from "./components/security/UserDetailForm.js";
 import { profileForm }       from "./components/profile/ProfileForm.js";
+import { preferencesForm }   from "./components/profile/PreferencesForm.js";
+import { passkeyOnboarding } from "./components/profile/PasskeyOnboarding.js";
 Alpine.data( "authForm", authForm );
 Alpine.data( "registerForm", registerForm );
 Alpine.data( "forgotPasswordForm", forgotPasswordForm );
@@ -50,6 +53,8 @@ Alpine.data( "rolesForm", rolesForm );
 Alpine.data( "usersForm", usersForm );
 Alpine.data( "userDetailForm", userDetailForm );
 Alpine.data( "profileForm", profileForm );
+Alpine.data( "preferencesForm", preferencesForm );
+Alpine.data( "passkeyOnboarding", passkeyOnboarding );
 
 // ============================================================
 // Alpine UI Components Registration

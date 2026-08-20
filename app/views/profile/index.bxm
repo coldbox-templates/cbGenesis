@@ -482,7 +482,7 @@
 					<h3 class="cb-content-card-title"><i class="ph-duotone ph-fingerprint" aria-hidden="true"></i> Passkeys <span class="cb-count-pill" x-text="passkeys.length"></span></h3>
 					<p class="cb-content-card-subtitle">Use a fingerprint, face scan, or device security key to sign in securely.</p>
 				</div>
-				<button type="button" class="btn btn-primary btn-sm" @click="registerPasskey()" :disabled="passkeyRegistering">
+				<button type="button" class="btn btn-primary btn-sm" @click="openPasskeyModal()" :disabled="passkeyRegistering">
 					<span x-show="!passkeyRegistering"><i class="ph-duotone ph-plus" aria-hidden="true"></i> Register Passkey</span>
 					<span x-show="passkeyRegistering" x-cloak><span class="spinner-border spinner-border-sm me-1" role="status"></span> Waiting for device...</span>
 				</button>
@@ -504,6 +504,17 @@
 			</div>
 			<p class="text-muted cb-api-token-empty" x-show="!passkeys.length" x-cloak>No passkeys have been registered.</p>
 		</section>
+
+		#view(
+			view = "_components/ui/modal",
+			args = {
+				id            : "passkey-label-modal",
+				title         : "Name Passkey",
+				openExpression: "passkeyModalOpen",
+				closeExpression: "closePasskeyModal()",
+				contentView   : "profile/passkeyForm"
+			}
+		)#
 
 		#view(
 			view = "_components/ui/modal",
@@ -550,5 +561,3 @@
 	</div>
 </div>
 </bx:output>
-
-<script src="/modules/cbsecurity-passkeys/includes/passkeys.js"></script>

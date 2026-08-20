@@ -23,7 +23,8 @@ class extends="BaseSecureHandler" {
 			"createToken": true,
 			"updateToken": true,
 			"deleteToken": true,
-			"deletePasskey": true
+			"deletePasskey": true,
+			"updatePasskey": true
 		}
 	}
 
@@ -52,6 +53,11 @@ class extends="BaseSecureHandler" {
 		prc.profile = prc.authUser
 		prc.apiTokenMaxValidityMonths = settingService.getSetting( "cbApiTokenMaxValidityMonths" )
 		event.setView( "profile/index" )
+	}
+
+	function passkeyRequired( event, rc, prc ) {
+		prc.title = "Passkey Required"
+		event.setView( "profile/passkeyRequired" )
 	}
 
 	@remote( "Save the authenticated user's profile remotely via AJAX" )
@@ -146,12 +152,49 @@ class extends="BaseSecureHandler" {
 			passkeys.map( ( item, index ) => {
 				return {
 					"passkeyId"   : item.getPasskeyId(),
-					"label"       : "Passkey #index + 1#",
+					"label"       : item.getLabel() ?: "Passkey #index + 1#",
 					"createdDate" : item.getCreatedDate(),
 					"lastUsed"   : item.getLastUsedTimestamp()
 				}
 			} )
 		)
+	}
+
+	/**
+	 * Update an authenticated user's passkey display label.
+	 */
+	@remote( "Update an authenticated user's passkey label remotely via AJAX" )
+	function updatePasskey( event, rc, prc ) {
+		var response = event.getResponse()
+		var label = trim( rc.label ?: "" )
+
+		if ( !len( label ) || len( label ) > 100 ) {
+			return response.setErrorMessage(
+				errorMessage: "Passkey labels must be between 1 and 100 characters.",
+				statusCode: 422
+			)
+		}
+
+		try {
+			var passkey = passkeyService.updateLabelForCredential(
+				credentialId: rc.credentialId ?: "",
+				userId      : prc.authUser.getId(),
+				label       : label
+			)
+			return response.setData(
+				data: {
+					"passkeyId": passkey.getPasskeyId(),
+					"label"    : passkey.getLabel()
+				},
+				message: "Passkey label saved successfully."
+			)
+		} catch ( any error ) {
+			log.error( "Error updating passkey label: #error.message#", error )
+			return response.setErrorMessage(
+				errorMessage: "Passkey label could not be saved.",
+				statusCode: error.type == "Passkey.NotFound" ? 404 : 500
+			)
+		}
 	}
 
 	/**
@@ -161,6 +204,15 @@ class extends="BaseSecureHandler" {
 	function deletePasskey( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
+			if (
+				settingService.getSetting( "cbRequirePasskey", false )
+				&& passkeyService.listForUser( prc.authUser.getId() ).len() <= 1
+			) {
+				return response.setErrorMessage(
+					errorMessage: "You must keep at least one passkey while mandatory passkey enrollment is enabled.",
+					statusCode: 409
+				)
+			}
 			passkeyService.deleteForUser(
 				passkeyId: rc.passkeyId ?: "",
 				userId   : prc.authUser.getId()
