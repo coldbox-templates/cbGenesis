@@ -9,12 +9,23 @@ class extends="coldbox.system.RestHandler"{
 	@inject
 	property name="settingService";
 
+	@inject
+	property name="passkeyService";
+
 	/**
 	 * Pre-handler method that runs before any secure handler.
 	 * It sets the layout to "Admin" for all views rendered by this handler.
 	 */
 	function preHandler( event, rc, prc ) {
 		event.setLayout( "Admin" )
+
+		if (
+			settingService.getSetting( "cbRequirePasskey", false )
+			&& event.getCurrentAction() != "logout"
+			&& !passkeyService.listForUser( prc.authUser.getId() ).len()
+		) {
+			return relocate( "profile/passkey-required" )
+		}
 	}
 
 	/**

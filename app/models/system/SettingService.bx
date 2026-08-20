@@ -51,6 +51,8 @@ class extends="app.models.BaseService" {
 			// Persistent browser-login duration in days
 			cbRememberMeDays          : 14,
 			cbAllowRememberMe		: true,
+			// Require every authenticated user to register at least one passkey
+			cbRequirePasskey         : false,
 			// Maximum API token validity in months
 			cbApiTokenMaxValidityMonths: 12,
 			// Mail Settings

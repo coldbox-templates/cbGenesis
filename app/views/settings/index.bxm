@@ -214,6 +214,16 @@
 				<label>API Token Maximum Validity (months)
 					<input type="number" name="cbApiTokenMaxValidityMonths" min="1" max="120" step="1" value="#encodeForHTMLAttribute( prc.settings.cbApiTokenMaxValidityMonths )#">
 				</label>
+				<div class="cb-setting-row cb-span-2">
+					<div>
+						<strong>Require Passkey Enrollment</strong>
+						<small>Block authenticated users until they register at least one passkey.</small>
+					</div>
+					#view(
+						view = "_components/ui/switch",
+						args = { name: "cbRequirePasskey", value: prc.settings.cbRequirePasskey }
+					)#
+				</div>
 				<label>Encryption Key
 					<input type="password" name="cbEncryptionKey" value="#encodeForHTMLAttribute( prc.settings.cbEncryptionKey )#" readonly>
 					<small>Generated at first run. Change only if you know what you are doing.</small>
