@@ -4,6 +4,8 @@
  * This service keeps profile-facing passkey operations scoped to the owning
  * user. Credential material remains private to the passkey entity and module.
  */
+import java:java.util.Base64;
+
 @singleton
 @threadSafe
 class extends="app.models.BaseService" {
@@ -45,6 +47,48 @@ class extends="app.models.BaseService" {
 			.isEq( "passkeyId", arguments.passkeyId )
 			.isEq( "user.userId", arguments.userId )
 			.get()
+	}
+
+	/**
+	 * Find a passkey by its browser credential ID for one user.
+	 *
+	 * @credentialId Base64url-encoded WebAuthn credential ID.
+	 * @userId The owning user's identifier.
+	 *
+	 * @return The matching passkey or null when it does not belong to the user.
+	 */
+	any function findForCredentialId( required string credentialId, required string userId ) {
+		var credentialBytes = Base64
+			.getUrlDecoder()
+			.decode( arguments.credentialId )
+
+		return newCriteria()
+			.isEq( "credentialId", credentialBytes )
+			.isEq( "user.userId", arguments.userId )
+			.get()
+	}
+
+	/**
+	 * Update a passkey label belonging to one user.
+	 *
+	 * @credentialId Base64url-encoded WebAuthn credential ID.
+	 * @userId The owning user's identifier.
+	 * @label The normalized display label.
+	 *
+	 * @return The updated passkey entity.
+	 */
+	any function updateLabelForCredential( required string credentialId, required string userId, required string label ) {
+		var passkey = findForCredentialId( arguments.credentialId, arguments.userId )
+
+		if ( isNull( passkey ) || !passkey.isLoaded() ) {
+			throw(
+				type    = "Passkey.NotFound",
+				message = "Passkey not found"
+			)
+		}
+
+		passkey.setLabel( arguments.label )
+		return passkey.save()
 	}
 
 	/**

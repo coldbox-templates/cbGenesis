@@ -96,8 +96,10 @@ class {
 			DELETE: "deletePasskey"
 		})
 		route( "profile/passkeys" ).withHandler( "Profile" ).toAction({
-			GET: "listPasskeys"
+			GET : "listPasskeys",
+			POST: "updatePasskey"
 		})
+		route( "profile/passkey-required", "Profile.passkeyRequired" )
 		route( "profile" ).withHandler( "Profile" ).toAction({
 			GET: "index",
 			POST: "save"

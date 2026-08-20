@@ -5,10 +5,34 @@ class {
 		 * --------------------------------------------------------------------------
 		 * CBSecurity Passkeys
 		 * --------------------------------------------------------------------------
+		 * Passkey credentials are bound to the relying-party ID and origin values
+		 * below. These values must match the URL used by the browser during the
+		 * WebAuthn ceremony.
+		 *
+		 * Change the local examples before deploying. A relying-party ID change
+		 * creates a different WebAuthn namespace, so users must register their
+		 * passkeys again after changing it.
 		 */
 		return {
+			// WireBox mapping for the application's ICredentialRepository implementation.
 			"credentialRepositoryMapping": "Passkey",
-        	"allowedOrigins": [ "http://localhost:8080", "http://127.0.0.1:8080" ]
+
+			// The WebAuthn RP ID: a hostname only, without a scheme, port, path, or slash.
+			// Local development uses "localhost". Production should use the application's
+			// canonical domain, such as "app.example.com" or "example.com".
+			"relyingPartyId": "localhost",
+
+			// The human-readable name shown by authenticators when users register
+			// or use a passkey. This is not the domain and does not affect origin
+			// validation. Use the product or application name users will recognize.
+			"relyingPartyName": "cbGenesis",
+
+			// Complete browser origins allowed to create or use passkeys. Include the
+			// scheme and port when applicable, but never include a path. Every origin
+			// users can use to access the app must be listed explicitly.
+			// Examples: "http://localhost:8080" for local development and
+			// "https://app.example.com" for production.
+			"allowedOrigins": [ "http://localhost:8080" ]
 		}
 	}
 

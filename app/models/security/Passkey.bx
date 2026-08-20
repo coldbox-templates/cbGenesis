@@ -34,6 +34,11 @@ class extends="app.models.BaseEntity"{
 	property name="signCount";
 
 	@notnull( false )
+	@ormtype( "string" )
+	@length( 100 )
+	property name="label";
+
+	@notnull( false )
 	@ormtype( "timestamp" )
 	property name="lastUsedTimestamp";
 
@@ -86,7 +91,7 @@ class extends="app.models.BaseEntity"{
 	this.memento = {
 		defaultIncludes: [
 			"lastUsedTimestamp",
-			"clientDataJSONString"
+			"label"
 		],
 		defaultExcludes: [],
 		neverInclude   : [

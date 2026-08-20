@@ -31,6 +31,9 @@
         document.documentElement.setAttribute( "data-sidebar-collapsed", collapsed ? "true" : "false" );
     })();
 </script>
+<!--- Passkeys --->
+<script src="/includes/passkeys.js"></script>
+<!--- Vite Assets --->
 #vite(
 	[ "resources/assets/scss/app.scss", "resources/assets/js/App.js"]
 )#

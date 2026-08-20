@@ -38,7 +38,7 @@
 				class="form-control"
                 x-model="email"
 				placeholder="you@cbGenesis.com"
-				autocomplete="email"
+				autocomplete="username webauthn"
 				required
 				autofocus
 			>
@@ -81,6 +81,16 @@
                 Signing in…
             </span>
         </button>
+
+		<button
+			type="button"
+			class="btn btn-outline-secondary w-100 mb-3"
+			@click="loginWithPasskey()"
+			:disabled="loading || passkeyLoading"
+		>
+			<span x-show="!passkeyLoading"><i class="ph-duotone ph-fingerprint" aria-hidden="true"></i> Sign in with a passkey</span>
+			<span x-show="passkeyLoading" x-cloak><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Waiting for device...</span>
+		</button>
 
     </form>
 
