@@ -6,7 +6,13 @@ summary: A production-ready ColdBox HMVC starter template for BoxLang - authenti
 toc: false
 ---
 
-# ⚡ CB Genesis
+<div class="bxsites-hero">
+	<img class="bxsites-hero__banner" src="assets/home-banner.png" alt="CB Genesis Docs - The official ColdBox project starter. Everything you need to Scaffold. Build. Accelerate. Built for developers, by developers, backed by ColdBox.">
+	<div class="bxsites-hero__actions">
+		<a class="bxsites-hero__btn bxsites-hero__btn--primary" href="getting-started.md">Get Started</a>
+		<a class="bxsites-hero__btn bxsites-hero__btn--secondary" href="https://github.com/coldbox-templates/cbGenesis">View on GitHub</a>
+	</div>
+</div>
 
 A production-ready **ColdBox HMVC** starter template for [BoxLang](https://boxlang.io) - the modern, dynamic JVM language. It ships with authentication, role-based permissions, API tokens, dark mode, and an Alpine-powered admin panel, so you spend your first day building features instead of scaffolding auth.
 
@@ -28,6 +34,12 @@ Server-rendered BXM views, sprinkled with small Alpine components, compiled by V
 :::
 ::: card title="A Real Test Suite" icon="phosphor-duotone:test-tube" href="guides/testing.md"
 TestBox unit specs for every entity and service, plus integration specs that exercise real HTTP requests.
+:::
+::: card title="Easy Configuration" icon="phosphor-duotone:sliders" href="guides/configuration.md"
+Environment variables for the essentials, DB-backed admin settings for everything else - no redeploy needed to change them.
+:::
+::: card title="Production Ready" icon="phosphor-duotone:cloud-arrow-up" href="deployment.md"
+A real go-live checklist, Docker support, and a choice of CommandBox or the BoxLang MiniServer.
 :::
 :::
 
