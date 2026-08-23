@@ -44,13 +44,18 @@ jobs:
           distribution: "temurin"
           java-version: ${{ env.JDK_VERSION }}
 
-      - name: Setup BoxLang & CommandBox
-        uses: ortus-boxlang/setup-boxlang@main
-        with:
-          version: latest
-          modules: bx-cli
-          with-commandbox: true
-          commandbox_modules: commandbox-boxlang,commandbox-migrations,testbox-cli
+      - name: Setup BoxLang & CommandBox (Quick Installer)
+        run: |
+          curl -fsSL https://install.boxlang.io | bash -s -- --yes --without-jre --with-commandbox
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install bx-cli BoxLang Module
+        run: |
+          install-bx-module bx-cli
+
+      - name: Install CommandBox CLI Modules
+        run: |
+          box install testbox-cli
 
       - name: Setup Environment For Testing Process
         run: |
