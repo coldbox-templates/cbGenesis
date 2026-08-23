@@ -50,9 +50,23 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           echo "BOXLANG_INSTALL_HOME=$HOME/.local/boxlang" >> $GITHUB_ENV
 
+      # bx-cli is alpha software and its transitive Maven dependency downloads have
+      # been observed to intermittently 404 against ForgeBox's own proxy/cache even
+      # when the artifact exists upstream on Maven Central. Retry a few times before
+      # giving up, and don't fail the whole suite if it still won't install: nothing
+      # else in this pipeline (migrate/testbox/server) depends on bx-cli itself, only
+      # on the `box` CLI installed by the quick installer above.
       - name: Install bx-cli BoxLang Module
+        continue-on-error: true
         run: |
-          install-bx-module bx-cli
+          for attempt in 1 2 3; do
+            if install-bx-module bx-cli; then
+              exit 0
+            fi
+            echo "install-bx-module bx-cli failed (attempt $attempt/3), retrying in 10s..."
+            sleep 10
+          done
+          echo "::warning::bx-cli could not be installed after 3 attempts; continuing without it."
 
       - name: Install CommandBox CLI Modules
         run: |
