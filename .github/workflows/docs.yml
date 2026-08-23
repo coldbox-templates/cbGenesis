@@ -1,0 +1,53 @@
+name: Publish Docs
+
+# Builds this repository's own docs (docs/ + bxsites.yaml at the repo root)
+# with BX Sites (https://ortus-boxlang.github.io/bx-sites/), using its
+# default "bootstrap" theme, and publishes the result to GitHub Pages.
+#
+# One-time setup required before this workflow can publish anything - see
+# docs/README in the pull request that introduced this workflow, or:
+#   1. Let this workflow run once (it creates the gh-pages branch for you)
+#   2. Settings -> Pages -> Build and deployment -> Source: "Deploy from a branch"
+#   3. Settings -> Pages -> Branch: gh-pages, folder: / (root)
+
+on:
+  push:
+    branches:
+      - development
+    paths:
+      - "docs/**"
+      - "bxsites.yaml"
+      - ".github/workflows/docs.yml"
+
+  # Manual trigger, for a one-off republish without a new commit
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "pages-docs"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & Publish Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup BoxLang + BX Sites
+        uses: ortus-boxlang/setup-boxlang@1.4.0
+        with:
+          with-commandbox: true
+          modules: bx-sites bx-markdown bx-yaml bx-image
+
+      - name: Build the site
+        run: bxSites build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
