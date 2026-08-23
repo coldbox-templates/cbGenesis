@@ -80,6 +80,18 @@ class {
 
 		/**
 		 * --------------------------------------------------------------------------
+		 * Audit Log Routing
+		 * --------------------------------------------------------------------------
+		 */
+		route( "auditlog/search", "AuditLog.search" )
+		route( "auditlog/export", "AuditLog.export" )
+		route( "auditlog/purge" ).withHandler( "AuditLog" ).toAction({ POST: "purge" })
+		route( "auditlog/clear" ).withHandler( "AuditLog" ).toAction({ DELETE: "clear" })
+		route( "auditlog/:auditLogId", "AuditLog.show" )
+		route( "auditlog", "AuditLog.index" )
+
+		/**
+		 * --------------------------------------------------------------------------
 		 * Profile Routing
 		 * --------------------------------------------------------------------------
 		 */

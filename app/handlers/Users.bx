@@ -22,6 +22,9 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="userActionTokenService";
 
+	@inject
+	property name="auditLogService";
+
 	static{
 		csrfVerify = {
 			"update": true,
@@ -112,6 +115,14 @@ class extends="BaseSecureHandler" {
 				.setRoles( [ selectedRole ] )
 				.validateOrFail( profiles: "invitation" )
 			userService.createInvitation( prc.user )
+			auditLogService.info(
+				action     : "user.created",
+				message    : "User [#prc.user.getEmail()#] was invited.",
+				category   : "data",
+				targetType : "User",
+				targetId   : prc.user.getUserId(),
+				targetLabel: prc.user.getEmail()
+			)
 			response.setData( data: prc.user.getMemento(), message: "User created successfully." )
 		}
 		catch( ValidationException error ){
@@ -233,6 +244,14 @@ class extends="BaseSecureHandler" {
 			if ( !isBoolean( rc.isActive ?: "" ) ) throw( type: "UserManagement.InvalidStatus", message: "A valid active state is required." )
 			if ( !javacast( "boolean", rc.isActive ) ) ensureNotSelf( prc.user, prc )
 			prc.user.setIsActive( javacast( "boolean", rc.isActive ) ).save()
+			auditLogService.warn(
+				action     : prc.user.getIsActive() ? "user.enabled" : "user.disabled",
+				message    : "User [#prc.user.getEmail()#] was #prc.user.getIsActive() ? 'enabled' : 'disabled'#.",
+				category   : "data",
+				targetType : "User",
+				targetId   : prc.user.getUserId(),
+				targetLabel: prc.user.getEmail()
+			)
 			response.setData( data: buildDetailPayload( prc.user ), message: "User status updated successfully." )
 		} catch ( any error ) {
 			response.failure( message: "User status could not be updated: #error.message#", statusCode: 400 )
@@ -289,7 +308,18 @@ class extends="BaseSecureHandler" {
 		try {
 			prc.user = getManagedUser( rc )
 			prc.role = roleService.getOrFail( rc.roleId ?: "" )
-			if ( !prc.user.hasRole( prc.role ) ) prc.user.addRole( prc.role ).save()
+			if ( !prc.user.hasRole( prc.role ) ) {
+				prc.user.addRole( prc.role ).save()
+				auditLogService.info(
+					action     : "user.role.granted",
+					message    : "Role [#prc.role.getRole()#] was granted to [#prc.user.getEmail()#].",
+					category   : "data",
+					targetType : "User",
+					targetId   : prc.user.getUserId(),
+					targetLabel: prc.user.getEmail(),
+					metadata   : { role: prc.role.getRole() }
+				)
+			}
 			event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Role added successfully." )
 		} catch ( any error ) {
 			event.getResponse().failure( message: "Role could not be added: #error.message#", statusCode: 400 )
@@ -304,6 +334,15 @@ class extends="BaseSecureHandler" {
 			prc.role = roleService.getOrFail( rc.roleId ?: "" )
 			ensureNotSelf( prc.user, prc )
 			prc.user.removeRole( prc.role ).save()
+			auditLogService.warn(
+				action     : "user.role.revoked",
+				message    : "Role [#prc.role.getRole()#] was revoked from [#prc.user.getEmail()#].",
+				category   : "data",
+				targetType : "User",
+				targetId   : prc.user.getUserId(),
+				targetLabel: prc.user.getEmail(),
+				metadata   : { role: prc.role.getRole() }
+			)
 			event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Role removed successfully." )
 		} catch ( any error ) {
 			event.getResponse().failure( message: "Role could not be removed: #error.message#", statusCode: 400 )
@@ -375,6 +414,14 @@ class extends="BaseSecureHandler" {
 				.populate( rc )
 				.validateOrFail()
 				.save()
+			auditLogService.info(
+				action     : "user.updated",
+				message    : "User [#prc.user.getEmail()#] was updated.",
+				category   : "data",
+				targetType : "User",
+				targetId   : prc.user.getUserId(),
+				targetLabel: prc.user.getEmail()
+			)
 			response.setData( data: prc.user.getMemento(), message: "User updated successfully." )
 		}
 		catch( ValidationException error ){
@@ -401,9 +448,18 @@ class extends="BaseSecureHandler" {
 	function delete( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
-			prc.user = userService
-				.getOrFail( rc.userId ?: "" )
-				.delete()
+			var user = userService.getOrFail( rc.userId ?: "" )
+			var userEmail = user.getEmail()
+			var userId = user.getUserId()
+			user.delete()
+			auditLogService.warn(
+				action     : "user.deleted",
+				message    : "User [#userEmail#] was deleted.",
+				category   : "data",
+				targetType : "User",
+				targetId   : userId,
+				targetLabel: userEmail
+			)
 			response.addMessage( "User deleted successfully." )
 		} catch ( any error ) {
 			log.error( "Error deleting user with ID [#rc.userId#]: #error.message#", error )

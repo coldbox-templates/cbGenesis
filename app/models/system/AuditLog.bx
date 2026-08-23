@@ -1,0 +1,206 @@
+/**
+ * An immutable, append-only record of a single admin/auth/security event.
+ *
+ * Audit rows are never updated or soft-deleted, so this entity intentionally
+ * does NOT extend `app.models.BaseEntity` -- that base class contributes
+ * `isActive`, `modifiedDate`, and a `preUpdate()` restamp that make sense for
+ * mutable business entities but are meaningless (and misleading) on a log row.
+ */
+@persistent( true )
+@table( "audit_logs" )
+class extends="cborm.models.ActiveEntity" {
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Static Defaults
+	 * --------------------------------------------------------------------------
+	 */
+	static {
+		SEVERITIES = [ "debug", "info", "warn", "error", "fatal" ]
+		CATEGORIES = [ "auth", "security", "data", "system" ]
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Persisted Properties
+	 * --------------------------------------------------------------------------
+	 */
+
+	@fieldType( "id" )
+	@generator( "uuid" )
+	property
+		name="auditLogId"
+		setter="false";
+
+	@ormType( "timestamp" )
+	@notNull( true )
+	@update( "false" )
+	property
+		name="createdDate"
+		type="date";
+
+	@notNull( true )
+	@update( "false" )
+	property name="severity" default="info";
+
+	@notNull( true )
+	@update( "false" )
+	property name="category" default="system";
+
+	@notNull( true )
+	@update( "false" )
+	property name="action" default="";
+
+	@ormType( "text" )
+	@notNull( true )
+	@update( "false" )
+	property name="message" default="";
+
+	@update( "false" )
+	property name="actorEmail";
+
+	@update( "false" )
+	property name="actorName";
+
+	@update( "false" )
+	property name="targetType";
+
+	@update( "false" )
+	property name="targetId";
+
+	@update( "false" )
+	property name="targetLabel";
+
+	@update( "false" )
+	property name="ipAddress";
+
+	@ormType( "text" )
+	@update( "false" )
+	property name="userAgent";
+
+	@ormType( "text" )
+	@update( "false" )
+	property name="metadata";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Relationships
+	 * --------------------------------------------------------------------------
+	 */
+
+	/**
+	 * The actor who performed the action. Null for anonymous events (e.g. a failed login).
+	 */
+	@fieldType( "many-to-one" )
+	@class( "app.models.system.User" )
+	@fkColumn( "FK_userId" )
+	@lazy( "proxy" )
+	@update( "false" )
+	property name="user";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Population Options
+	 * --------------------------------------------------------------------------
+	 */
+	this.population = {
+		exclude: [
+			"auditLogId",
+			"createdDate",
+			"user"
+		]
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Mementifier Options
+	 * --------------------------------------------------------------------------
+	 * https://forgebox.io/view/mementifier
+	 */
+	this.memento = {
+		defaultIncludes: [
+			"auditLogId",
+			"createdDate",
+			"severity",
+			"category",
+			"action",
+			"message",
+			"actorEmail",
+			"actorName",
+			"targetType",
+			"targetId",
+			"targetLabel",
+			"ipAddress",
+			"userAgent",
+			"metadata"
+		],
+		defaultExcludes: [],
+		neverInclude   : []
+	}
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		super.init()
+		variables.severity = "info"
+		variables.category = "system"
+		variables.action = ""
+		variables.message = ""
+		variables.actorEmail = ""
+		variables.actorName = ""
+		variables.targetType = ""
+		variables.targetId = ""
+		variables.targetLabel = ""
+		variables.ipAddress = ""
+		variables.userAgent = ""
+		variables.metadata = ""
+		return this
+	}
+
+	/**
+	 * Called before an entity is inserted: stamps the immutable creation timestamp.
+	 */
+	function preInsert() {
+		if ( isNull( variables.createdDate ) ) {
+			variables.createdDate = now()
+		}
+	}
+
+	/**
+	 * Returns the primary key value of this audit log row.
+	 */
+	string function getId() {
+		return variables.auditLogId
+	}
+
+	/**
+	 * Whether this entity has been persisted (has an assigned primary key).
+	 */
+	boolean function isLoaded() {
+		return len( variables.auditLogId ?: "" ) > 0
+	}
+
+	/**
+	 * Safely parses the stored metadata JSON into a struct.
+	 *
+	 * @return The metadata as a struct, or an empty struct when absent/invalid.
+	 */
+	struct function getMetadataAsStruct() {
+		if ( !len( variables.metadata ?: "" ) || !isJSON( variables.metadata ) ) {
+			return {}
+		}
+		return deserializeJSON( variables.metadata )
+	}
+
+	/**
+	 * Returns the CSS modifier class used to render this row's severity badge.
+	 *
+	 * @return A `cb-severity-badge--{severity}` modifier class name.
+	 */
+	string function getSeverityClass() {
+		var normalized = static.SEVERITIES.findNoCase( variables.severity ) ? lcase( variables.severity ) : "info"
+		return "cb-severity-badge--" & normalized
+	}
+
+}

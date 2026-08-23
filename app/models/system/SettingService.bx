@@ -55,6 +55,8 @@ class extends="app.models.BaseService" {
 			cbRequirePasskey         : false,
 			// Maximum API token validity in months
 			cbApiTokenMaxValidityMonths: 12,
+			// Audit log retention window, in days. 0 disables the scheduled purge.
+			cbAuditLogRetentionDays  : 90,
 			// Mail Settings
 			cbMailHost               : "smtp.mailtrap.io",
 			cbMailPort               : 25,

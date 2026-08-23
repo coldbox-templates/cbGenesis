@@ -465,6 +465,13 @@
 	color: var(--app-text-muted);
 }
 
+// Audit log fatal severity: a solid treatment so it reads as more urgent than
+// the plain "error" chip above.
+.cb-chip-fatal {
+	background: $bl-danger;
+	color: #fff;
+}
+
 .cb-muted-cell {
 	color: var(--app-text-muted);
 }
@@ -1913,4 +1920,51 @@
 	.cb-permission-callout {
 		color: $bl-cyan-light;
 	}
+}
+
+// Audit Log
+.cb-audit-row {
+	cursor: pointer;
+}
+
+.cb-audit-detail-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin: 0;
+
+	> div {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	dt {
+		font-size: 0.72rem;
+		font-weight: 800;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--app-text-muted);
+	}
+
+	dd {
+		margin: 0;
+		word-break: break-word;
+	}
+}
+
+.cb-audit-detail-useragent {
+	font-size: 0.85rem;
+	color: var(--app-text-muted);
+}
+
+.cb-audit-detail-metadata {
+	background: var(--app-surface-raised);
+	border: 1px solid var(--app-border-subtle);
+	border-radius: 0.5rem;
+	padding: 0.85rem 1rem;
+	font-size: 0.8rem;
+	white-space: pre-wrap;
+	word-break: break-word;
+	margin: 0;
 }

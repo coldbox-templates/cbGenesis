@@ -1,0 +1,25 @@
+<bx:output>
+<div class="cb-ui-modal__body cb-delete-confirmation">
+	<i class="ph-duotone ph-warning" aria-hidden="true"></i>
+	<p>You are about to permanently delete <strong>every</strong> audit log entry, regardless of any filters currently applied.</p>
+	<p class="cb-danger-callout"><i class="ph-duotone ph-warning" aria-hidden="true"></i> This cannot be undone. A single entry recording who cleared the log will be created afterward.</p>
+	<p>Are you sure you want to continue?</p>
+	<p class="cb-form-error" x-show="error" x-text="error"></p>
+</div>
+
+<div class="cb-ui-modal__footer">
+	<button
+		type="button"
+		class="btn btn-light"
+		@click="cancelClear()"
+		:disabled="clearing">Cancel</button>
+	<button
+		type="button"
+		class="btn btn-danger"
+		@click.prevent="clearAll()"
+		:disabled="clearing">
+		<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+		<span x-text="clearing ? 'Clearing...' : 'Clear all logs'"></span>
+	</button>
+</div>
+</bx:output>

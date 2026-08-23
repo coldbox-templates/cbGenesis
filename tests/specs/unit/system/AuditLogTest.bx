@@ -1,0 +1,63 @@
+/**
+ * The base model test case will use the 'model' annotation as the instantiation path
+ * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
+ * responsibility to update the model annotation instantiation path and init your model.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject
+	property name="auditLogService";
+
+	/*********************************** BDD SUITES ***********************************/
+
+	function run() {
+		describe( "An AuditLog", () => {
+			beforeEach( () => {
+				variables.entry = auditLogService.new()
+			} )
+
+			it( "can be created", () => {
+				expect( entry ).notToBeNull()
+			} )
+
+			it( "initializes with default values", () => {
+				expect( entry.isLoaded() ).toBeFalse()
+				expect( entry.getSeverity() ).toBe( "info" )
+				expect( entry.getCategory() ).toBe( "system" )
+				expect( entry.getAction() ).toBe( "" )
+				expect( entry.getMessage() ).toBe( "" )
+			} )
+
+			describe( "getMetadataAsStruct()", () => {
+				it( "parses valid JSON metadata into a struct", () => {
+					entry.setMetadata( '{"changedFields":["email"]}' )
+					var metadata = entry.getMetadataAsStruct()
+					expect( metadata ).toHaveKey( "changedFields" )
+				} )
+
+				it( "returns an empty struct when metadata is empty", () => {
+					entry.setMetadata( "" )
+					expect( entry.getMetadataAsStruct() ).toBeStruct()
+					expect( structIsEmpty( entry.getMetadataAsStruct() ) ).toBeTrue()
+				} )
+
+				it( "returns an empty struct when metadata is not valid JSON", () => {
+					entry.setMetadata( "not json" )
+					expect( structIsEmpty( entry.getMetadataAsStruct() ) ).toBeTrue()
+				} )
+			} )
+
+			describe( "getSeverityClass()", () => {
+				it( "returns the modifier class for a known severity", () => {
+					entry.setSeverity( "warn" )
+					expect( entry.getSeverityClass() ).toBe( "cb-severity-badge--warn" )
+				} )
+
+				it( "falls back to info for an unrecognized severity", () => {
+					entry.setSeverity( "bogus" )
+					expect( entry.getSeverityClass() ).toBe( "cb-severity-badge--info" )
+				} )
+			} )
+		} )
+	}
+}

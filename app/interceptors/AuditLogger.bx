@@ -1,0 +1,82 @@
+/**
+ * Listens for authentication and firewall events and records them to the
+ * audit log. Admin CRUD events are NOT handled here -- they are recorded
+ * explicitly by their owning services (see AuditLogService.record()),
+ * since only the service call site knows the specific business action and
+ * what changed.
+ *
+ * Interception points used, and the cbauth/cbsecurity docs confirming them:
+ * - postAuthentication (cbauth)   -- fires after a successful authenticate()/login()
+ * - preLogout          (cbauth)   -- fires before session data is cleared on logout()
+ * - cbSecurity_onInvalidAuthentication (cbsecurity) -- unauthenticated access to a secured event
+ * - cbSecurity_onInvalidAuthorization  (cbsecurity) -- authenticated but unauthorized access
+ */
+class extends="coldbox.system.Interceptor" {
+
+	@inject
+	property name="auditLogService";
+
+	function configure() {
+	}
+
+	/**
+	 * Records a successful login.
+	 */
+	function postAuthentication( event, interceptData, buffer, rc, prc ) {
+		var user = interceptData.user ?: javaCast( "null", "" )
+		if ( isNull( user ) ) {
+			return
+		}
+
+		variables.auditLogService.info(
+			action  : "auth.login.success",
+			message : "#user.getEmail()# logged in.",
+			category: "auth",
+			actor   : user
+		)
+	}
+
+	/**
+	 * Records a logout, captured before the session is cleared so the acting user is known.
+	 */
+	function preLogout( event, interceptData, buffer, rc, prc ) {
+		var user = interceptData.user ?: javaCast( "null", "" )
+		if ( isNull( user ) ) {
+			return
+		}
+
+		variables.auditLogService.info(
+			action  : "auth.logout",
+			message : "#user.getEmail()# logged out.",
+			category: "auth",
+			actor   : user
+		)
+	}
+
+	/**
+	 * Records an unauthenticated request to a secured event.
+	 */
+	function cbSecurity_onInvalidAuthentication( event, interceptData, buffer, rc, prc ) {
+		variables.auditLogService.warn(
+			action     : "security.access.unauthenticated",
+			message    : "Unauthenticated access attempt to [#event.getCurrentEvent()#].",
+			category   : "security",
+			targetType : "Event",
+			targetLabel: event.getCurrentEvent()
+		)
+	}
+
+	/**
+	 * Records an authenticated-but-unauthorized request to a secured event.
+	 */
+	function cbSecurity_onInvalidAuthorization( event, interceptData, buffer, rc, prc ) {
+		variables.auditLogService.error(
+			action     : "security.access.denied",
+			message    : "Access denied to [#event.getCurrentEvent()#].",
+			category   : "security",
+			targetType : "Event",
+			targetLabel: event.getCurrentEvent()
+		)
+	}
+
+}

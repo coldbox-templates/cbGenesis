@@ -95,6 +95,27 @@ class {
 				id          : "00000000-0000-0000-0000-000000000404",
 				permission  : "settings:admin",
 				description : "Full settings administration"
+			},
+
+			{
+				id          : "00000000-0000-0000-0000-000000000501",
+				permission  : "auditlog:read",
+				description : "View audit log entries"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000502",
+				permission  : "auditlog:export",
+				description : "Export audit log entries"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000503",
+				permission  : "auditlog:delete",
+				description : "Purge audit log entries by age"
+			},
+			{
+				id          : "00000000-0000-0000-0000-000000000504",
+				permission  : "auditlog:admin",
+				description : "Full audit log administration, including clearing all entries"
 			}
 		]
 

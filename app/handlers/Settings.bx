@@ -7,6 +7,9 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="securityService";
 
+	@inject
+	property name="auditLogService";
+
 	function preHandler( event, rc, prc ) {
 		if ( event.getHTTPMethod() != "GET" && !csrfVerify( rc.csrf ?: "" ) ) {
 			flash.put( "messages", {
@@ -115,6 +118,11 @@ class extends="BaseSecureHandler" {
 	function save( event, rc, prc ) {
 		try {
 			settingService.bulkSave( rc )
+			auditLogService.info(
+				action  : "settings.updated",
+				message : "Application settings were updated.",
+				category: "data"
+			)
 			flash.put( "messages", {
 				type   : "success",
 				message: "Settings saved successfully."

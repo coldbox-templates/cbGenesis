@@ -1,0 +1,155 @@
+/**
+ * The base model test case will use the 'model' annotation as the instantiation path
+ * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
+ * responsibility to update the model annotation instantiation path and init your model.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject
+	property name="auditLogService";
+
+	/*********************************** BDD SUITES ***********************************/
+
+	function run() {
+		describe( "AuditLog Service", () => {
+
+			it( "can be created", () => {
+				expect( auditLogService ).notToBeNull()
+			} )
+
+			describe( "record()", () => {
+				it( "persists an entry with the requested severity, category, and message", () => {
+					var entry = auditLogService.record(
+						action  : "test.event",
+						message : "A test event occurred",
+						severity: "warn",
+						category: "system"
+					)
+
+					expect( entry ).notToBeNull()
+					expect( entry.isLoaded() ).toBeTrue()
+					expect( entry.getAction() ).toBe( "test.event" )
+					expect( entry.getSeverity() ).toBe( "warn" )
+					expect( entry.getCategory() ).toBe( "system" )
+				} )
+
+				it( "falls back to info severity when an unrecognized severity is passed", () => {
+					var entry = auditLogService.record(
+						action  : "test.event",
+						message : "A test event occurred",
+						severity: "bogus"
+					)
+					expect( entry.getSeverity() ).toBe( "info" )
+				} )
+
+				it( "falls back to system category when an unrecognized category is passed", () => {
+					var entry = auditLogService.record(
+						action  : "test.event",
+						message : "A test event occurred",
+						category: "bogus"
+					)
+					expect( entry.getCategory() ).toBe( "system" )
+				} )
+
+				it( "stamps the acting user's email and name when an actor is supplied", () => {
+					var user = createVerifiedUser()
+					var entry = auditLogService.record(
+						action : "test.event",
+						message: "A test event occurred",
+						actor  : user
+					)
+					expect( entry.getActorEmail() ).toBe( user.getEmail() )
+				} )
+
+				it( "redacts sensitive metadata keys before persisting", () => {
+					var entry = auditLogService.record(
+						action  : "test.event",
+						message : "A test event occurred",
+						metadata: { password: "hunter2", note: "ok" }
+					)
+					var metadata = entry.getMetadataAsStruct()
+					expect( metadata.password ).toBe( "[REDACTED]" )
+					expect( metadata.note ).toBe( "ok" )
+				} )
+
+				it( "never throws, even with minimal arguments", () => {
+					expect( () => auditLogService.record( action: "test.event", message: "msg" ) ).notToThrow()
+				} )
+			} )
+
+			describe( "search()", () => {
+				beforeEach( () => {
+					auditLogService.record( action: "search.match", message: "findable-marker-#createUUID()#", severity: "error" )
+					auditLogService.record( action: "search.other", message: "unrelated entry", severity: "info" )
+				} )
+
+				it( "filters by severity", () => {
+					var results = auditLogService.search( severity: "error", max: 50 )
+					expect( results.records.len() ).toBeGT( 0 )
+					results.records.each( ( record ) => expect( record.getSeverity() ).toBe( "error" ) )
+				} )
+
+				it( "ignores an invalid severity value rather than erroring", () => {
+					expect( () => auditLogService.search( severity: "not-a-real-severity", max: 5 ) ).notToThrow()
+				} )
+
+				it( "matches free text search against the message", () => {
+					var marker = "findable-marker-#createUUID()#"
+					auditLogService.record( action: "search.marker", message: marker )
+					var results = auditLogService.search( searchTerm: marker, max: 10 )
+					expect( results.count ).toBeGTE( 1 )
+				} )
+			} )
+
+			describe( "severityCountsReport()", () => {
+				it( "returns a struct with an entry per severity plus an all total", () => {
+					var counts = auditLogService.severityCountsReport()
+					expect( counts ).toHaveKey( "all" )
+					expect( counts ).toHaveKey( "debug" )
+					expect( counts ).toHaveKey( "info" )
+					expect( counts ).toHaveKey( "warn" )
+					expect( counts ).toHaveKey( "error" )
+					expect( counts ).toHaveKey( "fatal" )
+				} )
+			} )
+
+			describe( "clearAll()", () => {
+				it( "removes every entry and leaves exactly one entry describing the clear", () => {
+					auditLogService.record( action: "before.clear", message: "will be purged" )
+					auditLogService.record( action: "before.clear", message: "will also be purged" )
+
+					auditLogService.clearAll()
+
+					var remaining = auditLogService.search( max: 50 )
+					expect( remaining.count ).toBe( 1 )
+					expect( remaining.records[ 1 ].getAction() ).toBe( "auditlog.clear" )
+				} )
+			} )
+
+			describe( "purgeOlderThan()", () => {
+				it( "is a no-op for a non-positive retention window", () => {
+					expect( auditLogService.purgeOlderThan( 0 ) ).toBe( 0 )
+				} )
+
+				it( "does not purge entries created within the retention window", () => {
+					auditLogService.record( action: "recent.event", message: "recent" )
+					expect( auditLogService.purgeOlderThan( 90 ) ).toBe( 0 )
+				} )
+			} )
+
+			describe( "exportCSV()", () => {
+				it( "escapes a leading formula-injection character in a field", () => {
+					auditLogService.record( action: "csv.test", message: "=SUM(A1:A2)", severity: "info" )
+					var csv = auditLogService.exportCSV( searchTerm: "SUM(A1" )
+					expect( csv ).toInclude( "'=SUM" )
+				} )
+
+				it( "includes a header row", () => {
+					var csv = auditLogService.exportCSV()
+					expect( listFirst( csv, chr( 13 ) & chr( 10 ) ) ).toInclude( "Severity" )
+				} )
+			} )
+
+		} )
+	}
+}

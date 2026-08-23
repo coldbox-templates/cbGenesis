@@ -13,6 +13,9 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="userService";
 
+	@inject
+	property name="auditLogService";
+
 	static{
 		csrfVerify = {
 			"create" : true,
@@ -71,6 +74,14 @@ class extends="BaseSecureHandler" {
 				.populate( rc )
 				.validateOrFail()
 				.save()
+			auditLogService.info(
+				action     : "role.created",
+				message    : "Role [#prc.role.getRole()#] was created.",
+				category   : "data",
+				targetType : "Role",
+				targetId   : prc.role.getRoleId(),
+				targetLabel: prc.role.getRole()
+			)
 			response.setData( data: prc.role.getMemento(), message: "Role created successfully." )
 		}
 		catch( ValidationException error ){
@@ -101,6 +112,14 @@ class extends="BaseSecureHandler" {
 				.populate( rc )
 				.validateOrFail()
 				.save()
+			auditLogService.info(
+				action     : "role.updated",
+				message    : "Role [#prc.role.getRole()#] was updated.",
+				category   : "data",
+				targetType : "Role",
+				targetId   : prc.role.getRoleId(),
+				targetLabel: prc.role.getRole()
+			)
 			response.setData( data: prc.role.getMemento(), message: "Role saved successfully." )
 		}
 		catch( ValidationException error ){
@@ -126,9 +145,18 @@ class extends="BaseSecureHandler" {
 	function delete( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
-			roleService
-				.getOrFail( rc.roleId ?: "" )
-				.delete()
+			var role = roleService.getOrFail( rc.roleId ?: "" )
+			var roleName = role.getRole()
+			var roleId = role.getRoleId()
+			role.delete()
+			auditLogService.warn(
+				action     : "role.deleted",
+				message    : "Role [#roleName#] was deleted.",
+				category   : "data",
+				targetType : "Role",
+				targetId   : roleId,
+				targetLabel: roleName
+			)
 			response.addMessage( "Role deleted successfully." )
 		} catch ( any error ) {
 			log.error( "Error deleting role with ID [#rc.roleId#]: #error.message#", error )

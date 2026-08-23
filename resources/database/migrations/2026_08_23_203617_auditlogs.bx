@@ -1,0 +1,43 @@
+class {
+
+	function up( schema, qb ) {
+		// Audit Log table - append-only record of admin/auth/security activity
+		schema.create( "audit_logs", ( table ) => {
+			table.guid( "auditLogId" ).primaryKey()
+			table.timestamp( "createdDate" )
+
+			// Classification
+			table.string( "severity", 20 )
+			table.string( "category", 50 )
+			table.string( "action", 100 )
+			table.longText( "message" )
+
+			// Actor (denormalized so the trail survives the actor being deleted)
+			table.guid( "FK_userId" ).nullable()
+			table.string( "actorEmail" ).nullable()
+			table.string( "actorName" ).nullable()
+
+			// Target of the action, if any
+			table.string( "targetType", 100 ).nullable()
+			table.string( "targetId", 100 ).nullable()
+			table.string( "targetLabel" ).nullable()
+
+			// Request context
+			table.string( "ipAddress", 45 ).nullable()
+			table.longText( "userAgent" ).nullable()
+			table.json( "metadata" ).nullable()
+
+			// Indexes
+			table.index( "severity", "idx_auditSeverity" )
+			table.index( "createdDate", "idx_auditCreatedDate" )
+			table.index( "category", "idx_auditCategory" )
+			table.index( "FK_userId", "idx_auditActor" )
+			table.index( [ "severity", "createdDate" ], "idx_auditSeverityDate" )
+		} )
+	}
+
+	function down( schema, qb ) {
+		schema.dropIfExists( "audit_logs" )
+	}
+
+}

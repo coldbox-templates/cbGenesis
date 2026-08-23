@@ -23,6 +23,9 @@ class extends="coldbox.system.EventHandler"{
 	@inject
 	property name="userActionTokenService";
 
+	@inject
+	property name="auditLogService";
+
 	/**
 	 * Execute before any handler action is called.  This is a good place to check for
 	 * authentication and authorization.
@@ -98,6 +101,13 @@ class extends="coldbox.system.EventHandler"{
 				// Success — redirect to the dashboard
 				relocate( "dashboard" )
 			} catch ( "InvalidCredentials" | "EntityNotFound" e ) {
+				variables.auditLogService.warn(
+					action     : "auth.login.failed",
+					message    : "Failed login attempt for [#rc.email#].",
+					category   : "auth",
+					targetType : "User",
+					targetLabel: rc.email
+				)
 				flash.put( "messages", {
 					type   : "error",
 					message: "Invalid email or password"
