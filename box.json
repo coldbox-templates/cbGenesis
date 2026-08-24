@@ -35,15 +35,8 @@
         "cbsecurity-passkeys":"^1.0.8"
     },
     "installPaths":{
-        "coldbox":"lib/coldbox/",
-        "testbox":"lib/testbox/",
-        "qb":"lib/modules/qb/",
-        "cbmailservices":"lib/modules/cbmailservices/",
-        "cbsecurity":"lib/modules/cbsecurity/",
-        "vite-helpers":"lib/modules/vite-helpers/",
-        "cborm":"lib/modules/cborm/",
-        "route-visualizer":"lib/modules/route-visualizer/",
-        "cbsecurity-passkeys":"lib/modules/cbsecurity-passkeys/"
+        "coldbox":"lib/",
+        "testbox":"lib/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",

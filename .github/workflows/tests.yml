@@ -84,16 +84,6 @@ jobs:
         run: |
           box install
 
-      # Diagnostic: confirms cborm's actual module content (models/,
-      # ModuleConfig.bx) landed where runtime/boxlang.json's /cborm mapping
-      # now points (lib/modules/cborm/cborm/, per box.json's installPaths --
-      # double-nested, unlike coldbox/testbox which install single-level).
-      - name: Debug - Verify Module Installation Paths
-        run: |
-          echo "--- lib/modules/cborm/cborm contents ---"
-          ls -la lib/modules/cborm/cborm/ 2>&1 || echo "lib/modules/cborm/cborm/ does not exist"
-          find lib/modules/cborm -maxdepth 3 -iname "ModuleConfig.bx" -o -maxdepth 3 -iname "models" 2>&1 || true
-
       - name: Run Migrations & Seed Database
         run: |
           box migrate install

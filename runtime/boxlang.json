@@ -76,13 +76,7 @@
 		"/coldbox" :  {"path": "${user-dir}/lib/coldbox", "external": false },
 		"/coldbox/system/exceptions" :  {"path": "${user-dir}/lib/coldbox/system/exceptions", "external": true },
 		"/modules" :  {"path": "${user-dir}/lib/modules", "external": true },
-		// box.json's installPaths declares cborm's target as "lib/modules/cborm/cborm/"
-		// (double-nested, unlike coldbox/testbox which install at a single level) --
-		// confirmed on disk in CI: the real module content (models/, ModuleConfig.bx,
-		// etc.) lands at lib/modules/cborm/cborm/, not lib/modules/cborm/. This mapping
-		// must match that actual install location or every cborm.models.* class fails
-		// to resolve via the /cborm BoxLang mapping.
-		"/cborm" :  {"path": "${user-dir}/lib/modules/cborm/cborm", "external": false },
+		"/cborm" :  {"path": "${user-dir}/lib/modules/cborm", "external": false },
 		"/testbox" :  "${user-dir}/lib/testbox",
 		"/tests" : "${user-dir}/tests"
 	},
