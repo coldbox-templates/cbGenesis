@@ -12,16 +12,6 @@ class extends="cborm.models.ActiveEntity" {
 
 	/**
 	 * --------------------------------------------------------------------------
-	 * Static Defaults
-	 * --------------------------------------------------------------------------
-	 */
-	static {
-		SEVERITIES = [ "debug", "info", "warn", "error", "fatal" ]
-		CATEGORIES = [ "auth", "security", "data", "system" ]
-	}
-
-	/**
-	 * --------------------------------------------------------------------------
 	 * Persisted Properties
 	 * --------------------------------------------------------------------------
 	 */
@@ -97,6 +87,20 @@ class extends="cborm.models.ActiveEntity" {
 	@lazy( "proxy" )
 	@update( "false" )
 	property name="user";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Static Defaults
+	 * --------------------------------------------------------------------------
+	 * Placed after all persisted/relationship property declarations: a `static{}`
+	 * block positioned before annotated `@persistent` properties trips up the
+	 * BoxLang ORM property scanner (confirmed via CI -- "Invalid syntax near ...
+	 * property" on the very next `@fieldType`-annotated property).
+	 */
+	static {
+		SEVERITIES = [ "debug", "info", "warn", "error", "fatal" ]
+		CATEGORIES = [ "auth", "security", "data", "system" ]
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
