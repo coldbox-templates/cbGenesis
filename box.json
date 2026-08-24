@@ -35,8 +35,8 @@
         "cbsecurity-passkeys":"^1.0.8"
     },
     "installPaths":{
-        "coldbox":"lib/coldbox/",
-        "testbox":"lib/testbox/"
+        "coldbox":"lib/",
+        "testbox":"lib/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",
