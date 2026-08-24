@@ -84,6 +84,22 @@ jobs:
         run: |
           box install
 
+      # Diagnostic: the server's start-up logs show every cborm.models.* class
+      # (ActiveEntity, VirtualEntityService, BxEventHandler, ...) as unresolvable
+      # via the BoxLang `/cborm` mapping (which points at
+      # ${user-dir}/lib/modules/cborm per runtime/boxlang.json), even though
+      # `box install` above reports success. This step confirms on disk whether
+      # bx-cli actually installed cborm to the box.json-declared installPaths
+      # location, or somewhere else / not at all.
+      - name: Debug - Verify Module Installation Paths
+        run: |
+          echo "--- lib/modules contents ---"
+          ls -la lib/modules/ 2>&1 || echo "lib/modules/ does not exist"
+          echo "--- searching for any cborm directory ---"
+          find . -maxdepth 4 -iname "cborm" -not -path "./node_modules/*" 2>&1 || true
+          echo "--- box.json installPaths ---"
+          cat box.json | grep -A 10 '"installPaths"' || true
+
       - name: Run Migrations & Seed Database
         run: |
           box migrate install
