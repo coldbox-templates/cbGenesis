@@ -32,6 +32,14 @@ class {
 			.everyDayAt( "03:15" )
 			.onOneServer()
 			.withNoOverlaps()
+
+		task( "Purge Old Audit Logs" )
+			.call( () => getInstance( "AuditLogService" ).purgeOlderThan(
+				getInstance( "SettingService" ).getSetting( "cbAuditLogRetentionDays", 90 )
+			) )
+			.everyDayAt( "03:30" )
+			.onOneServer()
+			.withNoOverlaps()
 	}
 
 	/**

@@ -1,0 +1,65 @@
+<bx:output>
+<div class="cb-drawer-form-body cb-audit-detail">
+
+	<!--- Loading State --->
+	<div x-show="detailLoading" x-cloak>
+		#view( view: "_components/ui/progressbar", args: {
+			label        : "Loading entry...",
+			ariaLabel    : "Loading audit log entry",
+			indeterminate: true,
+			variant      : "cyan",
+			size         : "sm"
+		} )#
+	</div>
+
+	<!--- Error State --->
+	<p class="cb-form-error" x-show="!detailLoading && detailError" x-cloak x-text="detailError"></p>
+
+	<!--- Entry Detail --->
+	<template x-if="!detailLoading && detailTarget && !detailError">
+		<div class="d-flex flex-column gap-3">
+			<div class="cb-chip-row">
+				<span class="cb-chip" :class="detailTarget.severityChipClass" x-text="detailTarget.severity"></span>
+				<span class="cb-chip cb-chip-muted" x-text="detailTarget.category"></span>
+			</div>
+
+			<p x-text="detailTarget.message"></p>
+
+			<dl class="cb-audit-detail-list">
+				<div>
+					<dt>When</dt>
+					<dd x-text="detailTarget.createdDate ? $formatDateTime( detailTarget.createdDate ) : '-'"></dd>
+				</div>
+				<div>
+					<dt>Action</dt>
+					<dd x-text="detailTarget.action"></dd>
+				</div>
+				<div>
+					<dt>Actor</dt>
+					<dd x-text="detailTarget.actorName || detailTarget.actorEmail || 'System'"></dd>
+				</div>
+				<div x-show="detailTarget.targetLabel" x-cloak>
+					<dt>Target</dt>
+					<dd x-text="( detailTarget.targetType ? detailTarget.targetType + ': ' : '' ) + detailTarget.targetLabel"></dd>
+				</div>
+				<div>
+					<dt>IP Address</dt>
+					<dd x-text="detailTarget.ipAddress || '-'"></dd>
+				</div>
+				<div x-show="detailTarget.userAgent" x-cloak>
+					<dt>User Agent</dt>
+					<dd class="cb-audit-detail-useragent" x-text="detailTarget.userAgent"></dd>
+				</div>
+			</dl>
+
+			<template x-if="detailTarget.metadata && Object.keys( detailTarget.metadata ).length">
+				<div>
+					<div class="cb-drawer-section-heading"><div>Metadata</div></div>
+					<pre class="cb-audit-detail-metadata" x-text="JSON.stringify( detailTarget.metadata, null, 2 )"></pre>
+				</div>
+			</template>
+		</div>
+	</template>
+
+</div>
+</bx:output>

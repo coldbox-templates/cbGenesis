@@ -7,9 +7,29 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: cbgenesis
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     env:
+      DB_DRIVER: MySQL
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: cbgenesis
+      DB_SCHEMA: cbgenesis
       DB_USER: root
       DB_PASSWORD: root
+      DB_BUNDLENAME: ""
+      DB_BUNDLEVERSION: ""
       WEB_PORT: 60299
       JDK_VERSION: "21"
     strategy:
@@ -18,37 +38,67 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Not Needed in this module
-      - name: Setup Database and Fixtures
-        run: |
-          sudo systemctl start mysql.service
-          mysql -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }} -e 'CREATE DATABASE coldbox;'
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: ${{ env.JDK_VERSION }}
 
-      - name: Setup CommandBox CLI
-        uses: Ortus-Solutions/setup-commandbox@v2.0.1
+      # bx-cli's own module install creates its "box" executable script (confirmed in
+      # CI output: "Creating executable script: box"), so it stands in for CommandBox
+      # on its own -- no separate `with-commandbox` / legacy CommandBox download needed.
+      - name: Setup BoxLang (with bx-cli module)
+        uses: ortus-boxlang/setup-boxlang@main
         with:
-          install: testbox-cli,commandbox-boxlang
+          version: latest
+          modules: bx-cli
+
+      # install-bx-module writes module-provided executables (like bx-cli's "box"
+      # script) to ${BOXLANG_HOME}/bin, not to the /usr/local/bin (or ~/.local/bin)
+      # directory the installer links the core boxlang/bx binaries into. Neither the
+      # quick installer nor the setup-boxlang action adds this directory to PATH, so
+      # `box` is otherwise unreachable in every later step. BOXLANG_HOME itself is
+      # already exported to $GITHUB_ENV by the action above.
+      - name: Link BoxLang module executables onto PATH
+        run: |
+          echo "${BOXLANG_HOME}/bin" >> $GITHUB_PATH
+
+      - name: Install CommandBox CLI Modules
+        run: |
+          box install testbox-cli
 
       - name: Setup Environment For Testing Process
         run: |
           # Setup .env
           touch .env
           # ENV
-          printf "DB_HOST=localhost\n" >> .env
-          printf "DB_DATABASE=coldbox\n" >> .env
-          printf "DB_DRIVER=MySQL\n" >> .env
+          printf "DB_HOST=${{ env.DB_HOST }}\n" >> .env
+          printf "DB_PORT=${{ env.DB_PORT }}\n" >> .env
+          printf "DB_DATABASE=${{ env.DB_DATABASE }}\n" >> .env
+          printf "DB_SCHEMA=${{ env.DB_SCHEMA }}\n" >> .env
+          printf "DB_DRIVER=${{ env.DB_DRIVER }}\n" >> .env
           printf "DB_USER=${{ env.DB_USER }}\n" >> .env
           printf "DB_PASSWORD=${{ env.DB_PASSWORD }}\n" >> .env
 
       - name: Install Dependencies
         run: |
           box install
+
+      # Diagnostic: confirms cborm's actual module content (models/,
+      # ModuleConfig.bx) landed where runtime/boxlang.json's /cborm mapping
+      # now points (lib/modules/cborm/cborm/, per box.json's installPaths --
+      # double-nested, unlike coldbox/testbox which install single-level).
+      - name: Debug - Verify Module Installation Paths
+        run: |
+          echo "--- lib/modules/cborm/cborm contents ---"
+          ls -la lib/modules/cborm/cborm/ 2>&1 || echo "lib/modules/cborm/cborm/ does not exist"
+          find lib/modules/cborm -maxdepth 3 -iname "ModuleConfig.bx" -o -maxdepth 3 -iname "models" 2>&1 || true
+
+      - name: Run Migrations & Seed Database
+        run: |
+          box migrate install
+          box migrate up
+          box migrate seed run
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

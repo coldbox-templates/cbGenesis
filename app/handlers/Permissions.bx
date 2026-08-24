@@ -7,6 +7,9 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="permissionService";
 
+	@inject
+	property name="auditLogService";
+
 	function preHandler( event, rc, prc ) {
 		// --- CSRF Verification ---
 		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
@@ -39,6 +42,14 @@ class extends="BaseSecureHandler" {
 				.populate( rc )
 				.validateOrFail()
 				.save()
+			auditLogService.info(
+				action     : "permission.created",
+				message    : "Permission [#prc.permission.getPermission()#] was created.",
+				category   : "data",
+				targetType : "Permission",
+				targetId   : prc.permission.getPermissionId(),
+				targetLabel: prc.permission.getPermission()
+			)
 			flash.put( "messages", {
 				type   : "success",
 				message: "Permission saved successfully."
@@ -71,6 +82,14 @@ class extends="BaseSecureHandler" {
 				.populate( rc )
 				.validateOrFail()
 				.save()
+			auditLogService.info(
+				action     : "permission.updated",
+				message    : "Permission [#prc.permission.getPermission()#] was updated.",
+				category   : "data",
+				targetType : "Permission",
+				targetId   : prc.permission.getPermissionId(),
+				targetLabel: prc.permission.getPermission()
+			)
 			results.messages = "Permission saved successfully."
 			results.data = prc.permission.getMemento()
 		}
@@ -96,9 +115,18 @@ class extends="BaseSecureHandler" {
 		var results = getApiResults()
 		// --- Attempt to Delete Permission ---
 		try {
-			permissionService
-				.getOrFail( rc.permissionId ?: "" )
-				.delete()
+			var permission = permissionService.getOrFail( rc.permissionId ?: "" )
+			var permissionSlug = permission.getPermission()
+			var permissionId = permission.getPermissionId()
+			permission.delete()
+			auditLogService.warn(
+				action     : "permission.deleted",
+				message    : "Permission [#permissionSlug#] was deleted.",
+				category   : "data",
+				targetType : "Permission",
+				targetId   : permissionId,
+				targetLabel: permissionSlug
+			)
 			results.messages = "Permission deleted successfully."
 		} catch ( any error ) {
 			log.error( "Error deleting permission with ID [#rc.permissionId#]: #error.message#", error )

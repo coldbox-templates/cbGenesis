@@ -50,7 +50,7 @@
         </div>
 
 		<!--- Access Group --->
-        <bx:if prc.authUser.hasPermission( "users:read,users:admin,roles:read,roles:admin,permissions:read,permissions:admin" )>
+        <bx:if prc.authUser.hasPermission( "users:read,users:admin,roles:read,roles:admin,permissions:read,permissions:admin,auditlog:read,auditlog:admin" )>
         <div class="cb-sidebar-nav-section">
             <span class="cb-sidebar-nav-label">Access</span>
             <ul class="cb-sidebar-nav-list">
@@ -87,6 +87,18 @@
                        title="Permissions">
                         <i class="ph-duotone ph-key cb-sidebar-nav-icon" aria-hidden="true"></i>
                         <span class="cb-sidebar-nav-text">Permissions</span>
+                    </a>
+                </li>
+                </bx:if>
+                <bx:if prc.authUser.hasPermission( "auditlog:read,auditlog:admin" )>
+                <li>
+                    <a href="#event.route( "auditlog" )#"
+                       class="cb-sidebar-nav-item"
+                        @click="$store.sidebar.close()"
+                       :class="#event.routeIs( "auditlog" )# ? 'active' : ''"
+                       title="Audit Log">
+                        <i class="ph-duotone ph-clipboard-text cb-sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="cb-sidebar-nav-text">Audit Log</span>
                     </a>
                 </li>
                 </bx:if>

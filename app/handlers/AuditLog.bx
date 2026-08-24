@@ -1,0 +1,149 @@
+/**
+ * Views and manages the admin audit log.
+ */
+@secured( "auditlog:admin,auditlog:read" )
+class extends="BaseSecureHandler" {
+
+	@inject
+	property name="auditLogService";
+
+	static{
+		csrfVerify = {
+			"clear": true,
+			"purge": true
+		}
+	}
+
+	function preHandler( event, rc, prc ) {
+		if ( static.csrfVerify.keyExists( event.getCurrentAction() ) && !csrfVerify( rc.csrf ?: "" ) ) {
+			event.getResponse().addMessage( "Invalid or expired CSRF token." )
+			onAuthorizationFailure(
+				event: event,
+				rc: rc,
+				prc: prc,
+				abort: true,
+				exception: { type: "InvalidCSRF", message: "Invalid or expired CSRF token" }
+			)
+		}
+		super.preHandler( argumentCollection: arguments )
+	}
+
+	// Present the audit log list view
+	function index( event, rc, prc ) {
+		prc.title = "Audit Log"
+		prc.payload = {
+			records   : [],
+			count     : 0,
+			counts    : auditLogService.severityCountsReport(),
+			severities: [ "debug", "info", "warn", "error", "fatal" ],
+			categories: [ "auth", "security", "data", "system" ]
+		}
+		event.setView( "auditlog/index" )
+	}
+
+	// Retrieve audit log listings
+	@remote( "Retrieve audit log listings remotely via AJAX" )
+	function search( event, rc, prc ) {
+		var pagination = getPagination( rc.page ?: 1, rc.limit ?: 25 )
+		prc.entries = auditLogService.search(
+			searchTerm: rc.search ?: "",
+			severity: rc.severity ?: "",
+			category: rc.category ?: "",
+			offset: pagination.offset,
+			max: pagination.limit,
+			sortOrder: rc.sortOrder ?: "",
+			propertyList: [
+				"auditLogId",
+				"createdDate",
+				"severity",
+				"category",
+				"action",
+				"message",
+				"actorEmail",
+				"actorName",
+				"targetType",
+				"targetId",
+				"targetLabel",
+				"ipAddress"
+			]
+		)
+		event.getResponse().withData( {
+			records: prc.entries.records,
+			count  : prc.entries.count,
+			counts : auditLogService.severityCountsReport()
+		} )
+	}
+
+	// Show a specific audit log entry's full detail (for the drawer)
+	@remote( "Retrieve a single audit log entry remotely via AJAX" )
+	function show( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.entry = auditLogService.getOrFail( rc.auditLogId ?: "" )
+			var detail = prc.entry.getMemento()
+			detail[ "metadata" ] = prc.entry.getMetadataAsStruct()
+			response.setData( data: detail )
+		} catch ( any error ) {
+			response.failure(
+				message: "Audit log entry could not be found: #error.message#",
+				statusCode: 404
+			)
+		}
+
+		return response
+	}
+
+	// Export the currently filtered audit log entries as CSV
+	@remote( "Export audit log entries as CSV" )
+	@secured( "auditlog:admin,auditlog:export" )
+	function export( event, rc, prc ) {
+		var csv = auditLogService.exportCSV(
+			searchTerm: rc.search ?: "",
+			severity: rc.severity ?: "",
+			category: rc.category ?: ""
+		)
+
+		bx:header name="Content-Disposition" value="attachment; filename=""audit-log-#dateFormat( now(), 'yyyy-mm-dd' )#.csv""";
+
+		return event.renderData( type: "plain", data: csv, contentType: "text/csv" )
+	}
+
+	// Purge audit log entries older than the given number of days
+	@remote( "Purge old audit log entries remotely via AJAX" )
+	@secured( "auditlog:admin,auditlog:delete" )
+	function purge( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var purgedCount = auditLogService.purgeOlderThan( rc.days ?: 90 )
+			response.setData( data: { purgedCount: purgedCount }, message: "Purged #purgedCount# audit log #( purgedCount == 1 ? 'entry' : 'entries' )#." )
+		} catch ( any error ) {
+			log.error( "Error purging audit log entries: #error.message#", error )
+			response.failure(
+				message: "Audit log entries could not be purged: #error.message#",
+				statusCode: 500
+			)
+		}
+
+		return response
+	}
+
+	// Clear every audit log entry
+	@remote( "Clear all audit log entries remotely via AJAX" )
+	@secured( "auditlog:admin" )
+	function clear( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var purgedCount = auditLogService.clearAll()
+			response.setData( data: { purgedCount: purgedCount }, message: "Cleared #purgedCount# audit log #( purgedCount == 1 ? 'entry' : 'entries' )#." )
+		} catch ( any error ) {
+			log.error( "Error clearing audit log entries: #error.message#", error )
+			response.failure(
+				message: "Audit log could not be cleared: #error.message#",
+				statusCode: 500
+			)
+		}
+
+		return response
+	}
+
+}

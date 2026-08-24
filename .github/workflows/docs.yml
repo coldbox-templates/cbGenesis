@@ -45,10 +45,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # bx-sites ships its own "bxSites" executable script via its module
+      # install (same mechanism bx-cli uses for its "box" script) -- no
+      # CommandBox needed just to build the site. Pinned to @main (latest)
+      # rather than a released tag so this picks up the setup-boxlang fix
+      # (ortus-boxlang/setup-boxlang#11) that adds ${BOXLANG_HOME}/bin to
+      # $GITHUB_PATH -- without it, module-provided executables like
+      # "bxSites" land outside PATH and the build step below fails with
+      # "bxSites: command not found".
       - name: Setup BoxLang + BX Sites
-        uses: ortus-boxlang/setup-boxlang@1.4.0
+        uses: ortus-boxlang/setup-boxlang@main
         with:
-          with-commandbox: true
           modules: bx-sites bx-markdown bx-yaml bx-image
 
       - name: Install yq

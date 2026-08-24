@@ -1,0 +1,390 @@
+/**
+ * Records and queries the append-only admin/auth/security audit trail.
+ *
+ * Every public write method swallows its own persistence failures: an audit
+ * entry that fails to save must never roll back or interrupt the business
+ * operation it is describing.
+ */
+@singleton
+@threadSafe
+class extends="app.models.BaseService" {
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Injections
+	 * --------------------------------------------------------------------------
+	 */
+	@inject( "provider:SecurityService" )
+	property name="securityService";
+
+	static {
+		// Kept in sync with AuditLog::SEVERITIES / AuditLog::CATEGORIES -- duplicated here rather
+		// than referenced cross-class to avoid coupling the service to the entity's static scope.
+		SEVERITIES = [ "debug", "info", "warn", "error", "fatal" ]
+		CATEGORIES = [ "auth", "security", "data", "system" ]
+		SORT_MAP = {
+			"createdDate": "createdDate",
+			"severity"   : "severity",
+			"category"   : "category",
+			"action"     : "action",
+			"actorEmail" : "actorEmail"
+		}
+		DEFAULT_SORT_ORDER = "createdDate desc"
+		// Maximum number of rows a single CSV export will stream, to bound memory usage.
+		EXPORT_MAX = 10000
+		// Metadata keys (matched case-insensitively as substrings) that are never persisted in the clear.
+		METADATA_DENY_KEYS = [ "password", "token", "secret", "apikey", "credential" ]
+	}
+
+	/**
+	 * Constructor
+	 */
+	AuditLogService function init() {
+		super.init( entityName: "AuditLog" )
+		return this
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Write API
+	 * --------------------------------------------------------------------------
+	 */
+
+	/**
+	 * Records a single audit log entry. Never throws: a failure to persist the
+	 * entry is logged and swallowed so the calling business operation is unaffected.
+	 *
+	 * @action      A short, dotted machine-readable action name, e.g. "user.role.granted".
+	 * @message     A human-readable description of what happened.
+	 * @severity    One of AuditLog::SEVERITIES (duplicated in this service's static scope). Defaults to "info".
+	 * @category    One of AuditLog::CATEGORIES (duplicated in this service's static scope). Defaults to "system".
+	 * @actor       The acting User entity. Defaults to the currently authenticated user, if any.
+	 * @targetType  The type of entity affected, e.g. "User", "Role".
+	 * @targetId    The id of the entity affected.
+	 * @targetLabel A human-readable label for the target, e.g. the affected user's email.
+	 * @metadata    Additional structured context. Sensitive keys are redacted before saving.
+	 *
+	 * @return The saved AuditLog entity, or null if the entry could not be recorded.
+	 */
+	function record(
+		required string action,
+		required string message,
+		string severity = "info",
+		string category = "system",
+		any actor,
+		string targetType = "",
+		string targetId = "",
+		string targetLabel = "",
+		struct metadata = {}
+	) {
+		try {
+			var entry = this.new()
+
+			entry.setAction( arguments.action )
+			entry.setMessage( arguments.message )
+			entry.setSeverity( static.SEVERITIES.findNoCase( arguments.severity ) ? lcase( arguments.severity ) : "info" )
+			entry.setCategory( static.CATEGORIES.findNoCase( arguments.category ) ? lcase( arguments.category ) : "system" )
+			entry.setTargetType( arguments.targetType )
+			entry.setTargetId( arguments.targetId )
+			entry.setTargetLabel( arguments.targetLabel )
+			entry.setIpAddress( getClientIp() )
+			entry.setUserAgent( cgi.http_user_agent ?: "" )
+			entry.setMetadata( arguments.metadata.isEmpty() ? "" : jsonSerialize( sanitizeMetadata( arguments.metadata ) ) )
+
+			applyActor( entry, arguments.actor )
+
+			entry.save()
+			return entry
+		} catch ( any e ) {
+			log.error( "Failed to record audit log entry [#arguments.action#]: #e.message#", e )
+		}
+	}
+
+	/**
+	 * Records a "debug" severity entry. See record() for argument details.
+	 */
+	function debug( required string action, required string message, string category = "system", any actor, string targetType = "", string targetId = "", string targetLabel = "", struct metadata = {} ) {
+		arguments.severity = "debug"
+		return record( argumentCollection = arguments )
+	}
+
+	/**
+	 * Records an "info" severity entry. See record() for argument details.
+	 */
+	function info( required string action, required string message, string category = "system", any actor, string targetType = "", string targetId = "", string targetLabel = "", struct metadata = {} ) {
+		arguments.severity = "info"
+		return record( argumentCollection = arguments )
+	}
+
+	/**
+	 * Records a "warn" severity entry. See record() for argument details.
+	 */
+	function warn( required string action, required string message, string category = "system", any actor, string targetType = "", string targetId = "", string targetLabel = "", struct metadata = {} ) {
+		arguments.severity = "warn"
+		return record( argumentCollection = arguments )
+	}
+
+	/**
+	 * Records an "error" severity entry. See record() for argument details.
+	 */
+	function error( required string action, required string message, string category = "system", any actor, string targetType = "", string targetId = "", string targetLabel = "", struct metadata = {} ) {
+		arguments.severity = "error"
+		return record( argumentCollection = arguments )
+	}
+
+	/**
+	 * Records a "fatal" severity entry. See record() for argument details.
+	 */
+	function fatal( required string action, required string message, string category = "system", any actor, string targetType = "", string targetId = "", string targetLabel = "", struct metadata = {} ) {
+		arguments.severity = "fatal"
+		return record( argumentCollection = arguments )
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Read API
+	 * --------------------------------------------------------------------------
+	 */
+
+	/**
+	 * Search audit log entries across different criteria with pagination.
+	 *
+	 * @searchTerm   Matches against message, action, actorEmail, actorName, and targetLabel.
+	 * @severity     If passed, restricts to a single severity value.
+	 * @category     If passed, restricts to a single category value.
+	 * @actorId      If passed, restricts to entries recorded by this user id.
+	 * @dateFrom     If passed, restricts to entries created on/after this date.
+	 * @dateTo       If passed, restricts to entries created on/before this date.
+	 * @offset       The offset for pagination.
+	 * @max          The max records to return, defaults to 25.
+	 * @sortOrder    The sort ordering to apply. Defaults to newest first.
+	 * @propertyList The list or array of properties to include in the results as a projection instead of ORM Objects.
+	 *
+	 * @return struct of { count:numeric, records:array }
+	 */
+	struct function search(
+		string searchTerm = "",
+		string severity = "",
+		string category = "",
+		string actorId = "",
+		any dateFrom,
+		any dateTo,
+		numeric offset = 0,
+		numeric max = 25,
+		string sortOrder = static.DEFAULT_SORT_ORDER,
+		any propertyList = ""
+	) {
+		var results = { "count": 0, "records": [] }
+
+		arguments.sortOrder = ensureSortOrder( arguments.sortOrder, static.SORT_MAP, static.DEFAULT_SORT_ORDER )
+
+		if ( isArray( arguments.propertyList ) ) {
+			arguments.propertyList = arguments.propertyList.toList()
+		}
+
+		var validSeverity = len( arguments.severity ) && static.SEVERITIES.findNoCase( arguments.severity )
+		var validCategory = len( arguments.category ) && static.CATEGORIES.findNoCase( arguments.category )
+
+		var c = newCriteria()
+			// Free text search
+			.when( len( arguments.searchTerm ), ( c ) => {
+				c.or(
+					c.restrictions.like( "message", "%#arguments.searchTerm#%" ),
+					c.restrictions.like( "action", "%#arguments.searchTerm#%" ),
+					c.restrictions.like( "actorEmail", "%#arguments.searchTerm#%" ),
+					c.restrictions.like( "actorName", "%#arguments.searchTerm#%" ),
+					c.restrictions.like( "targetLabel", "%#arguments.searchTerm#%" )
+				)
+			} )
+			// Severity Filter
+			.when( validSeverity, ( c ) => c.eq( "severity", lcase( arguments.severity ) ) )
+			// Category Filter
+			.when( validCategory, ( c ) => c.eq( "category", lcase( arguments.category ) ) )
+			// Actor Filter
+			.when( len( arguments.actorId ), ( c ) => c.eq( "user.userId", arguments.actorId ) )
+			// Date Range Filters
+			.when( !isNull( arguments.dateFrom ), ( c ) => c.ge( "createdDate", arguments.dateFrom ) )
+			.when( !isNull( arguments.dateTo ), ( c ) => c.le( "createdDate", arguments.dateTo ) )
+
+		// Run Results
+		results.count = c.count( "auditLogId" )
+
+		// If we have a property list, then we will use projections to return a struct instead of ORM objects
+		if ( len( arguments.propertyList ) ) {
+			c.withProjections( property: arguments.propertyList ).asStruct()
+		}
+
+		results.records = c.list( offset: arguments.offset, max: arguments.max, sortOrder: arguments.sortOrder )
+
+		return results
+	}
+
+	/**
+	 * Grouped counts per severity, plus an "all" total, for the listing's segmented control.
+	 *
+	 * @return struct of { all, debug, info, warn, error, fatal }
+	 */
+	struct function severityCountsReport() {
+		var counts = { all: count() }
+		static.SEVERITIES.each( ( severity ) => {
+			counts[ severity ] = count( "severity = ?", [ severity ] )
+		} )
+		return counts
+	}
+
+	/**
+	 * Hard-deletes every audit log entry, then records a single entry describing the clear.
+	 *
+	 * @return The number of entries that were purged.
+	 */
+	numeric function clearAll() {
+		var purgedCount = count()
+
+		variables.qb.newQuery().from( "audit_logs" ).delete()
+
+		record(
+			action  : "auditlog.clear",
+			message : "Cleared #purgedCount# audit log #( purgedCount == 1 ? 'entry' : 'entries' )#.",
+			severity: "warn",
+			category: "system",
+			metadata: { purgedCount: purgedCount }
+		)
+
+		return purgedCount
+	}
+
+	/**
+	 * Hard-deletes audit log entries older than the given number of days.
+	 *
+	 * @days The retention window, in days. A value of 0 or less is a no-op.
+	 *
+	 * @return The number of entries that were purged.
+	 */
+	numeric function purgeOlderThan( required numeric days ) {
+		if ( arguments.days <= 0 ) {
+			return 0
+		}
+
+		var cutoff = dateAdd( "d", -arguments.days, now() )
+		return variables.qb.newQuery().from( "audit_logs" ).where( "createdDate", "<", cutoff ).delete()
+	}
+
+	/**
+	 * Streams the currently filtered set of audit log entries as CSV text.
+	 * Bounded by EXPORT_MAX rows and escaped against CSV formula injection.
+	 *
+	 * @searchTerm See search().
+	 * @severity   See search().
+	 * @category   See search().
+	 * @actorId    See search().
+	 * @dateFrom   See search().
+	 * @dateTo     See search().
+	 *
+	 * @return CSV text, including a header row.
+	 */
+	string function exportCSV(
+		string searchTerm = "",
+		string severity = "",
+		string category = "",
+		string actorId = "",
+		any dateFrom,
+		any dateTo
+	) {
+		var results = search(
+			searchTerm: arguments.searchTerm,
+			severity: arguments.severity,
+			category: arguments.category,
+			actorId: arguments.actorId,
+			dateFrom: arguments.dateFrom ?: javaCast( "null", "" ),
+			dateTo: arguments.dateTo ?: javaCast( "null", "" ),
+			offset: 0,
+			max: static.EXPORT_MAX,
+			sortOrder: static.DEFAULT_SORT_ORDER,
+			propertyList: [
+				"createdDate",
+				"severity",
+				"category",
+				"action",
+				"message",
+				"actorEmail",
+				"actorName",
+				"targetType",
+				"targetId",
+				"targetLabel",
+				"ipAddress"
+			]
+		)
+
+		var columns = [ "createdDate", "severity", "category", "action", "message", "actorEmail", "actorName", "targetType", "targetId", "targetLabel", "ipAddress" ]
+		var headers = [ "When", "Severity", "Category", "Action", "Message", "Actor Email", "Actor Name", "Target Type", "Target Id", "Target Label", "IP Address" ]
+
+		var lines = [ headers.map( csvEscape ).toList() ]
+
+		results.records.each( ( row ) => {
+			lines.append(
+				columns
+					.map( ( column ) => csvEscape( column == "createdDate" ? dateTimeFormat( row[ column ], "yyyy-MM-dd'T'HH:mm:ss" ) : row[ column ] ) )
+					.toList()
+			)
+		} )
+
+		return lines.toList( chr( 13 ) & chr( 10 ) )
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Private Helpers
+	 * --------------------------------------------------------------------------
+	 */
+
+	/**
+	 * Resolves the acting user (explicit actor, else the current authenticated user)
+	 * and stamps a denormalized snapshot of their identity onto the entry.
+	 */
+	private function applyActor( required entry, any actor ) {
+		var resolvedActor = !isNull( arguments.actor ) ? arguments.actor : variables.securityService.getCurrentUser()
+
+		if ( !isNull( resolvedActor ) && isObject( resolvedActor ) && resolvedActor.isLoaded() ) {
+			arguments.entry.setUser( resolvedActor )
+			arguments.entry.setActorEmail( resolvedActor.getEmail() )
+			arguments.entry.setActorName( trim( resolvedActor.getFirstName() & " " & resolvedActor.getLastName() ) )
+		}
+	}
+
+	/**
+	 * Resolves the client IP address, preferring a forwarded-for header when present.
+	 */
+	private string function getClientIp() {
+		var forwarded = cgi.http_x_forwarded_for ?: ""
+		if ( len( forwarded ) ) {
+			return trim( listFirst( forwarded, "," ) )
+		}
+		return cgi.remote_addr ?: ""
+	}
+
+	/**
+	 * Redacts sensitive keys (password, token, secret, etc.) from a metadata struct
+	 * before it is serialized and persisted.
+	 */
+	private struct function sanitizeMetadata( required struct metadata ) {
+		var clean = {}
+		for ( var key in arguments.metadata ) {
+			var isSensitive = static.METADATA_DENY_KEYS.some( ( denyKey ) => findNoCase( denyKey, key ) > 0 )
+			clean[ key ] = isSensitive ? "[REDACTED]" : arguments.metadata[ key ]
+		}
+		return clean
+	}
+
+	/**
+	 * Escapes a single CSV field: quotes it, doubles embedded quotes, and neutralizes
+	 * a leading formula-injection character (=, +, -, @) by prefixing a single quote.
+	 */
+	private string function csvEscape( required any value ) {
+		var str = toString( arguments.value ?: "" )
+		if ( reFind( "^[=+\-@]", str ) ) {
+			str = "'" & str
+		}
+		return '"' & replace( str, '"', '""', "all" ) & '"'
+	}
+
+}

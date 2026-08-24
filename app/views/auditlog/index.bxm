@@ -1,0 +1,230 @@
+<bx:output>
+<!--- Audit Log Component --->
+<div x-data='auditLogForm( #forAttribute( prc.payload )#, "#csrfToken()#" )' x-init="refreshEntries()">
+
+	<!--- Header --->
+	<div class="cb-page-header cb-admin-page-heading">
+		<div>
+			<p class="cb-eyebrow">Security</p>
+			<h2 class="cb-page-title">Audit Log</h2>
+			<p class="cb-page-subtitle">A record of authentication, admin, and security activity across the system.</p>
+		</div>
+		<div class="d-flex gap-2">
+			<bx:if prc.authUser.hasPermission( "auditlog:export,auditlog:admin" )>
+			<button type="button" class="btn btn-light" @click="exportCsv()">
+				<i class="ph-duotone ph-download-simple" aria-hidden="true"></i>
+				Export CSV
+			</button>
+			</bx:if>
+			<bx:if prc.authUser.hasPermission( "auditlog:admin" )>
+			<button type="button" class="btn btn-outline-danger" @click="confirmClear()">
+				<i class="ph-duotone ph-trash" aria-hidden="true"></i>
+				Clear All
+			</button>
+			</bx:if>
+		</div>
+	</div>
+
+	#view( view: "_components/ui/messagebox", args: {
+		dynamic          : true,
+		messageExpression: "feedbackMessage",
+		typeExpression   : "feedbackType",
+		dismissAction    : "clearFeedback()",
+		classes          : "cb-users-feedback"
+	} )#
+
+	<!--- Audit Log Table --->
+	<section class="cb-content-card cb-admin-workbench">
+
+		<!--- Audit Log Table Header --->
+		<div class="cb-content-card-header cb-admin-toolbar">
+			<!--- Severity Filters --->
+			<div class="cb-segmented-control" aria-label="Severity filters">
+				<button
+					type="button"
+					:class="severityFilter === 'all' ? 'active' : ''"
+					@click="setSeverityFilter( 'all' )">All <span class="cb-tab-count" x-text="counts.all"></span></button>
+				<template x-for="severity in severities" :key="severity">
+					<button
+						type="button"
+						:class="severityFilter === severity ? 'active' : ''"
+						@click="setSeverityFilter( severity )">
+						<span x-text="severity.charAt( 0 ).toUpperCase() + severity.slice( 1 )"></span>
+						<span class="cb-tab-count" x-text="counts[ severity ] || 0"></span>
+					</button>
+				</template>
+			</div>
+			<!--- Filter by Category --->
+			<select
+				class="cb-filter-select"
+				x-model="categoryFilter"
+				@change="setCategoryFilter( $event.target.value )"
+				aria-label="Filter by category">
+				<option value="">All Categories</option>
+				<template x-for="category in categories" :key="category">
+					<option :value="category" x-text="category.charAt( 0 ).toUpperCase() + category.slice( 1 )"></option>
+				</template>
+			</select>
+			<!--- Search --->
+			<div class="cb-admin-search cb-wide">
+				<i class="ph-duotone ph-magnifying-glass" aria-hidden="true"></i>
+				<input x-model="query" @input.debounce.250ms="refreshEntries()" type="search" placeholder="Search message, action, or actor..." aria-label="Search audit log">
+			</div>
+			<!--- Search Totals --->
+			<span
+				class="cb-muted-cell"
+				x-show="query.trim()"
+				x-cloak
+				x-text="$countLabel( total, 'matching entry', 'matching entries' )"></span>
+		</div>
+
+		<!--- Audit Log Table --->
+		<div class="cb-table-wrap">
+			<table class="cb-table">
+				<thead>
+					<tr>
+						<th
+							scope="col"
+							:aria-sort="$sortClass( sortOrder, 'createdDate' ) ? ( sortOrder.endsWith( ' desc' ) ? 'descending' : 'ascending' ) : 'none'">
+							<button
+								type="button"
+								class="cb-table-sort-button"
+								:class="$sortClass( sortOrder, 'createdDate' )"
+								@click="sortBy( 'createdDate' )">
+								When <i class="ph-duotone" :class="$sortIcon( sortOrder, 'createdDate' )" aria-hidden="true"></i>
+							</button>
+						</th>
+						<th
+							scope="col"
+							:aria-sort="$sortClass( sortOrder, 'severity' ) ? ( sortOrder.endsWith( ' desc' ) ? 'descending' : 'ascending' ) : 'none'">
+							<button
+								type="button"
+								class="cb-table-sort-button"
+								:class="$sortClass( sortOrder, 'severity' )"
+								@click="sortBy( 'severity' )">
+								Severity <i class="ph-duotone" :class="$sortIcon( sortOrder, 'severity' )" aria-hidden="true"></i>
+							</button>
+						</th>
+						<th scope="col">Category</th>
+						<th
+							scope="col"
+							:aria-sort="$sortClass( sortOrder, 'action' ) ? ( sortOrder.endsWith( ' desc' ) ? 'descending' : 'ascending' ) : 'none'">
+							<button
+								type="button"
+								class="cb-table-sort-button"
+								:class="$sortClass( sortOrder, 'action' )"
+								@click="sortBy( 'action' )">
+								Action <i class="ph-duotone" :class="$sortIcon( sortOrder, 'action' )" aria-hidden="true"></i>
+							</button>
+						</th>
+						<th
+							scope="col"
+							:aria-sort="$sortClass( sortOrder, 'actorEmail' ) ? ( sortOrder.endsWith( ' desc' ) ? 'descending' : 'ascending' ) : 'none'">
+							<button
+								type="button"
+								class="cb-table-sort-button"
+								:class="$sortClass( sortOrder, 'actorEmail' )"
+								@click="sortBy( 'actorEmail' )">
+								Actor <i class="ph-duotone" :class="$sortIcon( sortOrder, 'actorEmail' )" aria-hidden="true"></i>
+							</button>
+						</th>
+						<th scope="col">Target</th>
+					</tr>
+				</thead>
+				<tbody>
+					<template x-for="entry in entries" :key="entry.auditLogId">
+						<tr class="cb-audit-row" @click="openDetail( entry )">
+							<td width="160">
+								<small
+									class="cb-muted-cell"
+									:data-tooltip="entry.createdDate ? $formatDateTime( entry.createdDate ) : null"
+									x-text="$relativeDate( entry.createdDate )"></small>
+							</td>
+							<td width="110">
+								<span class="cb-chip" :class="entry.severityChipClass" x-text="entry.severity"></span>
+							</td>
+							<td width="110">
+								<span class="cb-chip cb-chip-muted" x-text="entry.category"></span>
+							</td>
+							<td>
+								<strong x-text="entry.action"></strong>
+								<div class="cb-muted-cell" x-text="entry.message"></div>
+							</td>
+							<td width="220">
+								<span x-text="entry.actorName || entry.actorEmail || 'System'"></span>
+							</td>
+							<td width="200">
+								<span x-show="entry.targetLabel" x-cloak x-text="( entry.targetType ? entry.targetType + ': ' : '' ) + entry.targetLabel"></span>
+								<span x-show="!entry.targetLabel" x-cloak>-</span>
+							</td>
+						</tr>
+					</template>
+
+					<!--- Loading state --->
+					<tr x-show="loading" x-cloak>
+						<td colspan="6">
+							#view( view: "_components/ui/progressbar", args: {
+								label        : "Loading audit log...",
+								ariaLabel    : "Loading audit log",
+								indeterminate: true,
+								variant      : "cyan",
+								size         : "sm"
+							} )#
+						</td>
+					</tr>
+					<tr x-show="!loading && error" x-cloak>
+						<td colspan="6" class="cb-empty-state text-danger">
+							<span x-text="error"></span>
+							<button type="button" class="btn btn-sm btn-outline-primary ms-2" @click="refreshEntries()">Retry</button>
+						</td>
+					</tr>
+
+					<!--- If No Entries Found --->
+					<tr x-show="!loading && entries.length === 0" x-cloak>
+						<td colspan="6" class="cb-empty-state">No audit log entries found</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!--- Pagination --->
+		<div class="cb-pagination" x-show="total > 0" x-cloak>
+			<button
+				type="button"
+				class="btn btn-light btn-sm"
+				@click="previousPage()"
+				:disabled="page <= 1 || loading">
+				<i class="ph-bold ph-caret-left" aria-hidden="true"></i> Previous
+			</button>
+			<span x-text="'Page ' + page + ' of ' + pageCount"></span>
+			<button
+				type="button"
+				class="btn btn-light btn-sm"
+				@click="nextPage()"
+				:disabled="page >= pageCount || loading">
+				Next <i class="ph-bold ph-caret-right" aria-hidden="true"></i>
+			</button>
+		</div>
+	</section>
+
+	<!--- Entry Detail Drawer --->
+	#view( view: "_components/ui/drawer", args: {
+		id: "cb-auditlog-detail-drawer",
+		title: "Audit Log Entry",
+		openExpression: "detailTarget",
+		closeExpression: "closeDetail()",
+		contentView: "auditlog/detail"
+	} )#
+
+	<!--- Clear All Confirmation Modal --->
+	<bx:if prc.authUser.hasPermission( "auditlog:admin" )>
+	#view( view: "_components/ui/modal", args: {
+		id            : "cb-auditlog-clear-modal",
+		title         : "Clear the entire audit log?",
+		openExpression: "clearOpen",
+		closeExpression: "cancelClear()",
+		contentView   : "auditlog/clearConfirm"
+	} )#
+	</bx:if>
+</div>
+</bx:output>
