@@ -53,6 +53,16 @@ jobs:
           version: latest
           modules: bx-cli
 
+      # install-bx-module writes module-provided executables (like bx-cli's "box"
+      # script) to ${BOXLANG_HOME}/bin, not to the /usr/local/bin (or ~/.local/bin)
+      # directory the installer links the core boxlang/bx binaries into. Neither the
+      # quick installer nor the setup-boxlang action adds this directory to PATH, so
+      # `box` is otherwise unreachable in every later step. BOXLANG_HOME itself is
+      # already exported to $GITHUB_ENV by the action above.
+      - name: Link BoxLang module executables onto PATH
+        run: |
+          echo "${BOXLANG_HOME}/bin" >> $GITHUB_PATH
+
       - name: Install CommandBox CLI Modules
         run: |
           box install testbox-cli
