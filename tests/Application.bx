@@ -55,7 +55,7 @@ class {
 		flushAtRequestEnd: false,
 		autoManageSession: false,
 		eventHandling: true,
-		eventHandler: "cborm.models.BxEventHandler",
+		eventHandler: "cborm.models.BXEventHandler",
 		ignoreParseErrors: true
 	}
 
