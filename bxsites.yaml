@@ -1,0 +1,26 @@
+name: "CB Genesis"
+description: "A production-ready ColdBox HMVC starter template for BoxLang - authentication, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on."
+baseURL: "https://coldbox-templates.github.io/cbGenesis/"
+theme:
+  name: bootstrap
+  options: { navCollapsible: true, navExpandAll: false, tocPosition: sticky }
+search: true
+nav: []
+markdown:
+  enableFootnotes: true
+  enableDefinitionLists: true
+repo:
+  url: "https://github.com/coldbox-templates/cbGenesis"
+  editUri: "edit/main/docs/"
+social:
+  - url: "https://github.com/coldbox-templates/cbGenesis"
+    icon: github
+    label: "cbGenesis on GitHub"
+  - url: "https://www.ortussolutions.com/community/slack"
+    icon: slack
+    label: "Slack Community"
+  - url: "https://boxlang.io"
+    label: "BoxLang"
+footer: true
+lastUpdated: true
+mermaid: true

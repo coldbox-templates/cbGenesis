@@ -3,6 +3,7 @@
 settings.xml
 WEB-INF
 build/**
+*.code-workspace
 
 # Engines + Database + CBFS + Secrets
 .tmp/**
