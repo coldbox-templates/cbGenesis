@@ -13,7 +13,7 @@
  */
 class extends="coldbox.system.Interceptor" {
 
-	@inject
+	@inject( "provider:AuditLogService" )
 	property name="auditLogService";
 
 	function configure() {
