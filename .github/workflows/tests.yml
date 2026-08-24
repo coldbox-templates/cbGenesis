@@ -80,31 +80,9 @@ jobs:
           printf "DB_USER=${{ env.DB_USER }}\n" >> .env
           printf "DB_PASSWORD=${{ env.DB_PASSWORD }}\n" >> .env
 
-      # box.json's committed installPaths are single-level (e.g. "lib/coldbox/",
-      # confirmed correct all the way back to the first commit that added this
-      # file) but CI has repeatedly shown modules landing one level too deep
-      # (e.g. lib/modules/cborm/cborm/) with box.json ITSELF showing doubled
-      # paths afterward. That means something mutates box.json on disk during
-      # install. Snapshot it now so the next step can prove (or disprove)
-      # that "box install" is the one rewriting it.
-      - name: Snapshot box.json before install
-        run: cp box.json /tmp/box.json.before
-
       - name: Install Dependencies
         run: |
           box install
-
-      # Diagnostic: does box.json differ from what's committed, and where did
-      # cborm's real content (models/, ModuleConfig.bx) actually land?
-      - name: Debug - Verify Module Installation Paths
-        run: |
-          echo "--- box.json diff (before vs after box install) ---"
-          diff -u /tmp/box.json.before box.json || echo "(diff shown above; box.json WAS modified by box install)"
-          echo "--- lib/modules/cborm contents (single level) ---"
-          ls -la lib/modules/cborm/ 2>&1 || echo "lib/modules/cborm/ does not exist"
-          echo "--- lib/modules/cborm/cborm contents (double level) ---"
-          ls -la lib/modules/cborm/cborm/ 2>&1 || echo "lib/modules/cborm/cborm/ does not exist"
-          find lib/modules/cborm -maxdepth 3 -iname "ModuleConfig.bx" -o -maxdepth 3 -iname "models" 2>&1 || true
 
       - name: Run Migrations & Seed Database
         run: |
