@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/guides/handlers-routing/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/reference/routes/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/reference/settings/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/getting-started/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/guides/security/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/architecture/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/guides/database-orm/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/deployment/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/guides/frontend/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/guides/email/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/guides/testing/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/guides/configuration/index.html</loc></url>
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/development/guides/extending/index.html</loc></url>
+</urlset>
