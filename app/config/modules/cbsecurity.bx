@@ -68,12 +68,7 @@ class {
 				// Default Authorization Action: override or redirect when a user does not have enough permissions to access something
 				"defaultAuthorizationAction" : "redirect",
 				// Firewall database event logs.
-				// autoCreate is disabled because cbsecurity's DBLogger (<=3.7.1) creates
-				// unprefixed indexes on its VARCHAR(1024) columns, which exceeds MySQL/MariaDB's
-				// 3072-byte max index key length under utf8mb4 and aborts startup. We pre-create
-				// the table ourselves with MySQL-safe indexes via a migration instead
-				// (see resources/database/migrations/2026_08_26_120000_cbsecurity_logs.bx).
-				"logs"                       : { "enabled": true, "table": "cbsecurity_logs", "autoCreate": false },
+				"logs"                       : { "enabled": true, "table": "cbsecurity_logs" },
 				// Firewall Rules, this can be a struct of detailed configuration
 				// or a simple array of inline rules
 				"rules"                      : []
