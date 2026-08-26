@@ -7,6 +7,9 @@ on:
     branches:
       - "v*"
 
+  # Manual Trigger
+  workflow_dispatch:
+
 jobs:
   #############################################
   # Tests First baby! We fail, no build :(
