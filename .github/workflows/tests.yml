@@ -113,7 +113,13 @@ jobs:
       - name: Run Tests
         run: |
           mkdir -p tests/results
-          box testbox run --verbose outputFile=tests/results/test-results outputFormats=json,antjunit
+          # antjunit output is dropped for now: box testbox run's JSON-to-ANTJunit-XML
+          # conversion throws a fatal XML parse error ("element type br must be
+          # terminated") on any failure/error whose message embeds TestBox's own
+          # HTML-formatted code-context snippets (<br>/<b> tags), which aborts the
+          # write of both output files. json alone is unaffected. The "Publish Test
+          # Results" step below will report no files found until this is revisited.
+          box testbox run --verbose outputFile=tests/results/test-results outputFormats=json
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
