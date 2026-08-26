@@ -121,6 +121,10 @@ jobs:
           # Results" step below will report no files found until this is revisited.
           box testbox run --verbose outputFile=tests/results/test-results outputFormats=json
 
+      - name: Print JSON Test Results
+        if: always()
+        run: cat tests/results/test-results.json || echo "no json results file found"
+
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
