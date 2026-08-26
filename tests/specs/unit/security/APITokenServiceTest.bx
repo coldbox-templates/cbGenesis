@@ -84,17 +84,20 @@ class extends="tests.resources.BaseIntegrationSpec"{
 			} )
 
 			it( "revokes all tokens for a user", () => {
+				// A dedicated user (rather than the shared variables.testUser) keeps this
+				// test's count assertion exact regardless of tokens other tests create.
+				var bulkRevokeUser = createVerifiedUser()
 				var firstToken = createTokenFixture(
-					user  = variables.testUser,
+					user  = bulkRevokeUser,
 					label = "Bulk revoke one"
 				)
 				var secondToken = createTokenFixture(
-					user  = variables.testUser,
+					user  = bulkRevokeUser,
 					label = "Bulk revoke two"
 				)
 				var tokenCount = 2
 
-				expect( apiTokenService.revokeAllForUser( variables.testUser.getId() ) ).toBe( tokenCount )
+				expect( apiTokenService.revokeAllForUser( bulkRevokeUser.getId() ) ).toBe( tokenCount )
 				expect( apiTokenService.isValidToken( firstToken.rawToken ) ).toBeFalse()
 				expect( apiTokenService.isValidToken( secondToken.rawToken ) ).toBeFalse()
 			} )

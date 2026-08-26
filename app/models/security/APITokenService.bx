@@ -63,7 +63,8 @@ class extends="app.models.BaseService" {
 
 		var maxMonths = settingService.getSetting( "cbApiTokenMaxValidityMonths" )
 		var maxDate = dateAdd( "m", maxMonths, now() )
-		if ( dateCompare( dateFormat( arguments.expiration, "yyyy-mm-dd" ), dateFormat( maxDate, "yyyy-mm-dd" ) ) > 0 ) {
+		// "MM" is the month mask; lowercase "mm" is minutes and produced an invalid date string.
+		if ( dateCompare( dateFormat( arguments.expiration, "yyyy-MM-dd" ), dateFormat( maxDate, "yyyy-MM-dd" ) ) > 0 ) {
 			throw(
 				type    = "APIToken.InvalidExpiration",
 				message = "API token expiration cannot be more than #maxMonths# months from today."
@@ -140,7 +141,7 @@ class extends="app.models.BaseService" {
 	boolean function revokeToken( required string tokenId ) {
 		var token = get( arguments.tokenId )
 
-		if( !token.isLoaded() ){
+		if( !token.isLoaded() || !token.getIsActive() ){
 			return false
 		}
 

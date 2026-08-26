@@ -1,0 +1,25 @@
+/**
+ * Wraps a couple of built-in global functions that get misrouted through
+ * `onMissingMethod` when called bare from inside a class extending
+ * `cborm.models.ActiveEntity` / `cborm.models.VirtualEntityService` -- this class
+ * doesn't extend either, so the bare calls resolve normally here.
+ */
+class {
+
+	/**
+	 * Deserializes a JSON string into a struct/array.
+	 *
+	 * @json The JSON string to deserialize.
+	 */
+	function deserializeJSON( required string json ) {
+		return deserializeJSON( arguments.json )
+	}
+
+	/**
+	 * Returns a carriage-return + line-feed pair (CRLF).
+	 */
+	string function crlf() {
+		return chr( 13 ) & chr( 10 )
+	}
+
+}

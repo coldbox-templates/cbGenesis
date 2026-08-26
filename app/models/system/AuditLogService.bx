@@ -89,7 +89,9 @@ class extends="app.models.BaseService" {
 			entry.setTargetLabel( arguments.targetLabel )
 			entry.setIpAddress( getClientIp() )
 			entry.setUserAgent( cgi.http_user_agent ?: "" )
-			entry.setMetadata( arguments.metadata.isEmpty() ? "" : jsonSerialize( sanitizeMetadata( arguments.metadata ) ) )
+			// null, not "" -- the `metadata` column is a native MySQL JSON column, which
+			// rejects an empty string as invalid JSON but accepts NULL.
+			entry.setMetadata( arguments.metadata.isEmpty() ? javaCast( "null", "" ) : jsonSerialize( sanitizeMetadata( arguments.metadata ) ) )
 
 			applyActor( entry, arguments.actor )
 
@@ -342,10 +344,10 @@ class extends="app.models.BaseService" {
 			)
 		} )
 
-		// Static BIF references (`::chr`), not bare calls: a bare `chr(...)` call here gets
-		// misrouted through this service's inherited `onMissingMethod` instead of resolving
-		// to the built-in function.
-		return lines.toList( ( ::chr )( 13 ) & ( ::chr )( 10 ) )
+		// A bare `chr(...)` call here gets misrouted through this service's inherited
+		// `onMissingMethod` instead of resolving to the built-in function, so it's wrapped by
+		// a plain (non-ORM) helper class where that misroute doesn't happen.
+		return lines.toList( new app.models.util.SafeBif().crlf() )
 	}
 
 	/**

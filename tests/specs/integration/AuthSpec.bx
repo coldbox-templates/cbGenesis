@@ -32,6 +32,10 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				prepareMock( getInstance( "@cbcsrf" ) )
 					.$( "verify" )
 					.$results( true )
+				// passwordConfirm intentionally matches password: a mismatch is handled by an
+				// earlier, separate branch in doRegister() and never reaches entity validation,
+				// so it can never appear as a key in validationErrors (nor does the register
+				// view read one for that field -- confirm-mismatch is client-side only).
 				var event = post(
 					route : "/register",
 					params: {
@@ -39,7 +43,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 						lastName      : "",
 						email         : "not-an-email",
 						password      : "short",
-						passwordConfirm: "different",
+						passwordConfirm: "short",
 						_token        : "valid-token"
 					}
 				)
@@ -47,7 +51,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				var validationErrors = event.getPrivateValue( "validationErrors" )
 				expect( event.getCurrentView() ).toBe( "auth/register" )
 				expect( structKeyExists( validationErrors, "email" ) ).toBeTrue()
-				expect( structKeyExists( validationErrors, "passwordConfirm" ) ).toBeTrue()
+				expect( structKeyExists( validationErrors, "password" ) ).toBeTrue()
 			} )
 		} )
 	}

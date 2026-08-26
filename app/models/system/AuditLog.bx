@@ -159,7 +159,9 @@ class extends="cborm.models.ActiveEntity" {
 		variables.targetLabel = ""
 		variables.ipAddress = ""
 		variables.userAgent = ""
-		variables.metadata = ""
+		// null, not "" -- the `metadata` column is a native MySQL JSON column, which
+		// rejects an empty string as invalid JSON ("the document is empty") but accepts NULL.
+		variables.metadata = javaCast( "null", "" )
 		return this
 	}
 
@@ -195,10 +197,10 @@ class extends="cborm.models.ActiveEntity" {
 		if ( !len( variables.metadata ?: "" ) || !isJSON( variables.metadata ) ) {
 			return {}
 		}
-		// Called as a member function (not the bare global BIF): a bare `deserializeJSON(...)`
-		// call here gets misrouted through this entity's inherited `onMissingMethod` instead
-		// of resolving to the built-in function.
-		return variables.metadata.deserializeJSON()
+		// A bare `deserializeJSON(...)` call here gets misrouted through this entity's
+		// inherited `onMissingMethod` instead of resolving to the built-in function, so it's
+		// wrapped by a plain (non-ORM) helper class where that misroute doesn't happen.
+		return new app.models.util.SafeBif().deserializeJSON( variables.metadata )
 	}
 
 	/**
