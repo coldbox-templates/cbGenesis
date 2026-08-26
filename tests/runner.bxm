@@ -33,16 +33,17 @@
 <!--- <bx:param name="url.isBatched"						default="false"> --->
 
 <!--- Include the appropriate runner based on streaming mode.
-	Written as a single <bx:script> block using script-syntax include/savecontent/if
-	rather than <bx:if>/<bx:include>/<bx:savecontent> tags -- BoxLang's .bxm tag parser
-	doesn't bind some of those as valid elements in this position (observed: "The
-	prefix 'bx' for element 'bx:savecontent' is not bound", a fatal XML parse error
-	dumped straight into the response body), while the equivalent script statements
-	work fine. --->
+	Component calls (bx:include, bx:savecontent) need their bx: prefix even inside a
+	<bx:script> block -- only language keywords like if/else don't take one. A bare
+	`savecontent variable="x" { ... }` throws "the requested key [savecontent] was not
+	located in any scope" (BoxLang parses it as an undefined variable reference), and
+	the earlier tag-mode attempt (<bx:savecontent> as a standalone tag around
+	<bx:if>/<bx:include>) threw its own fatal XML parse error, so this is the form that
+	actually works: bx:-prefixed component statements inside plain if/else. --->
 <bx:script>
 	if ( url.streaming && !url.dryRun ) {
 		// Stream results in real-time via SSE
-		include template="/testbox/system/runners/StreamingRunner.cfm";
+		bx:include template="/testbox/system/runners/StreamingRunner.cfm";
 	} else {
 		// Traditional batch results: capture everything HTMLRunner.cfm outputs rather
 		// than letting it stream straight to the client. ColdBox's testing HTTP
@@ -54,8 +55,8 @@
 		// only from there, dropping anything that leaked before it. Any other reporter
 		// (simple HTML, ANTJunit, dryRun) is emitted untouched, since no such marker
 		// applies to it.
-		savecontent variable="rawRunnerOutput" {
-			include template="/testbox/system/runners/HTMLRunner.cfm";
+		bx:savecontent variable="rawRunnerOutput" {
+			bx:include template="/testbox/system/runners/HTMLRunner.cfm";
 		}
 
 		jsonMarker = '{"CFMLEngine"';
