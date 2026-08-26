@@ -33,17 +33,18 @@
 <!--- <bx:param name="url.isBatched"						default="false"> --->
 
 <!--- Include the appropriate runner based on streaming mode.
-	Component calls (bx:include, bx:savecontent) need their bx: prefix even inside a
-	<bx:script> block -- only language keywords like if/else don't take one. A bare
-	`savecontent variable="x" { ... }` throws "the requested key [savecontent] was not
-	located in any scope" (BoxLang parses it as an undefined variable reference), and
-	the earlier tag-mode attempt (<bx:savecontent> as a standalone tag around
-	<bx:if>/<bx:include>) threw its own fatal XML parse error, so this is the form that
-	actually works: bx:-prefixed component statements inside plain if/else. --->
+	Confirmed via BoxLang docs: inside a <bx:script> block, `include` is a script-level
+	statement and must NOT take the bx: prefix (bx:include is the tag/component form,
+	invalid in script -- it threw "Invalid method call" here), whereas `savecontent`
+	is a component whose script form DOES need the prefix (bare `savecontent { ... }`
+	threw "the requested key [savecontent] was not located in any scope", parsed as an
+	undefined variable). A standalone <bx:savecontent> tag (outside <bx:script>) also
+	isn't bound by BoxLang's .bxm tag parser in this position, so this bx:script-based
+	mix (bx:savecontent, unprefixed include) is the form that actually works. --->
 <bx:script>
 	if ( url.streaming && !url.dryRun ) {
 		// Stream results in real-time via SSE
-		bx:include template="/testbox/system/runners/StreamingRunner.cfm";
+		include template="/testbox/system/runners/StreamingRunner.cfm";
 	} else {
 		// Traditional batch results: capture everything HTMLRunner.cfm outputs rather
 		// than letting it stream straight to the client. ColdBox's testing HTTP
@@ -56,7 +57,7 @@
 		// (simple HTML, ANTJunit, dryRun) is emitted untouched, since no such marker
 		// applies to it.
 		bx:savecontent variable="rawRunnerOutput" {
-			bx:include template="/testbox/system/runners/HTMLRunner.cfm";
+			include template="/testbox/system/runners/HTMLRunner.cfm";
 		}
 
 		jsonMarker = '{"CFMLEngine"';
