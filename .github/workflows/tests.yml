@@ -115,17 +115,37 @@ jobs:
           mkdir -p tests/results
 
           # Diagnostic: box testbox run currently fails silently (exit 1, zero
-          # output files, no error message), so capture the raw runner.bxm
-          # response directly first to see what it actually returns.
-          echo "=== Diagnostic: raw runner.bxm response ==="
-          curl -s -w '\nHTTP_STATUS:%{http_code}\nSIZE_BYTES:%{size_download}\n' \
-            "http://127.0.0.1:${{ env.WEB_PORT }}/tests/runner.bxm?reporter=json&verbose=true&recurse=true" \
-            -o /tmp/runner-response.json
-          echo "--- head (first 4000 chars) ---"
-          head -c 4000 /tmp/runner-response.json
+          # output files, no error message). The prior round showed the
+          # runner.bxm response itself comes back HTTP 200 with 0 bytes, so
+          # dig further: capture full request/response headers (-v) and try
+          # the plain "simple" reporter too, to see whether this is specific
+          # to the json reporter or the runner itself always returns empty.
+          echo "=== Diagnostic: reporter=json, verbose headers ==="
+          curl -v -s -w '\nHTTP_STATUS:%{http_code}\nSIZE_BYTES:%{size_download}\n' \
+            "http://127.0.0.1:${{ env.WEB_PORT }}/tests/runner.bxm?reporter=json&recurse=true" \
+            -o /tmp/runner-response-json.txt 2>/tmp/runner-response-json.headers
+          echo "--- response headers/trace ---"
+          cat /tmp/runner-response-json.headers
+          echo "--- body size ---"
+          wc -c /tmp/runner-response-json.txt
+          echo "--- body head/tail ---"
+          head -c 2000 /tmp/runner-response-json.txt
           echo ""
-          echo "--- tail (last 4000 chars) ---"
-          tail -c 4000 /tmp/runner-response.json
+          tail -c 2000 /tmp/runner-response-json.txt
+          echo ""
+
+          echo "=== Diagnostic: reporter=simple ==="
+          curl -v -s -w '\nHTTP_STATUS:%{http_code}\nSIZE_BYTES:%{size_download}\n' \
+            "http://127.0.0.1:${{ env.WEB_PORT }}/tests/runner.bxm?reporter=simple&recurse=true" \
+            -o /tmp/runner-response-simple.txt 2>/tmp/runner-response-simple.headers
+          echo "--- response headers/trace ---"
+          cat /tmp/runner-response-simple.headers
+          echo "--- body size ---"
+          wc -c /tmp/runner-response-simple.txt
+          echo "--- body head/tail ---"
+          head -c 2000 /tmp/runner-response-simple.txt
+          echo ""
+          tail -c 2000 /tmp/runner-response-simple.txt
           echo ""
           echo "=== End diagnostic ==="
 
