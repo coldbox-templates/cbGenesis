@@ -1,4 +1,9 @@
-<bx:setting enableOutputOnly=true>
+<!--- enableOutputOnly is intentionally NOT set here: TestBox's HTMLRunner.cfm writes
+	its report via a bare writeoutput() call (not inside an explicit <cfoutput> tag), and
+	under BoxLang, enableOutputOnly=true suppresses that call -- the response comes back
+	HTTP 200 with a genuinely empty body (confirmed via the x-testbox-total* summary
+	headers still reporting real results while Content-Length is 0), which silently
+	breaks `box testbox run` and any other client reading the report body. --->
 <!--- Executes all tests in the 'specs' folder with simple reporter by default --->
 <bx:param name="url.reporter" 			default="simple">
 <bx:param name="url.directory" 			default="tests.specs">
