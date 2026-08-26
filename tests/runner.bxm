@@ -32,30 +32,38 @@
 <!--- Enable batched code coverage reporter, useful for large test bundles which require spreading over multiple testbox run commands. --->
 <!--- <bx:param name="url.isBatched"						default="false"> --->
 
-<!--- Include the appropriate runner based on streaming mode. --->
-<bx:if url.streaming && !url.dryRun>
-	<!--- Stream results in real-time via SSE --->
-	<bx:include template="/testbox/system/runners/StreamingRunner.cfm" >
-<bx:else>
-	<!--- Traditional batch results: capture everything HTMLRunner.cfm outputs rather
-		than letting it stream straight to the client. ColdBox's testing HTTP
-		simulation (get()/post() inside a spec) can render a real view as part of
-		running that spec -- e.g. a login page plus cbcsrf's injected rotation script
-		-- and that markup can leak directly into this same response buffer, ahead of
-		the actual report. For the json reporter (the one `box testbox run` and CI
-		consume), locate TestBox's own payload by its stable leading key and emit only
-		from there, dropping anything that leaked before it. Any other reporter
-		(simple HTML, ANTJunit, dryRun) is emitted untouched, since no such marker
-		applies to it. --->
-	<bx:savecontent variable="rawRunnerOutput">
-		<bx:include template="/testbox/system/runners/HTMLRunner.cfm" >
-	</bx:savecontent>
+<!--- Include the appropriate runner based on streaming mode.
+	Written as a single <bx:script> block using script-syntax include/savecontent/if
+	rather than <bx:if>/<bx:include>/<bx:savecontent> tags -- BoxLang's .bxm tag parser
+	doesn't bind some of those as valid elements in this position (observed: "The
+	prefix 'bx' for element 'bx:savecontent' is not bound", a fatal XML parse error
+	dumped straight into the response body), while the equivalent script statements
+	work fine. --->
+<bx:script>
+	if ( url.streaming && !url.dryRun ) {
+		// Stream results in real-time via SSE
+		include template="/testbox/system/runners/StreamingRunner.cfm";
+	} else {
+		// Traditional batch results: capture everything HTMLRunner.cfm outputs rather
+		// than letting it stream straight to the client. ColdBox's testing HTTP
+		// simulation (get()/post() inside a spec) can render a real view as part of
+		// running that spec -- e.g. a login page plus cbcsrf's injected rotation script
+		// -- and that markup can leak directly into this same response buffer, ahead of
+		// the actual report. For the json reporter (the one `box testbox run` and CI
+		// consume), locate TestBox's own payload by its stable leading key and emit
+		// only from there, dropping anything that leaked before it. Any other reporter
+		// (simple HTML, ANTJunit, dryRun) is emitted untouched, since no such marker
+		// applies to it.
+		savecontent variable="rawRunnerOutput" {
+			include template="/testbox/system/runners/HTMLRunner.cfm";
+		}
 
-	<bx:set jsonMarker = '{"CFMLEngine"'>
-	<bx:set jsonStart = find( jsonMarker, rawRunnerOutput )>
-	<bx:if url.reporter eq "json" && jsonStart GT 0>
-		<bx:output>#mid( rawRunnerOutput, jsonStart, len( rawRunnerOutput ) - jsonStart + 1 )#</bx:output>
-	<bx:else>
-		<bx:output>#rawRunnerOutput#</bx:output>
-	</bx:if>
-</bx:if>
+		jsonMarker = '{"CFMLEngine"';
+		jsonStart = find( jsonMarker, rawRunnerOutput );
+		if ( url.reporter == "json" && jsonStart > 0 ) {
+			writeOutput( mid( rawRunnerOutput, jsonStart, len( rawRunnerOutput ) - jsonStart + 1 ) );
+		} else {
+			writeOutput( rawRunnerOutput );
+		}
+	}
+</bx:script>
