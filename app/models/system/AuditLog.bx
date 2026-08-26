@@ -147,6 +147,7 @@ class extends="cborm.models.ActiveEntity" {
 	 */
 	function init() {
 		super.init()
+		variables.createdDate = now()
 		variables.severity = "info"
 		variables.category = "system"
 		variables.action = ""
