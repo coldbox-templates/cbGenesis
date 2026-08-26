@@ -3,6 +3,9 @@ name: Test Suites
 on:
   workflow_call:
 
+  # Manual Trigger
+  workflow_dispatch:
+
 jobs:
   tests:
     name: Tests
