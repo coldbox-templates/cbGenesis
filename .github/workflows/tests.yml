@@ -119,11 +119,21 @@ jobs:
           # HTML-formatted code-context snippets (<br>/<b> tags), which aborts the
           # write of both output files. json alone is unaffected. The "Publish Test
           # Results" step below will report no files found until this is revisited.
-          box testbox run --verbose outputFile=tests/results/test-results outputFormats=json
+          #
+          # box testbox run's own exit code is not reliable -- it returns non-zero even
+          # when every single spec passes -- and its outputFile write is itself flaky
+          # (observed silently not writing the file at all on some runs), so this step
+          # never fails on its own exit code. "Verify Test Results" below determines the
+          # real pass/fail outcome from the JSON report TestBox prints to stdout.
+          box testbox run --verbose outputFile=tests/results/test-results outputFormats=json > tests/results/raw-output.log 2>&1 || true
+          cat tests/results/raw-output.log
 
       - name: Print JSON Test Results
         if: always()
         run: cat tests/results/test-results.json || echo "no json results file found"
+
+      - name: Verify Test Results
+        run: python3 tests/verify-results.py
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
