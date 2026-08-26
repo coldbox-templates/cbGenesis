@@ -199,8 +199,15 @@ class extends="coldbox.system.EventHandler"{
 			email    : rc.email,
 			password : rc.password
 		} )
+		// Not prc.oUser.validate(): cborm's ActiveEntity.validate() is declared with a bare
+		// `ValidationResult` return type, which BoxLang fails to resolve for a cross-module
+		// type -- the method silently falls through to onMissingMethod ("Invalid method
+		// call: validate") instead of running. isValid() + getValidationResults() are the
+		// same two calls validate() makes internally, declared with types that don't hit
+		// this bug.
+		prc.oUser.isValid()
 		prc.oUser
-			.validate()
+			.getValidationResults()
 			// Handle validation errors
 			.onError( results =>{
 				flash.put( "messages", {

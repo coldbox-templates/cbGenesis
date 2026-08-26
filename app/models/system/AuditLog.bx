@@ -197,10 +197,10 @@ class extends="cborm.models.ActiveEntity" {
 		if ( !len( variables.metadata ?: "" ) || !isJSON( variables.metadata ) ) {
 			return {}
 		}
-		// A bare `deserializeJSON(...)` call here gets misrouted through this entity's
-		// inherited `onMissingMethod` instead of resolving to the built-in function, so it's
-		// wrapped by a plain (non-ORM) helper class where that misroute doesn't happen.
-		return new app.models.util.SafeBif().deserializeJSON( variables.metadata )
+		// BoxLang's JSON-deserialize BIF is named `jsonDeserialize`, not the CFML/Lucee
+		// `deserializeJSON` -- the latter doesn't exist here, so it fell through to this
+		// entity's inherited `onMissingMethod` instead of resolving to a built-in function.
+		return jsonDeserialize( variables.metadata )
 	}
 
 	/**

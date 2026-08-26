@@ -344,10 +344,10 @@ class extends="app.models.BaseService" {
 			)
 		} )
 
-		// A bare `chr(...)` call here gets misrouted through this service's inherited
-		// `onMissingMethod` instead of resolving to the built-in function, so it's wrapped by
-		// a plain (non-ORM) helper class where that misroute doesn't happen.
-		return lines.toList( new app.models.util.SafeBif().crlf() )
+		// BoxLang's character-from-code BIF is named `char`, not the CFML/Lucee `chr` --
+		// the latter doesn't exist here, so it fell through to this service's inherited
+		// `onMissingMethod` instead of resolving to a built-in function.
+		return lines.toList( char( 13 ) & char( 10 ) )
 	}
 
 	/**

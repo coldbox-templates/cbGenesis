@@ -39,7 +39,10 @@ class extends="app.models.BaseService" {
 	struct function createToken( required APIToken apiToken ) {
 		validateExpiration( arguments.apiToken.getExpiration() )
 		var rawToken = arguments.apiToken.getToken()
-		arguments.apiToken.setToken( bcryptHash( rawToken ) )
+		// SHA-256, not bcryptHash(): tokens are looked up by hash equality (see validateToken()),
+		// which requires a deterministic hash -- bcrypt's random-per-call salt means the same
+		// input never hashes to the same value twice, so a bcrypt hash can never be found again.
+		arguments.apiToken.setToken( hash( rawToken, "SHA-256" ) )
 
 		super.save( arguments.apiToken )
 
@@ -97,7 +100,7 @@ class extends="app.models.BaseService" {
 	 * @return The active, non-expired API token entity.
 	 */
 	APIToken function validateToken( required string rawToken ) {
-		var token = findWhere( { token: bcryptHash( arguments.rawToken ) } )
+		var token = findWhere( { token: hash( arguments.rawToken, "SHA-256" ) } )
 
 		// If the token is not found or not active
 		if ( isNull( token ) || !token.getIsActive() ) {

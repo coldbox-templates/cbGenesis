@@ -140,7 +140,9 @@ class extends="app.models.BaseEntity" {
 	 * @return boolean True if the apiToken matches, false otherwise.
 	 */
 	boolean function sameApiToken( required string apiToken ) {
-		return BCryptVerify( arguments.apiToken, getToken() )
+		// SHA-256, matching how APITokenService hashes/looks up tokens -- not BCryptVerify,
+		// which can't verify against a deterministic (non-bcrypt) hash.
+		return hash( arguments.apiToken, "SHA-256" ) == getToken()
 	}
 
 	/**
