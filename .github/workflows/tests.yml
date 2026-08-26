@@ -113,6 +113,22 @@ jobs:
       - name: Run Tests
         run: |
           mkdir -p tests/results
+
+          # Diagnostic: box testbox run currently fails silently (exit 1, zero
+          # output files, no error message), so capture the raw runner.bxm
+          # response directly first to see what it actually returns.
+          echo "=== Diagnostic: raw runner.bxm response ==="
+          curl -s -w '\nHTTP_STATUS:%{http_code}\nSIZE_BYTES:%{size_download}\n' \
+            "http://127.0.0.1:${{ env.WEB_PORT }}/tests/runner.bxm?reporter=json&verbose=true&recurse=true" \
+            -o /tmp/runner-response.json
+          echo "--- head (first 4000 chars) ---"
+          head -c 4000 /tmp/runner-response.json
+          echo ""
+          echo "--- tail (last 4000 chars) ---"
+          tail -c 4000 /tmp/runner-response.json
+          echo ""
+          echo "=== End diagnostic ==="
+
           box testbox run --verbose outputFile=tests/results/test-results outputFormats=json,antjunit
 
       - name: Publish Test Results
