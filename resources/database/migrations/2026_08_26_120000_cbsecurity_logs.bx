@@ -1,0 +1,60 @@
+class {
+
+	/**
+	 * Pre-creates the `cbsecurity_logs` table used by cbsecurity's firewall DB logger.
+	 *
+	 * cbsecurity's DBLogger (<=3.7.1) auto-creates this table with unprefixed indexes on
+	 * its VARCHAR(1024) columns (host, path, referer, userAgent). Under MySQL/MariaDB with
+	 * utf8mb4 (4 bytes/char), that requires up to 4096 bytes per index, which exceeds the
+	 * 3072-byte max index key length and aborts application startup. This has been fixed
+	 * upstream (prefixing those indexes to 255 chars) but is not yet released, so we create
+	 * the table ourselves here, matching the same schema, and disable
+	 * `firewall.logs.autoCreate` in cbsecurity.bx so DBLogger leaves it alone.
+	 */
+	function up( schema, qb ) {
+		var isMySQL = reFindNoCase( "mysql|maria", getSystemSetting( "DB_DRIVER", "mysql" ) ) > 0
+
+		schema.create( "cbsecurity_logs", ( table ) => {
+			table.string( "id", 36 ).primaryKey()
+			table.timestamp( "logDate" )
+			table.string( "action", 20 )
+			table.string( "blockType", 20 )
+			table.string( "ip", 100 )
+			table.string( "host", 1024 )
+			table.string( "httpMethod", 25 )
+			table.string( "path", 1024 )
+			table.string( "queryString", 1024 )
+			table.string( "referer", 1024 ).nullable()
+			table.string( "userAgent", 1024 )
+			table.string( "userId", 36 ).nullable()
+			table.longText( "securityRule" ).nullable()
+
+			// Short columns: safe to index in full on every grammar
+			table.index( [ "logDate", "action", "blockType" ], "idx_cbsecurity" )
+			table.index( "userId", "idx_cbsecurity_userId" )
+			table.index( "ip", "idx_cbsecurity_ip" )
+			table.index( "httpMethod", "idx_cbsecurity_httpMethod" )
+
+			// Non-MySQL grammars can safely index the full VARCHAR(1024) columns
+			if ( !isMySQL ) {
+				table.index( "userAgent", "idx_cbsecurity_userAgent" )
+				table.index( "host", "idx_cbsecurity_host" )
+				table.index( "path", "idx_cbsecurity_path" )
+				table.index( "referer", "idx_cbsecurity_referer" )
+			}
+		} )
+
+		// MySQL/MariaDB: index a 255-char prefix of the long columns to stay under the
+		// 3072-byte max key length under utf8mb4 (255 * 4 bytes = 1020 bytes per index).
+		if ( isMySQL ) {
+			[ "userAgent", "host", "path", "referer" ].each( ( column ) => {
+				queryExecute( "CREATE INDEX idx_cbsecurity_#column# ON cbsecurity_logs (#column#(255))" )
+			} )
+		}
+	}
+
+	function down( schema, qb ) {
+		schema.dropIfExists( "cbsecurity_logs" )
+	}
+
+}
