@@ -5,6 +5,7 @@
 	headers still reporting real results while Content-Length is 0), which silently
 	breaks `box testbox run` and any other client reading the report body. --->
 <!--- Executes all tests in the 'specs' folder with simple reporter by default --->
+
 <bx:param name="url.reporter" 			default="simple">
 <bx:param name="url.directory" 			default="tests.specs">
 <bx:param name="url.recurse" 			default="true" type="boolean">
@@ -31,11 +32,30 @@
 <!--- Enable batched code coverage reporter, useful for large test bundles which require spreading over multiple testbox run commands. --->
 <!--- <bx:param name="url.isBatched"						default="false"> --->
 
-<!--- Include the appropriate runner based on streaming mode --->
+<!--- Include the appropriate runner based on streaming mode. --->
 <bx:if url.streaming && !url.dryRun>
 	<!--- Stream results in real-time via SSE --->
 	<bx:include template="/testbox/system/runners/StreamingRunner.cfm" >
 <bx:else>
-	<!--- Traditional batch results --->
-	<bx:include template="/testbox/system/runners/HTMLRunner.cfm" >
+	<!--- Traditional batch results: capture everything HTMLRunner.cfm outputs rather
+		than letting it stream straight to the client. ColdBox's testing HTTP
+		simulation (get()/post() inside a spec) can render a real view as part of
+		running that spec -- e.g. a login page plus cbcsrf's injected rotation script
+		-- and that markup can leak directly into this same response buffer, ahead of
+		the actual report. For the json reporter (the one `box testbox run` and CI
+		consume), locate TestBox's own payload by its stable leading key and emit only
+		from there, dropping anything that leaked before it. Any other reporter
+		(simple HTML, ANTJunit, dryRun) is emitted untouched, since no such marker
+		applies to it. --->
+	<bx:savecontent variable="rawRunnerOutput">
+		<bx:include template="/testbox/system/runners/HTMLRunner.cfm" >
+	</bx:savecontent>
+
+	<bx:set jsonMarker = '{"CFMLEngine"'>
+	<bx:set jsonStart = find( jsonMarker, rawRunnerOutput )>
+	<bx:if url.reporter eq "json" && jsonStart GT 0>
+		<bx:output>#mid( rawRunnerOutput, jsonStart, len( rawRunnerOutput ) - jsonStart + 1 )#</bx:output>
+	<bx:else>
+		<bx:output>#rawRunnerOutput#</bx:output>
+	</bx:if>
 </bx:if>
