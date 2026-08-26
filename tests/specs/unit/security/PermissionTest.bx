@@ -45,20 +45,20 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				} )
 			} )
 
-			describe( "getPermissionSlug()", () => {
+			describe( "getSlug()", () => {
 				it( "returns slug when permission contains colon", () => {
 					permission.setPermission( "user:create" )
-					expect( permission.getPermissionSlug() ).toBe( "create" )
+					expect( permission.getSlug() ).toBe( "create" )
 				} )
 
 				it( "returns entire permission when no colon exists", () => {
 					permission.setPermission( "admin" )
-					expect( permission.getPermissionSlug() ).toBe( "admin" )
+					expect( permission.getSlug() ).toBe( "admin" )
 				} )
 
 				it( "handles multiple colons by returning everything after first colon", () => {
 					permission.setPermission( "api:v1:read" )
-					expect( permission.getPermissionSlug() ).toBe( "v1:read" )
+					expect( permission.getSlug() ).toBe( "v1:read" )
 				} )
 			} )
 

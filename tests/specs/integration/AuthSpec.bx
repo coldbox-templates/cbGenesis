@@ -25,7 +25,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					}
 				)
 
-				expect( getFlashScope().exists( "errors" ) ).toBeTrue()
+				expect( getFlashScope().exists( "messages" ) ).toBeTrue()
 			} )
 
 			it( "returns field validation errors without persisting credentials", () => {

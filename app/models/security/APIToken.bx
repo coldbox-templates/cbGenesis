@@ -230,17 +230,25 @@ class extends="app.models.BaseEntity" {
 	}
 
 	/**
-	 * Parse a token expiration date from a string.
+	 * Parse a token expiration date from a date/datetime value or a date-only string.
+	 * A date-only string (e.g. from a date picker) is treated as end-of-day.
 	 *
-	 * @expiration The expiration date as a string.
+	 * @expiration The expiration date, as a date/datetime value or string.
 	 *
 	 * @return The parsed date or null if the input is empty.
 	 */
-	private date function parseTokenExpiration( required string expiration ) {
-		if ( isNull( arguments.expiration ) || !len( trim( arguments.expiration ) ) ) {
+	private date function parseTokenExpiration( any expiration ) {
+		if ( isNull( arguments.expiration ) ) {
 			return null
 		}
-		return parseDateTime( "#trim( arguments.expiration )# 23:59:59" )
+		if ( isDate( arguments.expiration ) ) {
+			return arguments.expiration
+		}
+		var trimmed = trim( arguments.expiration )
+		if ( !len( trimmed ) ) {
+			return null
+		}
+		return parseDateTime( "#trimmed# 23:59:59" )
 	}
 
 }

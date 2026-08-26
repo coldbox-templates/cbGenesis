@@ -182,29 +182,39 @@ class extends="app.models.BaseService" {
 			arguments.propertyList = arguments.propertyList.toList()
 		}
 
-		var validSeverity = len( arguments.severity ) && static.SEVERITIES.findNoCase( arguments.severity )
-		var validCategory = len( arguments.category ) && static.CATEGORIES.findNoCase( arguments.category )
+		// Captured as locals: a nested closure gets its own `arguments` scope in BoxLang,
+		// so referencing `arguments.x` from inside the `.when()` callbacks below would look
+		// up keys on the closure's own (single-parameter) arguments struct, not this method's.
+		var searchTerm = arguments.searchTerm
+		var severity = arguments.severity
+		var category = arguments.category
+		var actorId = arguments.actorId
+		var dateFrom = arguments.dateFrom ?: javaCast( "null", "" )
+		var dateTo = arguments.dateTo ?: javaCast( "null", "" )
+
+		var validSeverity = len( severity ) && static.SEVERITIES.findNoCase( severity )
+		var validCategory = len( category ) && static.CATEGORIES.findNoCase( category )
 
 		var c = newCriteria()
 			// Free text search
-			.when( len( arguments.searchTerm ), ( c ) => {
+			.when( len( searchTerm ), ( c ) => {
 				c.or(
-					c.restrictions.like( "message", "%#arguments.searchTerm#%" ),
-					c.restrictions.like( "action", "%#arguments.searchTerm#%" ),
-					c.restrictions.like( "actorEmail", "%#arguments.searchTerm#%" ),
-					c.restrictions.like( "actorName", "%#arguments.searchTerm#%" ),
-					c.restrictions.like( "targetLabel", "%#arguments.searchTerm#%" )
+					c.restrictions.like( "message", "%#searchTerm#%" ),
+					c.restrictions.like( "action", "%#searchTerm#%" ),
+					c.restrictions.like( "actorEmail", "%#searchTerm#%" ),
+					c.restrictions.like( "actorName", "%#searchTerm#%" ),
+					c.restrictions.like( "targetLabel", "%#searchTerm#%" )
 				)
 			} )
 			// Severity Filter
-			.when( validSeverity, ( c ) => c.eq( "severity", lcase( arguments.severity ) ) )
+			.when( validSeverity, ( c ) => c.eq( "severity", lcase( severity ) ) )
 			// Category Filter
-			.when( validCategory, ( c ) => c.eq( "category", lcase( arguments.category ) ) )
+			.when( validCategory, ( c ) => c.eq( "category", lcase( category ) ) )
 			// Actor Filter
-			.when( len( arguments.actorId ), ( c ) => c.eq( "user.userId", arguments.actorId ) )
+			.when( len( actorId ), ( c ) => c.eq( "user.userId", actorId ) )
 			// Date Range Filters
-			.when( !isNull( arguments.dateFrom ), ( c ) => c.ge( "createdDate", arguments.dateFrom ) )
-			.when( !isNull( arguments.dateTo ), ( c ) => c.le( "createdDate", arguments.dateTo ) )
+			.when( !isNull( dateFrom ), ( c ) => c.ge( "createdDate", dateFrom ) )
+			.when( !isNull( dateTo ), ( c ) => c.le( "createdDate", dateTo ) )
 
 		// Run Results
 		results.count = c.count( "auditLogId" )
@@ -266,7 +276,11 @@ class extends="app.models.BaseService" {
 		}
 
 		var cutoff = dateAdd( "d", -arguments.days, now() )
-		return variables.qb.newQuery().from( "audit_logs" ).where( "createdDate", "<", cutoff ).delete()
+		// qb's delete() returns a { sql, bindings, result } wrapper rather than a plain
+		// count -- see APITokenService's revokeAllForUser()/purgeExpiredTokens() for the
+		// same pattern.
+		var deleteResult = variables.qb.newQuery().from( "audit_logs" ).where( "createdDate", "<", cutoff ).delete()
+		return deleteResult?.result?.recordcount ?: 0
 	}
 
 	/**
@@ -328,7 +342,10 @@ class extends="app.models.BaseService" {
 			)
 		} )
 
-		return lines.toList( chr( 13 ) & chr( 10 ) )
+		// Static BIF references (`::chr`), not bare calls: a bare `chr(...)` call here gets
+		// misrouted through this service's inherited `onMissingMethod` instead of resolving
+		// to the built-in function.
+		return lines.toList( ( ::chr )( 13 ) & ( ::chr )( 10 ) )
 	}
 
 	/**

@@ -129,12 +129,26 @@ class extends="app.models.BaseEntity" {
 	 * @return The number of users assigned to this role.
 	 */
 	numeric function getUsersCount() {
-		if( !hasUser() ) {
+		if( !hasUsers() ) {
 			return 0
 		}
 		return newCriteria()
 			.eq( "roleId", getRoleId() )
 			.count( "users" )
+	}
+
+	/**
+	 * Do we have any permissions assigned to this role?
+	 */
+	boolean function hasPermissions() {
+		return ( !isNull( variables.permissions ) && variables.permissions.len() > 0 )
+	}
+
+	/**
+	 * Do we have any users assigned to this role?
+	 */
+	boolean function hasUsers() {
+		return ( !isNull( variables.users ) && variables.users.len() > 0 )
 	}
 
 	/**

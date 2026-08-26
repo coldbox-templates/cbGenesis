@@ -195,7 +195,10 @@ class extends="cborm.models.ActiveEntity" {
 		if ( !len( variables.metadata ?: "" ) || !isJSON( variables.metadata ) ) {
 			return {}
 		}
-		return deserializeJSON( variables.metadata )
+		// Called as a member function (not the bare global BIF): a bare `deserializeJSON(...)`
+		// call here gets misrouted through this entity's inherited `onMissingMethod` instead
+		// of resolving to the built-in function.
+		return variables.metadata.deserializeJSON()
 	}
 
 	/**

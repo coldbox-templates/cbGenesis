@@ -42,7 +42,7 @@ class extends="cborm.models.VirtualEntityService" {
 		required sortMap,
 		string defaultSortOrder = "lastName asc"
 	) {
-		var sortParts = reMatchNoCase( "\\S+", trim( arguments.sortOrder ?: "" ) )
+		var sortParts = reMatchNoCase( "\S+", trim( arguments.sortOrder ?: "" ) )
 		var sortColumn = sortParts.len() && structKeyExists( arguments.sortMap, sortParts[ 1 ] )
 			? arguments.sortMap[ sortParts[ 1 ] ]
 			: ""
