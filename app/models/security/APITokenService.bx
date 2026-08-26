@@ -165,6 +165,10 @@ class extends="app.models.BaseService" {
 			.where( "FK_userId", "=", arguments.userId )
 			.update( { isActive: false } )
 
+		// This is a raw SQL update, bypassing the ORM -- clear the session so a subsequent
+		// ORM read (e.g. validateToken()'s findWhere()) doesn't return a stale cached entity.
+		ormClearSession()
+
 		return updateResult.result.recordcount
 	}
 

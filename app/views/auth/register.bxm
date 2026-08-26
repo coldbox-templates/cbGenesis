@@ -123,7 +123,7 @@
 				labelClass  : "form-label",
 				inputClasses: "form-control",
                 errorMessage: ( prc.keyExists( "validationErrors" ) && structKeyExists( prc.validationErrors, "password" ) )
-                    ? prc.validationErrors.password
+                    ? prc.validationErrors.password.toList( ", " )
 					: ""
 			}
 		)#
