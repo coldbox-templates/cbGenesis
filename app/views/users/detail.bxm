@@ -30,13 +30,205 @@
 
 		<section class="cb-content-card form-card" x-show="activeTab === 'overview'"><div class="cb-content-card-header"><div><h3 class="cb-content-card-title">Personal information</h3><p class="text-muted mb-0">Update the account's basic profile details.</p></div></div><form @submit="saveProfile" class="cb-form-grid"><label>First name<input type="text" x-model="user.firstName" required></label><label>Last name<input type="text" x-model="user.lastName" required></label><label class="cb-span-2">Email address<input type="email" x-model="user.email" required></label><label class="cb-span-2">Biography<textarea rows="4" x-model="user.biography"></textarea></label><div class="cb-span-2 d-flex justify-content-end"><bx:if prc.authUser.hasPermission( "users:write,users:admin" )><button type="submit" class="btn btn-primary" :disabled="loading"><i class="ph-duotone ph-floppy-disk"></i> Save profile</button></bx:if></div></form></section>
 
-		<section class="cb-content-card form-card" x-show="activeTab === 'access'" x-cloak><div class="cb-content-card-header"><div><h3 class="cb-content-card-title">Roles</h3><p class="text-muted mb-0">Roles grant baseline permissions.</p></div><bx:if prc.authUser.hasPermission( "users:admin" )><select class="form-select w-auto" @change="if ( $event.target.value ) { addRole( roleCatalog.find( role => String( role.roleId ) === $event.target.value ) ); $event.target.value = '' }"><option value="">Add role…</option><template x-for="role in availableRoles" :key="role.roleId"><option :value="role.roleId" x-text="role.role"></option></template></select></bx:if></div><div class="cb-chip-row p-3"><template x-for="( role, index ) in roles" :key="`${ role.roleId || 'role' }-${ index }`"><span class="cb-chip cb-chip-info" x-text="role.role"><bx:if prc.authUser.hasPermission( "users:admin" )><button type="button" class="btn btn-link p-0 ms-2" @click="removeRole( role )"><i class="ph-duotone ph-x"></i></button></bx:if></span></template><span class="text-muted" x-show="!roles.length">No roles assigned.</span></div><div class="cb-content-card-header border-top"><div><h3 class="cb-content-card-title">Direct permissions</h3><p class="text-muted mb-0">A-la-carte permissions apply directly to this user.</p></div><input class="form-control w-auto" type="search" placeholder="Filter permissions" x-model="search"></div><div class="cb-chip-row p-3"><template x-for="( permission, index ) in directPermissions" :key="`${ permission.permissionId || 'direct' }-${ index }`"><span class="cb-chip" x-text="permission.permission"><bx:if prc.authUser.hasPermission( "users:admin" )><button type="button" class="btn btn-link p-0 ms-2" @click="removePermission( permission )"><i class="ph-duotone ph-x"></i></button></bx:if></span></template><span class="text-muted" x-show="!directPermissions.length">No direct permissions assigned.</span></div><bx:if prc.authUser.hasPermission( "users:admin" )><div class="px-3 pb-3 d-flex flex-wrap gap-2"><template x-for="permission in availablePermissions.slice( 0, 20 )" :key="permission.permissionId"><button type="button" class="btn btn-sm btn-outline-secondary" @click="addPermission( permission )"><i class="ph-duotone ph-plus"></i> <span x-text="permission.permission"></span></button></template></div></bx:if><div class="border-top p-3"><h3 class="h6">Effective permissions</h3><div class="cb-chip-row"><template x-for="( permission, index ) in effectivePermissions" :key="`${ permission }-${ index }`"><span class="cb-chip cb-chip-success" x-text="permission"></span></template></div></div></section>
+		<section class="cb-content-card form-card" x-show="activeTab === 'access'" x-cloak>
+			<div class="cb-content-card-header">
+				<div>
+					<h3 class="cb-content-card-title">Roles</h3>
+					<p class="text-muted mb-0">Roles grant baseline permissions.</p>
+				</div>
+				<bx:if prc.authUser.hasPermission( "users:admin" )>
+					<select class="form-select w-auto" @change="if ( $event.target.value ) { addRole( roleCatalog.find( role => String( role.roleId ) === $event.target.value ) ); $event.target.value = '' }">
+						<option value="">Add role…</option>
+						<template x-for="role in availableRoles" :key="role.roleId">
+							<option :value="role.roleId" x-text="role.role"></option>
+						</template>
+					</select>
+				</bx:if>
+			</div>
 
-		<section class="cb-content-card form-card" x-show="activeTab === 'preferences'" x-cloak><div class="cb-content-card-header"><div><h3 class="cb-content-card-title">Preferences</h3><p class="text-muted mb-0">Manage user-specific application preferences.</p></div><button type="button" class="btn btn-sm btn-outline-secondary" @click="addPreference"><i class="ph-duotone ph-plus"></i> Add</button></div><form @submit.prevent="savePreferences" class="p-3"><template x-for="entry in preferences" :key="entry.id"><div class="row g-2 mb-2"><div class="col-md-5"><input class="form-control" placeholder="Preference name" x-model="entry.name"></div><div class="col-md-6"><input class="form-control" placeholder="Value" x-model="entry.value"></div><div class="col-md-1"><button type="button" class="btn btn-outline-danger" @click="removePreference( entry.id )"><i class="ph-duotone ph-trash"></i></button></div></div></template><button type="submit" class="btn btn-primary mt-3" :disabled="preferencesSubmitting"><i class="ph-duotone ph-floppy-disk"></i> Save preferences</button></form></section>
+			<div class="cb-chip-row p-3">
+				<template x-for="( role, index ) in roles" :key="`${ role.roleId || 'role' }-${ index }`">
+					<span class="cb-chip cb-chip-info">
+						<span x-text="role.role"></span>
+						<bx:if prc.authUser.hasPermission( "users:admin" )>
+							<button type="button" class="btn btn-link p-0 ms-2" @click="removeRole( role )">
+								<i class="ph-duotone ph-x"></i>
+							</button>
+						</bx:if>
+					</span>
+				</template>
+				<span class="text-muted" x-show="!roles.length">No roles assigned.</span>
+			</div>
 
-		<section class="cb-content-card form-card" x-show="activeTab === 'tokens'" x-cloak><div class="cb-content-card-header"><div><h3 class="cb-content-card-title">API tokens <span class="cb-count-pill" x-text="apiTokens.length"></span></h3><p class="text-muted mb-0">Only safe token snapshots are displayed.</p></div><button type="button" class="btn btn-outline-danger btn-sm" @click="revokeAllTokens" :disabled="!apiTokens.length">Revoke all</button></div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Label</th><th>Token</th><th>Last used</th><th>Expiration</th><th></th></tr></thead><tbody><template x-for="( token, index ) in apiTokens" :key="`${ token.tokenId || 'token' }-${ index }`"><tr><td x-text="token.label"></td><td><code x-text="token.tokenSnapshot"></code></td><td x-text="token.lastUsed ? $formatRelativeDate( token.lastUsed ) : 'Never'"></td><td x-text="token.expiration ? $formatDate( token.expiration ) : 'Never'"></td><td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" @click="revokeToken( token )"><i class="ph-duotone ph-trash"></i></button></td></tr></template></tbody></table></div><p class="text-muted p-3 mb-0" x-show="!apiTokens.length">No API tokens have been created.</p></section>
+			<div class="cb-content-card-header border-top">
+				<div>
+					<h3 class="cb-content-card-title">Direct permissions</h3>
+					<p class="text-muted mb-0">A-la-carte permissions apply directly to this user.</p>
+				</div>
+				<input class="form-control w-auto" type="search" placeholder="Filter permissions" x-model="search">
+			</div>
 
-		<section class="cb-content-card form-card" x-show="activeTab === 'security'" x-cloak><div class="cb-content-card-header"><div><h3 class="cb-content-card-title">Security actions</h3><p class="text-muted mb-0">Actions affecting authentication and remembered sessions.</p></div></div><div class="cb-settings-list"><bx:if prc.authUser.hasPermission( "users:admin" )><div class="cb-setting-row"><div><strong>Password reset</strong><small>Email reset instructions and require a password change at next login.</small></div><button type="button" class="btn btn-outline-warning btn-sm" @click="resetPassword">Send reset email</button></div><div class="cb-setting-row"><div><strong>Email verification</strong><small x-text="user.isVerified ? 'This user is verified.' : 'Mark this user as verified without an invitation link.'"></small></div><button type="button" class="btn btn-outline-secondary btn-sm" @click="verifyUser" :disabled="user.isVerified">Verify user</button></div><div class="cb-setting-row"><div><strong>Remembered sessions</strong><small>Sign out all remembered browsers and devices.</small></div><button type="button" class="btn btn-outline-danger btn-sm" @click="revokeRememberTokens">Revoke sessions</button></div></bx:if><bx:if prc.authUser.hasPermission( "users:write,users:admin" )><div class="cb-setting-row"><div><strong>Invitation</strong><small>Send the registration invitation again when verification is pending.</small></div><button type="button" class="btn btn-outline-secondary btn-sm" @click="request( `/users/${ user.userId }/invitation` )" :disabled="user.isVerified">Resend invite</button></div></bx:if></div></section>
+			<div class="cb-chip-row p-3">
+				<template x-for="( permission, index ) in directPermissions" :key="`${ permission.permissionId || 'direct' }-${ index }`">
+					<span class="cb-chip">
+						<span x-text="permission.permission"></span>
+						<bx:if prc.authUser.hasPermission( "users:admin" )>
+							<button type="button" class="btn btn-link p-0 ms-2" @click="removePermission( permission )">
+								<i class="ph-duotone ph-x"></i>
+							</button>
+						</bx:if>
+					</span>
+				</template>
+				<span class="text-muted" x-show="!directPermissions.length">No direct permissions assigned.</span>
+			</div>
+
+			<bx:if prc.authUser.hasPermission( "users:admin" )>
+				<div class="px-3 pb-3 d-flex flex-wrap gap-2">
+					<template x-for="permission in availablePermissions.slice( 0, 20 )" :key="permission.permissionId">
+						<button type="button" class="btn btn-sm btn-outline-secondary" @click="addPermission( permission )">
+							<i class="ph-duotone ph-plus"></i>
+							<span x-text="permission.permission"></span>
+						</button>
+					</template>
+				</div>
+			</bx:if>
+
+			<div class="border-top p-3">
+				<h3 class="h6">Effective permissions</h3>
+				<div class="cb-chip-row">
+					<template x-for="( permission, index ) in effectivePermissions" :key="`${ permission }-${ index }`">
+						<span class="cb-chip cb-chip-success" x-text="permission"></span>
+					</template>
+				</div>
+			</div>
+		</section>
+
+		<section class="cb-content-card form-card" x-show="activeTab === 'preferences'" x-cloak>
+			<div class="cb-content-card-header">
+				<div>
+					<h3 class="cb-content-card-title">Preferences</h3>
+					<p class="text-muted mb-0">Manage user-specific application preferences.</p>
+				</div>
+				<button type="button" class="btn btn-sm btn-outline-secondary" @click="addPreference">
+					<i class="ph-duotone ph-plus"></i>
+					Add
+				</button>
+			</div>
+
+			<form @submit.prevent="savePreferences" class="p-3">
+				<template x-for="entry in preferences" :key="entry.id">
+					<div class="row g-2 mb-2">
+						<div class="col-md-5">
+							<input class="form-control" placeholder="Preference name" x-model="entry.name">
+						</div>
+						<div class="col-md-6">
+							<input class="form-control" placeholder="Value" x-model="entry.value">
+						</div>
+						<div class="col-md-1">
+							<button type="button" class="btn btn-outline-danger" @click="removePreference( entry.id )">
+								<i class="ph-duotone ph-trash"></i>
+							</button>
+						</div>
+					</div>
+				</template>
+				<button type="submit" class="btn btn-primary mt-3" :disabled="preferencesSubmitting">
+					<i class="ph-duotone ph-floppy-disk"></i>
+					Save preferences
+				</button>
+			</form>
+		</section>
+
+		<section class="cb-content-card form-card" x-show="activeTab === 'tokens'" x-cloak>
+			<div class="cb-content-card-header">
+				<div>
+					<h3 class="cb-content-card-title">
+						API tokens
+						<span class="cb-count-pill" x-text="apiTokens.length"></span>
+					</h3>
+					<p class="text-muted mb-0">Only safe token snapshots are displayed.</p>
+				</div>
+				<button type="button" class="btn btn-outline-danger btn-sm" @click="revokeAllTokens" :disabled="!apiTokens.length">
+					Revoke all
+				</button>
+			</div>
+
+			<div class="table-responsive">
+				<table class="table align-middle mb-0">
+					<thead>
+						<tr>
+							<th>Label</th>
+							<th>Token</th>
+							<th>Last used</th>
+							<th>Expiration</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<template x-for="( token, index ) in apiTokens" :key="`${ token.tokenId || 'token' }-${ index }`">
+							<tr>
+								<td x-text="token.label"></td>
+								<td><code x-text="token.tokenSnapshot"></code></td>
+								<td x-text="token.lastUsed ? $formatRelativeDate( token.lastUsed ) : 'Never'"></td>
+								<td x-text="token.expiration ? $formatDate( token.expiration ) : 'Never'"></td>
+								<td class="text-end">
+									<button type="button" class="btn btn-sm btn-outline-danger" @click="revokeToken( token )">
+										<i class="ph-duotone ph-trash"></i>
+									</button>
+								</td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			</div>
+			<p class="text-muted p-3 mb-0" x-show="!apiTokens.length">No API tokens have been created.</p>
+		</section>
+
+		<section class="cb-content-card form-card" x-show="activeTab === 'security'" x-cloak>
+			<div class="cb-content-card-header">
+				<div>
+					<h3 class="cb-content-card-title">Security actions</h3>
+					<p class="text-muted mb-0">Actions affecting authentication and remembered sessions.</p>
+				</div>
+			</div>
+
+			<div class="cb-settings-list">
+				<bx:if prc.authUser.hasPermission( "users:admin" )>
+					<div class="cb-setting-row">
+						<div>
+							<strong>Password reset</strong>
+							<small>Email reset instructions and require a password change at next login.</small>
+						</div>
+						<button type="button" class="btn btn-outline-warning btn-sm" @click="resetPassword">Send reset email</button>
+					</div>
+
+					<div class="cb-setting-row">
+						<div>
+							<strong>Email verification</strong>
+							<small x-text="user.isVerified ? 'This user is verified.' : 'Mark this user as verified without an invitation link.'"></small>
+						</div>
+						<button type="button" class="btn btn-outline-secondary btn-sm" @click="verifyUser" :disabled="user.isVerified">Verify user</button>
+					</div>
+
+					<div class="cb-setting-row">
+						<div>
+							<strong>Remembered sessions</strong>
+							<small>Sign out all remembered browsers and devices.</small>
+						</div>
+						<button type="button" class="btn btn-outline-danger btn-sm" @click="revokeRememberTokens">Revoke sessions</button>
+					</div>
+				</bx:if>
+
+				<bx:if prc.authUser.hasPermission( "users:write,users:admin" )>
+					<div class="cb-setting-row">
+						<div>
+							<strong>Invitation</strong>
+							<small>Send the registration invitation again when verification is pending.</small>
+						</div>
+						<button type="button" class="btn btn-outline-secondary btn-sm" @click="request( `/users/${ user.userId }/invitation` )" :disabled="user.isVerified">Resend invite</button>
+					</div>
+				</bx:if>
+			</div>
+		</section>
 	</section>
 </div>
 </div>
