@@ -140,7 +140,14 @@ class extends="app.models.BaseEntity" {
 	 * @return boolean True if the apiToken matches, false otherwise.
 	 */
 	boolean function sameApiToken( required string apiToken ) {
-		return BCryptVerify( arguments.apiToken, getToken() )
+		if ( isNull( variables.token ) || !len( variables.token ) ) {
+			return false
+		}
+		try {
+			return BCryptVerify( arguments.apiToken, variables.token )
+		} catch ( any exception ) {
+			return false
+		}
 	}
 
 	/**
@@ -236,9 +243,12 @@ class extends="app.models.BaseEntity" {
 	 *
 	 * @return The parsed date or null if the input is empty.
 	 */
-	private date function parseTokenExpiration( required string expiration ) {
+	private date function parseTokenExpiration( required any expiration ) {
 		if ( isNull( arguments.expiration ) || !len( trim( arguments.expiration ) ) ) {
 			return null
+		}
+		if ( isDate( arguments.expiration ) ) {
+			return arguments.expiration
 		}
 		return parseDateTime( "#trim( arguments.expiration )# 23:59:59" )
 	}
