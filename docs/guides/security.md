@@ -27,6 +27,17 @@ sequenceDiagram
     Auth-->>-Form: redirect → /dashboard
 ```
 
+## Authentication layouts
+
+The authentication flow can use either shipped layout through the `cbLoginLayout` setting:
+
+| Value | Layout | Best for |
+|---|---|---|
+| `AuthSplit` | Branded feature panel on the left with the form on the right; it becomes compact on mobile. | Applications that want a branded, two-panel sign-in experience. This is the default. |
+| `AuthCenter` | Centered authentication card with the logo, form, and footer. | Applications that prefer a focused, compact sign-in experience. |
+
+Choose **Auth Center** or **Auth Split** on the `/settings` page. The selected layout applies to login, registration, invitation activation, and password-recovery pages. See [App Settings](../reference/settings.md#login-layout-selection) for the layout files and custom-layout instructions.
+
 ## Security layers
 
 | Layer | Implementation |
