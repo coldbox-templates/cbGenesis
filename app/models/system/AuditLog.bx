@@ -159,7 +159,7 @@ class extends="cborm.models.ActiveEntity" {
 		variables.targetLabel = ""
 		variables.ipAddress = ""
 		variables.userAgent = ""
-		variables.metadata = ""
+		variables.metadata = "{}"
 		return this
 	}
 
@@ -195,7 +195,7 @@ class extends="cborm.models.ActiveEntity" {
 		if ( !len( variables.metadata ?: "" ) || !isJSON( variables.metadata ) ) {
 			return {}
 		}
-		return deserializeJSON( variables.metadata )
+		return jsonDeserialize( variables.metadata )
 	}
 
 	/**
