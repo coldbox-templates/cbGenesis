@@ -39,7 +39,7 @@ class extends="app.models.BaseService" {
 	struct function createToken( required APIToken apiToken ) {
 		validateExpiration( arguments.apiToken.getExpiration() )
 		var rawToken = arguments.apiToken.getToken()
-		arguments.apiToken.setToken( bcryptHash( rawToken ) )
+		arguments.apiToken.setToken( hashToken( rawToken ) )
 
 		super.save( arguments.apiToken )
 
@@ -47,6 +47,16 @@ class extends="app.models.BaseService" {
 			rawToken: rawToken,
 			token: arguments.apiToken
 		}
+	}
+
+	/**
+	 * Create the deterministic digest used for indexed token lookup.
+	 *
+	 * @rawToken The raw token value.
+	 * @return The SHA-256 digest of the raw token.
+	 */
+	private string function hashToken( required string rawToken ) {
+		return hash( arguments.rawToken, "SHA-256" )
 	}
 
 	/**
@@ -63,7 +73,7 @@ class extends="app.models.BaseService" {
 
 		var maxMonths = settingService.getSetting( "cbApiTokenMaxValidityMonths" )
 		var maxDate = dateAdd( "m", maxMonths, now() )
-		if ( dateCompare( dateFormat( arguments.expiration, "yyyy-mm-dd" ), dateFormat( maxDate, "yyyy-mm-dd" ) ) > 0 ) {
+		if ( dateCompare( arguments.expiration, maxDate, "d" ) > 0 ) {
 			throw(
 				type    = "APIToken.InvalidExpiration",
 				message = "API token expiration cannot be more than #maxMonths# months from today."
@@ -96,7 +106,10 @@ class extends="app.models.BaseService" {
 	 * @return The active, non-expired API token entity.
 	 */
 	APIToken function validateToken( required string rawToken ) {
-		var token = findWhere( { token: bcryptHash( arguments.rawToken ) } )
+		var token = findWhere( {
+			token   : hashToken( arguments.rawToken ),
+			isActive: true
+		} )
 
 		// If the token is not found or not active
 		if ( isNull( token ) || !token.getIsActive() ) {
@@ -138,14 +151,14 @@ class extends="app.models.BaseService" {
 	 * @throws APIToken.NotFound when no token matches the identifier.
 	 */
 	boolean function revokeToken( required string tokenId ) {
-		var token = get( arguments.tokenId )
+		var updateResult = variables.qb
+			.table( "user_api_tokens" )
+			.where( "tokenId", "=", arguments.tokenId )
+			.where( "isActive", "=", true )
+			.update( { isActive: false } )
 
-		if( !token.isLoaded() ){
-			return false
-		}
-
-		save( token.setIsActive( false ) )
-		return true
+		ormClearSession()
+		return updateResult.result.recordcount == 1
 	}
 
 	/**

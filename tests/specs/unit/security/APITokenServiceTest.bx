@@ -11,7 +11,6 @@ class extends="tests.resources.BaseIntegrationSpec"{
 
 	function beforeAll() {
 		super.beforeAll()
-		variables.testUser = createVerifiedUser()
 	}
 
 	private struct function createTokenFixture(
@@ -35,6 +34,9 @@ class extends="tests.resources.BaseIntegrationSpec"{
 
 	function run(){
 		describe( "API Token Service", () => {
+			beforeEach( () => {
+				variables.testUser = createVerifiedUser()
+			} )
 
 			it( "can be created", () => {
 				expect( apiTokenService ).notToBeNull()
