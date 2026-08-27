@@ -84,7 +84,7 @@
 					<h1 class="page-title" id="page-title"><a href="#page-title" id="page-title" class="anchor"></a><span class="page-icon"><svg class="bxsites-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M80,136a24,24,0,1,1-24-24A24,24,0,0,1,80,136Zm48-72a24,24,0,1,0,24,24A24,24,0,0,0,128,64Zm72,80a24,24,0,1,0,24,24A24,24,0,0,0,200,144Z" opacity="0.2"/><path d="M64,105V40a8,8,0,0,0-16,0v65a32,32,0,0,0,0,62v49a8,8,0,0,0,16,0V167a32,32,0,0,0,0-62Zm-8,47a16,16,0,1,1,16-16A16,16,0,0,1,56,152Zm80-95V40a8,8,0,0,0-16,0V57a32,32,0,0,0,0,62v97a8,8,0,0,0,16,0V119a32,32,0,0,0,0-62Zm-8,47a16,16,0,1,1,16-16A16,16,0,0,1,128,104Zm104,64a32.06,32.06,0,0,0-24-31V40a8,8,0,0,0-16,0v97a32,32,0,0,0,0,62v17a8,8,0,0,0,16,0V199A32.06,32.06,0,0,0,232,168Zm-32,16a16,16,0,1,1,16-16A16,16,0,0,1,200,184Z"/></svg></span> App Settings</h1>
 					<p class="page-summary">The DB-backed, admin-editable settings defined in SettingService.static.DEFAULTS.</p>
 <div class="page-tags mb-3"><a class="page-tag" href="/cbGenesis/tags/index.html#tag-reference">reference</a><a class="page-tag" href="/cbGenesis/tags/index.html#tag-configuration">configuration</a><a class="page-tag" href="/cbGenesis/tags/index.html#tag-settings">settings</a></div>
-<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#authentication--registration">Authentication &amp;amp&#x3b; registration</a></li><li class="toc-level-2"><a href="#password--token-policy">Password &amp;amp&#x3b; token policy</a></li><li class="toc-level-2"><a href="#branding--appearance">Branding &amp;amp&#x3b; appearance</a></li><li class="toc-level-2"><a href="#email">Email</a></li></ul></details>
+<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#authentication--registration">Authentication &amp;amp&#x3b; registration</a></li><li class="toc-level-3"><a href="#login-layout-selection">Login layout selection</a></li><li class="toc-level-2"><a href="#password--token-policy">Password &amp;amp&#x3b; token policy</a></li><li class="toc-level-2"><a href="#branding--appearance">Branding &amp;amp&#x3b; appearance</a></li><li class="toc-level-2"><a href="#email">Email</a></li><li class="toc-level-2"><a href="#audit-log">Audit log</a></li><li class="toc-level-2"><a href="#secrets-and-encryption">Secrets and encryption</a></li></ul></details>
 					<h1 id="app-settings"><a href="#app-settings" id="app-settings" name="app-settings" class="anchor"></a>App Settings</h1>
 <p>These live in <code>SettingService.static.DEFAULTS</code>, are seeded on boot by <code>preFlightCheck()</code>, cached with a 2-hour TTL, and editable at <code>/settings</code> by anyone with the <code>settings:write</code> (or <code>settings:admin</code>) permission — see <a href="/cbGenesis/guides/configuration/index.html#app-settings-vs-framework-config">Configuration</a>.</p>
 <h2 id="authentication--registration"><a href="#authentication--registration" id="authentication--registration" name="authentication--registration" class="anchor"></a>Authentication &amp; registration</h2>
@@ -93,7 +93,7 @@
 <tr><th>Setting</th><th>Purpose</th></tr>
 </thead>
 <tbody>
-<tr><td><code>cbLoginLayout</code></td><td>Layout used for auth pages (<code>AuthSplit</code> by default)</td></tr>
+<tr><td><code>cbLoginLayout</code></td><td>Layout used for auth pages (<code>AuthSplit</code> by default; choose <code>AuthCenter</code> or <code>AuthSplit</code>)</td></tr>
 <tr><td><code>cbAllowRegistration</code></td><td>Enables/disables self-service registration</td></tr>
 <tr><td><code>cbAllowForgotPassword</code></td><td>Enables/disables the forgot-password flow</td></tr>
 <tr><td><code>cbAllowRememberMe</code></td><td>Enables/disables the &quot;remember me&quot; cookie</td></tr>
@@ -101,6 +101,18 @@
 <tr><td><code>cbRequirePasskey</code></td><td>Forces passkey enrollment before reaching the admin area</td></tr>
 </tbody>
 </table></div>
+<h3 id="login-layout-selection"><a href="#login-layout-selection" id="login-layout-selection" name="login-layout-selection" class="anchor"></a>Login layout selection</h3>
+<p>The <strong>Settings</strong> page exposes <code>cbLoginLayout</code> as a selector:</p>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Value</th><th>Layout</th><th>Appearance</th></tr>
+</thead>
+<tbody>
+<tr><td><code>AuthSplit</code></td><td><code>app/layouts/AuthSplit.bxm</code></td><td>Two-panel login: branding/features on the left and the form on the right. On small screens it collapses to the form with compact branding. This is the default.</td></tr>
+<tr><td><code>AuthCenter</code></td><td><code>app/layouts/AuthCenter.bxm</code></td><td>Centered authentication card with the logo, form, and authentication footer.</td></tr>
+</tbody>
+</table></div>
+<p>Select <strong>Auth Center</strong> or <strong>Auth Split</strong> at <code>/settings</code>, save the settings, and reload the authentication page. The handler calls <code>event.setLayout( prc.settings.cbLoginLayout )</code>, so the selected layout applies to login, registration, invitation activation, and password-recovery pages. You may also set the value in the database or add a custom layout name under <code>app/layouts/</code> if your application supplies that layout.</p>
 <h2 id="password--token-policy"><a href="#password--token-policy" id="password--token-policy" name="password--token-policy" class="anchor"></a>Password &amp; token policy</h2>
 <div class="bxsites-table-wrap"><table class="table">
 <thead>
@@ -124,6 +136,8 @@
 <tr><td><code>cbAppName</code></td><td>Application display name</td></tr>
 <tr><td><code>cbAppLogo</code></td><td>Logo shown in the admin sidebar</td></tr>
 <tr><td><code>cbAppTagline</code></td><td>Tagline shown alongside the logo</td></tr>
+<tr><td><code>cbAppBrandTagline</code></td><td>Short branding label shown in the sidebar brand area</td></tr>
+<tr><td><code>cbCopyrightNotice</code></td><td>Copyright text rendered by the application footer</td></tr>
 <tr><td><code>cbDefaultTheme</code></td><td>Default light/dark theme for new visitors</td></tr>
 </tbody>
 </table></div>
@@ -139,10 +153,29 @@
 <tr><td><code>cbMailTLS</code> / <code>cbMailSSL</code></td><td>Transport security flags</td></tr>
 </tbody>
 </table></div>
+<h2 id="audit-log"><a href="#audit-log" id="audit-log" name="audit-log" class="anchor"></a>Audit log</h2>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Setting</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code>cbAuditLogRetentionDays</code></td><td>Number of days audit records are retained by the scheduled purge. Set to <code>0</code> to disable automatic purging (default: <code>90</code>).</td></tr>
+</tbody>
+</table></div>
+<h2 id="secrets-and-encryption"><a href="#secrets-and-encryption" id="secrets-and-encryption" name="secrets-and-encryption" class="anchor"></a>Secrets and encryption</h2>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Setting</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code>cbEncryptionKey</code></td><td>AES encryption secret used by the security/storage layer. Replace the generated development value with a stable secret in production.</td></tr>
+<tr><td><code>cbSaltingKey</code></td><td>Salt used by security operations. Keep it stable and secret in production.</td></tr>
+</tbody>
+</table></div>
 <a class="bxsites-page-link" href="/cbGenesis/guides/configuration/index.html" data-bxsites-page-link><span class="bxsites-page-link__icon"><svg class="bxsites-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M230.1,108.76,198.25,90.62c-.64-1.16-1.31-2.29-2-3.41l-.12-36A104.61,104.61,0,0,0,162,32L130,49.89c-1.34,0-2.69,0-4,0L94,32A104.58,104.58,0,0,0,59.89,51.25l-.16,36c-.7,1.12-1.37,2.26-2,3.41l-31.84,18.1a99.15,99.15,0,0,0,0,38.46l31.85,18.14c.64,1.16,1.31,2.29,2,3.41l.12,36A104.61,104.61,0,0,0,94,224l32-17.87c1.34,0,2.69,0,4,0L162,224a104.58,104.58,0,0,0,34.08-19.25l.16-36c.7-1.12,1.37-2.26,2-3.41l31.84-18.1A99.15,99.15,0,0,0,230.1,108.76ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z" opacity="0.2"/><path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm109.94-52.79a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.88,25a8,8,0,0,0-6.47-.6A111.92,111.92,0,0,0,54.73,45.15a8,8,0,0,0-2.83,6.07l-.15,33.65-29.83,17a8,8,0,0,0-3.89,5.4,106.47,106.47,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.63a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.12,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.57-.42,112.1,112.1,0,0,0,36.68-20.73,8,8,0,0,0,2.83-6.07l.15-33.65,29.83-17a8,8,0,0,0,3.89-5.4A106.47,106.47,0,0,0,237.94,107.21Zm-15,34.91-28.57,16.25a8,8,0,0,0-3,3c-.58,1-1.19,2.06-1.81,3.06a7.94,7.94,0,0,0-1.22,4.21l-.15,32.25a95.89,95.89,0,0,1-25.37,14.3L134,199.13a8,8,0,0,0-3.91-1h-.19c-1.21,0-2.43,0-3.64,0a8.1,8.1,0,0,0-4.1,1l-28.84,16.1A96,96,0,0,1,67.88,201l-.11-32.2a8,8,0,0,0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09,8.09,0,0,0-3-3.06l-28.6-16.29a90.49,90.49,0,0,1,0-28.26L61.67,97.63a8,8,0,0,0,3-3c.58-1,1.19-2.06,1.81-3.06a7.94,7.94,0,0,0,1.22-4.21l.15-32.25a95.89,95.89,0,0,1,25.37-14.3L122,56.87a8,8,0,0,0,4.1,1c1.21,0,2.43,0,3.64,0a8,8,0,0,0,4.1-1l28.84-16.1A96,96,0,0,1,188.12,55l.11,32.2a8,8,0,0,0,1.22,4.22c.62,1,1.23,2,1.8,3.06a8.09,8.09,0,0,0,3,3.06l28.6,16.29A90.49,90.49,0,0,1,222.9,142.12Z"/></svg></span><span class="bxsites-page-link__text"><span class="bxsites-page-link__title">Configuration</span><span class="bxsites-page-link__summary">Environment variables, framework settings, and per-module configuration.</span></span></a>
 <a class="bxsites-page-link" href="/cbGenesis/guides/extending/index.html" data-bxsites-page-link><span class="bxsites-page-link__icon"><svg class="bxsites-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M204,168a28,28,0,0,0,12-2.69V208a8,8,0,0,1-8,8H64a8,8,0,0,1-8-8V165.31a28,28,0,1,1,0-50.62V72a8,8,0,0,1,8-8h46.69a28,28,0,1,1,50.61,0H208a8,8,0,0,1,8,8v42.69A28,28,0,1,0,204,168Z" opacity="0.2"/><path d="M220.27,158.54a8,8,0,0,0-7.7-.46,20,20,0,1,1,0-36.16A8,8,0,0,0,224,114.69V72a16,16,0,0,0-16-16H171.78a35.36,35.36,0,0,0,.22-4,36.15,36.15,0,0,0-11.36-26.25,36,36,0,0,0-60.55,23.63,36.56,36.56,0,0,0,.14,6.62H64A16,16,0,0,0,48,72v32.22a35.36,35.36,0,0,0-4-.22,36.12,36.12,0,0,0-26.24,11.36,35.7,35.7,0,0,0-9.69,27,36.08,36.08,0,0,0,33.31,33.6,36.56,36.56,0,0,0,6.62-.14V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V165.31A8,8,0,0,0,220.27,158.54ZM208,208H64V165.31a8,8,0,0,0-11.43-7.23,20,20,0,1,1,0-36.16A8,8,0,0,0,64,114.69V72h46.69a8,8,0,0,0,7.23-11.43,20,20,0,1,1,36.16,0A8,8,0,0,0,161.31,72H208v32.23a35.68,35.68,0,0,0-6.62-.14A36,36,0,0,0,204,176a35.36,35.36,0,0,0,4-.22Z"/></svg></span><span class="bxsites-page-link__text"><span class="bxsites-page-link__title">Extending the App</span><span class="bxsites-page-link__summary">Add a new CRUD module, permission, setting, or scheduled task, following the app&#x27;s own conventions.</span></span></a>
 
-<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/main/docs/reference/settings.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/reference/settings.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Aug 27, 2026, 7&#x3a;26&#x3a;49 PM</span></div>
+<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/main/docs/reference/settings.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/reference/settings.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Aug 27, 2026, 7&#x3a;30&#x3a;42 PM</span></div>
 				</article>
 
 				<nav class="page-nav d-flex justify-content-between" aria-label="Page navigation">
@@ -158,7 +191,7 @@
 			</main>
 
 			<aside class="col-xl-2 toc-sidebar d-none d-xl-block">
-				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#authentication--registration">Authentication &amp;amp&#x3b; registration</a></li><li class="toc-level-2"><a href="#password--token-policy">Password &amp;amp&#x3b; token policy</a></li><li class="toc-level-2"><a href="#branding--appearance">Branding &amp;amp&#x3b; appearance</a></li><li class="toc-level-2"><a href="#email">Email</a></li></ul></nav>
+				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#authentication--registration">Authentication &amp;amp&#x3b; registration</a></li><li class="toc-level-3"><a href="#login-layout-selection">Login layout selection</a></li><li class="toc-level-2"><a href="#password--token-policy">Password &amp;amp&#x3b; token policy</a></li><li class="toc-level-2"><a href="#branding--appearance">Branding &amp;amp&#x3b; appearance</a></li><li class="toc-level-2"><a href="#email">Email</a></li><li class="toc-level-2"><a href="#audit-log">Audit log</a></li><li class="toc-level-2"><a href="#secrets-and-encryption">Secrets and encryption</a></li></ul></nav>
 			</aside>
 
 		</div>
