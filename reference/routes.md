@@ -22,6 +22,12 @@ tags: [reference, routing]
 | `POST` | `/reset-password` | `Auth.doResetPassword` | Guest |
 | `POST` | `/logout` | `Auth.logout` | Auth |
 | `GET` | `/dashboard` | `Dashboard.index` | Auth |
+| `GET` | `/auditlog` | `AuditLog.index` | `auditlog:read,auditlog:admin` |
+| `GET` | `/auditlog/:id` | `AuditLog.show` | `auditlog:read,auditlog:admin` |
+| `GET` | `/auditlog/search` | `AuditLog.search` | `auditlog:read,auditlog:admin` |
+| `GET` | `/auditlog/export` | `AuditLog.export` | `auditlog:read,auditlog:admin` |
+| `POST` | `/auditlog/purge` | `AuditLog.purge` | `auditlog:admin` |
+| `DELETE` | `/auditlog/clear` | `AuditLog.clear` | `auditlog:admin` |
 | `GET` | `/users` | `Users.index` | `users:read,users:admin` |
 | `GET` | `/users/:id` | `Users.show` | `users:read` |
 | `GET` | `/roles` | `Roles.index` | `roles:read,roles:admin` |
@@ -37,8 +43,22 @@ tags: [reference, routing]
 | `DELETE` | `/permissions/:id` | `Permissions.delete` | `permissions:delete,permissions:admin` |
 | `GET` | `/profile` | `Profile.index` | Auth |
 | `POST` | `/profile` | `Profile.update` | Auth |
+| `POST` | `/profile/password` | `Profile.doPasswordChange` | Auth |
+| `GET` | `/profile/api-tokens` | `Profile.listTokens` | Auth |
+| `POST` | `/profile/api-tokens` | `Profile.createToken` | Auth |
+| `POST` | `/profile/api-tokens/:id` | `Profile.updateToken` | Auth |
+| `DELETE` | `/profile/api-tokens/:id` | `Profile.deleteToken` | Auth |
+| `GET` | `/profile/passkeys` | `Profile.listPasskeys` | Auth |
+| `POST` | `/profile/passkeys` | `Profile.updatePasskey` | Auth |
+| `DELETE` | `/profile/passkeys/:id` | `Profile.deletePasskey` | Auth |
 | `GET` | `/settings` | `Settings.index` | `settings:read,settings:admin` |
 | `POST` | `/settings` | `Settings.save` | `settings:write,settings:admin` |
+| `GET` | `/settings/registry` | `Settings.registry` | `settings:read,settings:admin` |
+| `POST` | `/settings/registry` | `Settings.createRegistry` | `settings:write,settings:admin` |
+| `GET` | `/settings/registry/search` | `Settings.registrySearch` | `settings:read,settings:admin` |
+| `PUT` | `/settings/registry/:id` | `Settings.updateRegistry` | `settings:write,settings:admin` |
+| `DELETE` | `/settings/registry/:id` | `Settings.deleteRegistry` | `settings:delete,settings:admin` |
+| `POST` | `/settings/registry/:id/status` | `Settings.toggleRegistryStatus` | `settings:admin` |
 | `GET` | `/healthcheck` | Returns `Ok!` | Public |
 
 All routes also support the conventions-based catch-all pattern `/:handler/:action?`, matched last in `app/config/Router.bx`.

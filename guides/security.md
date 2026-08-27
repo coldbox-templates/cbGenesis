@@ -74,9 +74,10 @@ Every permission is a slug in the form `resource:action`, seeded by `resources/d
 | `roles` | `read`, `write`, `delete`, `admin` |
 | `permissions` | `read`, `write`, `delete`, `admin` |
 | `settings` | `read`, `write`, `delete`, `admin` |
+| `auditlog` | `read`, `export`, `admin` |
 
 !!! info "`admin` is a superset"
-    `admin` means "full administration of that resource" and is always OR'd alongside the specific action a route needs, so a user holding `roles:admin` passes any `roles:*` check without also needing `roles:read`/`roles:write`/`roles:delete` individually. The seeder assigns all 16 permissions to a single **Administrator** role, granted to the seeded `admin@cbgenesis.com` user.
+    `admin` means "full administration of that resource" and is always OR'd alongside the specific action a route needs, so a user holding `roles:admin` passes any `roles:*` check without also needing `roles:read`/`roles:write`/`roles:delete` individually. The seeder assigns the built-in permissions to a single **Administrator** role, granted to the seeded `admin@cbgenesis.com` user.
 
 **Enforce it on the handler** — this is the real security boundary, resolved by cbsecurity's `CBAuthValidator` against the authenticated user's permissions:
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+	<url><loc>https://coldbox-templates.github.io/cbGenesis/guides/command-line/index.html</loc></url>
 	<url><loc>https://coldbox-templates.github.io/cbGenesis/guides/handlers-routing/index.html</loc></url>
 	<url><loc>https://coldbox-templates.github.io/cbGenesis/index.html</loc></url>
 	<url><loc>https://coldbox-templates.github.io/cbGenesis/reference/routes/index.html</loc></url>

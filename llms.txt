@@ -1,9 +1,10 @@
-# CB Genesis
+# CBGenesis
 
-> A production-ready ColdBox HMVC starter template for BoxLang - authentication, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.
+> A production-ready ColdBox MVC starter template for BoxLang - authentication, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.
 
 ## Pages
 
+- [BoxLang CLI](https://coldbox-templates.github.io/cbGenesis/guides/command-line/index.html)
 - [Handlers & Routing](https://coldbox-templates.github.io/cbGenesis/guides/handlers-routing/index.html)
 - [Home](https://coldbox-templates.github.io/cbGenesis/index.html)
 - [Route Map](https://coldbox-templates.github.io/cbGenesis/reference/routes/index.html)

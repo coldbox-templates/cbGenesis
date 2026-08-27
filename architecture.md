@@ -26,11 +26,11 @@ flowchart TD
 
     subgraph C["app/ — Application code (not web-accessible)"]
         C1["config/ — ColdBox, Router, CacheBox, WireBox, Scheduler"]
-        C2["handlers/ — Controllers"]
+        C2["handlers/ — Controllers, auth, admin, audit log"]
         C3["models/ — Entities, Services"]
         C4["views/ + layouts/ — BXM templates"]
         C5["email_templates/ — Token-based email bodies"]
-        C6["interceptors/ — Cross-cutting request hooks"]
+        C6["interceptors/ — Audit logging hook"]
     end
 
     C --> D

@@ -18,21 +18,29 @@ Compiles and fingerprints the frontend into `public/includes/` - see [Frontend](
 
 ## Docker
 
-A `Dockerfile` and `docker-compose.yaml` live in `resources/docker/`:
+A `Dockerfile` and `docker-compose.yml` live in `resources/docker/`. The `docker:*` package scripts run Docker directly; they do not replace the required BoxLang CLI installation for local `box` commands.
 
 ```bash frame="terminal" title="Terminal"
 npm run docker:build
 npm run docker:stack -- up -d
 ```
 
+Build the frontend before creating a production image:
+
+```bash
+npm run build
+```
+
 ## BoxLang MiniServer
 
-An alternative to CommandBox for running the compiled app directly:
+An alternative to the `bx-cli` development server for running the compiled app directly:
 
 ```bash frame="terminal" title="Terminal"
 cd my-app
 boxlang-miniserver --port 8080 --webroot ./public --dev
 ```
+
+The MiniServer does not provide `box install`, migrations, or TestBox commands. Use the required [BoxLang CLI](guides/command-line.md) for those tasks.
 
 ## Production checklist
 

@@ -40,9 +40,10 @@ App.js (entry)
   │
   └── Components (x-data)
       ├── auth/        → AuthForm, RegisterForm, ForgotPasswordForm, PasswordResetForm
-      ├── security/     → PermissionsForm, RoleForm
-      ├── settings/     → SettingsForm
-      └── ui/           → Drawer, Logo, MessageBox, PasswordMeter, Switch, Modal, Confirm
+    ├── security/     → AuditLogForm, PermissionsForm, RolesForm, UserDetailForm, UsersForm
+    ├── profile/      → PasskeyOnboarding, PreferencesForm, ProfileForm
+    ├── settings/     → SettingsForm, SettingsRegistryForm
+    └── ui/           → Drawer, GlobalProgress, GlobalToast, Logo, MessageBox, PasswordMeter, PasswordStrength, Switch
 ```
 
 Each component is a standalone module returning an Alpine `x-data` object:
