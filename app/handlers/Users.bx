@@ -355,9 +355,7 @@ class extends="BaseSecureHandler" {
 		try {
 			prc.user = getManagedUser( rc )
 			prc.permission = permissionService.getOrFail( rc.permissionId ?: "" )
-			var permissions = prc.user.getPermissions()
-			if ( !permissions.some( p => p.getPermissionId() == prc.permission.getPermissionId() ) ) permissions.append( prc.permission )
-			prc.user.setPermissions( permissions ).save()
+			if ( !prc.user.getPermissions().some( permission => permission.getPermissionId() == prc.permission.getPermissionId() ) ) prc.user.addPermission( prc.permission ).save()
 			event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Direct permission added successfully." )
 		} catch ( any error ) {
 			event.getResponse().failure( message: "Permission could not be added: #error.message#", statusCode: 400 )
@@ -369,8 +367,8 @@ class extends="BaseSecureHandler" {
 	function removePermission( event, rc, prc ) {
 		try {
 			prc.user = getManagedUser( rc )
-			var permissions = prc.user.getPermissions().filter( p => p.getPermissionId() != ( rc.permissionId ?: "" ) )
-			prc.user.setPermissions( permissions ).save()
+			prc.permission = permissionService.getOrFail( rc.permissionId ?: "" )
+			prc.user.removePermission( prc.permission ).save()
 			event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Direct permission removed successfully." )
 		} catch ( any error ) {
 			event.getResponse().failure( message: "Permission could not be removed: #error.message#", statusCode: 400 )
