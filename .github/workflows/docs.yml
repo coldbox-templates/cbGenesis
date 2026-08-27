@@ -2,13 +2,8 @@ name: Publish Docs
 
 # Builds this repository's own docs (docs/ + bxsites.yaml at the repo root)
 # with BX Sites (https://ortus-boxlang.github.io/bx-sites/), using its
-# default "bootstrap" theme, and publishes the result to GitHub Pages -
-# main publishes to the site root (stable), development publishes to
-# /development/ (work-in-progress preview) - so both stay live at once,
-# the same pattern bx-sites uses for its own docs.
-#
-# main doesn't exist yet as of this writing - only development publishes
-# until it's cut, and the site root stays unpublished (404) until then.
+# default "bootstrap" theme, and publishes the result to GitHub Pages
+# at the site root.
 #
 # One-time setup required before this workflow can publish anything:
 #   1. Let this workflow run once (it creates the gh-pages branch for you)
@@ -31,10 +26,9 @@ on:
 permissions:
   contents: write
 
-# main and development publish to different destination_dirs, so their
-# deploys never conflict - only serialize a branch against its own prior runs.
+# Serialize docs deploys so only one publish runs at a time.
 concurrency:
-  group: "pages-docs-${{ github.ref_name }}"
+  group: "pages-docs"
   cancel-in-progress: false
 
 jobs:
@@ -58,39 +52,12 @@ jobs:
         with:
           modules: bx-sites bx-markdown bx-yaml bx-image
 
-      - name: Install yq
-        run: |
-          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
-          sudo chmod +x /usr/bin/yq
-
-      - name: Point baseURL and repo.editUri at this branch's own sub-path
-        if: github.ref_name != 'main'
-        run: |
-          # main's committed bxsites.yaml already points baseURL/editUri at
-          # the site root / main branch - every other branch publishes under
-          # /<branch-name>/ and edits against its own branch instead, so
-          # patch a throwaway copy of the config just for this build.
-          export URL="https://coldbox-templates.github.io/cbGenesis/${{ github.ref_name }}/"
-          export EDIT_URI="edit/${{ github.ref_name }}/docs/"
-          yq eval '.baseURL = strenv(URL) | .repo.editUri = strenv(EDIT_URI)' bxsites.yaml > bxsites.yaml.tmp
-          mv bxsites.yaml.tmp bxsites.yaml
-
       - name: Build the site
         run: bxSites build
 
-      - name: Deploy main to the site root
-        if: github.ref_name == 'main'
+      - name: Deploy docs to the site root
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
-          keep_files: true
-
-      - name: Deploy development to /development/
-        if: github.ref_name == 'development'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
-          destination_dir: development
           keep_files: true
