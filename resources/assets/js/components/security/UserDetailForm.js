@@ -27,6 +27,8 @@ export function userDetailForm( payload = {} ) {
 		csrfToken             : initial.csrf || "",
 		activeTab             : "overview",
 		loading               : "",
+		statusTarget          : null,
+		statusSubmitting      : false,
 		preferencesSubmitting : false,
 		error                 : "",
 		search                : "",
@@ -87,8 +89,28 @@ export function userDetailForm( payload = {} ) {
 			await this.request( `/users/${ encodeURIComponent( this.user.userId ) }/profile`, "PUT", { firstName: this.user.firstName, lastName: this.user.lastName, email: this.user.email, biography: this.user.biography || "" } );
 		},
 
-		/** @param {boolean} value Desired active state. @returns {Promise<void>} */
-		async setStatus( value ) { await this.request( `/users/${ this.user.userId }/status`, "POST", { isActive: String( value ) } ); },
+		/** @param {Object} user User whose status will change. @param {boolean} isActive Desired active state. @returns {void} */
+		confirmStatusChange( user, isActive ) {
+			this.statusTarget = { user: { ...user, name: user.fullName }, isActive };
+			this.error = "";
+		},
+		/** @returns {void} */
+		cancelStatusChange() {
+			if ( this.statusSubmitting ) return;
+			this.statusTarget = null;
+			this.error = "";
+		},
+		/** @returns {Promise<void>} */
+		async saveStatusChange() {
+			if ( !this.statusTarget || this.statusSubmitting ) return;
+			this.statusSubmitting = true;
+			try {
+				await this.request( `/users/${ this.user.userId }/status`, "POST", { isActive: String( this.statusTarget.isActive ) } );
+				this.statusTarget = null;
+			} finally {
+				this.statusSubmitting = false;
+			}
+		},
 		/** @returns {Promise<void>} */
 		async resetPassword() { if ( window.confirm( "Send password reset instructions to this user?" ) ) await this.request( `/users/${ this.user.userId }/reset-password` ); },
 		/** @returns {Promise<void>} */

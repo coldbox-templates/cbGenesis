@@ -7,9 +7,25 @@
 		<p class="cb-page-subtitle">Review and manage profile, access, preferences, tokens, and account security.</p>
 	</div>
 	<div class="cb-page-actions">
-		<button type="button" class="btn btn-outline-secondary" @click="activeTab = 'security'"><i class="ph-duotone ph-shield-check"></i> Security</button>
+		<button
+			type="button"
+			class="btn btn-outline-secondary"
+			@click="activeTab = 'security'"
+		>
+			<i class="ph-duotone ph-shield-check"></i>
+			Security
+		</button>
 		<bx:if prc.authUser.hasPermission( "users:write,users:admin" )>
-		<button type="button" class="btn" :class="user.isActive ? 'btn-outline-danger' : 'btn-success'" @click="setStatus( !user.isActive )" :disabled="loading"><i class="ph-duotone" :class="user.isActive ? 'ph-lock' : 'ph-lock-open'"></i> <span x-text="user.isActive ? 'Disable account' : 'Enable account'"></span></button>
+		<button
+			type="button"
+			class="btn"
+			:class="user.isActive ? 'btn-outline-danger' : 'btn-success'"
+			@click="confirmStatusChange( user, !user.isActive )"
+			:disabled="statusSubmitting"
+		>
+			<i class="ph-duotone" :class="user.isActive ? 'ph-lock' : 'ph-lock-open'"></i>
+			<span x-text="user.isActive ? 'Disable account' : 'Enable account'"></span>
+		</button>
 		</bx:if>
 	</div>
 </div>
@@ -229,7 +245,15 @@
 				</bx:if>
 			</div>
 		</section>
-	</section>
-</div>
+		</section>
+
+		#view( view: "_components/ui/modal", args: {
+			id             : "cb-user-status-modal",
+			title          : "Change user status?",
+			openExpression : "statusTarget",
+			closeExpression: "cancelStatusChange()",
+			contentView    : "users/statusConfirm"
+		} )#
+	</div>
 </div>
 </bx:output>
