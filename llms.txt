@@ -1,0 +1,20 @@
+# CB Genesis
+
+> A production-ready ColdBox HMVC starter template for BoxLang - authentication, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.
+
+## Pages
+
+- [Handlers & Routing](https://coldbox-templates.github.io/cbGenesis/guides/handlers-routing/index.html)
+- [Home](https://coldbox-templates.github.io/cbGenesis/index.html)
+- [Route Map](https://coldbox-templates.github.io/cbGenesis/reference/routes/index.html)
+- [App Settings](https://coldbox-templates.github.io/cbGenesis/reference/settings/index.html)
+- [Getting Started](https://coldbox-templates.github.io/cbGenesis/getting-started/index.html)
+- [Security & Permissions](https://coldbox-templates.github.io/cbGenesis/guides/security/index.html)
+- [Architecture](https://coldbox-templates.github.io/cbGenesis/architecture/index.html)
+- [Database & ORM](https://coldbox-templates.github.io/cbGenesis/guides/database-orm/index.html)
+- [Deployment](https://coldbox-templates.github.io/cbGenesis/deployment/index.html)
+- [Frontend](https://coldbox-templates.github.io/cbGenesis/guides/frontend/index.html)
+- [Email](https://coldbox-templates.github.io/cbGenesis/guides/email/index.html)
+- [Testing](https://coldbox-templates.github.io/cbGenesis/guides/testing/index.html)
+- [Configuration](https://coldbox-templates.github.io/cbGenesis/guides/configuration/index.html)
+- [Extending the App](https://coldbox-templates.github.io/cbGenesis/guides/extending/index.html)
