@@ -20,9 +20,15 @@ Full documentation lives here:
 
 ## Quick Start
 
+> **Required CLI:** This template runs on BoxLang. Do not install or use the regular Lucee-based CommandBox distribution. Install BoxLang first, then install the BoxLang CLI module before running any `box` command.
+
 ```bash
 git clone https://github.com/coldbox-templates/cbGenesis my-app
 cd my-app
+
+# Install BoxLang first, then add the BoxLang-native CommandBox CLI
+# (use either the BoxLang quick installer or BVM; see docs/getting-started.md)
+install-bx-module bx-cli
 
 box install
 npm install
@@ -35,7 +41,7 @@ box server start
 ## Requirements
 
 - BoxLang 1.16+
-- CommandBox BoxLang Version (bx-cli)
+- BoxLang CLI (`bx-cli`) - required; regular Lucee CommandBox is not supported
 - Java 21+
 - Node.js 18+
 - MySQL 8+ (or any JDBC-compatible database)

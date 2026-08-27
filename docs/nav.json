@@ -5,6 +5,7 @@
 	{
 		"title": "Guides",
 		"children": [
+			"guides/command-line.md",
 			"guides/handlers-routing.md",
 			"guides/security.md",
 			"guides/database-orm.md",

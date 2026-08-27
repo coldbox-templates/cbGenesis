@@ -26,8 +26,7 @@ tests/
 ├── runner.bxm                  TestBox CLI runner entry
 ├── specs/
 │   ├── integration/
-│   │   ├── MainSpec.bx         Lifecycle events (onAppInit, onException...)
-│   │   └── AuthSpec.bx         Registration form, CSRF, validation
+    │   │   └── MainSpec.bx         Lifecycle events and exception handling
 │   └── unit/
 │       ├── security/           APIToken, Permission, Role, SecurityService tests
 │       └── system/             Setting, User tests
@@ -41,7 +40,7 @@ The naming convention is one unit spec per entity and one per service, split by 
 
 Integration specs extend `tests.resources.BaseIntegrationSpec`, which wires up `appMapping="/app"` so paths resolve exactly like production:
 
-```boxlang title="tests/specs/integration/AuthSpec.bx" linenums="1"
+```boxlang title="tests/specs/integration/MainSpec.bx" linenums="1"
 component extends="tests.resources.BaseIntegrationSpec" {
 
     function run(){
@@ -58,6 +57,8 @@ component extends="tests.resources.BaseIntegrationSpec" {
 
 !!! tip "Always reset state in beforeEach()"
     Call `setup()` in `beforeEach()` for every integration spec, so state from one test never leaks into the next.
+
+The checked-in suite contains unit coverage for the security and system entities/services plus the `Main` integration spec. Add integration coverage for new routes and handlers as you build them; a feature is not covered merely because its service has a unit spec.
 
 ::: cards
 ::: card title="Extending the App" icon="phosphor-duotone:puzzle-piece" href="extending.md"

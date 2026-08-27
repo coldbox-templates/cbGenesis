@@ -45,12 +45,20 @@ Verify the install:
 boxlang --version
 ```
 
-!!! note "Install the CommandBox CLI module too"
-    Once BoxLang is installed, add the CommandBox CLI module so the `box` command is available for dependency management, the server, and migrations:
+!!! danger "Use bx-cli, not regular CommandBox"
+    CB Genesis is a BoxLang template. Do not install the standard Lucee-based CommandBox distribution. After installing BoxLang with the quick installer or BVM, install the BoxLang-native CLI module. This is required before running `box install`, `box server`, `box migrate`, or `box testbox`:
 
     ```bash frame="terminal" title="Terminal"
     install-bx-module bx-cli
     ```
+
+    Verify that the BoxLang CLI is active:
+
+    ```bash frame="terminal" title="Terminal"
+    box version
+    ```
+
+    If `box` is not found after installation, restart the terminal or add the directory reported by the installer to your `PATH`.
 
 ## Scaffold your app
 
@@ -65,7 +73,7 @@ cd my-app
 ```bash frame="terminal" title="Terminal"
 box install
 ```
-Installs ColdBox, WireBox/CacheBox/LogBox, TestBox, qb, cbsecurity, cborm, cbmailservices, and every other `box.json` dependency into `lib/`.
+Runs through `bx-cli` and installs ColdBox, WireBox/CacheBox/LogBox, TestBox, qb, cbsecurity, cborm, cbmailservices, and every other `box.json` dependency into `lib/`.
 :::
 ::: step "Install Node dependencies"
 ```bash frame="terminal" title="Terminal"
@@ -112,7 +120,7 @@ box migrate seed
 ```bash frame="terminal" title="Terminal"
 box server start
 ```
-The first run installs the BoxLang modules listed in `server.json` (`bx-esapi`, `bx-password-encrypt`, `bx-mail`, `bx-orm`, `bx-mysql`).
+This is the BoxLang CLI server command. The first run installs the BoxLang modules listed in `server.json` (`bx-esapi`, `bx-password-encrypt`, `bx-mail`, `bx-orm`, `bx-mysql`).
 :::
 ::: step "Start Vite (in a second terminal)" color="success"
 ```bash frame="terminal" title="Terminal"

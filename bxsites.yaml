@@ -1,5 +1,5 @@
-name: "CB Genesis"
-description: "A production-ready ColdBox HMVC starter template for BoxLang - authentication, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on."
+name: "CBGenesis"
+description: "A production-ready ColdBox MVC starter template for BoxLang - authentication, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on."
 baseURL: "https://coldbox-templates.github.io/cbGenesis/"
 theme:
   name: bootstrap
@@ -45,7 +45,7 @@ social:
 footer: true
 lastUpdated: true
 mermaid: true
-math: true
-openapi: true
+math: false
+openapi: false
 pageActions: true
 ogImage: "assets/og-image.png"
