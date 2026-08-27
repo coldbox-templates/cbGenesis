@@ -1,4 +1,3 @@
-<bx:setting enableOutputOnly=true>
 <!--- Executes all tests in the 'specs' folder with simple reporter by default --->
 <bx:param name="url.reporter" 			default="simple">
 <bx:param name="url.directory" 			default="tests.specs">

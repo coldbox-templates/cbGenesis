@@ -146,7 +146,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 
 				it( "includes a header row", () => {
 					var csv = auditLogService.exportCSV()
-					expect( listFirst( csv, chr( 13 ) & chr( 10 ) ) ).toInclude( "Severity" )
+					expect( listFirst( csv, char( 13 ) & char( 10 ) ) ).toInclude( "Severity" )
 				} )
 			} )
 

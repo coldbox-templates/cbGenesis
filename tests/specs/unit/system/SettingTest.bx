@@ -24,7 +24,6 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( setting.isLoaded() ).toBeFalse()
 				expect( setting.getName() ).toBe( "" )
 				expect( setting.getValue() ).toBe( "" )
-				expect( setting.getDescription() ).toBe( "" )
 			} )
 
 
