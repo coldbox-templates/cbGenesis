@@ -150,7 +150,7 @@ class extends="app.models.BaseEntity" {
 	 * So hibernate can handle the many to many relationship properly
 	 */
 	Role function setPermissions( required array permissions ) {
-		if ( hasPermissions() ) {
+		if ( !isNull( variables.permissions ) && !variables.permissions.isEmpty() ) {
 			variables.permissions.clear();
 			variables.permissions.addAll( arguments.permissions );
 		} else {
@@ -172,7 +172,7 @@ class extends="app.models.BaseEntity" {
 	 * So hibernate can handle the many to many relationship properly
 	 */
 	Role function setUsers( required array users ) {
-		if ( hasUsers() ) {
+		if ( !isNull( variables.users ) && !variables.users.isEmpty() ) {
 			variables.users.clear()
 			variables.users.addAll( arguments.users )
 		} else {
@@ -190,7 +190,7 @@ class extends="app.models.BaseEntity" {
 	 */
 	boolean function hasPermission( required slug ) {
 		// no perms, just return false
-		if ( !hasPermissions() ) {
+		if ( isNull( variables.permissions ) || variables.permissions.isEmpty() ) {
 			return false
 		}
 
