@@ -84,7 +84,7 @@
 					<h1 class="page-title" id="page-title"><a href="#page-title" id="page-title" class="anchor"></a><span class="page-icon"><svg class="bxsites-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M224,127.17a96.48,96.48,0,0,1-2.39,22.18A24,24,0,0,1,198.21,168H152a24,24,0,0,0-24,24,24,24,0,0,1-32,22.61C58.73,201.44,32,169.81,32,128a96,96,0,0,1,95-96C179.84,31.47,223.55,74.35,224,127.17Z" opacity="0.2"/><path d="M200.77,53.89A103.27,103.27,0,0,0,128,24h-1.07A104,104,0,0,0,24,128c0,43,26.58,79.06,69.36,94.17A32,32,0,0,0,136,192a16,16,0,0,1,16-16h46.21a31.81,31.81,0,0,0,31.2-24.88,104.43,104.43,0,0,0,2.59-24A103.28,103.28,0,0,0,200.77,53.89Zm13,93.71A15.89,15.89,0,0,1,198.21,160H152a32,32,0,0,0-32,32,16,16,0,0,1-21.31,15.07C62.49,194.3,40,164,40,128a88,88,0,0,1,87.09-88h.9a88.35,88.35,0,0,1,88,87.25A88.86,88.86,0,0,1,213.81,147.6ZM140,76a12,12,0,1,1-12-12A12,12,0,0,1,140,76ZM96,100A12,12,0,1,1,84,88,12,12,0,0,1,96,100Zm0,56a12,12,0,1,1-12-12A12,12,0,0,1,96,156Zm88-56a12,12,0,1,1-12-12A12,12,0,0,1,184,100Z"/></svg></span> Frontend</h1>
 					<p class="page-summary">Server-rendered BXM views, small Alpine.js components, and a Vite-compiled SCSS&#x2f;JS pipeline.</p>
 <div class="page-tags mb-3"><a class="page-tag" href="/cbGenesis/tags/index.html#tag-guides">guides</a><a class="page-tag" href="/cbGenesis/tags/index.html#tag-frontend">frontend</a><a class="page-tag" href="/cbGenesis/tags/index.html#tag-alpine">alpine</a><a class="page-tag" href="/cbGenesis/tags/index.html#tag-vite">vite</a></div>
-<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#how-it-fits-together">How it fits together</a></li><li class="toc-level-2"><a href="#alpinejs-architecture">Alpine.js architecture</a></li><li class="toc-level-2"><a href="#scss-structure">SCSS structure</a></li><li class="toc-level-2"><a href="#vite-configuration">Vite configuration</a></li></ul></details>
+<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#how-it-fits-together">How it fits together</a></li><li class="toc-level-2"><a href="#alpinejs-architecture">Alpine.js architecture</a></li><li class="toc-level-2"><a href="#scss-structure">SCSS structure</a></li><li class="toc-level-2"><a href="#vite-configuration">Vite configuration</a></li><li class="toc-level-2"><a href="#server-rendered-view-components">Server-rendered view components</a></li><li class="toc-level-3"><a href="#application-shell">Application shell</a></li><li class="toc-level-3"><a href="#authentication-partials">Authentication partials</a></li><li class="toc-level-3"><a href="#ui-partials">UI partials</a></li><li class="toc-level-2"><a href="#alpine-components-and-stores">Alpine components and stores</a></li><li class="toc-level-3"><a href="#application-shell-and-authentication">Application shell and authentication</a></li><li class="toc-level-3"><a href="#admin-and-profile-forms">Admin and profile forms</a></li><li class="toc-level-3"><a href="#ui-components-and-global-apis">UI components and global APIs</a></li><li class="toc-level-3"><a href="#stores-utilities-and-magic-properties">Stores, utilities, and magic properties</a></li></ul></details>
 					<svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
 <symbol id="adm-note">
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -163,11 +163,127 @@ npm run lint:scss  # Stylelint on resources/assets/scss
 <p>In production, compiled asset URLs are prefixed with the <code>ASSET_URL</code> environment variable (<code>.env.example</code> defaults it to <code>/includes</code>) - see <a href="/cbGenesis/guides/configuration/index.html#environment-variables">Configuration</a>.</p>
 </div>
 </div>
+<h2 id="server-rendered-view-components"><a href="#server-rendered-view-components" id="server-rendered-view-components" name="server-rendered-view-components" class="anchor"></a>Server-rendered view components</h2>
+<p>These BXM partials live under <code>app/views/_components/</code> and are rendered with ColdBox's <code>view()</code> helper. They are intentionally presentation-focused: pass values through the <code>args</code> struct and keep business logic in handlers or services.</p>
+<h3 id="application-shell"><a href="#application-shell" id="application-shell" name="application-shell" class="anchor"></a>Application shell</h3>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Partial</th><th>Purpose and inputs</th></tr>
+</thead>
+<tbody>
+<tr><td><code>_components/app/includes</code></td><td>Document metadata, theme/sidebar FOUC prevention, passkey script, and Vite CSS/JS. Optional <code>title</code>. Include once in <code>&lt;head&gt;</code>.</td></tr>
+<tr><td><code>_components/app/sidebar</code></td><td>Admin navigation, permission-aware Users/Roles/Permissions/Audit Log links, settings submenu, and sidebar footer. Reads <code>prc.authUser</code>; include from <code>Admin.bxm</code>.</td></tr>
+<tr><td><code>_components/app/sidebar-brand</code></td><td>Application logo/name link used by the sidebar.</td></tr>
+<tr><td><code>_components/app/sidebar-footer</code></td><td>Authenticated user summary and profile/sign-out actions used by the sidebar.</td></tr>
+<tr><td><code>_components/app/topbar</code></td><td>Sidebar toggle, theme toggle, breadcrumbs, user menu, and sign-out action. Reads <code>prc.authUser</code> and <code>prc.title</code>.</td></tr>
+<tr><td><code>_components/app/topbar-breadcrumbs</code></td><td>Dashboard breadcrumb rendered inside the topbar. Extend when adding deeper navigation.</td></tr>
+<tr><td><code>_components/app/topbar-notifications</code></td><td>Topbar notification slot/component for application notifications.</td></tr>
+<tr><td><code>_components/app/footer</code></td><td>Copyright and footer links. Optional <code>classes</code>. Reads <code>prc.settings.cbCopyrightNotice</code>.</td></tr>
+</tbody>
+</table></div>
+<h3 id="authentication-partials"><a href="#authentication-partials" id="authentication-partials" name="authentication-partials" class="anchor"></a>Authentication partials</h3>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Partial</th><th>Purpose and inputs</th></tr>
+</thead>
+<tbody>
+<tr><td><code>_components/auth/footer</code></td><td>Footer used by authentication layouts.</td></tr>
+<tr><td><code>_components/auth/passwordInput</code></td><td>Reusable password field with visibility toggle and password-strength affordances.</td></tr>
+</tbody>
+</table></div>
+<h3 id="ui-partials"><a href="#ui-partials" id="ui-partials" name="ui-partials" class="anchor"></a>UI partials</h3>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Partial</th><th>Purpose and inputs</th></tr>
+</thead>
+<tbody>
+<tr><td><code>_components/ui/modal</code></td><td>Generic Alpine dialog that renders an optional nested view. Required <code>id</code> should be unique; supports <code>title</code>, <code>openExpression</code>, <code>closeExpression</code>, <code>contentView</code>, and <code>contentArgs</code>.</td></tr>
+<tr><td><code>_components/ui/drawer</code></td><td>Right-side focus-trapped dialog with backdrop/Escape closing and optional <code>contentView</code>/<code>contentArgs</code>; also initializes <code>drawer()</code>.</td></tr>
+<tr><td><code>_components/ui/confirm</code></td><td>Confirmation dialog with static or Alpine-bound message, confirm/cancel expressions, labels, icon, button class, and disabled expression.</td></tr>
+<tr><td><code>_components/ui/messagebox</code></td><td>Dismissible info/success/warning/error alert. Supports static <code>message</code>/<code>title</code> or dynamic <code>messageExpression</code>/<code>typeExpression</code>/<code>dismissAction</code>, plus <code>autoDismiss</code> and <code>classes</code>.</td></tr>
+<tr><td><code>_components/ui/globalProgress</code></td><td>Global accessible progress bar. Include once per layout; controlled by <code>&#x24;progress.start&#x28;&#x29;&#x60;, &#x60;&#x24;progress.set()</code>, and <code>$progress.stop()</code>.</td></tr>
+<tr><td><code>_components/ui/globalToast</code></td><td>Global toast stack. Include once per layout; accepts <code>duration</code>, <code>position</code>, and <code>maxVisible</code>, and receives notifications from <code>$toast()</code>.</td></tr>
+<tr><td><code>_components/ui/logo</code></td><td>Reusable application logo/branding partial.</td></tr>
+<tr><td><code>_components/ui/passwordMeter</code></td><td>Password policy meter used beside password fields.</td></tr>
+<tr><td><code>_components/ui/progressbar</code></td><td>Inline progress bar partial for a local numeric value.</td></tr>
+<tr><td><code>_components/ui/switch</code></td><td>Accessible switch control partial for boolean settings.</td></tr>
+</tbody>
+</table></div>
+<h2 id="alpine-components-and-stores"><a href="#alpine-components-and-stores" id="alpine-components-and-stores" name="alpine-components-and-stores" class="anchor"></a>Alpine components and stores</h2>
+<p><code>resources/assets/js/App.js</code> registers the following names globally with Alpine. Use them as <code>x-data=&quot;name&quot;</code> or <code>x-data=&quot;name(...)&quot;</code> in BXM views. Form components make remote requests to the matching handler routes and expect the CSRF token supplied by their view.</p>
+<h3 id="application-shell-and-authentication"><a href="#application-shell-and-authentication" id="application-shell-and-authentication" name="application-shell-and-authentication" class="anchor"></a>Application shell and authentication</h3>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Alpine name</th><th>Source</th><th>Responsibility</th></tr>
+</thead>
+<tbody>
+<tr><td><code>adminBody</code></td><td><code>components/app/AdminBody.js</code></td><td>Admin page shell behavior and global layout events.</td></tr>
+<tr><td><code>sidebarBrand</code></td><td><code>components/app/SidebarBrand.js</code></td><td>Sidebar brand interactions.</td></tr>
+<tr><td><code>footer</code></td><td><code>components/app/Footer.js</code></td><td>Footer state and current-year behavior.</td></tr>
+<tr><td><code>authForm</code></td><td><code>components/auth/AuthForm.js</code></td><td>Login submission, validation, remember-me, and errors.</td></tr>
+<tr><td><code>registerForm</code></td><td><code>components/auth/RegisterForm.js</code></td><td>Registration validation, email availability, and submission.</td></tr>
+<tr><td><code>forgotPasswordForm</code></td><td><code>components/auth/ForgotPasswordForm.js</code></td><td>Forgot-password request state and feedback.</td></tr>
+<tr><td><code>passwordResetForm</code></td><td><code>components/auth/PasswordResetForm.js</code></td><td>Password reset token submission and validation.</td></tr>
+</tbody>
+</table></div>
+<h3 id="admin-and-profile-forms"><a href="#admin-and-profile-forms" id="admin-and-profile-forms" name="admin-and-profile-forms" class="anchor"></a>Admin and profile forms</h3>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Alpine name</th><th>Source</th><th>Responsibility</th></tr>
+</thead>
+<tbody>
+<tr><td><code>usersForm</code></td><td><code>components/security/UsersForm.js</code></td><td>User listing, search, pagination, invitation, status, and admin actions.</td></tr>
+<tr><td><code>userDetailForm</code></td><td><code>components/security/UserDetailForm.js</code></td><td>User profile, role, permission, preference, token, and verification actions.</td></tr>
+<tr><td><code>rolesForm</code></td><td><code>components/security/RolesForm.js</code></td><td>Role CRUD and assigning/removing users and permissions.</td></tr>
+<tr><td><code>permissionsForm</code></td><td><code>components/security/PermissionsForm.js</code></td><td>Permission listing and CRUD operations.</td></tr>
+<tr><td><code>auditLogForm</code></td><td><code>components/security/AuditLogForm.js</code></td><td>Audit filtering, pagination, detail drawer, CSV export, purge, and clear actions.</td></tr>
+<tr><td><code>settingsForm</code></td><td><code>components/settings/SettingsForm.js</code></td><td>Core application settings editing and cache-related feedback.</td></tr>
+<tr><td><code>settingsRegistryForm</code></td><td><code>components/settings/SettingsRegistryForm.js</code></td><td>Registry search, pagination, create/update, enable/disable, and delete actions.</td></tr>
+<tr><td><code>profileForm</code></td><td><code>components/profile/ProfileForm.js</code></td><td>Profile fields, password policy, and API token management.</td></tr>
+<tr><td><code>preferencesForm</code></td><td><code>components/profile/PreferencesForm.js</code></td><td>Persisting user preferences.</td></tr>
+<tr><td><code>passkeyOnboarding</code></td><td><code>components/profile/PasskeyOnboarding.js</code></td><td>Passkey registration and required-passkey onboarding.</td></tr>
+</tbody>
+</table></div>
+<h3 id="ui-components-and-global-apis"><a href="#ui-components-and-global-apis" id="ui-components-and-global-apis" name="ui-components-and-global-apis" class="anchor"></a>UI components and global APIs</h3>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Alpine name</th><th>Source</th><th>Responsibility</th></tr>
+</thead>
+<tbody>
+<tr><td><code>messageBox</code></td><td><code>components/ui/MessageBox.js</code></td><td>Alert visibility and optional timed dismissal.</td></tr>
+<tr><td><code>passwordMeter</code></td><td><code>components/ui/PasswordMeter.js</code></td><td>Password requirement and strength display.</td></tr>
+<tr><td><code>passwordStrength</code></td><td><code>components/ui/PasswordStrength.js</code></td><td>Password strength calculation and labels.</td></tr>
+<tr><td><code>switchComponent</code></td><td><code>components/ui/Switch.js</code></td><td>Toggle state and change handling.</td></tr>
+<tr><td><code>drawer</code></td><td><code>components/ui/Drawer.js</code></td><td>Drawer lifecycle and focus behavior.</td></tr>
+<tr><td><code>globalProgress</code></td><td><code>components/ui/GlobalProgress.js</code></td><td>Progress events and current progress value.</td></tr>
+<tr><td><code>globalToast</code></td><td><code>components/ui/GlobalToast.js</code></td><td>Toast queue, dismissal, type mapping, and stack limits.</td></tr>
+</tbody>
+</table></div>
+<p>The source also contains <code>Header.js</code>, <code>Sidebar.js</code>, <code>TopBarNotifications.js</code>, and <code>Logo.js</code>. Their exports are available for local imports, but they are not currently registered by <code>App.js</code>; register them with <code>Alpine.data()</code> before using them as global <code>x-data</code> components.</p>
+<h3 id="stores-utilities-and-magic-properties"><a href="#stores-utilities-and-magic-properties" id="stores-utilities-and-magic-properties" name="stores-utilities-and-magic-properties" class="anchor"></a>Stores, utilities, and magic properties</h3>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>API</th><th>Source</th><th>Usage</th></tr>
+</thead>
+<tbody>
+<tr><td><code>$store.theme</code></td><td><code>stores/theme.js</code></td><td>Light/dark mode, <code>data-bs-theme</code>, and localStorage persistence.</td></tr>
+<tr><td><code>$store.sidebar</code></td><td><code>stores/sidebar.js</code></td><td>Desktop collapse, mobile open/close, and localStorage persistence.</td></tr>
+<tr><td><code>&#x24;formatDate&#x60;, &#x60;&#x24;formatDateTime</code>, <code>$relativeDate</code></td><td><code>utils/dateFormat.js</code></td><td>Consistent date display with fallbacks.</td></tr>
+<tr><td><code>$countLabel</code></td><td><code>utils/countLabel.js</code></td><td>Singular/plural count labels.</td></tr>
+<tr><td><code>&#x24;sortClass&#x60;, &#x60;&#x24;sortIcon</code></td><td><code>utils/sort.js</code></td><td>Sortable table headers and indicators.</td></tr>
+<tr><td><code>$passwordMeetsPolicy</code></td><td><code>utils/passwordPolicy.js</code></td><td>Checks the configured password requirements.</td></tr>
+<tr><td><code>$isEmail</code></td><td><code>App.js</code></td><td>Lightweight email-format check.</td></tr>
+<tr><td><code>&#x24;toast&#x60; &#x2f; &#x60;&#x24;progress</code></td><td><code>components/ui/GlobalToast.js</code>, <code>GlobalProgress.js</code></td><td>Global notification and progress APIs.</td></tr>
+<tr><td><code>&#x24;focus&#x60; &#x2f; &#x60;&#x24;copy</code></td><td><code>App.js</code></td><td>Focus a descendant after Alpine updates; copy text through the browser clipboard API.</td></tr>
+<tr><td><code>createRemoteListing()</code></td><td><code>utils/listing.js</code></td><td>Shared remote listing state, loading, pagination, and error handling.</td></tr>
+</tbody>
+</table></div>
+<p><code>AlpinePlugins.js</code> installs Collapse, Focus, Mask, and Persist. <code>passkeys.js</code> provides the browser-side WebAuthn integration. Keep new reusable browser APIs documented here and add their registration/import to <code>App.js</code> when they are global.</p>
 <div class="bxsites-cards"><a class="bxsites-card" href="/cbGenesis/guides/extending/index.html"><div class="bxsites-card__icon"><svg class="bxsites-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M204,168a28,28,0,0,0,12-2.69V208a8,8,0,0,1-8,8H64a8,8,0,0,1-8-8V165.31a28,28,0,1,1,0-50.62V72a8,8,0,0,1,8-8h46.69a28,28,0,1,1,50.61,0H208a8,8,0,0,1,8,8v42.69A28,28,0,1,0,204,168Z" opacity="0.2"/><path d="M220.27,158.54a8,8,0,0,0-7.7-.46,20,20,0,1,1,0-36.16A8,8,0,0,0,224,114.69V72a16,16,0,0,0-16-16H171.78a35.36,35.36,0,0,0,.22-4,36.15,36.15,0,0,0-11.36-26.25,36,36,0,0,0-60.55,23.63,36.56,36.56,0,0,0,.14,6.62H64A16,16,0,0,0,48,72v32.22a35.36,35.36,0,0,0-4-.22,36.12,36.12,0,0,0-26.24,11.36,35.7,35.7,0,0,0-9.69,27,36.08,36.08,0,0,0,33.31,33.6,36.56,36.56,0,0,0,6.62-.14V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V165.31A8,8,0,0,0,220.27,158.54ZM208,208H64V165.31a8,8,0,0,0-11.43-7.23,20,20,0,1,1,0-36.16A8,8,0,0,0,64,114.69V72h46.69a8,8,0,0,0,7.23-11.43,20,20,0,1,1,36.16,0A8,8,0,0,0,161.31,72H208v32.23a35.68,35.68,0,0,0-6.62-.14A36,36,0,0,0,204,176a35.36,35.36,0,0,0,4-.22Z"/></svg></div><div class="bxsites-card__title">Extending the App</div><div class="bxsites-card__body"><p>Add a new Alpine component and SCSS partial for your own admin page.</p>
 </div></a><a class="bxsites-card" href="/cbGenesis/deployment/index.html"><div class="bxsites-card__icon"><svg class="bxsites-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M240,128a80,80,0,0,1-80,80H72A56,56,0,1,1,85.92,97.74l0,.1A80,80,0,0,1,240,128Z" opacity="0.2"/><path d="M178.34,165.66,160,147.31V208a8,8,0,0,1-16,0V147.31l-18.34,18.35a8,8,0,0,1-11.32-11.32l32-32a8,8,0,0,1,11.32,0l32,32a8,8,0,0,1-11.32,11.32ZM160,40A88.08,88.08,0,0,0,81.29,88.68,64,64,0,1,0,72,216h40a8,8,0,0,0,0-16H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.12A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,100.8,66,8,8,0,0,0,3.2,15.34,7.9,7.9,0,0,0,3.2-.68A88,88,0,0,0,160,40Z"/></svg></div><div class="bxsites-card__title">Deployment</div><div class="bxsites-card__body"><p>Building and shipping the production frontend bundle.</p>
 </div></a></div>
 
-<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/main/docs/guides/frontend.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/frontend.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Aug 27, 2026, 7&#x3a;23&#x3a;19 PM</span></div>
+<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/main/docs/guides/frontend.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/frontend.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Aug 27, 2026, 7&#x3a;26&#x3a;49 PM</span></div>
 				</article>
 
 				<nav class="page-nav d-flex justify-content-between" aria-label="Page navigation">
@@ -183,7 +299,7 @@ npm run lint:scss  # Stylelint on resources/assets/scss
 			</main>
 
 			<aside class="col-xl-2 toc-sidebar d-none d-xl-block">
-				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#how-it-fits-together">How it fits together</a></li><li class="toc-level-2"><a href="#alpinejs-architecture">Alpine.js architecture</a></li><li class="toc-level-2"><a href="#scss-structure">SCSS structure</a></li><li class="toc-level-2"><a href="#vite-configuration">Vite configuration</a></li></ul></nav>
+				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#how-it-fits-together">How it fits together</a></li><li class="toc-level-2"><a href="#alpinejs-architecture">Alpine.js architecture</a></li><li class="toc-level-2"><a href="#scss-structure">SCSS structure</a></li><li class="toc-level-2"><a href="#vite-configuration">Vite configuration</a></li><li class="toc-level-2"><a href="#server-rendered-view-components">Server-rendered view components</a></li><li class="toc-level-3"><a href="#application-shell">Application shell</a></li><li class="toc-level-3"><a href="#authentication-partials">Authentication partials</a></li><li class="toc-level-3"><a href="#ui-partials">UI partials</a></li><li class="toc-level-2"><a href="#alpine-components-and-stores">Alpine components and stores</a></li><li class="toc-level-3"><a href="#application-shell-and-authentication">Application shell and authentication</a></li><li class="toc-level-3"><a href="#admin-and-profile-forms">Admin and profile forms</a></li><li class="toc-level-3"><a href="#ui-components-and-global-apis">UI components and global APIs</a></li><li class="toc-level-3"><a href="#stores-utilities-and-magic-properties">Stores, utilities, and magic properties</a></li></ul></nav>
 			</aside>
 
 		</div>
