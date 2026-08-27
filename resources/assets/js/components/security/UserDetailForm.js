@@ -17,18 +17,19 @@ export function userDetailForm( payload = {} ) {
 
 	return {
 		user,
-		roles                : initial.roles || [],
-		directPermissions    : initial.directPermissions || [],
-		effectivePermissions : initial.effectivePermissions || [],
-		roleCatalog          : initial.roleCatalog || [],
-		permissionCatalog    : initial.permissionCatalog || [],
-		apiTokens            : initial.apiTokens || [],
-		preferences          : preferenceEntries,
-		csrfToken            : initial.csrf || "",
-		activeTab            : "overview",
-		loading              : "",
-		error                : "",
-		search               : "",
+		roles                 : initial.roles || [],
+		directPermissions     : initial.directPermissions || [],
+		effectivePermissions  : initial.effectivePermissions || [],
+		roleCatalog           : initial.roleCatalog || [],
+		permissionCatalog     : initial.permissionCatalog || [],
+		apiTokens             : initial.apiTokens || [],
+		preferences           : preferenceEntries,
+		csrfToken             : initial.csrf || "",
+		activeTab             : "overview",
+		loading               : "",
+		preferencesSubmitting : false,
+		error                 : "",
+		search                : "",
 
 		get filteredPermissions() {
 			const query = this.search.trim().toLowerCase();
@@ -105,9 +106,15 @@ export function userDetailForm( payload = {} ) {
 		/** @param {Event} event Form submission event. @returns {Promise<void>} */
 		async savePreferences( event ) {
 			event.preventDefault();
-			const preferences = {};
-			this.preferences.forEach( ( entry ) => { if ( entry.name.trim() ) preferences[ entry.name.trim() ] = entry.value; } );
-			await this.request( `/users/${ this.user.userId }/preferences`, "POST", { preferences: JSON.stringify( preferences ) } );
+			if ( this.preferencesSubmitting ) return;
+			this.preferencesSubmitting = true;
+			try {
+				const preferences = {};
+				this.preferences.forEach( ( entry ) => { if ( entry.name.trim() ) preferences[ entry.name.trim() ] = entry.value; } );
+				await this.request( `/users/${ encodeURIComponent( this.user.userId ) }/preferences`, "POST", { preferences: JSON.stringify( preferences ) } );
+			} finally {
+				this.preferencesSubmitting = false;
+			}
 		},
 		/** @returns {void} */
 		addPreference() { this.preferences.push( { id: `new-${ Date.now() }`, name: "", value: "" } ); },
