@@ -52,7 +52,7 @@ The MiniServer does not provide `box install`, migrations, or TestBox commands. 
 Point `app/config/modules/cbmailservices.bx` at a real SMTP/Postmark/SendGrid driver - see [Email](guides/email.md#protocol-by-environment).
 :::
 ::: step "Rotate the seeded admin password" color="warning"
-The seeder creates `admin@cbgenesis.com` / `admin` - change it immediately after your first login. See [Getting Started](getting-started.md#scaffold-your-app).
+The seeder creates `admin@cbgenesis.com` / `test` - change it immediately after your first login. See [Getting Started](getting-started.md#scaffold-your-app).
 :::
 ::: step "Set a strong reinitPassword"
 In `app/config/Coldbox.bx`, so framework reinit (`?fwreinit=true`) isn't left open to anyone.
