@@ -112,7 +112,7 @@ box migrate seed
     | Field | Value |
     |---|---|
     | Email | `admin@cbgenesis.com` |
-    | Password | `admin` |
+    | Password | `test` |
 
     Change this password immediately after your first login - see the [production checklist](deployment.md#production-checklist).
 :::
