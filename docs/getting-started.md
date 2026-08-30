@@ -58,6 +58,12 @@ boxlang --version
     box version
     ```
 
+    Current developers using the Lucee-based CommandBox distribution should clean cached artifacts to ensure they are running the latest versions of the required modules:
+
+    ```bash frame="terminal" title="Terminal"
+    box artifacts clean
+    ```
+
     If `box` is not found after installation, restart the terminal or add the directory reported by the installer to your `PATH`.
 
 ## Scaffold your app
