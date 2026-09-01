@@ -92,6 +92,25 @@ class extends="coldbox.system.EventHandler"{
 		} )
 		// --- Authentication ---
 		.onSuccess( results => {
+			// A correct password on a reset-pending account never reaches
+			// securityService.login(): cbauth's own UserService contract
+			// (isValidCredentials()) rejects isPasswordReset users outright
+			// as a security backstop, with no way to distinguish "wrong
+			// password" from "right password, reset pending" on the other
+			// side of that call. So check that case here first, and hand a
+			// verified reset-pending user a real reset token into the
+			// existing forgot-password UI instead of failing their login.
+			var oPendingUser = variables.userService.verifyPassword( rc.email, rc.password )
+			if ( !isNull( oPendingUser ) && oPendingUser.getIsPasswordReset() ) {
+				var resetToken = variables.securityService.generatePasswordResetToken( oPendingUser )
+				flash.put( "messages", {
+					type   : "info",
+					message: "You must set a new password before continuing."
+				} )
+				relocate( "reset-password?token=#resetToken#" )
+				return
+			}
+
 			try {
 				var oUser = variables.securityService.login(
 					username = rc.email,

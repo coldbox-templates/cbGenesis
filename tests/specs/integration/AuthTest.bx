@@ -1,0 +1,92 @@
+/**
+ * Integration tests for the Auth handler's doLogin() action, exercised via execute()
+ * (the documented way to test a ColdBox handler action end-to-end and assert
+ * relocate() targets through the request collection's "relocate_*" keys).
+ *
+ * CSRF is generated for real through the injected cbcsrf service rather than relying
+ * on a dummy token, since csrfVerify() is a manual call inside doLogin() rather than
+ * the cbcsrf auto-verifier interceptor.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	/*********************************** LIFE CYCLE Methods ***********************************/
+
+	function beforeAll() {
+		super.beforeAll();
+	}
+
+	/*********************************** BDD SUITES ***********************************/
+
+	function run() {
+		describe( "Auth Handler", () => {
+			beforeEach( ( currentSpec ) => {
+				// Setup as a new ColdBox request, VERY IMPORTANT. ELSE EVERYTHING LOOKS LIKE THE SAME REQUEST.
+				setup();
+				securityService.logout( quiet: true );
+			} );
+
+			story( "Log in with a reset-pending account", () => {
+				it( "redirects a correct password straight into the reset-password flow instead of failing", () => {
+					var user = createVerifiedUser();
+					user.setIsPasswordReset( true );
+					userService.save( user );
+
+					form.email = user.getEmail();
+					form.password = "correct-password";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doLogin" );
+
+					expect( securityService.isLoggedIn() ).toBeFalse();
+					expect( event.getValue( "relocate_event", "" ) ).toInclude( "reset-password?token=" );
+				} );
+
+				it( "still rejects a wrong password without ever reaching the reset-pending check", () => {
+					var user = createVerifiedUser();
+					user.setIsPasswordReset( true );
+					userService.save( user );
+
+					form.email = user.getEmail();
+					form.password = "wrong-password";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doLogin" );
+
+					expect( securityService.isLoggedIn() ).toBeFalse();
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
+				} );
+			} );
+
+			story( "Log in with a normal verified account", () => {
+				it( "logs in and relocates to the dashboard with correct credentials", () => {
+					var user = createVerifiedUser();
+
+					form.email = user.getEmail();
+					form.password = "correct-password";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doLogin" );
+
+					expect( securityService.isLoggedIn() ).toBeTrue();
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "dashboard" );
+				} );
+
+				it( "rejects an incorrect password", () => {
+					var user = createVerifiedUser();
+
+					form.email = user.getEmail();
+					form.password = "wrong-password";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doLogin" );
+
+					expect( securityService.isLoggedIn() ).toBeFalse();
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
+				} );
+			} );
+		} );
+	}
+}

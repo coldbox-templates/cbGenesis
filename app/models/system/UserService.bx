@@ -116,6 +116,33 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
+	 * Look up a user by email and verify their password, deliberately ignoring
+	 * isPasswordReset - unlike isValidCredentials() (which cbauth's own login must
+	 * still gate on), this exists only so Auth.bx#doLogin() can tell "wrong password"
+	 * apart from "right password, reset pending" before attempting the real cbauth login.
+	 *
+	 * @username The username/email to test
+	 * @password The password to test
+	 *
+	 * @return The matching User if the password is correct, else null
+	 */
+	function verifyPassword( required username, required password ) {
+		try {
+			var oUser = retrieveUserByUsername( arguments.username )
+		} catch ( "EntityNotFound" e ) {
+			return
+		}
+
+		if ( !oUser.isEmailVerified() || isNull( oUser.getPassword() ) || !len( oUser.getPassword() ) ) {
+			return
+		}
+
+		if ( BCryptVerify( arguments.password, oUser.getPassword() ) ) {
+			return oUser
+		}
+	}
+
+	/**
 	 * Verify if an email address is in use
 	 *
 	 * @email The email target
