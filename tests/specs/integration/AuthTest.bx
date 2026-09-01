@@ -1,0 +1,85 @@
+/**
+ * Integration tests for the Auth handler, exercised through the real "/login" route
+ * via the HTTP testing methods (this.post()) so routing, CSRF and the full doLogin()
+ * pipeline are all covered -- not just the underlying services.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	/*********************************** LIFE CYCLE Methods ***********************************/
+
+	function beforeAll() {
+		super.beforeAll();
+	}
+
+	/*********************************** BDD SUITES ***********************************/
+
+	function run() {
+		describe( "Auth Handler", () => {
+			beforeEach( ( currentSpec ) => {
+				// Setup as a new ColdBox request, VERY IMPORTANT. ELSE EVERYTHING LOOKS LIKE THE SAME REQUEST.
+				setup();
+				securityService.logout( quiet: true );
+			} );
+
+			story( "Log in with a reset-pending account", () => {
+				it( "redirects a correct password straight into the reset-password flow instead of failing", () => {
+					var user = createVerifiedUser();
+					user.setIsPasswordReset( true );
+					userService.save( user );
+
+					var event = this.post( "/login", {
+						email   : user.getEmail(),
+						password: "correct-password",
+						csrf    : "test-csrf-token"
+					} );
+
+					expect( securityService.isLoggedIn() ).toBeFalse();
+					expect( event.getValue( "relocate_event", "" ) ).toInclude( "reset-password?token=" );
+				} );
+
+				it( "still rejects a wrong password without ever reaching the reset-pending check", () => {
+					var user = createVerifiedUser();
+					user.setIsPasswordReset( true );
+					userService.save( user );
+
+					var event = this.post( "/login", {
+						email   : user.getEmail(),
+						password: "wrong-password",
+						csrf    : "test-csrf-token"
+					} );
+
+					expect( securityService.isLoggedIn() ).toBeFalse();
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
+				} );
+			} );
+
+			story( "Log in with a normal verified account", () => {
+				it( "logs in and relocates to the dashboard with correct credentials", () => {
+					var user = createVerifiedUser();
+
+					var event = this.post( "/login", {
+						email   : user.getEmail(),
+						password: "correct-password",
+						csrf    : "test-csrf-token"
+					} );
+
+					expect( securityService.isLoggedIn() ).toBeTrue();
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "dashboard" );
+				} );
+
+				it( "rejects an incorrect password", () => {
+					var user = createVerifiedUser();
+
+					var event = this.post( "/login", {
+						email   : user.getEmail(),
+						password: "wrong-password",
+						csrf    : "test-csrf-token"
+					} );
+
+					expect( securityService.isLoggedIn() ).toBeFalse();
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
+				} );
+			} );
+		} );
+	}
+}

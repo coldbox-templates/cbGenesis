@@ -1,26 +1,15 @@
 /**
- * The base model test case will use the 'model' annotation as the instantiation path
- * and then create it, prepare it for mocking and then place it in the variables scope as 'model'. It is your
- * responsibility to update the model annotation instantiation path and init your model.
+ * UserService needs real ORM access (retrieveUserByUsername, save, etc.), so this
+ * spec extends BaseIntegrationSpec rather than BaseModelTest -- it gets a real,
+ * transaction-rolled-back database plus the userService/createVerifiedUser fixtures
+ * already used by SecurityServiceTest.
  */
-
-@model( "app.models.system.UserService" )
-class extends="coldbox.system.testing.BaseModelTest" {
+class extends="tests.resources.BaseIntegrationSpec" {
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
 	function beforeAll() {
 		super.beforeAll();
-
-		// setup the model
-		super.setup();
-
-		// init the model object
-		model.init();
-	}
-
-	function afterAll() {
-		super.afterAll();
 	}
 
 	/*********************************** BDD SUITES ***********************************/
@@ -32,20 +21,71 @@ class extends="coldbox.system.testing.BaseModelTest" {
 				it(
 					"can be created",
 					function() {
-						expect( model ).toBeComponent();
+						expect( userService ).toBeComponent();
 					}
 				);
 				it(
 					"normalizes valid sort orders and rejects invalid input",
 					function() {
-						expect( model.ensureSortOrder( "lastName" ) ).toBe( "lastName asc" );
-						expect( model.ensureSortOrder( " EMAIL DESC " ) ).toBe( "email desc" );
-						expect( model.ensureSortOrder( "verifiedAt asc" ) ).toBe( "verifiedAt asc" );
-						expect( model.ensureSortOrder( "email desc, password" ) ).toBe( "lastName asc" );
-						expect( model.ensureSortOrder( "unknown asc" ) ).toBe( "lastName asc" );
+						expect( userService.ensureSortOrder( "lastName" ) ).toBe( "lastName asc" );
+						expect( userService.ensureSortOrder( " EMAIL DESC " ) ).toBe( "email desc" );
+						expect( userService.ensureSortOrder( "verifiedAt asc" ) ).toBe( "verifiedAt asc" );
+						expect( userService.ensureSortOrder( "email desc, password" ) ).toBe( "lastName asc" );
+						expect( userService.ensureSortOrder( "unknown asc" ) ).toBe( "lastName asc" );
 					}
 				);
 			}
 		);
+
+		story( "Verify a user's password while bypassing the isPasswordReset gate", () => {
+			it( "returns the user when the password is correct, even if isPasswordReset is true", () => {
+				var user = createVerifiedUser();
+				user.setIsPasswordReset( true );
+				userService.save( user );
+
+				var result = userService.verifyPassword( user.getEmail(), "correct-password" );
+
+				expect( isNull( result ) ).toBeFalse();
+				expect( result.getId() ).toBe( user.getId() );
+			} );
+
+			it( "returns null when the password is incorrect", () => {
+				var user = createVerifiedUser();
+
+				var result = userService.verifyPassword( user.getEmail(), "wrong-password" );
+
+				expect( isNull( result ) ).toBeTrue();
+			} );
+
+			it( "returns null for an unknown email", () => {
+				var result = userService.verifyPassword( "unknown-#createUUID()#@example.com", "whatever" );
+
+				expect( isNull( result ) ).toBeTrue();
+			} );
+
+			it( "returns null for an unverified user", () => {
+				var user = userService.new( properties: {
+					firstName: "Unverified",
+					lastName: "Tester",
+					email: "unverified-#createUUID()#@example.com",
+					password: "correct-password"
+				}, ignoreTargetLists: true );
+				userService.save( user );
+
+				var result = userService.verifyPassword( user.getEmail(), "correct-password" );
+
+				expect( isNull( result ) ).toBeTrue();
+			} );
+		} );
+
+		story( "isValidCredentials() keeps gating login on isPasswordReset as cbauth's security backstop", () => {
+			it( "rejects a reset-pending user even with the correct password", () => {
+				var user = createVerifiedUser();
+				user.setIsPasswordReset( true );
+				userService.save( user );
+
+				expect( userService.isValidCredentials( user.getEmail(), "correct-password" ) ).toBeFalse();
+			} );
+		} );
 	}
 }
