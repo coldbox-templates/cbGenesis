@@ -1,9 +1,16 @@
 /**
- * Integration tests for the Auth handler, exercised through the real "/login" route
- * via the HTTP testing methods (this.post()) so routing, CSRF and the full doLogin()
- * pipeline are all covered -- not just the underlying services.
+ * Integration tests for the Auth handler's doLogin() action, exercised via execute()
+ * (the documented way to test a ColdBox handler action end-to-end and assert
+ * relocate() targets through the request collection's "relocate_*" keys).
+ *
+ * CSRF is generated for real through the injected cbcsrf service rather than relying
+ * on a dummy token, since csrfVerify() is a manual call inside doLogin() rather than
+ * the cbcsrf auto-verifier interceptor.
  */
 class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
@@ -27,11 +34,11 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					user.setIsPasswordReset( true );
 					userService.save( user );
 
-					var event = this.post( "/login", {
-						email   : user.getEmail(),
-						password: "correct-password",
-						csrf    : "test-csrf-token"
-					} );
+					form.email = user.getEmail();
+					form.password = "correct-password";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doLogin" );
 
 					expect( securityService.isLoggedIn() ).toBeFalse();
 					expect( event.getValue( "relocate_event", "" ) ).toInclude( "reset-password?token=" );
@@ -42,11 +49,11 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					user.setIsPasswordReset( true );
 					userService.save( user );
 
-					var event = this.post( "/login", {
-						email   : user.getEmail(),
-						password: "wrong-password",
-						csrf    : "test-csrf-token"
-					} );
+					form.email = user.getEmail();
+					form.password = "wrong-password";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doLogin" );
 
 					expect( securityService.isLoggedIn() ).toBeFalse();
 					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
@@ -57,11 +64,11 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				it( "logs in and relocates to the dashboard with correct credentials", () => {
 					var user = createVerifiedUser();
 
-					var event = this.post( "/login", {
-						email   : user.getEmail(),
-						password: "correct-password",
-						csrf    : "test-csrf-token"
-					} );
+					form.email = user.getEmail();
+					form.password = "correct-password";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doLogin" );
 
 					expect( securityService.isLoggedIn() ).toBeTrue();
 					expect( event.getValue( "relocate_event", "" ) ).toBe( "dashboard" );
@@ -70,11 +77,11 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				it( "rejects an incorrect password", () => {
 					var user = createVerifiedUser();
 
-					var event = this.post( "/login", {
-						email   : user.getEmail(),
-						password: "wrong-password",
-						csrf    : "test-csrf-token"
-					} );
+					form.email = user.getEmail();
+					form.password = "wrong-password";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doLogin" );
 
 					expect( securityService.isLoggedIn() ).toBeFalse();
 					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
