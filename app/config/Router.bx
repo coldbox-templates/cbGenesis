@@ -66,6 +66,7 @@ class {
 		route( "users/:userId/profile" ).withHandler( "Users" ).toAction({ PUT: "updateProfile" })
 		route( "users/:userId/status" ).withHandler( "Users" ).toAction({ POST: "setStatus" })
 		route( "users/:userId/reset-password" ).withHandler( "Users" ).toAction({ POST: "resetPassword" })
+		route( "users/:userId/force-password-reset" ).withHandler( "Users" ).toAction({ POST: "forcePasswordReset" })
 		route( "users/:userId/verify" ).withHandler( "Users" ).toAction({ POST: "verify" })
 		route( "users/:userId/revoke-remember-tokens" ).withHandler( "Users" ).toAction({ POST: "revokeRememberTokens" })
 		route( "users/:userId/roles/:roleId" ).withHandler( "Users" ).toAction({ POST: "addRole", DELETE: "removeRole" })

@@ -219,6 +219,14 @@
 
 					<div class="cb-setting-row">
 						<div>
+							<strong>Force password reset</strong>
+							<small x-text="user.isPasswordReset ? 'Already required on next login.' : 'Require a new password immediately on their next login, without emailing a link.'"></small>
+						</div>
+						<button type="button" class="btn btn-outline-warning btn-sm" @click="forcePasswordReset" :disabled="user.isPasswordReset">Force reset</button>
+					</div>
+
+					<div class="cb-setting-row">
+						<div>
 							<strong>Email verification</strong>
 							<small x-text="user.isVerified ? 'This user is verified.' : 'Mark this user as verified without an invitation link.'"></small>
 						</div>

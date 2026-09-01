@@ -114,6 +114,8 @@ export function userDetailForm( payload = {} ) {
 		/** @returns {Promise<void>} */
 		async resetPassword() { if ( window.confirm( "Send password reset instructions to this user?" ) ) await this.request( `/users/${ this.user.userId }/reset-password` ); },
 		/** @returns {Promise<void>} */
+		async forcePasswordReset() { if ( window.confirm( "Require this user to set a new password on their next login?" ) ) await this.request( `/users/${ this.user.userId }/force-password-reset` ); },
+		/** @returns {Promise<void>} */
 		async verifyUser() { await this.request( `/users/${ this.user.userId }/verify` ); },
 		/** @returns {Promise<void>} */
 		async revokeRememberTokens() { if ( window.confirm( "Revoke all remembered sessions for this user?" ) ) await this.request( `/users/${ this.user.userId }/revoke-remember-tokens` ); },
