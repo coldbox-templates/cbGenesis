@@ -31,6 +31,7 @@ class extends="BaseSecureHandler" {
 			"updateProfile": true,
 			"setStatus": true,
 			"resetPassword": true,
+			"forcePasswordReset": true,
 			"verify": true,
 			"revokeRememberTokens": true,
 			"addRole": true,
@@ -269,6 +270,37 @@ class extends="BaseSecureHandler" {
 			response.setData( data: buildDetailPayload( prc.user ), message: "Password reset instructions sent successfully." )
 		} catch ( any error ) {
 			response.failure( message: "Password reset could not be issued: #error.message#", statusCode: 400 )
+		}
+		return response
+	}
+
+	/**
+	 * Flip isPasswordReset on for a managed user - unlike resetPassword() (which emails a
+	 * reset link the user must click), this takes effect immediately on their NEXT login
+	 * with their CURRENT password: the login flow detects it and routes them straight into
+	 * the existing reset-password flow before they reach the dashboard. No email is sent -
+	 * useful for an admin who wants to force a change without waiting on the user to open
+	 * an email.
+	 */
+	@remote( "Force a managed user to set a new password on their next login" )
+	@secured( "users:admin" )
+	function forcePasswordReset( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			prc.user = getManagedUser( rc )
+			ensureNotSelf( prc.user, prc )
+			prc.user.setIsPasswordReset( true ).save()
+			auditLogService.warn(
+				action     : "user.passwordResetForced",
+				message    : "[#prc.user.getEmail()#] will be required to set a new password on their next login.",
+				category   : "data",
+				targetType : "User",
+				targetId   : prc.user.getUserId(),
+				targetLabel: prc.user.getEmail()
+			)
+			response.setData( data: buildDetailPayload( prc.user ), message: "User will be required to set a new password on their next login." )
+		} catch ( any error ) {
+			response.failure( message: "Password reset could not be forced: #error.message#", statusCode: 400 )
 		}
 		return response
 	}
