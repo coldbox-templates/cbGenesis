@@ -40,6 +40,10 @@ class extends="app.models.BaseEntity" {
 	@unique( true )
 	property name="email" default="";
 
+	// A requested-but-not-yet-confirmed new email address. Only ever set through
+	// UserService#requestEmailChange()/confirmEmailChange() - never via generic population.
+	property name="pendingEmail" default="";
+
 	// Pending administrator invitations do not have a password until activation.
 	property name="password" default="";
 
@@ -191,6 +195,10 @@ class extends="app.models.BaseEntity" {
 			"userId",
 			"lastLogin",
 			"verifiedAt",
+			// email can only change through the request/confirm flow in UserService -
+			// never via a generic populate(rc) call - see requestEmailChange()/confirmEmailChange().
+			"email",
+			"pendingEmail",
 			"roles",
 			"permissions",
 			"apiTokens",
@@ -212,6 +220,7 @@ class extends="app.models.BaseEntity" {
 			"lastName",
 			"fullName",
 			"email",
+			"pendingEmail",
 			"biography",
 			"preferences",
 			"verifiedAt",
@@ -236,6 +245,7 @@ class extends="app.models.BaseEntity" {
 		variables.firstName = ""
 		variables.lastName = ""
 		variables.email = ""
+		variables.pendingEmail = ""
 		variables.password = ""
 		variables.biography = ""
 

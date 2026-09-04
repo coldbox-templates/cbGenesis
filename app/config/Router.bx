@@ -113,6 +113,10 @@ class {
 			POST: "updatePasskey"
 		})
 		route( "profile/passkey-required", "Profile.passkeyRequired" )
+		route( "profile/email-change" ).withHandler( "Profile" ).toAction({
+			POST  : "requestEmailChange",
+			DELETE: "cancelEmailChange"
+		})
 		route( "profile" ).withHandler( "Profile" ).toAction({
 			GET: "index",
 			POST: "save"
@@ -160,6 +164,7 @@ class {
 			POST: "doRegister"
 		})
 		route( "verify-registration", "Auth.verifyRegistration" )
+		route( "confirm-email-change", "Auth.verifyEmailChange" )
 		route( "activate-invitation" ).withHandler( "Auth" ).toAction({
 			GET: "activateInvitation",
 			POST: "doActivateInvitation"

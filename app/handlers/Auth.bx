@@ -31,8 +31,14 @@ class extends="coldbox.system.EventHandler"{
 	 * authentication and authorization.
 	 */
 	function preHandler( event, rc, prc ) {
-		// If the user is already logged in, redirect to the dashboard
-		if ( securityService.isLoggedIn() && event.getCurrentAction() != "logout" ) {
+		// If the user is already logged in, redirect to the dashboard - except for actions
+		// that are meant to work while logged in too. Unlike registration/password-reset
+		// links (normally opened logged out), an email-change confirmation link is very
+		// often clicked by a user who is still logged in, in the same browser that
+		// requested the change - so it must be exempted here the same way logout is,
+		// or the token never reaches verifyEmailChange() at all.
+		var currentAction = event.getCurrentAction()
+		if ( securityService.isLoggedIn() && currentAction != "logout" && currentAction != "verifyEmailChange" ) {
 			relocate( "dashboard" )
 		}
 		event.setLayout( prc.settings.cbLoginLayout )
@@ -257,6 +263,27 @@ class extends="coldbox.system.EventHandler"{
 			flash.put( "messages", { type: "error", message: "This verification link is invalid or expired." } )
 			return relocate( "login" )
 		}
+	}
+
+	/**
+	 * Confirm a pending email change from the link sent to the new address.
+	 * Reachable while logged in - see the preHandler note above - since the
+	 * confirming user is normally still logged in, in the same browser that
+	 * requested the change.
+	 */
+	function verifyEmailChange( event, rc, prc ) {
+		param rc.token = ""
+		try {
+			// This will throw an exception if the token is invalid, used, revoked, or expired
+			variables.userService.confirmEmailChange( rc.token )
+			flash.put( "messages", { type: "success", message: "Your email address has been updated." } )
+		} catch ( any error ) {
+			flash.put( "messages", { type: "error", message: "This email confirmation link is invalid or expired." } )
+		}
+		// A logged-in confirmer re-hydrates prc.authUser (and their new email) on their
+		// very next request via Main.preHandler(), so send them somewhere useful in-app
+		// instead of a login screen they don't need.
+		return securityService.isLoggedIn() ? relocate( "profile" ) : relocate( "login" )
 	}
 
 	/** Display the password form for an administrator invitation. */

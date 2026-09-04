@@ -1617,6 +1617,42 @@
 		grid-column: 1 / -1;
 	}
 
+	.cb-email-field {
+		display: grid;
+		gap: 0.45rem;
+		font-size: 0.72rem;
+		font-weight: 800;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--app-text-muted);
+
+		input:disabled {
+			opacity: 0.7;
+			cursor: not-allowed;
+		}
+	}
+
+	.cb-email-change-toggle,
+	.cb-pending-email-notice,
+	.cb-email-change-form {
+		text-transform: none;
+		letter-spacing: normal;
+		font-size: 0.85rem;
+		font-weight: 500;
+	}
+
+	.cb-email-change-form {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.25rem;
+
+		input {
+			flex: 1 1 220px;
+		}
+	}
+
 	.cb-password-field {
 		display: grid;
 		gap: 0.45rem;

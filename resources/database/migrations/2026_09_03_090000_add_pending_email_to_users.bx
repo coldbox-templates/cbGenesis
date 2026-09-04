@@ -1,0 +1,15 @@
+class {
+
+    function up( schema, qb ) {
+		schema.alter( "users", ( table ) => {
+			table.string( "pendingEmail" ).nullable().default( "" )
+		} )
+    }
+
+    function down( schema, qb ) {
+		schema.alter( "users", ( table ) => {
+			table.dropColumn( "pendingEmail" )
+		} )
+    }
+
+}

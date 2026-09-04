@@ -6,6 +6,9 @@
  */
 class extends="tests.resources.BaseIntegrationSpec" {
 
+	@inject
+	property name="userActionTokenService";
+
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
 	function beforeAll() {
@@ -85,6 +88,122 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				userService.save( user );
 
 				expect( userService.isValidCredentials( user.getEmail(), "correct-password" ) ).toBeFalse();
+			} );
+		} );
+
+		story( "requestEmailChange() only ever stores a pending address - it never touches email directly", () => {
+			it( "sets pendingEmail and leaves the real email untouched", () => {
+				var user = createVerifiedUser();
+				var newEmail = "changed-#createUUID()#@example.com";
+
+				userService.requestEmailChange( user, newEmail );
+
+				expect( user.getPendingEmail() ).toBe( newEmail );
+				expect( user.getEmail() ).notToBe( newEmail );
+			} );
+
+			it( "rejects an email address already in use by another account", () => {
+				var user = createVerifiedUser();
+				var otherUser = createVerifiedUser();
+
+				expect( () => userService.requestEmailChange( user, otherUser.getEmail() ) )
+					.toThrow( "User.EmailInUse" );
+			} );
+
+			it( "rejects a malformed email address", () => {
+				var user = createVerifiedUser();
+
+				expect( () => userService.requestEmailChange( user, "not-an-email" ) )
+					.toThrow( "User.InvalidEmail" );
+			} );
+
+			it( "revokes the earlier pending request's token so only the latest request's link is valid", () => {
+				var user = createVerifiedUser();
+
+				userService.requestEmailChange( user, "first-#createUUID()#@example.com" );
+				userService.requestEmailChange( user, "second-#createUUID()#@example.com" );
+
+				var tokenRows = qb.newQuery()
+					.from( "user_action_tokens" )
+					.where( "FK_userId", user.getUserId() )
+					.where( "purpose", userActionTokenService.PURPOSE_EMAIL_CHANGE )
+					.get();
+
+				expect( tokenRows.len() ).toBe( 2 );
+				expect( tokenRows.filter( ( row ) => isNull( row.revokedAt ) ).len() ).toBe( 1 );
+			} );
+		} );
+
+		story( "confirmEmailChange() is the only place a user's email is actually overwritten", () => {
+			it( "swaps email for pendingEmail, clears pendingEmail, and consumes the token", () => {
+				var user = createVerifiedUser();
+				var oldEmail = user.getEmail();
+				var newEmail = "confirmed-#createUUID()#@example.com";
+				user.setPendingEmail( newEmail );
+				userService.save( user );
+				var tokenResult = userActionTokenService.issue(
+					user: user,
+					purpose: userActionTokenService.PURPOSE_EMAIL_CHANGE,
+					expiresAt: dateAdd( "h", 24, now() )
+				);
+
+				var confirmed = userService.confirmEmailChange( tokenResult.rawToken );
+
+				expect( confirmed.getEmail() ).toBe( newEmail );
+				expect( confirmed.getPendingEmail() ).toBe( "" );
+				expect( isNull( userService.verifyPassword( newEmail, "correct-password" ) ) ).toBeFalse();
+				expect( isNull( userService.verifyPassword( oldEmail, "correct-password" ) ) ).toBeTrue();
+			} );
+
+			it( "rejects an unknown/invalid token", () => {
+				expect( () => userService.confirmEmailChange( "bxt_not-a-real-token" ) )
+					.toThrow( "UserActionToken.Invalid" );
+			} );
+
+			it( "rejects a token that has already been consumed", () => {
+				var user = createVerifiedUser();
+				user.setPendingEmail( "reused-#createUUID()#@example.com" );
+				userService.save( user );
+				var tokenResult = userActionTokenService.issue(
+					user: user,
+					purpose: userActionTokenService.PURPOSE_EMAIL_CHANGE,
+					expiresAt: dateAdd( "h", 24, now() )
+				);
+
+				userService.confirmEmailChange( tokenResult.rawToken );
+
+				expect( () => userService.confirmEmailChange( tokenResult.rawToken ) )
+					.toThrow( "UserActionToken.Invalid" );
+			} );
+
+			it( "refuses to confirm when there is no pending email change", () => {
+				var user = createVerifiedUser();
+				var tokenResult = userActionTokenService.issue(
+					user: user,
+					purpose: userActionTokenService.PURPOSE_EMAIL_CHANGE,
+					expiresAt: dateAdd( "h", 24, now() )
+				);
+
+				expect( () => userService.confirmEmailChange( tokenResult.rawToken ) )
+					.toThrow( "User.NoPendingEmailChange" );
+			} );
+		} );
+
+		story( "cancelEmailChange() lets a user back out of a pending request", () => {
+			it( "clears pendingEmail and revokes the outstanding token", () => {
+				var user = createVerifiedUser();
+				userService.requestEmailChange( user, "cancel-me-#createUUID()#@example.com" );
+
+				userService.cancelEmailChange( user );
+
+				expect( user.getPendingEmail() ).toBe( "" );
+				var activeTokens = qb.newQuery()
+					.from( "user_action_tokens" )
+					.where( "FK_userId", user.getUserId() )
+					.where( "purpose", userActionTokenService.PURPOSE_EMAIL_CHANGE )
+					.whereNull( "revokedAt" )
+					.get();
+				expect( activeTokens.len() ).toBe( 0 );
 			} );
 		} );
 	}
