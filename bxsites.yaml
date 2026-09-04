@@ -13,7 +13,7 @@ markdown:
   enableDefinitionLists: true
 repo:
   url: "https://github.com/coldbox-templates/cbGenesis"
-  editUri: "edit/main/docs/"
+  editUri: "edit/development/docs/"
 social:
   - url: "https://github.com/coldbox-templates/cbGenesis"
     icon: github

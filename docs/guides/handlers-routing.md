@@ -61,9 +61,10 @@ No `@secured` annotation - these actions must stay reachable by guests:
 - `activateInvitation` / `doActivateInvitation` - sets a password for an invited, admin-created user
 - `forgotPassword` / `doForgotPassword` - gated by `cbAllowForgotPassword`
 - `resetPassword` / `doResetPassword` - validates the reset token, sets a new password
+- `verifyEmailChange` - consumes a `PURPOSE_EMAIL_CHANGE` action token
 - `logout` - calls `securityService.logout()`
 
-`preHandler` redirects an already-authenticated visitor straight to the dashboard, and sets the layout from `prc.settings.cbLoginLayout` (`AuthSplit` by default - see [`guides/security.md`](security.md)).
+`preHandler` redirects an already-authenticated visitor straight to the dashboard, and sets the layout from `prc.settings.cbLoginLayout` (`AuthSplit` by default - see [`guides/security.md`](security.md)); `verifyEmailChange` and `logout` are exempted from that redirect so they stay reachable whether or not the visitor is already authenticated.
 
 ### `Dashboard`
 
@@ -86,6 +87,7 @@ No `@secured` annotation - these actions must stay reachable by guests:
 
 - `index`, `passkeyRequired`
 - `save`, `doPasswordChange`
+- `requestEmailChange` / `cancelEmailChange` - starts/cancels a pending email change, confirmed via `Auth.verifyEmailChange`
 - `listTokens` / `createToken` / `updateToken` / `deleteToken` - API tokens
 - `listPasskeys` / `updatePasskey` / `deletePasskey`
 

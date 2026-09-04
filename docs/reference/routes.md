@@ -16,6 +16,7 @@ tags: [reference, routing]
 | `POST` | `/login` | `Auth.doLogin` | Guest |
 | `GET` | `/register` | `Auth.register` | Guest |
 | `POST` | `/register` | `Auth.doRegister` | Guest |
+| `GET` | `/confirm-email-change` | `Auth.verifyEmailChange` | Guest or Auth — reachable either way, unlike the other `Auth` actions (see [Handlers & Routing](../guides/handlers-routing.md#auth)) |
 | `GET` | `/forgot-password` | `Auth.forgotPassword` | Guest |
 | `POST` | `/forgot-password` | `Auth.doForgotPassword` | Guest |
 | `GET` | `/reset-password` | `Auth.resetPassword` | Guest |
@@ -42,8 +43,10 @@ tags: [reference, routing]
 | `PUT` | `/permissions/:id` | `Permissions.update` | `permissions:write,permissions:admin` |
 | `DELETE` | `/permissions/:id` | `Permissions.delete` | `permissions:delete,permissions:admin` |
 | `GET` | `/profile` | `Profile.index` | Auth |
-| `POST` | `/profile` | `Profile.update` | Auth |
+| `POST` | `/profile` | `Profile.save` | Auth |
 | `POST` | `/profile/password` | `Profile.doPasswordChange` | Auth |
+| `POST` | `/profile/email-change` | `Profile.requestEmailChange` | Auth |
+| `DELETE` | `/profile/email-change` | `Profile.cancelEmailChange` | Auth |
 | `GET` | `/profile/api-tokens` | `Profile.listTokens` | Auth |
 | `POST` | `/profile/api-tokens` | `Profile.createToken` | Auth |
 | `POST` | `/profile/api-tokens/:id` | `Profile.updateToken` | Auth |
