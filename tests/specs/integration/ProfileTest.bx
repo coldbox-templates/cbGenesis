@@ -1,0 +1,81 @@
+/**
+ * Integration tests for the Profile handler's email-change endpoints, exercised via
+ * execute() the same way AuthTest.bx does. CSRF is generated for real through the
+ * injected cbcsrf service since csrfVerify() is a manual preHandler check here too.
+ *
+ * Only the valid-CSRF paths are exercised here: an invalid token routes through
+ * onAuthorizationFailure(abort: true), which - unlike Auth.bx's doLogin(), which just
+ * flashes a message and returns - performs a real engine abort. Inside TestBox's
+ * in-process execute() that abort terminates the whole test-runner request, not just
+ * the simulated sub-request, so it can only be exercised via a real HTTP call (verified
+ * manually: POST/DELETE to /profile/email-change with a bad csrf returns 403 and leaves
+ * pendingEmail untouched).
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	function beforeAll() {
+		super.beforeAll();
+	}
+
+	function run() {
+		describe( "Profile Handler", () => {
+			beforeEach( ( currentSpec ) => {
+				setup();
+				securityService.logout( quiet: true );
+			} );
+
+			story( "save() can no longer change the authenticated user's email (defense in depth)", () => {
+				it( "ignores an email param posted to the generic profile save action", () => {
+					var user = createVerifiedUser();
+					var originalEmail = user.getEmail();
+					securityService.authenticate( username: originalEmail, password: "correct-password" );
+
+					form.firstName = "Updated";
+					form.lastName = "Name";
+					form.email = "attacker-#createUUID()#@evil.com";
+					form.biography = "";
+					form.preferences = "{}";
+					form.csrf = cbcsrf.generate();
+
+					execute( "profile.save" );
+
+					var reloaded = userService.getOrFail( user.getUserId() );
+					expect( reloaded.getEmail() ).toBe( originalEmail );
+					expect( reloaded.getFirstName() ).toBe( "Updated" );
+				} );
+			} );
+
+			story( "requestEmailChange() and cancelEmailChange() work with a valid CSRF token", () => {
+				it( "sets a pending email change with a valid CSRF token", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+					var newEmail = "changed-#createUUID()#@example.com";
+
+					form.email = newEmail;
+					form.csrf = cbcsrf.generate();
+
+					execute( "profile.requestEmailChange" );
+
+					var reloaded = userService.getOrFail( user.getUserId() );
+					expect( reloaded.getPendingEmail() ).toBe( newEmail );
+					expect( reloaded.getEmail() ).notToBe( newEmail );
+				} );
+
+				it( "clears a pending email change via cancelEmailChange with a valid CSRF token", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+					userService.requestEmailChange( user, "cancel-me-#createUUID()#@example.com" );
+
+					form.csrf = cbcsrf.generate();
+					execute( "profile.cancelEmailChange" );
+
+					var reloaded = userService.getOrFail( user.getUserId() );
+					expect( reloaded.getPendingEmail() ).toBe( "" );
+				} );
+			} );
+		} );
+	}
+}

@@ -15,14 +15,22 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 		loading   : "",
 		notice    : { type: "", message: "" },
 		profile   : {
-			firstName : initialProfile.firstName ?? "",
-			lastName  : initialProfile.lastName ?? "",
-			email     : initialProfile.email ?? "",
-			biography : initialProfile.biography ?? "",
-			errors    : {},
-			initial   : {},
+			firstName    : initialProfile.firstName ?? "",
+			lastName     : initialProfile.lastName ?? "",
+			email        : initialProfile.email ?? "",
+			pendingEmail : initialProfile.pendingEmail ?? "",
+			biography    : initialProfile.biography ?? "",
+			errors       : {},
+			initial      : {},
 		},
 		csrfToken,
+		emailChangeForm : {
+			open    : false,
+			newEmail: "",
+			errors  : {},
+			loading : false,
+		},
+		emailChangeLoading : false,
 		password : {
 			currentPassword : "",
 			newPassword     : "",
@@ -517,7 +525,6 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			return {
 				firstName : this.normalize( this.profile.firstName ),
 				lastName  : this.normalize( this.profile.lastName ),
-				email     : this.normalize( this.profile.email ),
 				biography : this.normalize( this.profile.biography ),
 			};
 		},
@@ -551,7 +558,6 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			return Boolean(
 				this.profile.firstName.trim()
 				&& this.profile.lastName.trim()
-				&& this.$isEmail( this.profile.email )
 			);
 		},
 
@@ -717,6 +723,90 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			event.preventDefault();
 			if ( !this.passwordValid || this.loading ) return;
 			this.submit( event.currentTarget, "/profile/password", "password" );
+		},
+
+		/**
+		 * Opens the inline email-change request form, independent of the main profile-save form.
+		 *
+		 * @returns {void}
+		 */
+		openEmailChangeForm() {
+			this.emailChangeForm = { open: true, newEmail: "", errors: {}, loading: false };
+		},
+
+		/**
+		 * Closes the inline email-change request form without submitting it.
+		 *
+		 * @returns {void}
+		 */
+		closeEmailChangeForm() {
+			this.emailChangeForm.open = false;
+		},
+
+		/**
+		 * Requests an email address change for the authenticated user. Submits to a
+		 * dedicated endpoint independent of the main "Save Profile" form so the email
+		 * address can never change as a side effect of saving other profile fields.
+		 *
+		 * @param {SubmitEvent} event Email-change form submit event.
+		 * @returns {Promise<void>}
+		 */
+		async submitEmailChange( event ) {
+			event.preventDefault();
+			const newEmail = this.emailChangeForm.newEmail.trim();
+			if ( !this.$isEmail( newEmail ) || this.emailChangeForm.loading ) return;
+			this.emailChangeForm.loading = true;
+			this.emailChangeForm.errors = {};
+			this.clearNotice();
+
+			try {
+				const response = await fetch( "/profile/email-change", {
+					method      : "POST",
+					credentials : "same-origin",
+					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+					body        : new URLSearchParams( { email: newEmail, csrf: this.csrfToken } ),
+				} );
+				const payload = await response.json();
+				if ( !response.ok || payload.error ) {
+					this.applyErrors( this.emailChangeForm.errors, payload.data || {} );
+					throw new Error( payload.messages || "Email change could not be requested." );
+				}
+				this.profile.pendingEmail = payload.data.pendingEmail || newEmail;
+				this.emailChangeForm.open = false;
+				this.notice = { type: "success", message: payload.messages || "Confirmation email sent." };
+			} catch ( error ) {
+				this.notice = { type: "error", message: error.message || "Email change could not be requested." };
+			} finally {
+				this.emailChangeForm.loading = false;
+			}
+		},
+
+		/**
+		 * Cancels a pending email change request for the authenticated user.
+		 *
+		 * @returns {Promise<void>}
+		 */
+		async cancelEmailChange() {
+			if ( this.emailChangeLoading ) return;
+			this.emailChangeLoading = true;
+			this.clearNotice();
+
+			try {
+				const response = await fetch( "/profile/email-change", {
+					method      : "DELETE",
+					credentials : "same-origin",
+					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+					body        : new URLSearchParams( { csrf: this.csrfToken } ),
+				} );
+				const payload = await response.json();
+				if ( !response.ok || payload.error ) throw new Error( payload.messages || "Email change could not be cancelled." );
+				this.profile.pendingEmail = "";
+				this.notice = { type: "success", message: payload.messages || "Email change request cancelled." };
+			} catch ( error ) {
+				this.notice = { type: "error", message: error.message || "Email change could not be cancelled." };
+			} finally {
+				this.emailChangeLoading = false;
+			}
 		},
 
 		/**

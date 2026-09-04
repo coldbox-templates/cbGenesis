@@ -20,6 +20,8 @@ class extends="BaseSecureHandler" {
 		csrfVerify = {
 			"save"    : true,
 			"password": true,
+			"requestEmailChange": true,
+			"cancelEmailChange": true,
 			"createToken": true,
 			"updateToken": true,
 			"deleteToken": true,
@@ -89,6 +91,67 @@ class extends="BaseSecureHandler" {
 			)
 		}
 
+		return response
+	}
+
+	/**
+	 * Request a change to the authenticated user's email address. Does not change the
+	 * email directly - sends a confirmation link to the new address and a security
+	 * notice to the current address. See UserService#requestEmailChange().
+	 */
+	@remote( "Request an email address change for the authenticated user remotely via AJAX" )
+	function requestEmailChange( event, rc, prc ) {
+		var response = event.getResponse()
+		var newEmail = trim( rc.email ?: "" )
+
+		try {
+			userService.requestEmailChange( prc.authUser, newEmail )
+			response.setData(
+				data: prc.authUser.getMemento(),
+				message: "Confirmation sent to #newEmail#. Check your inbox to complete the change."
+			)
+		} catch ( "User.InvalidEmail" error ) {
+			response.setErrorMessage(
+				errorMessage: "Please provide a valid email address.",
+				statusCode: 422,
+				data: { email: "Please provide a valid email address." }
+			)
+		} catch ( "User.EmailInUse" error ) {
+			response.setErrorMessage(
+				errorMessage: "This email address is already in use.",
+				statusCode: 422,
+				data: { email: "This email address is already in use." }
+			)
+		} catch ( any error ) {
+			log.error( "Error requesting email change: #error.message#", error )
+			response.setErrorMessage(
+				errorMessage: "Email change could not be requested: #error.message#",
+				statusCode: 500
+			)
+		}
+
+		return response
+	}
+
+	/**
+	 * Cancel a pending email change for the authenticated user.
+	 */
+	@remote( "Cancel a pending email change for the authenticated user remotely via AJAX" )
+	function cancelEmailChange( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			userService.cancelEmailChange( prc.authUser )
+			response.setData(
+				data: prc.authUser.getMemento(),
+				message: "Email change request cancelled."
+			)
+		} catch ( any error ) {
+			log.error( "Error cancelling email change: #error.message#", error )
+			response.setErrorMessage(
+				errorMessage: "Email change could not be cancelled: #error.message#",
+				statusCode: 500
+			)
+		}
 		return response
 	}
 

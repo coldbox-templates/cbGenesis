@@ -12,6 +12,9 @@ class extends="tests.resources.BaseIntegrationSpec" {
 	@inject( "@cbcsrf" )
 	property name="cbcsrf";
 
+	@inject
+	property name="userActionTokenService";
+
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
 	function beforeAll() {
@@ -84,6 +87,38 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					var event = execute( "auth.doLogin" );
 
 					expect( securityService.isLoggedIn() ).toBeFalse();
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
+				} );
+			} );
+
+			story( "verifyEmailChange() confirms a pending email change even while the confirming user is still logged in", () => {
+				it( "swaps the email and redirects to profile - not login - for a still-logged-in confirmer", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+					var newEmail = "confirmed-#createUUID()#@example.com";
+					userService.requestEmailChange( user, newEmail );
+					var tokenResult = userActionTokenService.issue(
+						user: user,
+						purpose: userActionTokenService.PURPOSE_EMAIL_CHANGE,
+						expiresAt: dateAdd( "h", 24, now() )
+					);
+
+					form.token = tokenResult.rawToken;
+					var event = execute( "auth.verifyEmailChange" );
+
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "profile" );
+					expect( securityService.isLoggedIn() ).toBeTrue();
+					var reloaded = userService.getOrFail( user.getUserId() );
+					expect( reloaded.getEmail() ).toBe( newEmail );
+					expect( reloaded.getPendingEmail() ).toBe( "" );
+				} );
+
+				it( "redirects to login for an invalid token without a session", () => {
+					securityService.logout( quiet: true );
+
+					form.token = "bxt_not-a-real-token";
+					var event = execute( "auth.verifyEmailChange" );
+
 					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
 				} );
 			} );

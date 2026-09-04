@@ -172,17 +172,41 @@
 							autocomplete="family-name">
 						<span class="invalid-feedback" x-show="profile.errors.lastName" x-text="profile.errors.lastName"></span>
 					</label>
-					<label class="cb-span-2" for="email"><span class="cb-field-label">Email Address <span class="required-mark" aria-hidden="true">*</span></span>
-						<input
-							id="email"
-							name="email"
-							type="email"
-							x-model.trim="profile.email"
-							:class="{ 'is-invalid': !profile.email.trim() || profile.errors.email }"
-							required
-							autocomplete="email">
-						<span class="invalid-feedback" x-show="profile.errors.email" x-text="profile.errors.email"></span>
-					</label>
+					<div class="cb-span-2 cb-email-field">
+						<span class="cb-field-label">Email Address</span>
+						<input type="email" x-bind:value="profile.email" disabled autocomplete="email">
+						<template x-if="!profile.pendingEmail && !emailChangeForm.open">
+							<button type="button" class="btn btn-link btn-sm cb-email-change-toggle" @click="openEmailChangeForm()">Change email address</button>
+						</template>
+						<template x-if="profile.pendingEmail">
+							<p class="text-muted cb-pending-email-notice">
+								Confirmation sent to <strong x-text="profile.pendingEmail"></strong>.
+								<button type="button" class="btn btn-link btn-sm" @click="cancelEmailChange()" :disabled="emailChangeLoading">Cancel request</button>
+							</p>
+						</template>
+						<template x-if="emailChangeForm.open">
+							<form class="cb-email-change-form" @submit="submitEmailChange">
+								<label for="newEmail">
+									<span class="visually-hidden">New email address</span>
+									<input
+										id="newEmail"
+										name="newEmail"
+										type="email"
+										x-model.trim="emailChangeForm.newEmail"
+										:class="{ 'is-invalid': emailChangeForm.errors.email }"
+										placeholder="New email address"
+										required
+										autocomplete="email">
+									<span class="invalid-feedback" x-show="emailChangeForm.errors.email" x-text="emailChangeForm.errors.email"></span>
+								</label>
+								<button type="submit" class="btn btn-primary btn-sm" :disabled="emailChangeForm.loading || !$isEmail( emailChangeForm.newEmail )">
+									<span x-show="!emailChangeForm.loading">Send confirmation</span>
+									<span x-show="emailChangeForm.loading" x-cloak>Sending...</span>
+								</button>
+								<button type="button" class="btn btn-link btn-sm" @click="closeEmailChangeForm()" :disabled="emailChangeForm.loading">Cancel</button>
+							</form>
+						</template>
+					</div>
 					<label class="cb-span-2" for="biography">Biography <span class="optional-label"></span>
 						<textarea
 							id="biography"

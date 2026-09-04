@@ -525,6 +525,141 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
+	 * Request a change to the authenticated user's email address.
+	 *
+	 * Never changes `email` directly - stores the requested address as `pendingEmail`
+	 * and emails a confirmation link to the NEW address. A security notice is also sent
+	 * to the CURRENT address regardless of whether the new address ever confirms, so the
+	 * real owner is warned even if this request was made by someone riding a hijacked
+	 * session.
+	 *
+	 * @user     The user requesting the change
+	 * @newEmail The new email address to confirm
+	 *
+	 * @throws "User.InvalidEmail" if the new email is not a validly formed address.
+	 * @throws "User.EmailInUse" if the new email is already used by another account.
+	 *
+	 * @return Mail results for the old-address security notice: { error: boolean, errorArray: array }
+	 */
+	struct function requestEmailChange( required user, required string newEmail ) {
+		var email = trim( arguments.newEmail )
+
+		if ( !isValid( "email", email ) ) {
+			throw( type: "User.InvalidEmail", message: "Please provide a valid email address." )
+		}
+
+		if ( isEmailInUse( email, arguments.user.getUserId() ) ) {
+			throw( type: "User.EmailInUse", message: "This email address is already in use." )
+		}
+
+		var settings = variables.settingService.getAllSettings()
+		var event = variables.requestService.getContext()
+		var oldEmail = arguments.user.getEmail()
+
+		// Only the latest request's link should ever be valid. This (and the token issuance
+		// below) intentionally sit outside the entity save's transaction - revokeForUser() runs
+		// as a bulk qb UPDATE on its own connection, and pairing that with an ORM save in one
+		// transaction risks a cross-connection lock wait on the user row's FK references.
+		variables.userActionTokenService.revokeForUser(
+			userId: arguments.user.getUserId(),
+			purpose: variables.userActionTokenService.PURPOSE_EMAIL_CHANGE
+		)
+
+		arguments.user.setPendingEmail( email )
+		save( arguments.user )
+
+		var tokenResult = variables.userActionTokenService.issue(
+			user: arguments.user,
+			purpose: variables.userActionTokenService.PURPOSE_EMAIL_CHANGE,
+			expiresAt: dateAdd( "h", 24, now() )
+		)
+
+		// Confirmation link - sent to the NEW address, only completes the change once clicked
+		variables.mailservice.newMail()
+			.configure(
+				to: email,
+				from: settings.cbDefaultEmail,
+				subject: "Confirm your new " & settings.cbAppName & " email address",
+				bodyTokens: {
+					name: arguments.user.getFullName(),
+					email: email,
+					appName: settings.cbAppName,
+					appNameInitial: left( settings.cbAppName, 1 ),
+					linkTimeout: "24 hours",
+					linkToken: event.buildLink( "confirm-email-change?token=#tokenResult.rawToken#" )
+				},
+				type: "html"
+			)
+			.setBody( variables.renderer.externalView( "/app/email_templates/email_change_confirmation" ) )
+			.send()
+
+		// Security notice - sent to the CURRENT/OLD address regardless of confirmation
+		return variables.mailservice.newMail()
+			.configure(
+				to: oldEmail,
+				from: settings.cbDefaultEmail,
+				subject: "Your " & settings.cbAppName & " account email is changing",
+				bodyTokens: {
+					name: arguments.user.getFullName(),
+					oldEmail: oldEmail,
+					newEmail: email,
+					appName: settings.cbAppName,
+					appNameInitial: left( settings.cbAppName, 1 )
+				},
+				type: "html"
+			)
+			.setBody( variables.renderer.externalView( "/app/email_templates/email_change_notice" ) )
+			.send()
+			.getResults()
+	}
+
+	/**
+	 * Confirm a pending email change from the token sent to the new address.
+	 * This is the ONLY place a user's `email` is actually overwritten.
+	 *
+	 * @rawToken The raw confirmation token from the confirmation link.
+	 *
+	 * @throws "UserActionToken.Invalid" if the token is invalid, used, revoked, or expired.
+	 * @throws "User.NoPendingEmailChange" if the token's user has no pending email change.
+	 *
+	 * @return The updated user.
+	 */
+	User function confirmEmailChange( required string rawToken ) {
+		transaction {
+			var actionToken = variables.userActionTokenService.resolve( arguments.rawToken, variables.userActionTokenService.PURPOSE_EMAIL_CHANGE )
+			var user = actionToken.getUser()
+
+			if ( !len( user.getPendingEmail() ) ) {
+				throw( type: "User.NoPendingEmailChange", message: "This user has no pending email change." )
+			}
+
+			user.setEmail( user.getPendingEmail() ).setPendingEmail( "" )
+			save( user )
+			variables.userActionTokenService.consume( actionToken )
+
+			return user
+		}
+	}
+
+	/**
+	 * Cancel a pending email change, letting a user back out of a request they
+	 * didn't mean to make (or that wasn't actually theirs).
+	 *
+	 * @user The user cancelling their pending email change.
+	 *
+	 * @return The updated user.
+	 */
+	User function cancelEmailChange( required user ) {
+		variables.userActionTokenService.revokeForUser(
+			userId: arguments.user.getUserId(),
+			purpose: variables.userActionTokenService.PURPOSE_EMAIL_CHANGE
+		)
+		arguments.user.setPendingEmail( "" )
+		save( arguments.user )
+		return arguments.user
+	}
+
+	/**
 	 * Resets a user's password.
 	 *
 	 * @token    Security token
