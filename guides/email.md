@@ -32,8 +32,11 @@ mailService.newMail()
 | Template | Sent when |
 |---|---|
 | `user_welcome.bxm` | A new account is created |
+| `registration_verification.bxm` | A new account needs email verification |
 | `password_verification.bxm` | A password-reset link is requested |
 | `password_reset.bxm` | Confirmation after a password change |
+| `email_change_confirmation.bxm` | A user requests an email change - sent to the new address to confirm it |
+| `email_change_notice.bxm` | A user requests an email change - sent to the old address as a heads-up |
 
 ## Protocol by environment
 

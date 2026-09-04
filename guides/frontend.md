@@ -162,7 +162,7 @@ These BXM partials live under `app/views/_components/` and are rendered with Col
 | `auditLogForm` | `components/security/AuditLogForm.js` | Audit filtering, pagination, detail drawer, CSV export, purge, and clear actions. |
 | `settingsForm` | `components/settings/SettingsForm.js` | Core application settings editing and cache-related feedback. |
 | `settingsRegistryForm` | `components/settings/SettingsRegistryForm.js` | Registry search, pagination, create/update, enable/disable, and delete actions. |
-| `profileForm` | `components/profile/ProfileForm.js` | Profile fields, password policy, and API token management. |
+| `profileForm` | `components/profile/ProfileForm.js` | Profile fields, password policy, API token management, and the email-change request/cancel sub-form. |
 | `preferencesForm` | `components/profile/PreferencesForm.js` | Persisting user preferences. |
 | `passkeyOnboarding` | `components/profile/PasskeyOnboarding.js` | Passkey registration and required-passkey onboarding. |
 

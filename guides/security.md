@@ -127,9 +127,10 @@ A user who fails an `@secured` check is redirected:
 | Model | Purpose |
 |---|---|
 | `SecurityService` | Wraps `cbauth`'s authentication service; `login()`/`authenticate()`, remember-me cookie management with token rotation, `logout()`, password-reset token issue/verify (cache-backed, not DB) |
+| `UserService` | `requestEmailChange()`/`confirmEmailChange()`/`cancelEmailChange()` - self-service email change, gated behind a `PURPOSE_EMAIL_CHANGE` action token so a new address is only applied once the user confirms it from their inbox |
 | `APIToken` / `APITokenService` | SHA/BCrypt-hashed personal access tokens — `createToken()` returns the raw token exactly once, `revokeToken()`/`revokeAllForUser()`, `purgeExpiredTokens()` on a schedule |
 | `RememberToken` / `RememberTokenService` | Persistent "remember me" browser tokens, rotated on every use |
-| `UserActionToken` / `UserActionTokenService` | Purpose-bound, single-use tokens (`PURPOSE_REGISTRATION`, `PURPOSE_INVITATION`) — `issue()`, `resolve()`, `consume()` |
+| `UserActionToken` / `UserActionTokenService` | Purpose-bound, single-use tokens (`PURPOSE_REGISTRATION`, `PURPOSE_INVITATION`, `PURPOSE_EMAIL_CHANGE`) — `issue()`, `resolve()`, `consume()` |
 | `Passkey` / `PasskeyService` | WebAuthn credential storage via `cbsecurity-passkeys`' `ICredentialRepository` contract |
 
 ::: cards
