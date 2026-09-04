@@ -85,11 +85,11 @@ The following ColdBox modules are installed in this project. Use these when gene
 
 Current event handlers and their public actions (auto-updated on `coldbox ai refresh`):
 
-- **Auth**: login, register, forgotPassword, resetPassword, logout
+- **Auth**: login, register, forgotPassword, resetPassword, verifyEmailChange, logout
 - **Dashboard**: index
 - **Main**: onAppInit, onException
 - **Permissions**: index, getMockAuthUser
-- **Profile**: index, update, password, tokens, getMockAuthUser
+- **Profile**: index, update, password, requestEmailChange, cancelEmailChange, tokens, getMockAuthUser
 - **Roles**: index, getMockAuthUser
 - **Settings**: index, getMockAuthUser
 - **Users**: index, detail, setMockSecurityData, getMockAuthUser

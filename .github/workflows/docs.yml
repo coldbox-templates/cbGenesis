@@ -50,7 +50,7 @@ jobs:
       - name: Setup BoxLang + BX Sites
         uses: ortus-boxlang/setup-boxlang@main
         with:
-          modules: bx-sites bx-markdown bx-yaml bx-image
+          modules: bx-sites bx-markdown bx-esapi bx-yaml bx-image
 
       - name: Build the site
         run: bxSites build
