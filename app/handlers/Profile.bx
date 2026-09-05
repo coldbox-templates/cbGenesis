@@ -172,8 +172,11 @@ class extends="BaseSecureHandler" {
 			)
 		}
 
-		// Validate the new password
-		if ( !securityService.isValidPassword( newPassword ) ) {
+		// Validate the new password against the configured policy. This lives on
+		// SettingService (it reads cbMinPasswordLength), not SecurityService - calling it
+		// on the latter fell through to cborm's onMissingMethod and threw, so every
+		// password change returned a 500.
+		if ( !settingService.isValidPassword( newPassword ) ) {
 			errors.password = "The new password must be at least 8 characters and include uppercase, lowercase, number, and special characters."
 			return response.setErrorMessage(
 				errorMessage: "Password validation errors",
