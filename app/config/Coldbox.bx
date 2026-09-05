@@ -19,7 +19,14 @@ class {
 			appName                 : "",
 			eventName               : "event",
 			// Development Settings
-			reinitPassword          : "",
+			// ColdBox treats an EMPTY reinitPassword as "anyone may reinit", so production
+			// must always have one. Declare it in PLAINTEXT: ApplicationLoader hashes this
+			// value on load and compares it against hash( incoming ), so pre-hashing here
+			// would double-hash and reject every password. Callers pass ?fwreinit=<plaintext>.
+			// With COLDBOX_REINIT_PASSWORD unset we fall back to a per-boot random value,
+			// which leaves reinit effectively disabled rather than wide open. The
+			// development() override below restores the open ?fwreinit=1 behaviour locally.
+			reinitPassword          : getSystemSetting( "COLDBOX_REINIT_PASSWORD", createUUID() ),
 			reinitKey               : "fwreinit",
 			handlersIndexAutoReload : true,
 			// Implicit Events
@@ -99,12 +106,15 @@ class {
 		 */
 		variables.logBox = {
 			// Define Appenders
+			// Both appenders MUST live inside this struct: LogBoxConfig only reads the
+			// `appenders`, `root` and `categories` keys, so an appender declared as a
+			// sibling of `appenders` is silently discarded and never registers.
 			appenders: {
-				coldboxTracer: { class: "coldbox.system.logging.appenders.ConsoleAppender" }
-			},
-			filelog  : {
-				class     : "coldbox.system.logging.appenders.RollingFileAppender",
-				properties: { filename: "app", filePath: "/app/logs" }
+				coldboxTracer: { class: "coldbox.system.logging.appenders.ConsoleAppender" },
+				filelog      : {
+					class     : "coldbox.system.logging.appenders.RollingFileAppender",
+					properties: { filename: "app", filePath: "/app/logs" }
+				}
 			},
 			// Root Logger
 			root: { levelmax: "INFO", appenders: "*" },
@@ -194,5 +204,7 @@ class {
 		variables.coldbox.customErrorTemplate = "/coldbox/system/exceptions/Whoops.cfm"
 		variables.wirebox.singletonReload = true
 		variables.coldbox.debugMode = true
+		// Keep ?fwreinit=1 password-free while developing locally.
+		variables.coldbox.reinitPassword = ""
 	}
 }
