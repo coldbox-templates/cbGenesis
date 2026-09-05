@@ -114,7 +114,15 @@ class{
 	 * @targetPage The requested page
 	 */
 	public boolean function onRequestStart( string targetPage ) output=true{
-		if( url.keyExists( "fwreinit" ) ){
+		// Only reload the ORM when ColdBox itself accepts the reinit. isFWReinit() enforces
+		// the configured reinitPassword, so an anonymous ?fwreinit can no longer force a
+		// full ORM reload in production. The application key check keeps the very first
+		// (pre-bootstrap) request from reloading an ORM that has not been built yet.
+		if(
+			url.keyExists( "fwreinit" )
+			&& application.keyExists( "cbBootstrap" )
+			&& application.cbBootstrap.isFWReinit()
+		){
 			ormReload()
 		}
 
