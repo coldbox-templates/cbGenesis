@@ -118,9 +118,9 @@ box migrate seed
     | Field | Value |
     |---|---|
     | Email | `admin@cbgenesis.com` |
-    | Password | `test` |
+    | Password | `test` (reset-pending) |
 
-    Change this password immediately after your first login - see the [production checklist](deployment.md#production-checklist).
+    This account is seeded as reset-pending, so signing in with `test` does not give you a session - it takes you straight to the reset-password form to choose a real password. That is deliberate: the bootstrap hash ships in this repository and is public. See the [production checklist](deployment.md#production-checklist).
 :::
 ::: step "Start the server" color="success"
 ```bash frame="terminal" title="Terminal"
