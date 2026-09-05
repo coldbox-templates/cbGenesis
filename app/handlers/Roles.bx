@@ -69,11 +69,11 @@ class extends="BaseSecureHandler" {
 	function create( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
+			// Assign before validating so prc.role is available to the catch below.
 			prc.role = roleService
 				.new()
 				.populate( rc )
-				.validateOrFail()
-				.save()
+			prc.role.validateOrFail().save()
 			auditLogService.info(
 				action     : "role.created",
 				message    : "Role [#prc.role.getRole()#] was created.",
@@ -88,7 +88,7 @@ class extends="BaseSecureHandler" {
 			response.failure(
 				message: "Role validation errors",
 				statusCode: 422,
-				data : prc.role.getValidationResult().getAllErrorsAsStruct()
+				data : prc.role.getValidationResults().getAllErrorsAsStruct()
 			)
 		}
 		catch ( any error ) {
@@ -107,11 +107,11 @@ class extends="BaseSecureHandler" {
 	function update( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
+			// Assign before validating so prc.role is available to the catch below.
 			prc.role = roleService
 				.getOrFail( rc.roleId ?: "" )
 				.populate( rc )
-				.validateOrFail()
-				.save()
+			prc.role.validateOrFail().save()
 			auditLogService.info(
 				action     : "role.updated",
 				message    : "Role [#prc.role.getRole()#] was updated.",
@@ -126,7 +126,7 @@ class extends="BaseSecureHandler" {
 			response.failure(
 				message: "Role validation errors",
 				statusCode: 422,
-				data : prc.role.getValidationResult().getAllErrorsAsStruct()
+				data : prc.role.getValidationResults().getAllErrorsAsStruct()
 			)
 		}
 		catch ( any error ) {
