@@ -217,34 +217,41 @@ class extends="coldbox.system.EventHandler"{
 		}
 
 		// --- Validate ---
-		var args = arguments
+		// email is excluded from generic population (User.bx this.population.exclude) so
+		// that a profile save can never change it - it may only move through the
+		// request/confirm flow. Registration is the legitimate place to set it for the
+		// first time, so it is assigned explicitly rather than by populating it.
 		prc.oUser = variables.userService.new( {
 			firstName: rc.firstName,
 			lastName : rc.lastName,
-			email    : rc.email,
 			password : rc.password
 		} )
-		prc.oUser
-			.validate()
-			// Handle validation errors
-			.onError( results =>{
-				flash.put( "messages", {
-					type   : "error",
-					message: "Please correct the highlighted errors and try again." & results.getAllErrors().toList( '<br>' )
-				} )
-				prc.validationErrors = results.getAllErrorsAsStruct()
-				register( argumentCollection: args )
-			})
-			// --- Create User ---
-			.onSuccess( results => {
-				userService.createRegistration( prc.oUser )
-				flash.put( "messages", {
-					type   : "success",
-					message: "Your account was created. Check your email to finish the registration process."
-				} )
+		prc.oUser.setEmail( trim( rc.email ?: "" ) )
 
-				return relocate( "login" )
+		// ActiveEntity has no validate(); it exposes isValid()/validateOrFail() and
+		// getValidationResults(). The old prc.oUser.validate() call fell through to
+		// cborm's onMissingMethod and threw MissingMethodException, so registration
+		// always failed with a 500 and no account was ever created.
+		try {
+			prc.oUser.validateOrFail()
+		} catch ( ValidationException error ) {
+			var validationResults = prc.oUser.getValidationResults()
+			flash.put( "messages", {
+				type   : "error",
+				message: "Please correct the highlighted errors and try again." & validationResults.getAllErrors().toList( '<br>' )
 			} )
+			prc.validationErrors = validationResults.getAllErrorsAsStruct()
+			return register( argumentCollection: arguments )
+		}
+
+		// --- Create User ---
+		userService.createRegistration( prc.oUser )
+		flash.put( "messages", {
+			type   : "success",
+			message: "Your account was created. Check your email to finish the registration process."
+		} )
+
+		return relocate( "login" )
 	}
 
 	/** Verify a self-registration email without changing the selected password. */

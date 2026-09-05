@@ -112,9 +112,15 @@ class extends="BaseSecureHandler" {
 			var selectedRole = roleService.getOrFail( rc.roleId ?: "" )
 			// Assign before validating: validateOrFail() throws, so folding it into the
 			// assignment chain would leave prc.user undefined in the catch below.
+			//
+			// email is excluded from generic population (User.bx this.population.exclude),
+			// so populate( rc ) cannot carry it. Inviting a user is a legitimate place to
+			// set it for the first time, so assign it explicitly - without it the
+			// "invitation" constraints reject every invite for a missing email.
 			prc.user = userService
 				.new()
 				.populate( rc )
+				.setEmail( trim( rc.email ?: "" ) )
 				.setRoles( [ selectedRole ] )
 			prc.user.validateOrFail( profiles: "invitation" )
 			userService.createInvitation( prc.user )
