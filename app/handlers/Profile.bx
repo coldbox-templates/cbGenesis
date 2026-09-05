@@ -158,9 +158,12 @@ class extends="BaseSecureHandler" {
 	@remote( "Change the authenticated user's password remotely via AJAX" )
 	function doPasswordChange( event, rc, prc ) {
 		var response = event.getResponse()
-		var currentPassword = rc.currentPassword.trim() ?: ""
-		var newPassword = rc.password.trim() ?: ""
-		var passwordConfirm = rc.passwordConfirm.trim() ?: ""
+		// Read defensively: rc.currentPassword.trim() throws when the key is absent,
+		// because the method call happens before ?: can supply a default. A client that
+		// omits a field should get a 422, not a 500.
+		var currentPassword = trim( rc.currentPassword ?: "" )
+		var newPassword = trim( rc.password ?: "" )
+		var passwordConfirm = trim( rc.passwordConfirm ?: "" )
 		var errors = {}
 
 		// Validate the current password
@@ -176,6 +179,17 @@ class extends="BaseSecureHandler" {
 		// Validate the new password
 		if ( !securityService.isValidPassword( newPassword ) ) {
 			errors.password = "The new password must be at least 8 characters and include uppercase, lowercase, number, and special characters."
+			return response.setErrorMessage(
+				errorMessage: "Password validation errors",
+				statusCode: 422,
+				data: errors
+			)
+		}
+
+		// Confirm the new password. passwordConfirm was read and then never compared,
+		// so the server accepted a mismatch that only the browser was rejecting.
+		if ( newPassword != passwordConfirm ) {
+			errors.passwordConfirm = "The password confirmation does not match."
 			return response.setErrorMessage(
 				errorMessage: "Password validation errors",
 				statusCode: 422,

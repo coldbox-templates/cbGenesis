@@ -26,6 +26,9 @@ class extends="coldbox.system.EventHandler"{
 	@inject
 	property name="auditLogService";
 
+	@inject
+	property name="settingService";
+
 	/**
 	 * Execute before any handler action is called.  This is a good place to check for
 	 * authentication and authorization.
@@ -445,6 +448,27 @@ class extends="coldbox.system.EventHandler"{
 				message: "Invalid or expired password reset token. Please request a new password reset link."
 			} )
 			return relocate( "forgot-password" )
+		}
+
+		// --- Confirmation + Policy ---
+		// This flow previously accepted rc.password as-is: passwordConfirm was parammed
+		// and never compared, and UserService.resetPassword() saves without validating,
+		// so a one-character password was accepted on the most security-sensitive path
+		// in the app. doRegister() and doActivateInvitation() both already check.
+		if ( rc.password != rc.passwordConfirm ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Password and confirmation do not match."
+			} )
+			return resetPassword( argumentCollection: arguments )
+		}
+
+		if ( !variables.settingService.isValidPassword( rc.password ) ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Your new password must be at least #prc.settings.cbMinPasswordLength# characters and include uppercase, lowercase, number, and special characters."
+			} )
+			return resetPassword( argumentCollection: arguments )
 		}
 
 		// Change the password for the user associated with the token
