@@ -6,6 +6,10 @@
 class {
 
 	static {
+		// bcrypt of the well-known bootstrap password "test". This hash is public: it
+		// ships in the repository, so it must never be a password anyone keeps. The
+		// admin below is therefore seeded with isPasswordReset = true, which forces a
+		// new password on first sign-in before the account can be used.
 		test_bcrypt = "$2a$10$nIfWUb9y5BtKWWNinHxtkOo9QIg.AaoVh.7MbukPrg5uLX9BNVC42"
 	}
 
@@ -155,7 +159,11 @@ class {
 			password  : static.test_bcrypt,
 			biography : "I am a wonderful CBGenesis Admin",
 			preferences:  "{}",
-			isPasswordReset: false,
+			// Force a password change on first sign-in: the seeded hash is public.
+			// Auth.doLogin() detects a reset-pending account, issues a reset token and
+			// sends the user straight into the reset-password flow, so no email round
+			// trip is needed to complete the bootstrap.
+			isPasswordReset: true,
 			is2FactorAuth: false,
 			verifiedAt: { value: now(), sqltype: "timestamp" }
 		} )
