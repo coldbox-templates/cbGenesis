@@ -67,10 +67,9 @@ class extends="BaseSecureHandler" {
 		var response = event.getResponse()
 		param rc.preferences = "{}"
 		try {
-			prc.profile = prc.authUser
-				.populate( rc )
-				.validateOrFail( profiles: "update" )
-				.save()
+			// Assign before validating so prc.profile is available to the catch below.
+			prc.profile = prc.authUser.populate( rc )
+			prc.profile.validateOrFail( profiles: "update" ).save()
 			response.setData(
 				data: prc.profile.getMemento(),
 				message: "Profile saved successfully."
@@ -80,7 +79,7 @@ class extends="BaseSecureHandler" {
 			response.setErrorMessage(
 				errorMessage: "Profile validation errors",
 				statusCode: 422,
-				data: prc.profile.getValidationResult().getAllErrorsAsStruct()
+				data: prc.profile.getValidationResults().getAllErrorsAsStruct()
 			)
 		}
 		catch ( any error ) {
@@ -306,11 +305,12 @@ class extends="BaseSecureHandler" {
 			rc.label = trim( rc.label ?: "" )
 			rc.expiration = trim( rc.expiration ?: "" )
 			// Create the token
+			// Assign before validating so prc.token is available to the catch below.
 			prc.token = apiTokenService
 				.new()
 				.populate( rc )
 				.setUser( prc.authUser )
-				.validateOrFail()
+			prc.token.validateOrFail()
 			prc.tokenResults = apiTokenService.createToken( prc.token )
 			response.setData(
 				data: {
@@ -323,7 +323,7 @@ class extends="BaseSecureHandler" {
 			response.setErrorMessage(
 				errorMessage: "Token validation errors",
 				statusCode: 422,
-					data : prc.token.getValidationResult().getAllErrorsAsStruct()
+					data : prc.token.getValidationResults().getAllErrorsAsStruct()
 			)
 		} catch ( any error ) {
 			log.error( "Error saving token: #error.message#", error )

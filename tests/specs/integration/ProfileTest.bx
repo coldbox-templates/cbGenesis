@@ -108,6 +108,32 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				} );
 			} );
 
+			story( "save() reports validation errors instead of blowing up", () => {
+				it( "returns a 422 with per-field errors when a required field is blank", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+
+					// firstName is required by the "update" constraint profile, so this
+					// drives validateOrFail() into its ValidationException path - the same
+					// path that previously threw again inside its own catch block, first
+					// because prc.profile was never assigned when the chain threw, and then
+					// because getValidationResult() is not a method on ActiveEntity
+					// (it is getValidationResults()). Either fault turned a 422 into a 500.
+					form.firstName = "";
+					form.lastName = "Name";
+					form.biography = "";
+					form.preferences = "{}";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "profile.save" );
+					var response = event.getPrivateValue( "response" );
+
+					expect( response.getStatusCode() ).toBe( 422 );
+					expect( response.getError() ).toBeTrue();
+					expect( response.getData() ).toHaveKey( "firstName" );
+				} );
+			} );
+
 			story( "requestEmailChange() and cancelEmailChange() work with a valid CSRF token", () => {
 				it( "sets a pending email change with a valid CSRF token", () => {
 					var user = createVerifiedUser();
