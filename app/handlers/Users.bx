@@ -110,11 +110,13 @@ class extends="BaseSecureHandler" {
 		var response = event.getResponse()
 		try {
 			var selectedRole = roleService.getOrFail( rc.roleId ?: "" )
+			// Assign before validating: validateOrFail() throws, so folding it into the
+			// assignment chain would leave prc.user undefined in the catch below.
 			prc.user = userService
 				.new()
 				.populate( rc )
 				.setRoles( [ selectedRole ] )
-				.validateOrFail( profiles: "invitation" )
+			prc.user.validateOrFail( profiles: "invitation" )
 			userService.createInvitation( prc.user )
 			auditLogService.info(
 				action     : "user.created",
@@ -130,7 +132,7 @@ class extends="BaseSecureHandler" {
 			response.failure(
 				message: "User validation errors",
 				statusCode: 422,
-				data : prc.user.getValidationResult().getAllErrorsAsStruct()
+				data : prc.user.getValidationResults().getAllErrorsAsStruct()
 			)
 		}
 		catch ( any error ) {
@@ -229,7 +231,7 @@ class extends="BaseSecureHandler" {
 				.save()
 			response.setData( data: buildDetailPayload( prc.user ), message: "User profile saved successfully." )
 		} catch ( ValidationException error ) {
-			response.failure( message: "User validation errors", statusCode: 422, data: prc.user.getValidationResult().getAllErrorsAsStruct() )
+			response.failure( message: "User validation errors", statusCode: 422, data: prc.user.getValidationResults().getAllErrorsAsStruct() )
 		} catch ( any error ) {
 			response.failure( message: "User profile could not be saved: #error.message#", statusCode: 400 )
 		}
@@ -439,11 +441,11 @@ class extends="BaseSecureHandler" {
 	function update( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
+			// Assign before validating so prc.user is available to the catch below.
 			prc.user = userService
 				.getOrFail( rc.userId ?: "" )
 				.populate( rc )
-				.validateOrFail()
-				.save()
+			prc.user.validateOrFail().save()
 			auditLogService.info(
 				action     : "user.updated",
 				message    : "User [#prc.user.getEmail()#] was updated.",
@@ -458,7 +460,7 @@ class extends="BaseSecureHandler" {
 			response.failure(
 				message: "User validation errors",
 				statusCode: 422,
-				data : prc.user.getValidationResult().getAllErrorsAsStruct()
+				data : prc.user.getValidationResults().getAllErrorsAsStruct()
 			)
 		}
 		catch ( any error ) {
