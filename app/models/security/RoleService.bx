@@ -34,7 +34,35 @@ class extends="app.models.BaseService" {
 	 */
 	RoleService function deleteRole( required Role role ) {
 		transaction {
-			userService.removeRoleFromUsers( arguments.role )
+			// Role.users is the inverse side of the many-to-many, so clearing it writes
+			// nothing - the association is owned by User.roles. Each assigned user has to
+			// drop the role and be saved first, otherwise Hibernate still holds the role
+			// in those in-session collections and the delete fails with "deleted object
+			// would be re-saved by cascade".
+			//
+			// The list is snapshotted because removeRole() mutates the very collection
+			// getUsers() returns.
+			// Queried rather than read from role.getUsers(): that inverse collection is
+			// not maintained in memory when a user gains a role, so it is routinely empty
+			// even while user_roles rows exist. Querying the owning side returns the
+			// session's own User instances, so removing the role from them actually takes.
+			var assignedUsers = variables.userService
+				.newCriteria()
+				.createAlias( "roles", "assignedRole" )
+				.isEq( "assignedRole.roleId", arguments.role.getRoleId() )
+				.list()
+
+			assignedUsers.each( ( user ) => {
+				user.removeRole( role )
+				variables.userService.save( user )
+			} )
+
+			// cborm's save() does not flush by default and the app runs with
+			// autoManageSession/flushAtRequestEnd off, so without this the join-row
+			// deletes are still pending when the role is deleted and Hibernate refuses
+			// with "deleted object would be re-saved by cascade".
+			ormFlush()
+
 			arguments.role.clearUsers().clearPermissions()
 			super.delete( arguments.role )
 		}
