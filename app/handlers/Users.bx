@@ -25,39 +25,7 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="auditLogService";
 
-	static{
-		csrfVerify = {
-			"update": true,
-			"updateProfile": true,
-			"setStatus": true,
-			"resetPassword": true,
-			"forcePasswordReset": true,
-			"verify": true,
-			"revokeRememberTokens": true,
-			"addRole": true,
-			"removeRole": true,
-			"addPermission": true,
-			"removePermission": true,
-			"savePreferences": true,
-			"revokeToken": true,
-			"revokeAllTokens": true,
-			"resendInvitation": true
-		}
-	}
 
-	function preHandler( event, rc, prc ) {
-		if ( static.csrfVerify.keyExists( event.getCurrentAction() ) && !csrfVerify( rc.csrf ?: "" ) ) {
-			event.getResponse().addMessage( "Invalid or expired CSRF token." )
-			onAuthorizationFailure(
-				event: event,
-				rc: rc,
-				prc: prc,
-				abort: true,
-				exception: { type: "InvalidCSRF", message: "Invalid or expired CSRF token" }
-			)
-		}
-		super.preHandler( argumentCollection: arguments )
-	}
 
 	// Present the users list view
 	function index( event, rc, prc ) {
