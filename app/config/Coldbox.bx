@@ -99,12 +99,15 @@ class {
 		 */
 		variables.logBox = {
 			// Define Appenders
+			// Both appenders MUST live inside this struct: LogBoxConfig only reads the
+			// `appenders`, `root` and `categories` keys, so an appender declared as a
+			// sibling of `appenders` is silently discarded and never registers.
 			appenders: {
-				coldboxTracer: { class: "coldbox.system.logging.appenders.ConsoleAppender" }
-			},
-			filelog  : {
-				class     : "coldbox.system.logging.appenders.RollingFileAppender",
-				properties: { filename: "app", filePath: "/app/logs" }
+				coldboxTracer: { class: "coldbox.system.logging.appenders.ConsoleAppender" },
+				filelog      : {
+					class     : "coldbox.system.logging.appenders.RollingFileAppender",
+					properties: { filename: "app", filePath: "/app/logs" }
+				}
 			},
 			// Root Logger
 			root: { levelmax: "INFO", appenders: "*" },
