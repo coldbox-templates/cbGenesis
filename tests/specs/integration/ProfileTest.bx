@@ -48,6 +48,59 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				} );
 			} );
 
+			story( "doPasswordChange() changes the authenticated user's password", () => {
+				it( "accepts a policy-compliant new password and applies it", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+
+					form.currentPassword = "correct-password";
+					form.password = "Sup3rSecret!x";
+					form.passwordConfirm = "Sup3rSecret!x";
+					form.csrf = cbcsrf.generate();
+
+					// The policy check used to be called on securityService, which does not
+					// define isValidPassword() - it lives on SettingService - so this action
+					// threw MissingMethodException and returned a 500 every single time.
+					var event = execute( "profile.doPasswordChange" );
+					var response = event.getPrivateValue( "response" );
+
+					expect( response.getError() ).toBeFalse();
+					expect( userService.verifyPassword( user.getEmail(), "Sup3rSecret!x" ) ).notToBeNull();
+				} );
+
+				it( "rejects a new password that fails the policy", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+
+					form.currentPassword = "correct-password";
+					form.password = "weak";
+					form.passwordConfirm = "weak";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "profile.doPasswordChange" );
+					var response = event.getPrivateValue( "response" );
+
+					expect( response.getStatusCode() ).toBe( 422 );
+					expect( response.getData() ).toHaveKey( "password" );
+				} );
+
+				it( "rejects an incorrect current password", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+
+					form.currentPassword = "not-my-password";
+					form.password = "Sup3rSecret!x";
+					form.passwordConfirm = "Sup3rSecret!x";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "profile.doPasswordChange" );
+					var response = event.getPrivateValue( "response" );
+
+					expect( response.getStatusCode() ).toBe( 422 );
+					expect( response.getData() ).toHaveKey( "currentPassword" );
+				} );
+			} );
+
 			story( "requestEmailChange() and cancelEmailChange() work with a valid CSRF token", () => {
 				it( "sets a pending email change with a valid CSRF token", () => {
 					var user = createVerifiedUser();
