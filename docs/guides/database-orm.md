@@ -128,7 +128,7 @@ Migrations run in filename/timestamp order:
 
 - An **Administrator** role
 - **16 permissions** across four resources (`users`, `roles`, `permissions`, `settings`), each with `read`/`write`/`delete`/`admin` — all assigned to the Administrator role
-- One admin user, `admin@cbgenesis.com`, assigned the Administrator role
+- One admin user, `admin@cbgenesis.com`, assigned the Administrator role, seeded as reset-pending so the public bootstrap password must be replaced at first sign-in
 
 See [Security & Permissions](security.md#permission-model) for how those slugs are enforced at the handler level.
 

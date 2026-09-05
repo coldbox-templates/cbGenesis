@@ -67,7 +67,7 @@ class extends="BaseSecureHandler" {
 			settingService.flushSettingsCache()
 			return response.setData( data: prc.setting.getMemento(), message: "Setting created successfully." )
 		} catch ( ValidationException error ) {
-			return response.failure( message: "Setting validation failed.", statusCode: 422, data: structKeyExists( prc, "setting" ) ? prc.setting.getValidationResult().getAllErrorsAsStruct() : {} )
+			return response.failure( message: "Setting validation failed.", statusCode: 422, data: structKeyExists( prc, "setting" ) ? prc.setting.getValidationResults().getAllErrorsAsStruct() : {} )
 		} catch ( any error ) {
 			return response.failure( message: error.message, statusCode: 400 )
 		}
@@ -84,7 +84,7 @@ class extends="BaseSecureHandler" {
 			settingService.flushSettingsCache()
 			return response.setData( data: prc.setting.getMemento(), message: "Setting updated successfully." )
 		} catch ( ValidationException error ) {
-			return response.failure( message: "Setting validation failed.", statusCode: 422, data: structKeyExists( prc, "setting" ) ? prc.setting.getValidationResult().getAllErrorsAsStruct() : {} )
+			return response.failure( message: "Setting validation failed.", statusCode: 422, data: structKeyExists( prc, "setting" ) ? prc.setting.getValidationResults().getAllErrorsAsStruct() : {} )
 		} catch ( any error ) {
 			return response.failure( message: error.message, statusCode: 400 )
 		}
