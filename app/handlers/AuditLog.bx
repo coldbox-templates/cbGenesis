@@ -7,26 +7,7 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="auditLogService";
 
-	static{
-		csrfVerify = {
-			"clear": true,
-			"purge": true
-		}
-	}
 
-	function preHandler( event, rc, prc ) {
-		if ( static.csrfVerify.keyExists( event.getCurrentAction() ) && !csrfVerify( rc.csrf ?: "" ) ) {
-			event.getResponse().addMessage( "Invalid or expired CSRF token." )
-			onAuthorizationFailure(
-				event: event,
-				rc: rc,
-				prc: prc,
-				abort: true,
-				exception: { type: "InvalidCSRF", message: "Invalid or expired CSRF token" }
-			)
-		}
-		super.preHandler( argumentCollection: arguments )
-	}
 
 	// Present the audit log list view
 	function index( event, rc, prc ) {

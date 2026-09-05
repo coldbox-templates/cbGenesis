@@ -17,6 +17,19 @@ class extends="coldbox.system.RestHandler"{
 	 * It sets the layout to "Admin" for all views rendered by this handler.
 	 */
 	function preHandler( event, rc, prc ) {
+		// --- CSRF Verification: deny by default ---
+		// Every state-changing request into a secured handler must carry a valid token.
+		// This used to be opt-in: each handler kept a static.csrfVerify map naming the
+		// actions to check, and the maps had holes - Users omitted create and delete,
+		// and Profile's "password" key never matched its doPasswordChange action, so
+		// those endpoints were unprotected. Keying off the HTTP method instead means a
+		// new action is covered the day it is added rather than when someone remembers
+		// to list it. GET actions are exempt because they must not change state; if one
+		// does, that is the bug.
+		if ( event.getHTTPMethod() != "GET" && !csrfVerify( rc.csrf ?: "" ) ) {
+			return onInvalidCSRF( argumentCollection = arguments )
+		}
+
 		event.setLayout( "Admin" )
 
 		if (
@@ -26,6 +39,24 @@ class extends="coldbox.system.RestHandler"{
 		) {
 			return relocate( "profile/passkey-required" )
 		}
+	}
+
+	/**
+	 * How this handler reports a failed CSRF check.
+	 *
+	 * The default aborts with an authorization failure, which is what the JSON/AJAX
+	 * handlers want. Handlers that render HTML forms override this to flash a message
+	 * and redirect instead, so the user gets a page rather than a bare 403.
+	 */
+	private function onInvalidCSRF( event, rc, prc ) {
+		event.getResponse().addMessage( "Invalid or expired CSRF token." )
+		onAuthorizationFailure(
+			event: event,
+			rc: rc,
+			prc: prc,
+			abort: true,
+			exception: { type: "InvalidCSRF", message: "Invalid or expired CSRF token" }
+		)
 	}
 
 	/**

@@ -467,6 +467,18 @@ class extends="coldbox.system.EventHandler"{
 	// ============================================================
 
 	function logout( event, rc, prc ) {
+		// Auth does not extend BaseSecureHandler, so it does not inherit the deny-by-default
+		// CSRF rule. Logout is a POST and was the one state-changing action here with no
+		// check at all: forcing a victim's logout is only a nuisance, but it is free to close.
+		param rc.csrf = ""
+		if ( !csrfVerify( rc.csrf ) ) {
+			flash.put( "messages", {
+				type   : "error",
+				message: "Invalid token detected. Page refreshed, try again."
+			} )
+			return relocate( "login" )
+		}
+
 		variables.securityService.logout()
 		return relocate( "login" )
 	}
