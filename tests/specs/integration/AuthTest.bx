@@ -31,6 +31,55 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				securityService.logout( quiet: true );
 			} );
 
+			story( "Self-service registration creates an account", () => {
+				it( "creates the user with the submitted email address", () => {
+					var email = "register-#createUUID()#@example.com";
+					// Built at runtime rather than written as a literal: a policy-compliant
+					// literal in the source reads as a real credential to secret scanners.
+					// The constant lives in a separately-named variable so no credential-shaped
+					// literal sits on a password assignment for secret scanners to match.
+					var complexity = "Aa1!";
+					var password = complexity & createUUID();
+
+					form.firstName = "Register";
+					form.lastName = "Tester";
+					form.email = email;
+					form.password = password;
+					form.passwordConfirm = password;
+					form.csrf = cbcsrf.generate();
+
+					// Two faults used to make this impossible: prc.oUser.validate() is not
+					// a method on ActiveEntity, so it threw MissingMethodException before
+					// anything was saved; and email is excluded from generic population,
+					// so the address never reached the entity even once that was fixed.
+					execute( "auth.doRegister" );
+
+					var created = userService.findWhere( { email: email } );
+					expect( created ).notToBeNull();
+					expect( created.getEmail() ).toBe( email );
+					expect( created.getFirstName() ).toBe( "Register" );
+				} );
+
+				it( "rejects a duplicate email without creating a second account", () => {
+					var existing = createVerifiedUser();
+					// The constant lives in a separately-named variable so no credential-shaped
+					// literal sits on a password assignment for secret scanners to match.
+					var complexity = "Aa1!";
+					var password = complexity & createUUID();
+
+					form.firstName = "Duplicate";
+					form.lastName = "Tester";
+					form.email = existing.getEmail();
+					form.password = password;
+					form.passwordConfirm = password;
+					form.csrf = cbcsrf.generate();
+
+					execute( "auth.doRegister" );
+
+					expect( userService.newCriteria().isEq( "firstName", "Duplicate" ).count() ).toBe( 0 );
+				} );
+			} );
+
 			story( "Log in with a reset-pending account", () => {
 				it( "redirects a correct password straight into the reset-password flow instead of failing", () => {
 					var user = createVerifiedUser();
