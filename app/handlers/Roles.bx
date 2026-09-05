@@ -148,7 +148,9 @@ class extends="BaseSecureHandler" {
 			var role = roleService.getOrFail( rc.roleId ?: "" )
 			var roleName = role.getRole()
 			var roleId = role.getRoleId()
-			role.delete()
+			// Goes through the service rather than role.delete() so the role is detached
+			// from its users and permissions in the same transaction as the delete.
+			roleService.deleteRole( role )
 			auditLogService.warn(
 				action     : "role.deleted",
 				message    : "Role [#roleName#] was deleted.",

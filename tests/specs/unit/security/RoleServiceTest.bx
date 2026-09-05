@@ -17,6 +17,26 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( roleService ).notToBeNull()
 			} )
 
+			it( "deletes a role that is still assigned to a user", () => {
+				var role = roleService.new( { role: "Deletable-#createUUID()#", description: "temp" } )
+				roleService.save( role )
+				var roleId = role.getRoleId()
+
+				var user = createVerifiedUser()
+				user.addRole( role )
+				userService.save( user )
+
+				// deleteRole() used to call userService.removeRoleFromUsers(), which does
+				// not exist, so this threw MissingMethodException via cborm's
+				// onMissingMethod. Nothing called it, so the break stayed invisible.
+				roleService.deleteRole( role )
+
+				expect( roleService.findWhere( { roleId: roleId } ) ).toBeNull()
+
+				var reloaded = userService.getOrFail( user.getUserId() )
+				expect( reloaded.getRoles().filter( ( r ) => r.getRoleId() == roleId ) ).toBeEmpty()
+			} )
+
 		} )
 	}
 }
