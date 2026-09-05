@@ -37,11 +37,11 @@ class extends="BaseSecureHandler" {
 	@secured( "permissions:admin,permissions:write" )
 	function create( event, rc, prc ) {
 		try {
+			// Assign before validating so prc.permission is available to the catch below.
 			prc.permission = permissionService
 				.new()
 				.populate( rc )
-				.validateOrFail()
-				.save()
+			prc.permission.validateOrFail().save()
 			auditLogService.info(
 				action     : "permission.created",
 				message    : "Permission [#prc.permission.getPermission()#] was created.",
@@ -59,7 +59,7 @@ class extends="BaseSecureHandler" {
 			flash.put( "messages", {
 				type   : "error",
 				message: "Permission validation errors" &
-					prc.permission.getValidationResult().getAllErrors().toList( "<br>" )
+					prc.permission.getValidationResults().getAllErrors().toList( "<br>" )
 			} )
 		}
 		catch ( any error ) {
@@ -77,11 +77,11 @@ class extends="BaseSecureHandler" {
 	function update( event, rc, prc ) {
 		var results = getApiResults()
 		try {
+			// Assign before validating so prc.permission is available to the catch below.
 			prc.permission = permissionService
 				.getOrFail( rc.permissionId ?: "" )
 				.populate( rc )
-				.validateOrFail()
-				.save()
+			prc.permission.validateOrFail().save()
 			auditLogService.info(
 				action     : "permission.updated",
 				message    : "Permission [#prc.permission.getPermission()#] was updated.",
@@ -96,7 +96,7 @@ class extends="BaseSecureHandler" {
 		catch( ValidationException error ){
 			results.error = true
 			results.messages = "Permission validation errors"
-			results.data = prc.permission.getValidationResult().getAllErrorsAsStruct()
+			results.data = prc.permission.getValidationResults().getAllErrorsAsStruct()
 			event.setHTTPHeader( statusCode: 422 )
 		}
 		catch ( any error ) {
