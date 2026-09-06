@@ -10,16 +10,18 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="auditLogService";
 
-	function preHandler( event, rc, prc ) {
-		// --- CSRF Verification ---
-		if ( event.getCurrentAction() != "index" && !csrfVerify( rc.csrf ?: "" ) ) {
-			flash.put( "messages", {
-				type   : "error",
-				message: "Invalid security token detected."
-			} )
-			return relocate( "permissions" )
-		}
-		super.preHandler( argumentCollection: arguments )
+	/**
+	 * This handler renders HTML and reports through flash, so a failed CSRF check
+	 * redirects with a message rather than aborting with a bare 403. The decision of
+	 * WHEN to check now lives in BaseSecureHandler, which denies any non-GET request
+	 * without a valid token.
+	 */
+	private function onInvalidCSRF( event, rc, prc ) {
+		flash.put( "messages", {
+			type   : "error",
+			message: "Invalid security token detected."
+		} )
+		return relocate( "permissions" )
 	}
 
 	function index( event, rc, prc ) {
