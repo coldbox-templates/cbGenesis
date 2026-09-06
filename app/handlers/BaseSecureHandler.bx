@@ -12,6 +12,11 @@ class extends="coldbox.system.RestHandler"{
 	@inject
 	property name="passkeyService";
 
+	static{
+		// The safe methods of RFC 9110, exempt from CSRF verification below.
+		SAFE_HTTP_METHODS = "GET,HEAD,OPTIONS"
+	}
+
 	/**
 	 * Pre-handler method that runs before any secure handler.
 	 * It sets the layout to "Admin" for all views rendered by this handler.
@@ -24,9 +29,17 @@ class extends="coldbox.system.RestHandler"{
 		// and Profile's "password" key never matched its doPasswordChange action, so
 		// those endpoints were unprotected. Keying off the HTTP method instead means a
 		// new action is covered the day it is added rather than when someone remembers
-		// to list it. GET actions are exempt because they must not change state; if one
-		// does, that is the bug.
-		if ( event.getHTTPMethod() != "GET" && !csrfVerify( rc.csrf ?: "" ) ) {
+		// to list it.
+		//
+		// The safe methods of RFC 9110 are exempt: they must not change state, so they
+		// carry no CSRF risk. HEAD is GET without a response body and OPTIONS is a
+		// capability probe (including CORS preflight, which cannot carry a token at
+		// all) - demanding one on either breaks ordinary clients for no benefit. If a
+		// safe method does change state, that is the bug to fix, not this check.
+		if (
+			!static.SAFE_HTTP_METHODS.listFindNoCase( event.getHTTPMethod() )
+			&& !csrfVerify( rc.csrf ?: "" )
+		) {
 			return onInvalidCSRF( argumentCollection = arguments )
 		}
 
