@@ -123,7 +123,7 @@ Architecture</h1>
 
 
 
-	<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#layered-overview">Layered overview</a></li><li class="toc-level-2"><a href="#request-lifecycle">Request lifecycle</a></li><li class="toc-level-2"><a href="#full-project-tree">Full project tree</a></li><li class="toc-level-2"><a href="#the-stack">The stack</a></li></ul></details>
+	<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#layered-overview">Layered overview</a></li><li class="toc-level-2"><a href="#request-lifecycle">Request lifecycle</a></li><li class="toc-level-2"><a href="#interceptors">Interceptors</a></li><li class="toc-level-2"><a href="#scheduled-tasks">Scheduled tasks</a></li><li class="toc-level-2"><a href="#full-project-tree">Full project tree</a></li><li class="toc-level-2"><a href="#the-stack">The stack</a></li></ul></details>
 
 					<svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
 <symbol id="adm-note">
@@ -199,6 +199,33 @@ Architecture</h1>
 <li><code>onRequestStart</code> - loads <code>prc.settings</code> and <code>prc.authUser</code> for every request</li>
 <li><code>onException</code> - the app-wide exception handler</li>
 </ul>
+<h2 id="interceptors"><a href="#interceptors" id="interceptors" name="interceptors" class="anchor"></a>Interceptors</h2>
+<p><code>app/config/Coldbox.bx</code> registers one application interceptor, <code>app/interceptors/AuditLogger.bx</code>, which writes to the audit trail on four interception points:</p>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Point</th><th>Recorded</th></tr>
+</thead>
+<tbody>
+<tr><td><code>postAuthentication</code></td><td>A successful sign-in</td></tr>
+<tr><td><code>preLogout</code></td><td>A sign-out</td></tr>
+<tr><td><code>cbSecurity_onInvalidAuthentication</code></td><td>A request that required a session and had none</td></tr>
+<tr><td><code>cbSecurity_onInvalidAuthorization</code></td><td>An authenticated user missing the required permission</td></tr>
+</tbody>
+</table></div>
+<p>Add your own to the <code>variables.interceptors</code> array in <code>Coldbox.bx</code>; they fire in declaration order.</p>
+<h2 id="scheduled-tasks"><a href="#scheduled-tasks" id="scheduled-tasks" name="scheduled-tasks" class="anchor"></a>Scheduled tasks</h2>
+<p><code>app/config/Scheduler.bx</code> registers three daily background tasks, each <code>onOneServer()</code> and <code>withNoOverlaps()</code> so a multi-instance deployment runs each one exactly once:</p>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Task</th><th>Runs</th><th>Deletes</th><th>Governed by</th></tr>
+</thead>
+<tbody>
+<tr><td>Purge Expired API Tokens</td><td><code>03:00</code></td><td><code>user_api_tokens</code> rows past their <code>expiration</code></td><td>Token lifetime set at issue time from <code>cbApiTokenMaxValidityMonths</code> (default <code>12</code> months) - see <a href="/cbGenesis/reference/settings/index.html#password--token-policy">App Settings</a></td></tr>
+<tr><td>Purge Expired Remember Tokens</td><td><code>03:15</code></td><td><code>user_remember_tokens</code> rows past their <code>expiration</code></td><td>Fixed expiration set when the token is issued (<code>SecurityService</code>/<code>RememberTokenService</code>)</td></tr>
+<tr><td>Purge Old Audit Logs</td><td><code>03:30</code></td><td><code>audit_logs</code> rows older than the retention window</td><td><code>cbAuditLogRetentionDays</code> (default <code>90</code>; <code>0</code> disables the purge) - see <a href="/cbGenesis/reference/settings/index.html#password--token-policy">App Settings</a></td></tr>
+</tbody>
+</table></div>
+<p>All three call a <code>purgeExpiredTokens()</code>/<code>purgeOlderThan()</code> method on the owning service rather than querying the table directly, so the same purge logic is reachable (and testable) outside the scheduler. Add a new task the same way - see <a href="/cbGenesis/guides/extending/index.html#adding-a-scheduled-task">Extending the App</a>.</p>
 <h2 id="full-project-tree"><a href="#full-project-tree" id="full-project-tree" name="full-project-tree" class="anchor"></a>Full project tree</h2>
 <pre data-bxsites-start-line="1" data-bxsites-title="Project structure"><code class="language-text">cbgenesis/
 ├── app/                      Application code
@@ -215,13 +242,14 @@ Architecture</h1>
 │   ├── models/
 │   │   ├── BaseEntity.bx      ORM base: timestamps, soft delete, memento
 │   │   ├── BaseService.bx     Service base: cborm + qb + cache + validation
-│   │   ├── security/            Role, Permission, APIToken, RememberToken, Passkey, ...
-│   │   └── system/              User, UserService, Setting, SettingService
+│   │   ├── security/            Role, Permission, APIToken, RememberToken,
+│   │   │                        Passkey, UserActionToken, SecurityService, ...
+│   │   └── system/              User, Setting, AuditLog + their services
 │   ├── views/                  BXM templates, one folder per handler
 │   │   └── _components/        Reusable UI partials (app, auth, ui)
 │   ├── email_templates/       Token-based email body templates
 │   ├── helpers/               ApplicationHelper.bxm — global view helpers
-│   └── interceptors/           Extension point (empty by default)
+│   └── interceptors/           AuditLogger — records authentication events
 ├── public/
 │   ├── Application.bx         Entry point — ColdBox + ORM bootstrap
 │   ├── index.bxm               Front controller placeholder
@@ -271,7 +299,7 @@ Architecture</h1>
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/architecture.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/architecture.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 5, 2026, 8&#x3a;55&#x3a;22 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/architecture.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/architecture.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 6, 2026, 9&#x3a;52&#x3a;56 PM</span></div>
 
 				</article>
 
@@ -294,7 +322,7 @@ Architecture</h1>
 			</main>
 
 			<aside class="col-xl-2 toc-sidebar d-none d-xl-block">
-				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#layered-overview">Layered overview</a></li><li class="toc-level-2"><a href="#request-lifecycle">Request lifecycle</a></li><li class="toc-level-2"><a href="#full-project-tree">Full project tree</a></li><li class="toc-level-2"><a href="#the-stack">The stack</a></li></ul></nav>
+				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#layered-overview">Layered overview</a></li><li class="toc-level-2"><a href="#request-lifecycle">Request lifecycle</a></li><li class="toc-level-2"><a href="#interceptors">Interceptors</a></li><li class="toc-level-2"><a href="#scheduled-tasks">Scheduled tasks</a></li><li class="toc-level-2"><a href="#full-project-tree">Full project tree</a></li><li class="toc-level-2"><a href="#the-stack">The stack</a></li></ul></nav>
 			</aside>
 
 		</div>

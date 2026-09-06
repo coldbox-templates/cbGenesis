@@ -128,20 +128,22 @@ Configuration</h1>
 					<h1 id="configuration"><a href="#configuration" id="configuration" name="configuration" class="anchor"></a>Configuration</h1>
 <h2 id="environment-variables"><a href="#environment-variables" id="environment-variables" name="environment-variables" class="anchor"></a>Environment variables</h2>
 <p>Copy <code>.env.example</code> to <code>.env</code> and fill in your own values - read anywhere in the app via <code>getSystemSetting( &quot;VAR_NAME&quot;, &quot;default&quot; )</code>:</p>
-<div class="bxsites-table-wrap"><table class="table">
+<div class="bxsites-table-wrap" x-data="{ q: '' }"><input type="search" class="bxsites-table-filter" x-model="q" placeholder="Filter table..." aria-label="Filter table"><table class="table">
 <thead>
 <tr><th>Variable</th><th>Purpose</th></tr>
 </thead>
 <tbody>
-<tr><td><code>APPNAME</code></td><td>Application display name</td></tr>
-<tr><td><code>ENVIRONMENT</code></td><td><code>development</code> or <code>production</code></td></tr>
-<tr><td><code>ASSET_URL</code></td><td>Public URL prefix for Vite production assets (defaults to <code>/includes</code>)</td></tr>
-<tr><td><code>BOXLANG_DEBUG</code></td><td>Enable BoxLang debug output</td></tr>
-<tr><td><code>DB_CONNECTIONSTRING</code></td><td>Full JDBC connection string</td></tr>
-<tr><td><code>DB_DRIVER</code></td><td>Database driver (<code>MySQL</code>, <code>PostgreSQL</code>, ...)</td></tr>
-<tr><td><code>DB_HOST</code> / <code>DB_PORT</code> / <code>DB_DATABASE</code></td><td>Database connection details</td></tr>
-<tr><td><code>DB_USER</code> / <code>DB_PASSWORD</code></td><td>Database credentials</td></tr>
-<tr><td><code>JWT_SECRET</code></td><td>Signing key for <code>cbsecurity</code>'s JWT support</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>APPNAME</code></td><td>Application display name</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>ENVIRONMENT</code></td><td><code>development</code> or <code>production</code></td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>ASSET_URL</code></td><td>Public URL prefix for Vite production assets (defaults to <code>/includes</code>)</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>BOXLANG_DEBUG</code></td><td>Enable BoxLang debug output</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>DB_CONNECTIONSTRING</code></td><td>Full JDBC connection string</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>DB_DRIVER</code></td><td>Database driver (<code>MySQL</code>, <code>PostgreSQL</code>, ...)</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>DB_HOST</code> / <code>DB_PORT</code> / <code>DB_DATABASE</code></td><td>Database connection details</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>DB_SCHEMA</code></td><td>Schema the migration runner targets (<code>.cbmigrations.json</code>); leave blank for engines without one</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>DB_USER</code> / <code>DB_PASSWORD</code></td><td>Database credentials</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>JWT_SECRET</code></td><td>Signing key for <code>cbsecurity</code>'s JWT support</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>COLDBOX_REINIT_PASSWORD</code></td><td>Password required by <code>?fwreinit</code>. Unset means a fresh random value per boot, so reinit is closed - see <a href="/cbGenesis/deployment/index.html#production-checklist">Deployment</a></td></tr>
 </tbody>
 </table></div>
 <h2 id="framework-settings-appconfigcoldboxbx"><a href="#framework-settings-appconfigcoldboxbx" id="framework-settings-appconfigcoldboxbx" name="framework-settings-appconfigcoldboxbx" class="anchor"></a>Framework settings (<code>app/config/Coldbox.bx</code>)</h2>
@@ -157,9 +159,10 @@ Configuration</h1>
 <tr><td><code>modulesExternalLocation</code></td><td><code>[&quot;/modules&quot;]</code></td></tr>
 <tr><td><code>autoMapModels</code></td><td><code>true</code></td></tr>
 <tr><td><code>jsonPayloadToRC</code></td><td><code>true</code></td></tr>
+<tr><td><code>reinitPassword</code></td><td><code>COLDBOX_REINIT_PASSWORD</code>, or a fresh random UUID per boot when that is unset</td></tr>
 </tbody>
 </table></div>
-<p>A <code>development()</code> environment override enables the Whoops error template, WireBox singleton reload, and ColdBox debug mode. LogBox is configured with a console appender plus a rolling file appender writing to <code>app/logs</code>.</p>
+<p>A <code>development()</code> environment override enables the Whoops error template, WireBox singleton reload, ColdBox debug mode, and clears <code>reinitPassword</code> so <code>?fwreinit=1</code> works locally without one. LogBox is configured with a console appender plus a rolling file appender writing to <code>app/logs</code>.</p>
 <h2 id="app-settings-vs-framework-config"><a href="#app-settings-vs-framework-config" id="app-settings-vs-framework-config" name="app-settings-vs-framework-config" class="anchor"></a>App settings vs. framework config</h2>
 <p>Two different things both live under <code>app/config/</code>, and it's easy to conflate them:</p>
 <div class="bxsites-columns"><div class="bxsites-column"><p><strong>Framework config</strong> (<code>Coldbox.bx</code>, <code>Router.bx</code>, <code>WireBox.bx</code>, <code>CacheBox.bx</code>, <code>Scheduler.bx</code>) is static, file-based, and changes take effect on the next <code>?fwreinit</code>.</p>
@@ -190,7 +193,7 @@ Configuration</h1>
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/configuration.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/configuration.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 5, 2026, 8&#x3a;55&#x3a;22 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/configuration.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/configuration.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 6, 2026, 9&#x3a;52&#x3a;56 PM</span></div>
 
 				</article>
 

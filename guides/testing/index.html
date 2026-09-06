@@ -126,6 +126,11 @@ Testing</h1>
 	<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#running-tests">Running tests</a></li><li class="toc-level-2"><a href="#test-structure">Test structure</a></li><li class="toc-level-2"><a href="#writing-an-integration-spec">Writing an integration spec</a></li></ul></details>
 
 					<svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
+<symbol id="adm-warning">
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="m3.1 18.5 8.1-14c.4-.7 1.4-.7 1.8 0l8.1 14c.4.7-.1 1.6-.9 1.6h-16.1c-.9 0-1.4-.9-1-1.6zm10.6-4.3c0-.1 0-.2 0-.2v-4.6c0-.4 0-.6 0-.6-.1-.1-.3-.2-.7-.3s-.7-.1-1-.1c-.1 0-.2 0-.3 0-.3.1-.5.2-.5.4v4.2s-.1.1-.2.4-.1.4 0 .5c.3.2.7.4 1.2.6s.9.3 1.2.3h.2c.2 0 .3-.2.3-.5-.2 0-.2-.1-.2-.1zm-.8 1.4c-.5-.2-.9-.2-1.2-.2s-.4.1-.5.4v.9c0 .2 0 .3-.1.4-.1.2-.2.3-.1.4s.5.3 1.2.5c.6.2 1 .2 1.1.2.2 0 .4-.1.4-.3s.1-.4.1-.7c0-.1 0-.3.1-.7 0-.3 0-.5 0-.5-.2-.1-.5-.2-1-.4z" fill="currentColor"/>
+</svg>
+</symbol>
 <symbol id="adm-tip">
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 <path d="m12.3 10c2.8-.7 4.2-3.8 2.1-7.4 8.1 3.2 7.5 18.1-2.6 18.4-8.1.2-9.8-11.4-4.4-14.8.2 3.3 2.8 4.3 4.9 3.8zm-3.2 5.8c.2 1.6 2.5 1.9 3.6 1.5 2.8-1 2.5-4 2.1-5.1-.8 1.4-1.3 1.7-2.2 2s-3.7-.7-3.5 1.6z" fill="currentColor"/>
@@ -135,24 +140,40 @@ Testing</h1>
 <h1 id="testing"><a href="#testing" id="testing" name="testing" class="anchor"></a>Testing</h1>
 <p>CB Genesis ships with a <a href="https://testbox.ortusbooks.com">TestBox</a> suite covering every service and entity, plus integration specs that exercise real requests.</p>
 <h2 id="running-tests"><a href="#running-tests" id="running-tests" name="running-tests" class="anchor"></a>Running tests</h2>
-<pre data-bxsites-title="Terminal" data-bxsites-frame="terminal"><code class="language-bash">box testbox run                        # All tests
-box testbox run --labels=unit          # Unit tests only
-box testbox run --labels=integration   # Integration tests only
+<pre data-bxsites-title="Terminal" data-bxsites-frame="terminal"><code class="language-bash">box testbox run                                  # All tests
+box testbox run directory=tests.specs.unit       # Unit tests only
+box testbox run directory=tests.specs.integration # Integration tests only
+box testbox run bundles=tests.specs.unit.security.RoleServiceTest  # One bundle
 </code></pre>
+<p>The runner (<code>tests/runner.bxm</code>, wired up by <code>box.json</code>'s <code>testbox.runner</code> key) also accepts <code>labels=</code> and <code>excludes=</code>, but no spec in this suite declares a label, so filter by directory or bundle instead. <code>--verbose</code> prints each spec as it runs, and <code>outputFile=</code>/<code>outputFormats=</code> write reports - that is how CI invokes it.</p>
+<div class="adm-block adm-warning">
+<div class="adm-heading">
+<svg class="adm-icon"><use xlink:href="#adm-warning" /></svg><span>Integration specs need a running server</span>
+</div>
+<div class="adm-body">
+<p>They issue real requests, so <code>box server start</code> must be up and the database migrated and seeded first. CI does exactly that before <code>box testbox run</code>.</p>
+</div>
+</div>
 <h2 id="test-structure"><a href="#test-structure" id="test-structure" name="test-structure" class="anchor"></a>Test structure</h2>
 <pre data-bxsites-title="tests&#x2f; layout"><code class="language-text">tests/
 ├── Application.bx              Virtual ColdBox app (appMapping=&quot;/app&quot;)
 ├── runner.bxm                  TestBox CLI runner entry
+├── run.bxm / index.bxm         Browser-based runner UI
 ├── specs/
 │   ├── integration/
-    │   │   └── MainSpec.bx         Lifecycle events and exception handling
+│   │   ├── MainSpec.bx         Lifecycle events and exception handling
+│   │   ├── AuthTest.bx         Login, registration, and password reset
+│   │   └── ProfileTest.bx      Password change and profile validation
 │   └── unit/
-│       ├── security/           APIToken, Permission, Role, SecurityService tests
-│       └── system/             Setting, User tests
+│       ├── security/           APIToken, APITokenService, Permission,
+│       │                       PermissionService, RememberTokenService,
+│       │                       Role, RoleService, SecurityService
+│       └── system/             AuditLog, AuditLogService, Setting,
+│                               SettingService, User, UserService
 └── resources/
     └── BaseIntegrationSpec.bx  Shared helper for integration tests
 </code></pre>
-<p>The naming convention is one unit spec per entity and one per service, split by domain folder (<code>security</code>, <code>system</code>) - mirroring <code>app/models</code>. Follow the same pairing when you add your own domain.</p>
+<p>The naming convention is one unit spec per entity and one per service, split by domain folder (<code>security</code>, <code>system</code>) - mirroring <code>app/models</code>. Follow the same pairing when you add your own domain. The runner discovers bundles by the <code>*Spec*</code>/<code>*Test*</code> filename pattern, so either suffix works.</p>
 <h2 id="writing-an-integration-spec"><a href="#writing-an-integration-spec" id="writing-an-integration-spec" name="writing-an-integration-spec" class="anchor"></a>Writing an integration spec</h2>
 <p>Integration specs extend <code>tests.resources.BaseIntegrationSpec</code>, which wires up <code>appMapping=&quot;/app&quot;</code> so paths resolve exactly like production:</p>
 <pre data-bxsites-start-line="1" data-bxsites-title="tests&#x2f;specs&#x2f;integration&#x2f;MainSpec.bx"><code class="language-boxlang">component extends=&quot;tests.resources.BaseIntegrationSpec&quot; {
@@ -176,12 +197,12 @@ box testbox run --labels=integration   # Integration tests only
 <p>Call <code>setup()</code> in <code>beforeEach()</code> for every integration spec, so state from one test never leaks into the next.</p>
 </div>
 </div>
-<p>The checked-in suite contains unit coverage for the security and system entities/services plus the <code>Main</code> integration spec. Add integration coverage for new routes and handlers as you build them; a feature is not covered merely because its service has a unit spec.</p>
+<p>The checked-in suite is <strong>169 specs across 17 suites</strong>: unit coverage for every security and system entity and service, plus integration specs for the application lifecycle (<code>MainSpec</code>), the authentication flows (<code>AuthTest</code>), and the profile handler (<code>ProfileTest</code>). Add integration coverage for new routes and handlers as you build them; a feature is not covered merely because its service has a unit spec.</p>
 <div class="bxsites-cards"><a class="bxsites-card" href="/cbGenesis/guides/extending/index.html"><div class="bxsites-card__icon"><svg class="bxsites-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M204,168a28,28,0,0,0,12-2.69V208a8,8,0,0,1-8,8H64a8,8,0,0,1-8-8V165.31a28,28,0,1,1,0-50.62V72a8,8,0,0,1,8-8h46.69a28,28,0,1,1,50.61,0H208a8,8,0,0,1,8,8v42.69A28,28,0,1,0,204,168Z" opacity="0.2"/><path d="M220.27,158.54a8,8,0,0,0-7.7-.46,20,20,0,1,1,0-36.16A8,8,0,0,0,224,114.69V72a16,16,0,0,0-16-16H171.78a35.36,35.36,0,0,0,.22-4,36.15,36.15,0,0,0-11.36-26.25,36,36,0,0,0-60.55,23.63,36.56,36.56,0,0,0,.14,6.62H64A16,16,0,0,0,48,72v32.22a35.36,35.36,0,0,0-4-.22,36.12,36.12,0,0,0-26.24,11.36,35.7,35.7,0,0,0-9.69,27,36.08,36.08,0,0,0,33.31,33.6,36.56,36.56,0,0,0,6.62-.14V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V165.31A8,8,0,0,0,220.27,158.54ZM208,208H64V165.31a8,8,0,0,0-11.43-7.23,20,20,0,1,1,0-36.16A8,8,0,0,0,64,114.69V72h46.69a8,8,0,0,0,7.23-11.43,20,20,0,1,1,36.16,0A8,8,0,0,0,161.31,72H208v32.23a35.68,35.68,0,0,0-6.62-.14A36,36,0,0,0,204,176a35.36,35.36,0,0,0,4-.22Z"/></svg></div><div class="bxsites-card__title">Extending the App</div><div class="bxsites-card__body"><p>Add a unit spec for a new service, alongside its entity spec.</p>
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/testing.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/testing.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 5, 2026, 8&#x3a;55&#x3a;22 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/testing.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/testing.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 6, 2026, 9&#x3a;52&#x3a;56 PM</span></div>
 
 				</article>
 

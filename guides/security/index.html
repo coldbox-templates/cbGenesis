@@ -169,7 +169,8 @@ Security &amp; Permissions</h1>
 <tbody>
 <tr><td>Session auth</td><td>cbauth with <code>CacheStorage@cbStorages</code> — server-side session cache</td></tr>
 <tr><td>Password hashing</td><td>bcrypt via <code>bx-password-encrypt</code></td></tr>
-<tr><td>CSRF protection</td><td>cbsecurity rotating token (30 min), verified manually per action — see <a href="/cbGenesis/guides/handlers-routing/index.html#permissions">Handlers &amp; Routing</a></td></tr>
+<tr><td>Password policy</td><td><code>SettingService.isValidPassword()</code> — <code>cbMinPasswordLength</code> plus an uppercase letter, a lowercase letter, a digit, and a special character. Enforced server-side on registration, invitation activation, password reset, and profile password change; the Alpine <code>$passwordMeetsPolicy</code> helper mirrors it in the browser</td></tr>
+<tr><td>CSRF protection</td><td>cbsecurity rotating token (30 min); the auto-verifier is off, and <code>BaseSecureHandler</code> verifies deny-by-default on every unsafe HTTP method instead — see <a href="/cbGenesis/guides/handlers-routing/index.html#csrf-verification">Handlers &amp; Routing</a></td></tr>
 <tr><td>Handler security</td><td><code>@secured</code> annotation → firewall redirects unauthenticated visitors to <code>login</code>, authorized-but-unpermitted users to <code>dashboard.notAuthorized</code></td></tr>
 <tr><td>JWT support</td><td>Configured for API access (AES-256, HS512, 60 min, cache token storage)</td></tr>
 <tr><td>Security headers</td><td>XSS protection, <code>frameOptions: SAMEORIGIN</code>, <code>referrerPolicy: same-origin</code></td></tr>
@@ -209,7 +210,7 @@ Security &amp; Permissions</h1>
 <tr><td><code>roles</code></td><td><code>read</code>, <code>write</code>, <code>delete</code>, <code>admin</code></td></tr>
 <tr><td><code>permissions</code></td><td><code>read</code>, <code>write</code>, <code>delete</code>, <code>admin</code></td></tr>
 <tr><td><code>settings</code></td><td><code>read</code>, <code>write</code>, <code>delete</code>, <code>admin</code></td></tr>
-<tr><td><code>auditlog</code></td><td><code>read</code>, <code>export</code>, <code>admin</code></td></tr>
+<tr><td><code>auditlog</code></td><td><code>read</code>, <code>export</code>, <code>delete</code>, <code>admin</code></td></tr>
 </tbody>
 </table></div>
 <div class="adm-block adm-info">
@@ -217,7 +218,7 @@ Security &amp; Permissions</h1>
 <svg class="adm-icon"><use xlink:href="#adm-info" /></svg><span>`admin` is a superset</span>
 </div>
 <div class="adm-body">
-<p><code>admin</code> means &quot;full administration of that resource&quot; and is always OR'd alongside the specific action a route needs, so a user holding <code>roles:admin</code> passes any <code>roles:*</code> check without also needing <code>roles:read</code>/<code>roles:write</code>/<code>roles:delete</code> individually. The seeder assigns the built-in permissions to a single <strong>Administrator</strong> role, granted to the seeded <code>admin@cbgenesis.com</code> user.</p>
+<p><code>admin</code> means &quot;full administration of that resource&quot; and is always OR'd alongside the specific action a route needs, so a user holding <code>roles:admin</code> passes any <code>roles:*</code> check without also needing <code>roles:read</code>/<code>roles:write</code>/<code>roles:delete</code> individually. The seeder assigns all 20 built-in permissions to a single <strong>Admin</strong> role, granted to the seeded <code>admin@cbgenesis.com</code> user.</p>
 </div>
 </div>
 <p><strong>Enforce it on the handler</strong> — this is the real security boundary, resolved by cbsecurity's <code>CBAuthValidator</code> against the authenticated user's permissions:</p>
@@ -254,7 +255,9 @@ class extends=&quot;BaseSecureHandler&quot; {
 <tr><td><code>UserService</code></td><td><code>requestEmailChange()</code>/<code>confirmEmailChange()</code>/<code>cancelEmailChange()</code> - self-service email change, gated behind a <code>PURPOSE_EMAIL_CHANGE</code> action token so a new address is only applied once the user confirms it from their inbox</td></tr>
 <tr><td><code>APIToken</code> / <code>APITokenService</code></td><td>SHA/BCrypt-hashed personal access tokens — <code>createToken()</code> returns the raw token exactly once, <code>revokeToken()</code>/<code>revokeAllForUser()</code>, <code>purgeExpiredTokens()</code> on a schedule</td></tr>
 <tr><td><code>RememberToken</code> / <code>RememberTokenService</code></td><td>Persistent &quot;remember me&quot; browser tokens, rotated on every use</td></tr>
-<tr><td><code>UserActionToken</code> / <code>UserActionTokenService</code></td><td>Purpose-bound, single-use tokens (<code>PURPOSE_REGISTRATION</code>, <code>PURPOSE_INVITATION</code>, <code>PURPOSE_EMAIL_CHANGE</code>) — <code>issue()</code>, <code>resolve()</code>, <code>consume()</code></td></tr>
+<tr><td><code>UserActionToken</code> / <code>UserActionTokenService</code></td><td>Purpose-bound, single-use tokens — <code>issue()</code>, <code>resolve()</code>, <code>consume()</code>. Five purposes: <code>PURPOSE_REGISTRATION</code>, <code>PURPOSE_INVITATION</code>, <code>PURPOSE_PASSWORD_RESET</code>, <code>PURPOSE_FORCED_PASSWORD_CHANGE</code>, <code>PURPOSE_EMAIL_CHANGE</code></td></tr>
+<tr><td><code>Passkey</code> / <code>PasskeyService</code></td><td>WebAuthn credentials for passwordless sign-in; <code>cbRequirePasskey</code> makes <code>BaseSecureHandler</code> redirect a user with none to <code>profile/passkey-required</code></td></tr>
+<tr><td><code>AuditLog</code> / <code>AuditLogService</code></td><td>The audit trail. The <code>AuditLogger</code> interceptor writes sign-ins, sign-outs, and failed authentication/authorization automatically — see <a href="/cbGenesis/architecture/index.html#interceptors">Architecture</a></td></tr>
 <tr><td><code>Passkey</code> / <code>PasskeyService</code></td><td>WebAuthn credential storage via <code>cbsecurity-passkeys</code>' <code>ICredentialRepository</code> contract</td></tr>
 </tbody>
 </table></div>
@@ -264,7 +267,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 5, 2026, 8&#x3a;55&#x3a;22 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 6, 2026, 9&#x3a;52&#x3a;56 PM</span></div>
 
 				</article>
 
