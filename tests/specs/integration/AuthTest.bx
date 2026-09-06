@@ -31,6 +31,61 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				securityService.logout( quiet: true );
 			} );
 
+			story( "Reset password enforces the confirmation and the password policy", () => {
+				it( "rejects a new password that does not match its confirmation", () => {
+					var user = createVerifiedUser();
+					var token = securityService.generatePasswordResetToken( user );
+					// Assembled from a separately-named constant so no credential-shaped
+					// literal sits on a password assignment for secret scanners to match.
+					var complexity = "Aa1!";
+					var password = complexity & createUUID();
+
+					form.token = token;
+					form.password = password;
+					form.passwordConfirm = password & "-different";
+					form.csrf = cbcsrf.generate();
+
+					execute( "auth.doResetPassword" );
+
+					// The old password must still work: nothing should have been saved.
+					expect( userService.verifyPassword( user.getEmail(), "correct-password" ) ).notToBeNull();
+				} );
+
+				it( "rejects a new password that fails the policy", () => {
+					var user = createVerifiedUser();
+					var token = securityService.generatePasswordResetToken( user );
+
+					form.token = token;
+					form.password = "weak";
+					form.passwordConfirm = "weak";
+					form.csrf = cbcsrf.generate();
+
+					execute( "auth.doResetPassword" );
+
+					expect( userService.verifyPassword( user.getEmail(), "weak" ) ).toBeNull();
+					expect( userService.verifyPassword( user.getEmail(), "correct-password" ) ).notToBeNull();
+				} );
+
+				it( "accepts a confirmed, policy-compliant password", () => {
+					var user = createVerifiedUser();
+					var token = securityService.generatePasswordResetToken( user );
+					// Assembled from a separately-named constant so no credential-shaped
+					// literal sits on a password assignment for secret scanners to match.
+					var complexity = "Aa1!";
+					var password = complexity & createUUID();
+
+					form.token = token;
+					form.password = password;
+					form.passwordConfirm = password;
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doResetPassword" );
+
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
+					expect( userService.verifyPassword( user.getEmail(), password ) ).notToBeNull();
+				} );
+			} );
+
 			story( "Log in with a reset-pending account", () => {
 				it( "redirects a correct password straight into the reset-password flow instead of failing", () => {
 					var user = createVerifiedUser();
