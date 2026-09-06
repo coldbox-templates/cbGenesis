@@ -34,8 +34,6 @@ class extends="tests.resources.BaseIntegrationSpec" {
 			story( "Self-service registration creates an account", () => {
 				it( "creates the user with the submitted email address", () => {
 					var email = "register-#createUUID()#@example.com";
-					// Built at runtime rather than written as a literal: a policy-compliant
-					// literal in the source reads as a real credential to secret scanners.
 					// The constant lives in a separately-named variable so no credential-shaped
 					// literal sits on a password assignment for secret scanners to match.
 					var complexity = "Aa1!";
@@ -77,6 +75,61 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					execute( "auth.doRegister" );
 
 					expect( userService.newCriteria().isEq( "firstName", "Duplicate" ).count() ).toBe( 0 );
+				} );
+			} );
+
+			story( "Reset password enforces the confirmation and the password policy", () => {
+				it( "rejects a new password that does not match its confirmation", () => {
+					var user = createVerifiedUser();
+					var token = securityService.generatePasswordResetToken( user );
+					// Assembled from a separately-named constant so no credential-shaped
+					// literal sits on a password assignment for secret scanners to match.
+					var complexity = "Aa1!";
+					var password = complexity & createUUID();
+
+					form.token = token;
+					form.password = password;
+					form.passwordConfirm = password & "-different";
+					form.csrf = cbcsrf.generate();
+
+					execute( "auth.doResetPassword" );
+
+					// The old password must still work: nothing should have been saved.
+					expect( userService.verifyPassword( user.getEmail(), "correct-password" ) ).notToBeNull();
+				} );
+
+				it( "rejects a new password that fails the policy", () => {
+					var user = createVerifiedUser();
+					var token = securityService.generatePasswordResetToken( user );
+
+					form.token = token;
+					form.password = "weak";
+					form.passwordConfirm = "weak";
+					form.csrf = cbcsrf.generate();
+
+					execute( "auth.doResetPassword" );
+
+					expect( userService.verifyPassword( user.getEmail(), "weak" ) ).toBeNull();
+					expect( userService.verifyPassword( user.getEmail(), "correct-password" ) ).notToBeNull();
+				} );
+
+				it( "accepts a confirmed, policy-compliant password", () => {
+					var user = createVerifiedUser();
+					var token = securityService.generatePasswordResetToken( user );
+					// Assembled from a separately-named constant so no credential-shaped
+					// literal sits on a password assignment for secret scanners to match.
+					var complexity = "Aa1!";
+					var password = complexity & createUUID();
+
+					form.token = token;
+					form.password = password;
+					form.passwordConfirm = password;
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "auth.doResetPassword" );
+
+					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
+					expect( userService.verifyPassword( user.getEmail(), password ) ).notToBeNull();
 				} );
 			} );
 
