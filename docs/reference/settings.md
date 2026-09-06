@@ -41,6 +41,7 @@ Select **Auth Center** or **Auth Split** at `/settings`, save the settings, and 
 | `cbInvitationExpiration` | Invitation-token validity, in days (default: `7`) |
 | `cbRegistrationVerificationExpiration` | Registration-verification-token validity, in hours (default: `24`) |
 | `cbApiTokenMaxValidityMonths` | Maximum lifetime an API token can be issued for (default: `12`) |
+| `cbAuditLogRetentionDays` | Age, in days, at which the daily scheduled task hard-deletes audit log entries (default: `90`). `0` disables the purge - see [Scheduled Tasks](../architecture.md#scheduled-tasks) |
 | `cbEncryptionKey` / `cbSaltingKey` | Encryption/salting keys used by the security layer |
 
 ## Branding & appearance

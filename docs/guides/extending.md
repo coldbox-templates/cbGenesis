@@ -75,15 +75,17 @@ function preHandler( event, rc, prc ){
 
 ## Adding a scheduled task
 
-Register tasks in `app/config/Scheduler.bx`:
+Register tasks in `app/config/Scheduler.bx`, next to the three that already run there - see [Architecture](../architecture.md#scheduled-tasks) for what they do:
 
 ```boxlang title="app/config/Scheduler.bx" linenums="1"
 task( "My Task" )
     .call( () => getInstance( "MyService" ).doWork() )
-    .everyDayAt( "03:00" )
-    .when( isClusterReady )
-    .withoutOverlaps();
+    .everyDayAt( "03:45" )
+    .onOneServer()
+    .withNoOverlaps();
 ```
+
+`onOneServer()` and `withNoOverlaps()` matter the moment you deploy more than one instance: without them, every instance runs the task on its own schedule. Put the actual purge/cleanup logic on the service (`doWork()` above), not inline in the closure, so it stays unit-testable.
 
 ## Overriding module configuration
 

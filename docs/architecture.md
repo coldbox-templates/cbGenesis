@@ -87,6 +87,18 @@ sequenceDiagram
 
 Add your own to the `variables.interceptors` array in `Coldbox.bx`; they fire in declaration order.
 
+## Scheduled tasks
+
+`app/config/Scheduler.bx` registers three daily background tasks, each `onOneServer()` and `withNoOverlaps()` so a multi-instance deployment runs each one exactly once:
+
+| Task | Runs | Deletes | Governed by |
+|---|---|---|---|
+| Purge Expired API Tokens | `03:00` | `user_api_tokens` rows past their `expiration` | Token lifetime set at issue time from `cbApiTokenMaxValidityMonths` (default `12` months) - see [App Settings](reference/settings.md#password--token-policy) |
+| Purge Expired Remember Tokens | `03:15` | `user_remember_tokens` rows past their `expiration` | Fixed expiration set when the token is issued (`SecurityService`/`RememberTokenService`) |
+| Purge Old Audit Logs | `03:30` | `audit_logs` rows older than the retention window | `cbAuditLogRetentionDays` (default `90`; `0` disables the purge) - see [App Settings](reference/settings.md#password--token-policy) |
+
+All three call a `purgeExpiredTokens()`/`purgeOlderThan()` method on the owning service rather than querying the table directly, so the same purge logic is reachable (and testable) outside the scheduler. Add a new task the same way - see [Extending the App](guides/extending.md#adding-a-scheduled-task).
+
 ## Full project tree
 
 ```text title="Project structure" linenums="1"
