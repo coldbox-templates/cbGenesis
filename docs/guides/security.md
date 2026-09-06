@@ -86,10 +86,10 @@ Every permission is a slug in the form `resource:action`, seeded by `resources/d
 | `roles` | `read`, `write`, `delete`, `admin` |
 | `permissions` | `read`, `write`, `delete`, `admin` |
 | `settings` | `read`, `write`, `delete`, `admin` |
-| `auditlog` | `read`, `export`, `admin` |
+| `auditlog` | `read`, `export`, `delete`, `admin` |
 
 !!! info "`admin` is a superset"
-    `admin` means "full administration of that resource" and is always OR'd alongside the specific action a route needs, so a user holding `roles:admin` passes any `roles:*` check without also needing `roles:read`/`roles:write`/`roles:delete` individually. The seeder assigns the built-in permissions to a single **Administrator** role, granted to the seeded `admin@cbgenesis.com` user.
+    `admin` means "full administration of that resource" and is always OR'd alongside the specific action a route needs, so a user holding `roles:admin` passes any `roles:*` check without also needing `roles:read`/`roles:write`/`roles:delete` individually. The seeder assigns all 20 built-in permissions to a single **Admin** role, granted to the seeded `admin@cbgenesis.com` user.
 
 **Enforce it on the handler** — this is the real security boundary, resolved by cbsecurity's `CBAuthValidator` against the authenticated user's permissions:
 
@@ -131,7 +131,9 @@ A user who fails an `@secured` check is redirected:
 | `UserService` | `requestEmailChange()`/`confirmEmailChange()`/`cancelEmailChange()` - self-service email change, gated behind a `PURPOSE_EMAIL_CHANGE` action token so a new address is only applied once the user confirms it from their inbox |
 | `APIToken` / `APITokenService` | SHA/BCrypt-hashed personal access tokens — `createToken()` returns the raw token exactly once, `revokeToken()`/`revokeAllForUser()`, `purgeExpiredTokens()` on a schedule |
 | `RememberToken` / `RememberTokenService` | Persistent "remember me" browser tokens, rotated on every use |
-| `UserActionToken` / `UserActionTokenService` | Purpose-bound, single-use tokens (`PURPOSE_REGISTRATION`, `PURPOSE_INVITATION`, `PURPOSE_EMAIL_CHANGE`) — `issue()`, `resolve()`, `consume()` |
+| `UserActionToken` / `UserActionTokenService` | Purpose-bound, single-use tokens — `issue()`, `resolve()`, `consume()`. Five purposes: `PURPOSE_REGISTRATION`, `PURPOSE_INVITATION`, `PURPOSE_PASSWORD_RESET`, `PURPOSE_FORCED_PASSWORD_CHANGE`, `PURPOSE_EMAIL_CHANGE` |
+| `Passkey` / `PasskeyService` | WebAuthn credentials for passwordless sign-in; `cbRequirePasskey` makes `BaseSecureHandler` redirect a user with none to `profile/passkey-required` |
+| `AuditLog` / `AuditLogService` | The audit trail. The `AuditLogger` interceptor writes sign-ins, sign-outs, and failed authentication/authorization automatically — see [Architecture](../architecture.md#interceptors) |
 | `Passkey` / `PasskeyService` | WebAuthn credential storage via `cbsecurity-passkeys`' `ICredentialRepository` contract |
 
 ::: cards

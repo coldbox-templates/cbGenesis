@@ -20,7 +20,7 @@ In `app/models/<domain>/`, extending `BaseEntity` — see [Database & ORM](datab
 Extending `BaseService`, marked `singleton threadSafe` — see [the service pattern](database-orm.md#service-layer-pattern).
 :::
 ::: step "Create the handler"
-Extending `BaseSecureHandler`, with an `@secured` annotation — see [Handlers & Routing](handlers-routing.md#basesecurehandler).
+Extending `BaseSecureHandler`, with an `@secured` annotation — see [Handlers & Routing](handlers-routing.md#basesecurehandler). Inheriting that base means every `POST`/`PUT`/`DELETE` action you add is [CSRF-verified automatically](handlers-routing.md#csrf-verification); there is nothing to opt into, but your forms and Alpine components must send `rc.csrf`.
 :::
 ::: step "Add routes"
 In `app/config/Router.bx`, near the `// @app_routes@` marker.
@@ -35,7 +35,7 @@ In `resources/assets/js/components/<domain>/`, then register it in `App.js` — 
 In `resources/assets/scss/views/`, imported from `app.scss`.
 :::
 ::: step "Write tests" color="success"
-Unit specs in `tests/specs/unit/<domain>/` — see [Testing](testing.md#test-structure).
+Unit specs in `tests/specs/unit/<domain>/`, plus an integration spec in `tests/specs/integration/` for the routes you added — see [Testing](testing.md#test-structure).
 :::
 :::
 

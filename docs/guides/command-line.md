@@ -53,10 +53,11 @@ Run these from the project root. They are all executed by `bx-cli`:
 | `box migrate up` | Apply pending database migrations |
 | `box migrate down` | Roll back the most recent migration batch |
 | `box migrate reset` | Roll back all migrations and apply them again |
-| `box migrate seed` | Run seed data, including the initial Administrator user |
-| `box testbox run` | Run the TestBox suite |
+| `box migrate seed` | Run seed data: the `Admin` role, its 20 permissions, and the reset-pending admin user |
+| `box testbox run` | Run the TestBox suite - see [Testing](testing.md#running-tests) for filtering |
 | `box task run path/to/task.cfc` | Run a CommandBox task through `bx-cli` |
-| `box format --source app/,tests/specs/,*.bx` | Format BoxLang source |
+| `box run-script format` | Format BoxLang source (`app/`, `tests/specs/`, root `*.bx`) |
+| `box run-script format:check` | Verify formatting without writing changes |
 
 The frontend uses Node.js separately:
 

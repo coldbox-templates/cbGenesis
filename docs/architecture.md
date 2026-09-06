@@ -74,6 +74,19 @@ sequenceDiagram
 - `onRequestStart` - loads `prc.settings` and `prc.authUser` for every request
 - `onException` - the app-wide exception handler
 
+## Interceptors
+
+`app/config/Coldbox.bx` registers one application interceptor, `app/interceptors/AuditLogger.bx`, which writes to the audit trail on four interception points:
+
+| Point | Recorded |
+|---|---|
+| `postAuthentication` | A successful sign-in |
+| `preLogout` | A sign-out |
+| `cbSecurity_onInvalidAuthentication` | A request that required a session and had none |
+| `cbSecurity_onInvalidAuthorization` | An authenticated user missing the required permission |
+
+Add your own to the `variables.interceptors` array in `Coldbox.bx`; they fire in declaration order.
+
 ## Full project tree
 
 ```text title="Project structure" linenums="1"
@@ -92,13 +105,14 @@ cbgenesis/
 │   ├── models/
 │   │   ├── BaseEntity.bx      ORM base: timestamps, soft delete, memento
 │   │   ├── BaseService.bx     Service base: cborm + qb + cache + validation
-│   │   ├── security/            Role, Permission, APIToken, RememberToken, Passkey, ...
-│   │   └── system/              User, UserService, Setting, SettingService
+│   │   ├── security/            Role, Permission, APIToken, RememberToken,
+│   │   │                        Passkey, UserActionToken, SecurityService, ...
+│   │   └── system/              User, Setting, AuditLog + their services
 │   ├── views/                  BXM templates, one folder per handler
 │   │   └── _components/        Reusable UI partials (app, auth, ui)
 │   ├── email_templates/       Token-based email body templates
 │   ├── helpers/               ApplicationHelper.bxm — global view helpers
-│   └── interceptors/           Extension point (empty by default)
+│   └── interceptors/           AuditLogger — records authentication events
 ├── public/
 │   ├── Application.bx         Entry point — ColdBox + ORM bootstrap
 │   ├── index.bxm               Front controller placeholder

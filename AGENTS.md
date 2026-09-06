@@ -101,7 +101,7 @@ All handlers except `Auth` and `Main` extend `BaseSecureHandler`, whose `preHand
 
 Registered interceptors and their interception points (auto-updated on `coldbox ai refresh`):
 
-No interceptors found.
+- **AuditLogger** (`app/interceptors/AuditLogger.bx`, registered in `Coldbox.bx`): `postAuthentication`, `preLogout`, `cbSecurity_onInvalidAuthentication`, `cbSecurity_onInvalidAuthorization` — writes each to the audit trail via `AuditLogService`.
 
 ## Layouts
 

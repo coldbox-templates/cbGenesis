@@ -21,6 +21,7 @@ Copy `.env.example` to `.env` and fill in your own values - read anywhere in the
 | `DB_CONNECTIONSTRING` | Full JDBC connection string |
 | `DB_DRIVER` | Database driver (`MySQL`, `PostgreSQL`, ...) |
 | `DB_HOST` / `DB_PORT` / `DB_DATABASE` | Database connection details |
+| `DB_SCHEMA` | Schema the migration runner targets (`.cbmigrations.json`); leave blank for engines without one |
 | `DB_USER` / `DB_PASSWORD` | Database credentials |
 | `JWT_SECRET` | Signing key for `cbsecurity`'s JWT support |
 | `COLDBOX_REINIT_PASSWORD` | Password required by `?fwreinit`. Unset means a fresh random value per boot, so reinit is closed - see [Deployment](../deployment.md#production-checklist) |
