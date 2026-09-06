@@ -214,6 +214,14 @@
 				<label>API Token Maximum Validity (months)
 					<input type="number" name="cbApiTokenMaxValidityMonths" min="1" max="120" step="1" value="#encodeForHTMLAttribute( prc.settings.cbApiTokenMaxValidityMonths )#">
 				</label>
+				<label>Rate Limit Maximum Attempts
+					<input type="number" name="cbRateLimitMaxAttempts" min="1" max="100" step="1" value="#encodeForHTMLAttribute( prc.settings.cbRateLimitMaxAttempts )#">
+					<small>Attempts allowed per IP on login, registration, and password reset before blocking.</small>
+				</label>
+				<label>Rate Limit Window (seconds)
+					<input type="number" name="cbRateLimitWindowSeconds" min="0" max="86400" step="1" value="#encodeForHTMLAttribute( prc.settings.cbRateLimitWindowSeconds )#">
+					<small>How long a block lasts. Set to 0 to disable rate limiting.</small>
+				</label>
 				<div class="cb-setting-row cb-span-2">
 					<div>
 						<strong>Require Passkey Enrollment</strong>

@@ -102,6 +102,7 @@ All handlers except `Auth` and `Main` extend `BaseSecureHandler`, whose `preHand
 Registered interceptors and their interception points (auto-updated on `coldbox ai refresh`):
 
 - **AuditLogger** (`app/interceptors/AuditLogger.bx`, registered in `Coldbox.bx`): `postAuthentication`, `preLogout`, `cbSecurity_onInvalidAuthentication`, `cbSecurity_onInvalidAuthorization` — writes each to the audit trail via `AuditLogService`.
+- **RateLimiter** (`app/interceptors/RateLimiter.bx`, registered in `Coldbox.bx`): `preProcess` — throttles `Auth.doLogin`, `Auth.doRegister`, `Auth.doForgotPassword`, `Auth.doResetPassword`, `Auth.doActivateInvitation` by client IP via `RateLimitService`, governed by `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds`.
 
 ## Layouts
 

@@ -50,6 +50,31 @@ Choose **Auth Center** or **Auth Split** on the `/settings` page. The selected l
 | JWT support | Configured for API access (AES-256, HS512, 60 min, cache token storage) |
 | Security headers | XSS protection, `frameOptions: SAMEORIGIN`, `referrerPolicy: same-origin` |
 | API tokens | SHA/BCrypt-hashed per-user tokens with expiration and a daily purge scheduler |
+| Rate limiting | `RateLimiter` interceptor throttles login, registration, and password reset by IP - see [Rate limiting](#rate-limiting) below |
+
+## Rate limiting
+
+`app/interceptors/RateLimiter.bx` fires on `preProcess` - before routing, before any handler runs - and throttles five unauthenticated `Auth` endpoints by client IP:
+
+- `doLogin`, `doRegister`, `doForgotPassword`, `doResetPassword`, `doActivateInvitation`
+
+A caller that exceeds the limit is redirected back to the form with a flash error; the request never reaches the handler, so a correct password submitted while blocked still does not log the user in.
+
+| Setting | Purpose |
+|---|---|
+| `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, within the window (default: `5`) |
+| `cbRateLimitWindowSeconds` | Window length, in seconds (default: `300`). `0` disables rate limiting entirely |
+
+Both are editable at `/settings` like any other app setting - see [App Settings](../reference/settings.md#password--token-policy).
+
+::: cards
+::: card title="How counting works" icon="phosphor-duotone:hourglass"
+`RateLimitService.attempt()` is a **sliding window**: every attempt, allowed or blocked, resets the key's expiration to the full window from that moment. A key only cools down once it goes quiet for an entire window - which keeps blocking for as long as an attack continues, rather than reopening partway through. Each endpoint has its own counter (keyed by `event:ip`), so exhausting the login limit does not affect registration or password reset.
+:::
+:::
+
+!!! note "In-memory by default"
+    Counters live in the `rateLimit` CacheBox region (`app/config/CacheBox.bx`), which is in-memory and therefore **per application instance**. Behind a load balancer with more than one instance, each instance enforces its own limit independently - a caller could get `cbRateLimitMaxAttempts` free attempts per instance rather than in total. To share counts across instances, swap the `rateLimit` region's `provider`/`properties` for a distributed CacheBox provider (Redis, Couchbase, or any provider CacheBox supports) - no code change needed in `RateLimitService` or `RateLimiter`, since both go through the injected `cachebox:rateLimit` region.
 
 ## `cbsecurity` configuration
 

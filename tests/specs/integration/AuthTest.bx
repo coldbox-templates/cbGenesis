@@ -15,6 +15,9 @@ class extends="tests.resources.BaseIntegrationSpec" {
 	@inject
 	property name="userActionTokenService";
 
+	@inject
+	property name="rateLimitService";
+
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
 	function beforeAll() {
@@ -29,6 +32,10 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				// Setup as a new ColdBox request, VERY IMPORTANT. ELSE EVERYTHING LOOKS LIKE THE SAME REQUEST.
 				setup();
 				securityService.logout( quiet: true );
+				// RateLimiter's counters live in an app-scoped cache, not the per-request
+				// transaction this suite otherwise rolls back, so every doLogin/doRegister/etc.
+				// call in this file would otherwise share one running count across tests.
+				rateLimitService.clearAll();
 			} );
 
 			story( "Self-service registration creates an account", () => {
@@ -222,6 +229,32 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					var event = execute( "auth.verifyEmailChange" );
 
 					expect( event.getValue( "relocate_event", "" ) ).toBe( "login" );
+				} );
+			} );
+
+			story( "RateLimiter throttles repeated login attempts", () => {
+				it( "blocks a login attempt once the configured limit is exceeded, even with the correct password", () => {
+					var user = createVerifiedUser();
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+
+					// Exhaust the allowance with wrong-password attempts, each legitimately
+					// rejected by doLogin() itself for a normal reason (bad credentials).
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						form.email = user.getEmail();
+						form.password = "wrong-password";
+						form.csrf = cbcsrf.generate();
+						execute( "auth.doLogin" );
+					}
+
+					// This next attempt uses the CORRECT password. If RateLimiter is doing its
+					// job, preProcess blocks it before doLogin() ever checks credentials, so a
+					// password that would otherwise succeed still leaves the user logged out.
+					form.email = user.getEmail();
+					form.password = "correct-password";
+					form.csrf = cbcsrf.generate();
+					execute( "auth.doLogin" );
+
+					expect( securityService.isLoggedIn() ).toBeFalse();
 				} );
 			} );
 		} );

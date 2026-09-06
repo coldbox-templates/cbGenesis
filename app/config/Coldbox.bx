@@ -147,6 +147,11 @@ class {
 				class      : "app.interceptors.AuditLogger",
 				name       : "AuditLogger",
 				properties : {}
+			},
+			{
+				class      : "app.interceptors.RateLimiter",
+				name       : "RateLimiter",
+				properties : {}
 			}
 		]
 

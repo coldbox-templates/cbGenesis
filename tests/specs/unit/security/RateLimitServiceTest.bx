@@ -1,0 +1,59 @@
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject
+	property name="rateLimitService";
+
+	/*********************************** BDD SUITES ***********************************/
+
+	function run() {
+		describe( "Rate Limit Service", () => {
+
+			it( "can be created", () => {
+				expect( rateLimitService ).notToBeNull()
+			} )
+
+			it( "allows attempts up to the configured maximum", () => {
+				var key = "test:#createUUID()#"
+
+				for ( var i = 1; i <= 3; i++ ) {
+					var result = rateLimitService.attempt( key: key, maxAttempts: 3, windowSeconds: 60 )
+					expect( result.allowed ).toBeTrue()
+				}
+			} )
+
+			it( "blocks once the maximum is exceeded", () => {
+				var key = "test:#createUUID()#"
+
+				rateLimitService.attempt( key: key, maxAttempts: 2, windowSeconds: 60 )
+				rateLimitService.attempt( key: key, maxAttempts: 2, windowSeconds: 60 )
+				var blocked = rateLimitService.attempt( key: key, maxAttempts: 2, windowSeconds: 60 )
+
+				expect( blocked.allowed ).toBeFalse()
+				expect( blocked.remaining ).toBe( 0 )
+				expect( blocked.retryAfter ).toBe( 60 )
+			} )
+
+			it( "tracks separate keys independently", () => {
+				var keyA = "test:#createUUID()#"
+				var keyB = "test:#createUUID()#"
+
+				rateLimitService.attempt( key: keyA, maxAttempts: 1, windowSeconds: 60 )
+				var blockedA = rateLimitService.attempt( key: keyA, maxAttempts: 1, windowSeconds: 60 )
+				var allowedB = rateLimitService.attempt( key: keyB, maxAttempts: 1, windowSeconds: 60 )
+
+				expect( blockedA.allowed ).toBeFalse()
+				expect( allowedB.allowed ).toBeTrue()
+			} )
+
+			it( "always allows when the window is disabled", () => {
+				var key = "test:#createUUID()#"
+
+				for ( var i = 1; i <= 10; i++ ) {
+					var result = rateLimitService.attempt( key: key, maxAttempts: 1, windowSeconds: 0 )
+					expect( result.allowed ).toBeTrue()
+				}
+			} )
+
+		} )
+	}
+}

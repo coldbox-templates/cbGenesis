@@ -79,6 +79,31 @@ class {
 						maxObjects                    : 5000,
 						objectStore                   : "ConcurrentStore"
 					}
+				},
+
+				/**
+				 * --------------------------------------------------------------------------
+				 * Rate Limit Counters
+				 * --------------------------------------------------------------------------
+				 * Backs RateLimitService's per-key attempt counters (see app/interceptors/RateLimiter.bx).
+				 * In-memory and per-instance by default: on a multi-instance deployment, each instance
+				 * enforces its own limit unless this provider is swapped for a distributed one (Redis,
+				 * Couchbase, etc. - anything CacheBox has a provider for) so all instances share counts.
+				 * See docs/guides/security.md#rate-limiting.
+				 */
+				rateLimit: {
+					provider  : "coldbox.system.cache.providers.CacheBoxColdBoxProvider",
+					properties: {
+						objectDefaultTimeout          : 5,
+						objectDefaultLastAccessTimeout: 0,
+						useLastAccessTimeouts         : false,
+						freeMemoryPercentageThreshold : 0,
+						reapFrequency                 : 1,
+						evictionPolicy                : "LRU",
+						evictCount                    : 10,
+						maxObjects                    : 5000,
+						objectStore                   : "ConcurrentStore"
+					}
 				}
 			}
 		};
