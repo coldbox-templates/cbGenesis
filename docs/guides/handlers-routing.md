@@ -12,6 +12,7 @@ tags: [guides, handlers, routing]
 
 | Handler | Base | Purpose |
 |---|---|---|
+| [`AuditLog.bx`](#auditlog) | `BaseSecureHandler` | Audit trail browsing, export, and purging |
 | [`Auth.bx`](#auth) | `EventHandler` | Login, registration, invitations, password reset - all public |
 | [`BaseSecureHandler.bx`](#basesecurehandler) | `RestHandler` | Base class for every admin handler |
 | [`Dashboard.bx`](#dashboard) | `BaseSecureHandler` | The authenticated landing page |
@@ -24,12 +25,13 @@ tags: [guides, handlers, routing]
 
 ### `BaseSecureHandler`
 
-Every protected handler extends `BaseSecureHandler`, which forces the `Admin` layout in `preHandler`, redirects to `profile/passkey-required` when `cbRequirePasskey` is on and the user has none, and provides shared helpers (`getApiResults()`, `ensureSortDirection()`, `getPagination()`):
+Every protected handler extends `BaseSecureHandler`, whose `preHandler` [verifies CSRF on every state-changing request](#csrf-verification), forces the `Admin` layout, and redirects to `profile/passkey-required` when `cbRequirePasskey` is on and the user has none. It also provides shared helpers (`getApiResults()`, `ensureSortDirection()`, `getPagination()`):
 
 ```boxlang title="app/handlers/BaseSecureHandler.bx"
 component extends="coldbox.system.RestHandler" {
 
     function preHandler( event, rc, prc ){
+        // ...CSRF verification, deny-by-default...
         event.setLayout( "Admin" );
         // ...passkey enforcement...
     }
@@ -49,6 +51,15 @@ component extends="BaseSecureHandler" secured {
 
 }
 ```
+
+### `AuditLog`
+
+`@secured("auditlog:admin,auditlog:read")` at the class level; every action but `index` is `@remote`:
+
+- `index`, `search`, `show` - browse and filter the audit trail
+- `export` - `@secured("auditlog:admin,auditlog:export")`, streams CSV
+- `purge` - `@secured("auditlog:admin,auditlog:delete")`, deletes entries older than a cutoff
+- `clear` - `@secured("auditlog:admin")`, deletes every entry
 
 ### `Auth`
 
@@ -91,7 +102,7 @@ No `@secured` annotation - these actions must stay reachable by guests:
 - `listTokens` / `createToken` / `updateToken` / `deleteToken` - API tokens
 - `listPasskeys` / `updatePasskey` / `deletePasskey`
 
-A static `csrfVerify` map on the class lists which of these actions require CSRF verification.
+Every one of these is CSRF-verified by `BaseSecureHandler` unless it is reached over a safe HTTP method - see [CSRF verification](#csrf-verification).
 
 ### `Roles`
 
@@ -123,8 +134,35 @@ A static `csrfVerify` map on the class lists which of these actions require CSRF
 
 `ensureNotSelf()` guards several of these to block an admin from demoting or removing their own roles.
 
-!!! warning "CSRF is manual, not automatic"
-    `app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false` - every state-changing action verifies CSRF itself (via a `preHandler` check or a `static.csrfVerify` map), rather than relying on a global interceptor. Follow the existing pattern in the handler you're extending.
+## CSRF verification
+
+`app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false`, so there is no global interceptor. Instead, `BaseSecureHandler.preHandler()` verifies CSRF **deny-by-default** for every handler that extends it:
+
+```boxlang title="app/handlers/BaseSecureHandler.bx (excerpt)"
+static {
+    // The safe methods of RFC 9110, exempt from CSRF verification below.
+    SAFE_HTTP_METHODS = "GET,HEAD,OPTIONS"
+}
+
+function preHandler( event, rc, prc ) {
+    if (
+        !static.SAFE_HTTP_METHODS.listFindNoCase( event.getHTTPMethod() )
+        && !csrfVerify( rc.csrf ?: "" )
+    ) {
+        return onInvalidCSRF( argumentCollection = arguments )
+    }
+    // ...
+}
+```
+
+What this means when you extend a secured handler:
+
+- **You do not opt in.** Any action reached over `POST`, `PUT`, `PATCH`, or `DELETE` must carry a valid `rc.csrf`, from the day you add it. There is no per-handler list to remember to update.
+- **Safe methods are exempt.** `GET`, `HEAD`, and `OPTIONS` must not change state, so they carry no CSRF risk, and `OPTIONS` (CORS preflight) cannot carry a token at all. If a safe method in your code does change state, that is the bug to fix.
+- **`onInvalidCSRF()` is overridable.** The base implementation aborts with an authorization failure, which is what the JSON/AJAX endpoints want. `Permissions` and `Settings` override it to flash a message and redirect, so a browser form gets a page instead of a bare 403. Override it in your own handler when it renders HTML.
+
+!!! note "`Auth` is not a secured handler"
+    `Auth` extends `coldbox.system.EventHandler`, not `BaseSecureHandler`, because its actions run for unauthenticated visitors and so cannot inherit the check above. Each state-changing action verifies its own token: `doLogin`, `doRegister`, `doActivateInvitation`, `doForgotPassword`, `doResetPassword`, and `logout`.
 
 ## Route map (`app/config/Router.bx`)
 
