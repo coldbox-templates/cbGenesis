@@ -16,39 +16,7 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="passkeyService";
 
-	static{
-		csrfVerify = {
-			"save"    : true,
-			"password": true,
-			"requestEmailChange": true,
-			"cancelEmailChange": true,
-			"createToken": true,
-			"updateToken": true,
-			"deleteToken": true,
-			"deletePasskey": true,
-			"updatePasskey": true
-		}
-	}
 
-	function preHandler( event, rc, prc ) {
-		if (
-			static.csrfVerify.keyExists( event.getCurrentAction() )
-			&& !csrfVerify( rc.csrf ?: "" )
-		) {
-			event.getResponse().addMessage( "Invalid or expired CSRF token." )
-			onAuthorizationFailure(
-				event: event,
-				rc: rc,
-				prc: prc,
-				abort: true,
-				exception: {
-					type: "InvalidCSRF",
-					message: "Invalid or expired CSRF token"
-				}
-			)
-		}
-		super.preHandler( argumentCollection: arguments )
-	}
 
 	function index( event, rc, prc ) {
 		prc.title = "My Profile"
