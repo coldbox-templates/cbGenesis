@@ -113,7 +113,7 @@ box migrate seed
 ```
 
 ??? tip "What does the seeder create?"
-    `resources/database/seeds/AdminData.bx` creates an **Administrator** role with all 16 built-in permissions, and one admin user:
+    `resources/database/seeds/AdminData.bx` creates an **Admin** role with all 20 built-in permissions, and one admin user:
 
     | Field | Value |
     |---|---|

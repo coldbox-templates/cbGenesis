@@ -54,8 +54,8 @@ Point `app/config/modules/cbmailservices.bx` at a real SMTP/Postmark/SendGrid dr
 ::: step "Rotate the seeded admin password" color="warning"
 The seeder creates `admin@cbgenesis.com` / `test`, flagged as reset-pending. Signing in with it does not grant a session: you are sent straight to the reset-password form and must set a new password first. The bootstrap hash is public (it ships in the repo), so never clear that flag to keep using `test`. See [Getting Started](getting-started.md#scaffold-your-app).
 :::
-::: step "Set a strong reinitPassword"
-In `app/config/Coldbox.bx`, so framework reinit (`?fwreinit=true`) isn't left open to anyone.
+::: step "Decide who may reinit the framework"
+`reinitPassword` reads `COLDBOX_REINIT_PASSWORD` from the environment. Leave it **unset** in production and each boot falls back to a fresh random UUID nobody knows, which closes `?fwreinit` entirely. Set it only if you need to reinit a running instance, and treat it as a credential. Setting it to an empty string leaves reinit open to anyone, which is why `development()` does exactly that and production must not.
 :::
 ::: step "Enable HTTPS"
 Via SSL configuration in `server.json`, or your reverse proxy / load balancer of choice.

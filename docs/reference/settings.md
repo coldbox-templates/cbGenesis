@@ -36,7 +36,7 @@ Select **Auth Center** or **Auth Split** at `/settings`, save the settings, and 
 
 | Setting | Purpose |
 |---|---|
-| `cbMinPasswordLength` | Minimum password length (default: `8`) |
+| `cbMinPasswordLength` | Minimum password length (default: `8`). `SettingService.isValidPassword()` also requires an uppercase letter, a lowercase letter, a digit, and a special character, and every server-side path that sets a password (registration, invitation activation, reset, and profile change) runs it |
 | `cbPasswordResetExpiration` | Reset-token validity, in minutes (default: `60`) |
 | `cbInvitationExpiration` | Invitation-token validity, in days (default: `7`) |
 | `cbRegistrationVerificationExpiration` | Registration-verification-token validity, in hours (default: `24`) |

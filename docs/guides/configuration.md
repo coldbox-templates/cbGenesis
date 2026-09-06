@@ -23,6 +23,7 @@ Copy `.env.example` to `.env` and fill in your own values - read anywhere in the
 | `DB_HOST` / `DB_PORT` / `DB_DATABASE` | Database connection details |
 | `DB_USER` / `DB_PASSWORD` | Database credentials |
 | `JWT_SECRET` | Signing key for `cbsecurity`'s JWT support |
+| `COLDBOX_REINIT_PASSWORD` | Password required by `?fwreinit`. Unset means a fresh random value per boot, so reinit is closed - see [Deployment](../deployment.md#production-checklist) |
 
 ## Framework settings (`app/config/Coldbox.bx`)
 
@@ -35,8 +36,9 @@ Copy `.env.example` to `.env` and fill in your own values - read anywhere in the
 | `modulesExternalLocation` | `["/modules"]` |
 | `autoMapModels` | `true` |
 | `jsonPayloadToRC` | `true` |
+| `reinitPassword` | `COLDBOX_REINIT_PASSWORD`, or a fresh random UUID per boot when that is unset |
 
-A `development()` environment override enables the Whoops error template, WireBox singleton reload, and ColdBox debug mode. LogBox is configured with a console appender plus a rolling file appender writing to `app/logs`.
+A `development()` environment override enables the Whoops error template, WireBox singleton reload, ColdBox debug mode, and clears `reinitPassword` so `?fwreinit=1` works locally without one. LogBox is configured with a console appender plus a rolling file appender writing to `app/logs`.
 
 ## App settings vs. framework config
 

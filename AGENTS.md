@@ -85,14 +85,17 @@ The following ColdBox modules are installed in this project. Use these when gene
 
 Current event handlers and their public actions (auto-updated on `coldbox ai refresh`):
 
-- **Auth**: login, register, forgotPassword, resetPassword, verifyEmailChange, logout
-- **Dashboard**: index
-- **Main**: onAppInit, onException
-- **Permissions**: index, getMockAuthUser
-- **Profile**: index, update, password, requestEmailChange, cancelEmailChange, tokens, getMockAuthUser
-- **Roles**: index, getMockAuthUser
-- **Settings**: index, getMockAuthUser
-- **Users**: index, detail, setMockSecurityData, getMockAuthUser
+- **AuditLog**: index, search, show, export, purge, clear
+- **Auth**: login, doLogin, register, checkEmailAvailability, doRegister, verifyRegistration, verifyEmailChange, activateInvitation, doActivateInvitation, forgotPassword, doForgotPassword, resetPassword, doResetPassword, logout
+- **Dashboard**: index, notAuthorized
+- **Main**: onAppInit, onRequestStart, onRequestEnd, onSessionStart, onSessionEnd, onException
+- **Permissions**: index, create, update, delete
+- **Profile**: index, passkeyRequired, save, requestEmailChange, cancelEmailChange, doPasswordChange, listTokens, createToken, updateToken, deleteToken, listPasskeys, updatePasskey, deletePasskey
+- **Roles**: index, create, update, delete, users, availableUsers, addUser, removeUser
+- **Settings**: index, registry, registrySearch, createRegistry, updateRegistry, toggleRegistryStatus, deleteRegistry, save, clearTemplateCache, clearSessionsCache, revokeRememberTokens, flushSettingsCache
+- **Users**: index, search, create, show, update, delete, resendInvitation, updateProfile, setStatus, resetPassword, forcePasswordReset, verify, revokeRememberTokens, addRole, removeRole, addPermission, removePermission, savePreferences, revokeToken, revokeAllTokens
+
+All handlers except `Auth` and `Main` extend `BaseSecureHandler`, whose `preHandler` verifies CSRF deny-by-default: any request that is not `GET`/`HEAD`/`OPTIONS` must carry a valid `rc.csrf`. Override `onInvalidCSRF()` in a handler that renders HTML instead of JSON.
 
 ## Interceptors Snapshot
 

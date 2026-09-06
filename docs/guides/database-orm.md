@@ -126,9 +126,9 @@ Migrations run in filename/timestamp order:
 
 `resources/database/seeds/AdminData.bx`, run via `box migrate seed`, creates:
 
-- An **Administrator** role
-- **16 permissions** across four resources (`users`, `roles`, `permissions`, `settings`), each with `read`/`write`/`delete`/`admin` — all assigned to the Administrator role
-- One admin user, `admin@cbgenesis.com`, assigned the Administrator role, seeded as reset-pending so the public bootstrap password must be replaced at first sign-in
+- An **Admin** role
+- **20 permissions** across five resources (`users`, `roles`, `permissions`, `settings`, `auditlog`), each with `read`/`write`/`delete`/`admin` (`auditlog` uses `read`/`export`/`delete`/`admin`) — all assigned to the Admin role
+- One admin user, `admin@cbgenesis.com`, assigned the Admin role, seeded as reset-pending so the public bootstrap password must be replaced at first sign-in
 
 See [Security & Permissions](security.md#permission-model) for how those slugs are enforced at the handler level.
 
