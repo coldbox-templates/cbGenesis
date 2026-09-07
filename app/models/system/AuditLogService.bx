@@ -17,6 +17,9 @@ class extends="app.models.BaseService" {
 	@inject( "provider:SecurityService" )
 	property name="securityService";
 
+	@inject( "provider:CBSecurity@cbsecurity" )
+	property name="cbsecurity";
+
 	static {
 		// Kept in sync with AuditLog::SEVERITIES / AuditLog::CATEGORIES -- duplicated here rather
 		// than referenced cross-class to avoid coupling the service to the entity's static scope.
@@ -87,7 +90,7 @@ class extends="app.models.BaseService" {
 			entry.setTargetType( arguments.targetType )
 			entry.setTargetId( arguments.targetId )
 			entry.setTargetLabel( arguments.targetLabel )
-			entry.setIpAddress( getClientIp() )
+			entry.setIpAddress( variables.cbsecurity.getRealIP() )
 			entry.setUserAgent( cgi.http_user_agent ?: "" )
 			entry.setMetadata( jsonSerialize( sanitizeMetadata( arguments.metadata ) ) )
 
@@ -363,17 +366,6 @@ class extends="app.models.BaseService" {
 			arguments.entry.setActorEmail( resolvedActor.getEmail() )
 			arguments.entry.setActorName( trim( resolvedActor.getFirstName() & " " & resolvedActor.getLastName() ) )
 		}
-	}
-
-	/**
-	 * Resolves the client IP address, preferring a forwarded-for header when present.
-	 */
-	private string function getClientIp() {
-		var forwarded = cgi.http_x_forwarded_for ?: ""
-		if ( len( forwarded ) ) {
-			return trim( listFirst( forwarded, "," ) )
-		}
-		return cgi.remote_addr ?: ""
 	}
 
 	/**
