@@ -72,6 +72,19 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( () => settingService.bulkSave( { cbApiTokenMaxValidityMonths: 121 } ) ).toThrow( "Setting.Invalid" )
 			} )
 
+			it( "defines a five-attempt, five-minute rate limit default", () => {
+				expect( settingService.DEFAULTS.cbRateLimitMaxAttempts ).toBe( 5 )
+				expect( settingService.DEFAULTS.cbRateLimitWindowSeconds ).toBe( 300 )
+			} )
+
+			it( "rejects invalid rate limit settings", () => {
+				expect( () => settingService.bulkSave( { cbRateLimitMaxAttempts: 0 } ) ).toThrow( "Setting.Invalid" )
+				expect( () => settingService.bulkSave( { cbRateLimitMaxAttempts: 101 } ) ).toThrow( "Setting.Invalid" )
+				expect( () => settingService.bulkSave( { cbRateLimitMaxAttempts: "not-a-number" } ) ).toThrow( "Setting.Invalid" )
+				expect( () => settingService.bulkSave( { cbRateLimitWindowSeconds: -1 } ) ).toThrow( "Setting.Invalid" )
+				expect( () => settingService.bulkSave( { cbRateLimitWindowSeconds: 86401 } ) ).toThrow( "Setting.Invalid" )
+			} )
+
 			it( "searches settings through the criteria builder", () => {
 				var service = prepareMock( settingService )
 				var criteria = createEmptyMock( "cborm.models.criterion.CriteriaBuilder" )

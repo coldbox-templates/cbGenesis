@@ -1,0 +1,66 @@
+/**
+ * A generic, cache-backed attempt counter used to throttle sensitive endpoints
+ * (see the RateLimiter interceptor). Callers own their own key naming and
+ * limits - this service just counts and expires.
+ *
+ * Backed by the "rateLimit" CacheBox region (app/config/CacheBox.bx), which is
+ * in-memory by default. Swap that region's provider for a distributed one to
+ * share limits across multiple app instances - see docs/guides/security.md#rate-limiting.
+ */
+// Not entity-backed, so this does not extend app.models.BaseService: that base
+// extends cborm's VirtualEntityService, which requires an entityName this
+// service has no corresponding ORM entity to supply.
+@singleton
+@threadSafe
+class {
+
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
+
+	/**
+	 * Records one attempt for the given key and reports whether it is still within
+	 * the allowed limit.
+	 *
+	 * This is a sliding window: every attempt (allowed or blocked) resets the key's
+	 * expiration to windowSeconds from now, so a key only cools down after it goes
+	 * quiet for a full window. That is a deliberate trade-off for a security throttle:
+	 * it keeps blocking for as long as attempts keep coming, rather than reopening
+	 * partway through an ongoing attack.
+	 *
+	 * The counter itself is a plain cache get-then-set, not an atomic increment
+	 * (CacheBox's provider API does not expose one), so two requests racing in the
+	 * same instant could both read the same count and each add one. That is an
+	 * acceptable trade-off for a login-attempt throttle - it is not a billing meter.
+	 *
+	 * @key           Caller-supplied identity for what is being limited, e.g. "Auth.doLogin:1.2.3.4".
+	 * @maxAttempts   Attempts allowed within the window before this reports blocked.
+	 * @windowSeconds Length of the window, in seconds. 0 or less always allows.
+	 *
+	 * @return { allowed: boolean, remaining: numeric, retryAfter: numeric }. retryAfter is
+	 *         the window length in seconds once blocked, 0 while still allowed.
+	 */
+	struct function attempt( required string key, required numeric maxAttempts, required numeric windowSeconds ) {
+		if ( arguments.windowSeconds <= 0 || arguments.maxAttempts <= 0 ) {
+			return { allowed: true, remaining: arguments.maxAttempts, retryAfter: 0 }
+		}
+
+		var cacheKey = "attempt:#arguments.key#"
+		var attempts = ( variables.rateLimitCache.get( cacheKey ) ?: 0 ) + 1
+		variables.rateLimitCache.set( cacheKey, attempts, arguments.windowSeconds / 60 )
+
+		return {
+			allowed   : attempts <= arguments.maxAttempts,
+			remaining : max( 0, arguments.maxAttempts - attempts ),
+			retryAfter: attempts <= arguments.maxAttempts ? 0 : arguments.windowSeconds
+		}
+	}
+
+	/**
+	 * Clears every tracked counter. Primarily useful for test isolation between
+	 * specs that exercise rate-limited endpoints.
+	 */
+	void function clearAll() {
+		variables.rateLimitCache.clearAll()
+	}
+
+}

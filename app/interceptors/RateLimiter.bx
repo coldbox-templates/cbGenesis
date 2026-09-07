@@ -1,0 +1,80 @@
+/**
+ * Throttles the sensitive, unauthenticated Auth endpoints (login, register,
+ * forgot/reset password, invitation activation) by client IP, so a single
+ * caller cannot hammer credential or token checks indefinitely.
+ *
+ * Fires on preProcess -- before routing/dispatch and before Main.onRequestStart
+ * loads prc.settings, so limits are read directly from SettingService rather
+ * than prc.settings. A blocked request never reaches the handler action at all:
+ * it is redirected with a flash message, the same way BaseSecureHandler's
+ * deny-by-default CSRF check short-circuits a request.
+ *
+ * See RateLimitService for the counting logic and docs/guides/security.md#rate-limiting
+ * for the configurable settings and how to distribute limits across instances.
+ */
+class extends="coldbox.system.Interceptor" {
+
+	@inject( "provider:RateLimitService" )
+	property name="rateLimitService";
+
+	@inject( "provider:SettingService" )
+	property name="settingService";
+
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
+
+	@inject( "provider:CBSecurity@cbsecurity" )
+	property name="cbsecurity";
+
+	function configure() {
+		// Events this interceptor throttles, and where to send a blocked request back to.
+		// tokenParam, when present, is echoed onto the redirect so the form still has what
+		// it needs to re-render (mirrors the existing error-handling redirects in Auth.bx).
+		variables.limitedActions = {
+			"Auth.doLogin"             : { redirectEvent: "login" },
+			"Auth.doRegister"          : { redirectEvent: "register" },
+			"Auth.doForgotPassword"    : { redirectEvent: "forgot-password" },
+			"Auth.doResetPassword"     : { redirectEvent: "reset-password", tokenParam: "token" },
+			"Auth.doActivateInvitation": { redirectEvent: "activate-invitation", tokenParam: "token" }
+		}
+	}
+
+	function preProcess( event, interceptData, buffer, rc, prc ) {
+		var currentEvent = event.getCurrentEvent()
+		if ( !variables.limitedActions.keyExists( currentEvent ) ) {
+			return
+		}
+
+		var result = variables.rateLimitService.attempt(
+			key          : "#currentEvent#:#variables.cbsecurity.getRealIP()#",
+			maxAttempts  : variables.settingService.getSetting( "cbRateLimitMaxAttempts", 5 ),
+			windowSeconds: variables.settingService.getSetting( "cbRateLimitWindowSeconds", 300 )
+		)
+
+		if ( result.allowed ) {
+			return
+		}
+
+		variables.auditLogService.warn(
+			action     : "security.ratelimit.blocked",
+			message    : "Rate limit exceeded for [#currentEvent#].",
+			category   : "security",
+			targetType : "Event",
+			targetLabel: currentEvent
+		)
+
+		flash.put( "messages", {
+			type   : "error",
+			message: "Too many attempts. Please wait a few minutes and try again."
+		} )
+
+		var target = variables.limitedActions[ currentEvent ]
+		var redirectTo = target.redirectEvent
+		if ( target.keyExists( "tokenParam" ) && len( rc[ target.tokenParam ] ?: "" ) ) {
+			redirectTo &= "?#target.tokenParam#=#encodeForURL( rc[ target.tokenParam ] )#"
+		}
+
+		relocate( redirectTo )
+	}
+
+}

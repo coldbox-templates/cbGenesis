@@ -57,6 +57,12 @@ class extends="app.models.BaseService" {
 			cbApiTokenMaxValidityMonths: 12,
 			// Audit log retention window, in days. 0 disables the scheduled purge.
 			cbAuditLogRetentionDays  : 90,
+			// Rate limiting: max attempts allowed per IP within the window below, on
+			// sensitive Auth endpoints (login, register, forgot/reset password, invitation
+			// activation). See RateLimiter interceptor and RateLimitService.
+			cbRateLimitMaxAttempts   : 5,
+			// Rate limiting window, in seconds. 0 disables rate limiting entirely.
+			cbRateLimitWindowSeconds: 300,
 			// Mail Settings
 			cbMailHost               : "smtp.mailtrap.io",
 			cbMailPort               : 25,
@@ -331,6 +337,24 @@ class extends="app.models.BaseService" {
 			throw(
 				type   = "Setting.Invalid",
 				message = "API token maximum validity must be a whole number between 1 and 120 months."
+			)
+		}
+
+		// Validate the cbRateLimitMaxAttempts setting to be a whole number between 1 and 100
+		var maxAttempts = arguments.memento?.cbRateLimitMaxAttempts ?: this.DEFAULTS.cbRateLimitMaxAttempts
+		if ( !isNumeric( maxAttempts ) || int( maxAttempts ) != maxAttempts || int( maxAttempts ) < 1 || int( maxAttempts ) > 100 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "Rate limit maximum attempts must be a whole number between 1 and 100."
+			)
+		}
+
+		// Validate the cbRateLimitWindowSeconds setting to be a whole number between 0 and 86400 (one day). 0 disables rate limiting.
+		var windowSeconds = arguments.memento?.cbRateLimitWindowSeconds ?: this.DEFAULTS.cbRateLimitWindowSeconds
+		if ( !isNumeric( windowSeconds ) || int( windowSeconds ) != windowSeconds || int( windowSeconds ) < 0 || int( windowSeconds ) > 86400 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "Rate limit window must be a whole number of seconds between 0 and 86400."
 			)
 		}
 	}
