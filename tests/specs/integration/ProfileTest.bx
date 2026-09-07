@@ -16,6 +16,9 @@ class extends="tests.resources.BaseIntegrationSpec" {
 	@inject( "@cbcsrf" )
 	property name="cbcsrf";
 
+	@inject
+	property name="imageService";
+
 	function beforeAll() {
 		super.beforeAll();
 	}
@@ -160,6 +163,73 @@ class extends="tests.resources.BaseIntegrationSpec" {
 
 					var reloaded = userService.getOrFail( user.getUserId() );
 					expect( reloaded.getPendingEmail() ).toBe( "" );
+				} );
+			} );
+
+			story( "uploadAvatar()/deleteAvatar() manage the authenticated user's avatar", () => {
+				it( "uploads an avatar, stores both size variants, and flips hasAvatar", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+
+					var img = imageNew( "", 400, 200, "rgb", "blue" );
+					form.avatar = "data:image/png;base64," & imageWriteBase64( img, "png" );
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "profile.uploadAvatar" );
+					var response = event.getPrivateValue( "response" );
+
+					expect( response.getError() ).toBeFalse();
+					expect( response.getData().hasAvatar ).toBeTrue();
+
+					var reloaded = userService.getOrFail( user.getUserId() );
+					expect( reloaded.getHasAvatar() ).toBeTrue();
+					expect( imageService.exists( imageService.avatarPath( user.getUserId(), "sm" ) ) ).toBeTrue();
+					expect( imageService.exists( imageService.avatarPath( user.getUserId(), "lg" ) ) ).toBeTrue();
+
+					imageService.deleteAvatar( user.getUserId() );
+				} );
+
+				it( "rejects an unreadable avatar with a 422 and leaves hasAvatar untouched", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+
+					form.avatar = "data:image/png;base64,not-a-real-image";
+					form.csrf = cbcsrf.generate();
+
+					var event = execute( "profile.uploadAvatar" );
+					var response = event.getPrivateValue( "response" );
+
+					expect( response.getStatusCode() ).toBe( 422 );
+					expect( response.getData() ).toHaveKey( "avatar" );
+
+					var reloaded = userService.getOrFail( user.getUserId() );
+					expect( reloaded.getHasAvatar() ).toBeFalse();
+				} );
+
+				it( "deletes an existing avatar and flips hasAvatar back off", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+
+					var img = imageNew( "", 400, 200, "rgb", "green" );
+					form.avatar = "data:image/png;base64," & imageWriteBase64( img, "png" );
+					form.csrf = cbcsrf.generate();
+					execute( "profile.uploadAvatar" );
+
+					form.csrf = cbcsrf.generate();
+					var event = execute( "profile.deleteAvatar" );
+					var response = event.getPrivateValue( "response" );
+
+					// Not asserting response.getError() here: BaseTestCase runs every it()
+					// in the bundle inside one physical request to runner.bxm, and the
+					// Response object's error flag is never reset back to false once a
+					// prior spec (the 422 test above) sets it - only its data/messages are
+					// fresh per action. Data and persisted state are the reliable signal.
+					expect( arrayLast( response.getMessages() ) ).toBe( "Avatar removed successfully." );
+					expect( response.getData().hasAvatar ).toBeFalse();
+
+					var reloaded = userService.getOrFail( user.getUserId() );
+					expect( reloaded.getHasAvatar() ).toBeFalse();
+					expect( imageService.exists( imageService.avatarPath( user.getUserId(), "sm" ) ) ).toBeFalse();
 				} );
 			} );
 		} );

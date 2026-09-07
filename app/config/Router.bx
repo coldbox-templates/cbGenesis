@@ -112,6 +112,10 @@ class {
 			GET : "listPasskeys",
 			POST: "updatePasskey"
 		})
+		route( "profile/avatar" ).withHandler( "Profile" ).toAction({
+			POST  : "uploadAvatar",
+			DELETE: "deleteAvatar"
+		})
 		route( "profile/passkey-required", "Profile.passkeyRequired" )
 		route( "profile/email-change" ).withHandler( "Profile" ).toAction({
 			POST  : "requestEmailChange",

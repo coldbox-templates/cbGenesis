@@ -62,6 +62,54 @@ class extends="BaseSecureHandler" {
 	}
 
 	/**
+	 * Upload (or replace) the authenticated user's avatar. Accepts the image
+	 * as a base64 data URI in rc.avatar - see BaseSecureHandler#decodeDataUri().
+	 */
+	@remote( "Upload the authenticated user's avatar remotely via AJAX" )
+	function uploadAvatar( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var bytes = decodeDataUri( rc.avatar ?: "" )
+			getInstance( "imageService" ).storeAvatar( prc.authUser.getUserId(), bytes )
+			prc.authUser.setHasAvatar( true )
+			userService.save( prc.authUser )
+			response.setData( data: prc.authUser.getMemento(), message: "Avatar updated successfully." )
+		} catch ( "Image.TooLarge" error ) {
+			response.setErrorMessage( errorMessage: error.message, statusCode: 422, data: { avatar: error.message } )
+		} catch ( "Image.InvalidFormat" error ) {
+			response.setErrorMessage( errorMessage: error.message, statusCode: 422, data: { avatar: error.message } )
+		} catch ( any error ) {
+			log.error( "Error uploading avatar: #error.message#", error )
+			response.setErrorMessage(
+				errorMessage: "Avatar could not be saved: #error.message#",
+				statusCode: 500
+			)
+		}
+		return response
+	}
+
+	/**
+	 * Permanently delete the authenticated user's avatar.
+	 */
+	@remote( "Delete the authenticated user's avatar remotely via AJAX" )
+	function deleteAvatar( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			getInstance( "imageService" ).deleteAvatar( prc.authUser.getUserId() )
+			prc.authUser.setHasAvatar( false )
+			userService.save( prc.authUser )
+			response.setData( data: prc.authUser.getMemento(), message: "Avatar removed successfully." )
+		} catch ( any error ) {
+			log.error( "Error deleting avatar: #error.message#", error )
+			response.setErrorMessage(
+				errorMessage: "Avatar could not be removed: #error.message#",
+				statusCode: 500
+			)
+		}
+		return response
+	}
+
+	/**
 	 * Request a change to the authenticated user's email address. Does not change the
 	 * email directly - sends a confirmation link to the new address and a security
 	 * notice to the current address. See UserService#requestEmailChange().

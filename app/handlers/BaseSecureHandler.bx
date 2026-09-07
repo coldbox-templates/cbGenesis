@@ -123,4 +123,24 @@ class extends="coldbox.system.RestHandler"{
 		return { offset: offset, limit: arguments.limit }
 	}
 
+	/**
+	 * Decodes a base64 image upload into raw bytes, for handlers accepting an
+	 * avatar/logo as a JSON field rather than a multipart file - this app's
+	 * AJAX calls are all JSON/urlencoded, never multipart, and BoxLang has no
+	 * built-in multipart form parser to receive one with anyway.
+	 *
+	 * Accepts either a data URI ("data:image/png;base64,...") or a bare
+	 * base64 string.
+	 *
+	 * @throws Image.InvalidFormat When the value is not decodable as base64.
+	 */
+	private binary function decodeDataUri( required string value ) {
+		var base64 = reReplaceNoCase( arguments.value, "^data:[^;]*;base64,", "" )
+		try {
+			return binaryDecode( base64, "base64" )
+		} catch ( any e ) {
+			throw( type = "Image.InvalidFormat", message = "The uploaded file is not a readable image." )
+		}
+	}
+
 }
