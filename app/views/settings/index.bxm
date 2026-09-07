@@ -58,7 +58,7 @@
 			</div>
 			<div class="cb-form-grid">
 				<label
-					x-data="logoUploader( '#encodeForHTMLAttribute( prc.settings.cbAppLogo )#', '#csrfToken()#' )"
+					x-data="logoUploader( #forAttribute( { initialLogoPath: prc.settings.cbAppLogo, csrfToken: csrfToken() } )# )"
 				>
 					App Logo Path
 					<input

@@ -7,12 +7,13 @@
  * replaces the path with the streamed asset URL; removing resets it to the
  * server's default and clears the stored file.
  *
- * @param {string} initialLogoPath Current cbAppLogo setting value.
- * @param {string} csrfToken CSRF token for the upload/remove requests.
+ * @param {Object} config Component configuration.
+ * @param {string} config.initialLogoPath Current cbAppLogo setting value.
+ * @param {string} config.csrfToken CSRF token for the upload/remove requests.
  *
  * @returns {Object} Alpine logo uploader state and handlers.
  */
-export function logoUploader( initialLogoPath = "", csrfToken = "" ) {
+export function logoUploader( { initialLogoPath = "", csrfToken = "" } = {} ) {
 	return {
 		logoPath : initialLogoPath,
 		loading  : false,

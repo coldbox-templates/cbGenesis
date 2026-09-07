@@ -135,7 +135,17 @@ class extends="coldbox.system.RestHandler"{
 	 * @throws Image.InvalidFormat When the value is not decodable as base64.
 	 */
 	private binary function decodeDataUri( required string value ) {
-		var base64 = reReplaceNoCase( arguments.value, "^data:[^;]*;base64,", "" )
+		var base64 = arguments.value
+		var commaPos = arguments.value.find( "," )
+		if ( commaPos ) {
+			var header = arguments.value.left( commaPos - 1 )
+			// The media type itself may carry ";parameter=value" segments (e.g.
+			// ";charset=utf-8") before the trailing ";base64" marker, so this only
+			// anchors on how the header ends - not an exact "data:<type>;base64" shape.
+			if ( reFindNoCase( "^data:.*;base64$", header ) ) {
+				base64 = arguments.value.mid( commaPos + 1, len( arguments.value ) )
+			}
+		}
 		try {
 			return binaryDecode( base64, "base64" )
 		} catch ( any e ) {
