@@ -147,6 +147,10 @@ class {
 			GET : "registry",
 			POST: "createRegistry"
 		})
+		route( "settings/logo" ).withHandler( "Settings" ).toAction({
+			POST  : "uploadLogo",
+			DELETE: "deleteLogo"
+		})
 		// Settings Manager
 		route( "settings" ).withHandler( "Settings" ).toAction({
 			GET: "index",

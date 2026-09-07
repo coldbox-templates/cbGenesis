@@ -1,0 +1,121 @@
+/**
+ * Integration tests for the Settings handler's branding logo endpoints, exercised
+ * via execute() the same way ProfileTest.bx does. CSRF is generated for real
+ * through the injected cbcsrf service.
+ *
+ * Two harness quirks needed for a permission-gated (not just login-gated)
+ * @secured action to work under execute(), neither of which is specific to
+ * this feature:
+ *   - execute() needs prePostExempt=true, or cbsecurity's permission check
+ *     always denies access here.
+ *   - The test user needs the already-seeded Admin role (see
+ *     createSettingsAdmin()), not a permission granted ad hoc in this same
+ *     test transaction - cbauth's user cache did not see an a-la-carte
+ *     permission attached to a brand-new user within the same (uncommitted,
+ *     per aroundTransaction) transaction, even with prePostExempt.
+ * Also verified for real over live HTTP as an authenticated admin.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	@inject
+	property name="imageService";
+
+	@inject
+	property name="roleService";
+
+	function run() {
+		describe( "Settings Handler", () => {
+			beforeEach( () => {
+				securityService.logout( quiet: true )
+			} )
+
+			afterEach( () => {
+				// Restore the default logo setting so other tests/spec runs in the
+				// same suite don't see whatever the last test left behind.
+				settingService.bulkSave( { cbAppLogo: settingService.getDefaults().cbAppLogo } )
+			} )
+
+			story( "uploadLogo()/deleteLogo() manage the application branding logo", () => {
+				it( "uploads a logo, stores both size variants, and rewrites cbAppLogo", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					var img = imageNew( "", 400, 100, "rgb", "white" )
+					form.logo = "data:image/png;base64," & imageWriteBase64( img, "png" )
+					form.csrf = cbcsrf.generate()
+
+					var event = execute( event = "settings.uploadLogo", prePostExempt = true )
+					var response = event.getPrivateValue( "response" )
+
+					expect( response.getError() ).toBeFalse()
+					expect( response.getData().cbAppLogo ).toBe( "/branding/logo/lg" )
+					expect( settingService.getSetting( "cbAppLogo" ) ).toBe( "/branding/logo/lg" )
+					expect( imageService.exists( imageService.logoPath( "sm" ) ) ).toBeTrue()
+					expect( imageService.exists( imageService.logoPath( "lg" ) ) ).toBeTrue()
+
+					imageService.deleteLogo()
+				} )
+
+				it( "rejects an unreadable logo with a 422 and does not touch cbAppLogo", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					var originalLogo = settingService.getSetting( "cbAppLogo" )
+
+					form.logo = "data:image/png;base64,not-a-real-image"
+					form.csrf = cbcsrf.generate()
+
+					var event = execute( event = "settings.uploadLogo", prePostExempt = true )
+					var response = event.getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 422 )
+					expect( response.getData() ).toHaveKey( "logo" )
+					expect( settingService.getSetting( "cbAppLogo" ) ).toBe( originalLogo )
+				} )
+
+				it( "deletes the logo and restores the default cbAppLogo setting", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					var img = imageNew( "", 400, 100, "rgb", "black" )
+					form.logo = "data:image/png;base64," & imageWriteBase64( img, "png" )
+					form.csrf = cbcsrf.generate()
+					execute( event = "settings.uploadLogo", prePostExempt = true )
+
+					form.csrf = cbcsrf.generate()
+					var event = execute( event = "settings.deleteLogo", prePostExempt = true )
+					var response = event.getPrivateValue( "response" )
+
+					// Not asserting response.getError() here: BaseTestCase runs every it()
+					// in the bundle inside one physical request to runner.bxm, and the
+					// Response object's error flag is never reset back to false once a
+					// prior spec (the 422 test above) sets it - only its data/messages are
+					// fresh per action. Data and persisted state are the reliable signal.
+					expect( arrayLast( response.getMessages() ) ).toBe( "Logo removed successfully." )
+					expect( response.getData().cbAppLogo ).toBe( settingService.getDefaults().cbAppLogo )
+					expect( settingService.getSetting( "cbAppLogo" ) ).toBe( settingService.getDefaults().cbAppLogo )
+					expect( imageService.exists( imageService.logoPath( "sm" ) ) ).toBeFalse()
+				} )
+			} )
+		} )
+	}
+
+	/**
+	 * A verified user carrying the existing, already-seeded Admin role -
+	 * satisfies @secured("settings:admin,settings:write")'s OR check.
+	 *
+	 * Uses the seeded Admin role rather than granting an a-la-carte permission
+	 * directly: a permission attached to a brand-new user within this same
+	 * (uncommitted, per aroundTransaction) test transaction was not visible to
+	 * cbauth's user cache even with prePostExempt - only a role that already
+	 * existed before the transaction started worked reliably here.
+	 */
+	private User function createSettingsAdmin() {
+		var user = createVerifiedUser()
+		var adminRole = roleService.findWhere( { role: "Admin" } )
+		user.setRoles( [ adminRole ] )
+		return userService.save( user )
+	}
+}

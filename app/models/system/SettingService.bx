@@ -170,6 +170,17 @@ class extends="app.models.BaseService" {
 	}
 
 	/**
+	 * The shipped default value for every setting, keyed by name. Callers
+	 * that only hold a WireBox provider for this service (e.g. property
+	 * name="settingService" inject="provider:settingService") cannot read
+	 * this.DEFAULTS directly - a provider only proxies method calls, not
+	 * property access - so this method exists as the real way to reach it.
+	 */
+	struct function getDefaults() {
+		return this.DEFAULTS
+	}
+
+	/**
 	 * Get a setting value
 	 *
 	 * @name         The name of the seting

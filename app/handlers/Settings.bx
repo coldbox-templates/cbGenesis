@@ -117,6 +117,65 @@ class extends="BaseSecureHandler" {
 		}
 	}
 
+	/**
+	 * Upload (or replace) the application branding logo. Accepts the image as
+	 * a base64 data URI in rc.logo - see BaseSecureHandler#decodeDataUri().
+	 * Rewrites the cbAppLogo setting to point at the streamed logo route
+	 * rather than storing a new setting key.
+	 */
+	@remote( "Upload the application branding logo remotely via AJAX" )
+	@secured( "settings:admin,settings:write" )
+	function uploadLogo( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var bytes = decodeDataUri( rc.logo ?: "" )
+			getInstance( "imageService" ).storeLogo( bytes )
+			settingService.bulkSave( { cbAppLogo: "/branding/logo/lg" } )
+			auditLogService.info(
+				action  : "settings.logo_updated",
+				message : "Application branding logo was updated.",
+				category: "data"
+			)
+			return response.setData(
+				data: { cbAppLogo: settingService.getSetting( "cbAppLogo" ) },
+				message: "Logo updated successfully."
+			)
+		} catch ( "Image.TooLarge" error ) {
+			return response.failure( message: error.message, statusCode: 422, data: { logo: error.message } )
+		} catch ( "Image.InvalidFormat" error ) {
+			return response.failure( message: error.message, statusCode: 422, data: { logo: error.message } )
+		} catch ( any error ) {
+			log.error( "Error uploading logo: #error.message#", error )
+			return response.failure( message: "Logo could not be saved: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Permanently delete the application branding logo and restore the
+	 * shipped default cbAppLogo setting value.
+	 */
+	@remote( "Delete the application branding logo remotely via AJAX" )
+	@secured( "settings:admin,settings:write" )
+	function deleteLogo( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			getInstance( "imageService" ).deleteLogo()
+			settingService.bulkSave( { cbAppLogo: settingService.getDefaults().cbAppLogo } )
+			auditLogService.info(
+				action  : "settings.logo_removed",
+				message : "Application branding logo was removed.",
+				category: "data"
+			)
+			return response.setData(
+				data: { cbAppLogo: settingService.getSetting( "cbAppLogo" ) },
+				message: "Logo removed successfully."
+			)
+		} catch ( any error ) {
+			log.error( "Error deleting logo: #error.message#", error )
+			return response.failure( message: "Logo could not be removed: #error.message#", statusCode: 500 )
+		}
+	}
+
 	@secured( "settings:admin,settings:write" )
 	function save( event, rc, prc ) {
 		try {
