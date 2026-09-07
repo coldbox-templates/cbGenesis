@@ -1,0 +1,40 @@
+<!--- Avatar Component
+    Renders a user's avatar image when one exists, falling back to their
+    initials otherwise. This is the read-only display used in the sidebar,
+    topbar, and Users listing. The interactive upload/remove widget on the
+    Profile page is built directly into profile/index.bxm + ProfileForm.js,
+    since it needs reactive state a static partial can't provide.
+
+    Usage:
+        #view( view: "_components/ui/avatar", args: {
+            userId    : prc.authUser.getUserId(),
+            hasAvatar : prc.authUser.getHasAvatar(),
+            initials  : prc.authUser.getInitials(),
+            class     : "cb-sidebar-user-avatar"
+        } )#
+
+    Args:
+        userId    : string  — required to build the streamed avatar URL
+        hasAvatar : boolean — whether the user has an avatar to stream (default: false)
+        initials  : string  — fallback text shown when there is no avatar (default: "")
+        size      : sm | lg — which streamed variant to request            (default: "sm")
+        class     : string  — CSS class(es) applied to the rendered element (default: "")
+        alt       : string  — <img> alt text, only used when hasAvatar     (default: "") --->
+<bx:param name="args.userId" default=""/>
+<bx:param name="args.hasAvatar" default="false"/>
+<bx:param name="args.initials" default=""/>
+<bx:param name="args.size" default="sm"/>
+<bx:param name="args.class" default=""/>
+<bx:param name="args.alt" default=""/>
+
+<bx:output>
+<bx:if args.hasAvatar && len( args.userId )>
+	<img
+		class="#encodeForHTMLAttribute( args.class )#"
+		style="object-fit: cover;"
+		src="/avatars/#encodeForURL( args.userId )#/#encodeForURL( args.size )#"
+		alt="#encodeForHTMLAttribute( args.alt )#">
+<bx:else>
+	<span class="#encodeForHTMLAttribute( args.class )#">#encodeForHTML( args.initials )#</span>
+</bx:if>
+</bx:output>

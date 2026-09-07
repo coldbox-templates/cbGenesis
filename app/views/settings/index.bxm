@@ -58,17 +58,14 @@
 			</div>
 			<div class="cb-form-grid">
 				<label
-					x-data="{ logoPath: '' }"
-					x-init="logoPath = $refs.logoInput.value"
+					x-data="logoUploader( '#encodeForHTMLAttribute( prc.settings.cbAppLogo )#', '#csrfToken()#' )"
 				>
 					App Logo Path
 					<input
 						type="text"
 						name="cbAppLogo"
-						x-ref="logoInput"
 						x-model="logoPath"
-						x-on:input="$refs.logoPreview.hidden = false"
-						value="#encodeForHTMLAttribute( prc.settings.cbAppLogo )#">
+						x-on:input="$refs.logoPreview.hidden = false">
 					<span class="cb-logo-preview" x-show="logoPath">
 						<img
 							x-ref="logoPreview"
@@ -76,6 +73,11 @@
 							x-on:load="$refs.logoPreview.hidden = false"
 							x-on:error="$refs.logoPreview.hidden = true"
 							alt="App logo preview">
+					</span>
+					<span class="cb-logo-actions">
+						<button type="button" class="btn btn-link btn-sm" :disabled="loading" @click.prevent="$refs.logoFileInput.click()">Upload logo</button>
+						<button type="button" class="btn btn-link btn-sm" x-show="hasCustomLogo" x-cloak :disabled="loading" @click.prevent="removeLogo()">Remove</button>
+						<input type="file" accept="image/png,image/jpeg,image/webp" x-ref="logoFileInput" class="visually-hidden" @change="uploadLogo( $event )">
 					</span>
 				</label>
 				<label>App Name

@@ -408,6 +408,43 @@
 	}
 }
 
+.cb-profile-avatar-wrap {
+	position: relative;
+	width: fit-content;
+	margin-inline: auto;
+
+	.cb-profile-orb {
+		margin-inline: 0;
+	}
+}
+
+.cb-avatar-edit-btn {
+	position: absolute;
+	right: -0.2rem;
+	bottom: -0.2rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.7rem;
+	height: 1.7rem;
+	border: 2px solid var(--app-surface);
+	border-radius: 999px;
+	background: var(--app-surface-alt);
+	color: var(--app-text);
+	font-size: 0.85rem;
+	cursor: pointer;
+
+	&:hover {
+		background: var(--bl-gradient);
+		color: #07101c;
+	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+}
+
 .cb-chip-row {
 	display: flex;
 	align-items: center;
@@ -1706,6 +1743,12 @@
 		max-height: 100%;
 		object-fit: contain;
 	}
+}
+
+.cb-logo-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
 }
 
 .cb-form-actions {

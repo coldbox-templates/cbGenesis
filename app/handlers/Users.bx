@@ -59,6 +59,7 @@ class extends="BaseSecureHandler" {
 				"isActive",
 				"isPasswordReset",
 				"is2FactorAuth",
+				"hasAvatar",
 				"createdDate",
 				"verifiedAt",
 				"lastLogin"
