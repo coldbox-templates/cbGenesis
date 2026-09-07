@@ -2,7 +2,7 @@ class {
 
 	function up( schema, qb ) {
 		schema.alter( "users", ( table ) => {
-			table.boolean( "hasAvatar" ).default( false )
+			table.addColumn( table.boolean( "hasAvatar" ).default( false ) )
 		} )
 	}
 
