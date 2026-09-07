@@ -1,0 +1,15 @@
+class {
+
+	function up( schema, qb ) {
+		schema.alter( "users", ( table ) => {
+			table.boolean( "hasAvatar" ).default( false )
+		} )
+	}
+
+	function down( schema, qb ) {
+		schema.alter( "users", ( table ) => {
+			table.dropColumn( "hasAvatar" )
+		} )
+	}
+
+}

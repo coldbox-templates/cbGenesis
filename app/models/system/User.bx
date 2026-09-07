@@ -65,6 +65,12 @@ class extends="app.models.BaseEntity" {
 	@ormType( "boolean" )
 	property name="is2FactorAuth" default="false";
 
+	// Whether an avatar image exists on the "assets" cbfs disk for this user. There is no
+	// stored filename - the path is derived deterministically from userId. Only ever set
+	// through UserService avatar upload/delete - never via generic population.
+	@ormType( "boolean" )
+	property name="hasAvatar" default="false";
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Non Persisted Properties
@@ -199,6 +205,7 @@ class extends="app.models.BaseEntity" {
 			// never via a generic populate(rc) call - see requestEmailChange()/confirmEmailChange().
 			"email",
 			"pendingEmail",
+			"hasAvatar",
 			"roles",
 			"permissions",
 			"apiTokens",
@@ -221,6 +228,7 @@ class extends="app.models.BaseEntity" {
 			"fullName",
 			"email",
 			"pendingEmail",
+			"hasAvatar",
 			"biography",
 			"preferences",
 			"verifiedAt",
