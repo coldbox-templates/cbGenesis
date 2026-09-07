@@ -123,9 +123,17 @@ Security &amp; Permissions</h1>
 
 
 
-	<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#login-flow">Login flow</a></li><li class="toc-level-2"><a href="#authentication-layouts">Authentication layouts</a></li><li class="toc-level-2"><a href="#security-layers">Security layers</a></li><li class="toc-level-2"><a href="#cbsecurity-configuration">cbsecurity configuration</a></li><li class="toc-level-2"><a href="#permission-model">Permission model</a></li><li class="toc-level-2"><a href="#related-security-services">Related security services</a></li></ul></details>
+	<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#login-flow">Login flow</a></li><li class="toc-level-2"><a href="#authentication-layouts">Authentication layouts</a></li><li class="toc-level-2"><a href="#security-layers">Security layers</a></li><li class="toc-level-2"><a href="#rate-limiting">Rate limiting</a></li><li class="toc-level-2"><a href="#cbsecurity-configuration">cbsecurity configuration</a></li><li class="toc-level-2"><a href="#permission-model">Permission model</a></li><li class="toc-level-2"><a href="#related-security-services">Related security services</a></li></ul></details>
 
 					<svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
+<symbol id="adm-note">
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<g fill="currentColor">
+<path d="m15.4 5h4.5v2.7h-4.5z" transform="matrix(-.7071 -.7071 .7071 -.7071 25.7188 23.288)"/>
+<path d="m13.9 7 3.1 3.1-9.5 9.6-3.5.3.3-3.5z"/>
+</g>
+</svg>
+</symbol>
 <symbol id="adm-info">
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 <path d="m20.5 11.8c0 4.5-3.7 8.2-8.2 8.2s-8.2-3.7-8.2-8.2 3.7-8.2 8.2-8.2 8.2 3.7 8.2 8.2zm-6.7 4c-.1-.1-.2-.2-.2-.3v-4.5c0-.1.1-.2.2-.4s.2-.3.2-.3 0-.1-.1-.1c-.1-.1-.5-.2-1.2-.4-.7-.1-1.2-.2-1.5-.2-.5 0-.7 0-.7.1s.1.3.2.6v4.7c0 .3-.1.5-.2.6-.2.2-.2.3-.2.3.1.1.5.3 1.2.4.6.1 1.2.2 1.6.2h.3c.4-.1.5-.2.5-.5.1 0 .1-.1-.1-.2zm-.9-8.6c-.7-.1-1.2-.2-1.5-.2-.2 0-.5.2-.7.4s-.3.4-.3.6c0 .1 0 .1.1.2s.6.2 1.5.4c1 .3 1.5.4 1.6.3.1 0 .2-.2.3-.5s.2-.5.2-.6v-.1c-.1-.1-.5-.3-1.2-.5z" fill="currentColor"/>
@@ -175,8 +183,35 @@ Security &amp; Permissions</h1>
 <tr><td>JWT support</td><td>Configured for API access (AES-256, HS512, 60 min, cache token storage)</td></tr>
 <tr><td>Security headers</td><td>XSS protection, <code>frameOptions: SAMEORIGIN</code>, <code>referrerPolicy: same-origin</code></td></tr>
 <tr><td>API tokens</td><td>SHA/BCrypt-hashed per-user tokens with expiration and a daily purge scheduler</td></tr>
+<tr><td>Rate limiting</td><td><code>RateLimiter</code> interceptor throttles login, registration, and password reset by IP - see <a href="#rate-limiting">Rate limiting</a> below</td></tr>
 </tbody>
 </table></div>
+<h2 id="rate-limiting"><a href="#rate-limiting" id="rate-limiting" name="rate-limiting" class="anchor"></a>Rate limiting</h2>
+<p><code>app/interceptors/RateLimiter.bx</code> fires on <code>preProcess</code> - before routing, before any handler runs - and throttles five unauthenticated <code>Auth</code> endpoints by client IP:</p>
+<ul>
+<li><code>doLogin</code>, <code>doRegister</code>, <code>doForgotPassword</code>, <code>doResetPassword</code>, <code>doActivateInvitation</code></li>
+</ul>
+<p>A caller that exceeds the limit is redirected back to the form with a flash error; the request never reaches the handler, so a correct password submitted while blocked still does not log the user in.</p>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Setting</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code>cbRateLimitMaxAttempts</code></td><td>Attempts allowed per IP, per endpoint, within the window (default: <code>5</code>)</td></tr>
+<tr><td><code>cbRateLimitWindowSeconds</code></td><td>Window length, in seconds (default: <code>300</code>). <code>0</code> disables rate limiting entirely</td></tr>
+</tbody>
+</table></div>
+<p>Both are editable at <code>/settings</code> like any other app setting - see <a href="/cbGenesis/reference/settings/index.html#password--token-policy">App Settings</a>.</p>
+<div class="bxsites-cards"><div class="bxsites-card"><div class="bxsites-card__icon"><svg class="bxsites-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M188.82,82,128,128,67.2,82.4A8,8,0,0,1,64,76V40a8,8,0,0,1,8-8H184a8,8,0,0,1,8,8V75.64A8,8,0,0,1,188.82,82ZM64,180v36a8,8,0,0,0,8,8H184a8,8,0,0,0,8-8V180.36a8,8,0,0,0-3.18-6.38L128,128,67.2,173.6A8,8,0,0,0,64,180Z" opacity="0.2"/><path d="M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.59A16.09,16.09,0,0,0,200,75.64ZM184,216H72V180l56-42,56,42.35Zm0-140.36L128,118,72,76V40H184Z"/></svg></div><div class="bxsites-card__title">How counting works</div><div class="bxsites-card__body"><p><code>RateLimitService.attempt()</code> is a <strong>sliding window</strong>: every attempt, allowed or blocked, resets the key's expiration to the full window from that moment. A key only cools down once it goes quiet for an entire window - which keeps blocking for as long as an attack continues, rather than reopening partway through. Each endpoint has its own counter (keyed by <code>event:ip</code>), so exhausting the login limit does not affect registration or password reset.</p>
+</div></div></div>
+<div class="adm-block adm-note">
+<div class="adm-heading">
+<svg class="adm-icon"><use xlink:href="#adm-note" /></svg><span>In-memory by default</span>
+</div>
+<div class="adm-body">
+<p>Counters live in the <code>rateLimit</code> CacheBox region (<code>app/config/CacheBox.bx</code>), which is in-memory and therefore <strong>per application instance</strong>. Behind a load balancer with more than one instance, each instance enforces its own limit independently - a caller could get <code>cbRateLimitMaxAttempts</code> free attempts per instance rather than in total. To share counts across instances, swap the <code>rateLimit</code> region's <code>provider</code>/<code>properties</code> for a distributed CacheBox provider (Redis, Couchbase, or any provider CacheBox supports) - no code change needed in <code>RateLimitService</code> or <code>RateLimiter</code>, since both go through the injected <code>cachebox:rateLimit</code> region.</p>
+</div>
+</div>
 <h2 id="cbsecurity-configuration"><a href="#cbsecurity-configuration" id="cbsecurity-configuration" name="cbsecurity-configuration" class="anchor"></a><code>cbsecurity</code> configuration</h2>
 <p><code>app/config/modules/cbsecurity.bx</code> is the single source of truth for the firewall:</p>
 <pre data-bxsites-hl-lines="3,8,9" data-bxsites-title="app&#x2f;config&#x2f;modules&#x2f;cbsecurity.bx &#x28;excerpt&#x29;"><code class="language-boxlang">{
@@ -267,7 +302,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 6, 2026, 9&#x3a;52&#x3a;56 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 7, 2026, 4&#x3a;11&#x3a;38 PM</span></div>
 
 				</article>
 
@@ -290,7 +325,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 			</main>
 
 			<aside class="col-xl-2 toc-sidebar d-none d-xl-block">
-				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#login-flow">Login flow</a></li><li class="toc-level-2"><a href="#authentication-layouts">Authentication layouts</a></li><li class="toc-level-2"><a href="#security-layers">Security layers</a></li><li class="toc-level-2"><a href="#cbsecurity-configuration">cbsecurity configuration</a></li><li class="toc-level-2"><a href="#permission-model">Permission model</a></li><li class="toc-level-2"><a href="#related-security-services">Related security services</a></li></ul></nav>
+				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#login-flow">Login flow</a></li><li class="toc-level-2"><a href="#authentication-layouts">Authentication layouts</a></li><li class="toc-level-2"><a href="#security-layers">Security layers</a></li><li class="toc-level-2"><a href="#rate-limiting">Rate limiting</a></li><li class="toc-level-2"><a href="#cbsecurity-configuration">cbsecurity configuration</a></li><li class="toc-level-2"><a href="#permission-model">Permission model</a></li><li class="toc-level-2"><a href="#related-security-services">Related security services</a></li></ul></nav>
 			</aside>
 
 		</div>

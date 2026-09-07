@@ -76,7 +76,9 @@ sequenceDiagram
 
 ## Interceptors
 
-`app/config/Coldbox.bx` registers one application interceptor, `app/interceptors/AuditLogger.bx`, which writes to the audit trail on four interception points:
+`app/config/Coldbox.bx` registers two application interceptors, in this order:
+
+**`app/interceptors/AuditLogger.bx`** writes to the audit trail on four interception points:
 
 | Point | Recorded |
 |---|---|
@@ -84,6 +86,8 @@ sequenceDiagram
 | `preLogout` | A sign-out |
 | `cbSecurity_onInvalidAuthentication` | A request that required a session and had none |
 | `cbSecurity_onInvalidAuthorization` | An authenticated user missing the required permission |
+
+**`app/interceptors/RateLimiter.bx`** fires on `preProcess` - before routing, before any handler - and throttles five unauthenticated `Auth` actions (login, register, forgot/reset password, invitation activation) by client IP. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
 
 Add your own to the `variables.interceptors` array in `Coldbox.bx`; they fire in declaration order.
 
@@ -108,7 +112,7 @@ cbgenesis/
 │   ├── config/
 │   │   ├── Coldbox.bx        Framework settings, environments, logging
 │   │   ├── Router.bx         All application routes
-│   │   ├── CacheBox.bx       Cache regions (default, template, sessions)
+│   │   ├── CacheBox.bx       Cache regions (default, template, sessions, rateLimit)
 │   │   ├── WireBox.bx        DI container configuration
 │   │   ├── Scheduler.bx      Scheduled tasks
 │   │   └── modules/          Per-module settings (cbsecurity, cbauth, cborm, ...)
@@ -124,7 +128,7 @@ cbgenesis/
 │   │   └── _components/        Reusable UI partials (app, auth, ui)
 │   ├── email_templates/       Token-based email body templates
 │   ├── helpers/               ApplicationHelper.bxm — global view helpers
-│   └── interceptors/           AuditLogger — records authentication events
+│   └── interceptors/           AuditLogger (audit trail), RateLimiter (throttling)
 ├── public/
 │   ├── Application.bx         Entry point — ColdBox + ORM bootstrap
 │   ├── index.bxm               Front controller placeholder
