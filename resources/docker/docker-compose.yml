@@ -1,24 +1,29 @@
 ################################################################################
-# ColdBox Docker Compose Stack
-# This can be used to quickly run your ColdBox application in a CommandBox based Docker Container.
+# CB Genesis Docker Compose Stack
+# Runs the app in a CommandBox/BoxLang container alongside a MySQL 8 database,
+# for local development. The app container bind-mounts the whole repo, so
+# code changes on the host are picked up without rebuilding the image.
 #
-# We pull the latest image, you can change this to a specific tag or CFML engine, which we recommend.
-# https://hub.docker.com/repository/docker/ortussolutions/commandbox
+# Usage (from the repo root):
+#   docker compose -f resources/docker/docker-compose.yml up -d
+#   docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate up
+#   docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed
+#   docker compose -f resources/docker/docker-compose.yml down
 #
-# Database
-# - We give you three databases for you to choose from below: MySQL 8, PostgreSQL, Azure MSSQL
+# See docs/deployment.md#docker for the full walkthrough, including running
+# the Vite dev server for frontend assets.
 ################################################################################
 services:
 
-  ## PostgreSQL
+  ## PostgreSQL (swap in place of coldbox_db below; also update DB_DRIVER)
   # coldbox_db:
   #   image: postgres:12
   #   environment:
-  #     POSTGRES_PASSWORD: "coldbox"
-  #     POSTGRES_USER: "coldbox"
-  #     POSTGRES_DB: "coldbox"
+  #     POSTGRES_PASSWORD: "cbgenesis"
+  #     POSTGRES_USER: "cbgenesis"
+  #     POSTGRES_DB: "cbgenesis"
   #   ports:
-  #     - 5432:5432
+  #     - "5432:5432"
   #   volumes:
   #     - .db/postgres/initdb:/docker-entrypoint-initdb.d
   #     - .db/postgres/data:/var/lib/postgresql/data
@@ -33,41 +38,52 @@ services:
   #   volumes:
   #     - .db/mssql/tmp:/tmp/mssql
 
-  # MySQL Server 8
+  # MySQL 8 - the default database for this template
   coldbox_db:
     image: mysql:8
     ports:
-      - "4306:3306"
+      # Host 3406 avoids colliding with a MySQL/MariaDB already running on
+      # your machine's default 3306. The app talks to this container over
+      # the internal Docker network on MySQL's real port, 3306 - not this one.
+      - "3406:3306"
     environment:
-      MYSQL_DATABASE: "coldbox"
-      MYSQL_ROOT_PASSWORD: "coldbox"
+      MYSQL_DATABASE: "cbgenesis"
+      MYSQL_ROOT_PASSWORD: "cbgenesis"
     volumes:
-      # Store the data locally
       - .db/mysql8/data:/var/lib/mysql
-      # You can uncomment and it will seed the db with our prepared sql data
+      # Uncomment to auto-run SQL files here on first container creation
       #- ../resources/sql/mysql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pcbgenesis" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  # ColdBox Site
+  # CB Genesis application server
   coldbox_app:
     depends_on:
-      - coldbox_db
+      coldbox_db:
+        condition: service_healthy
     image: ortussolutions/commandbox:boxlang
-    # Environment Variables
     environment:
-      CFCONFIG_ADMINPASSWORD: coldbox
-      ENVIRONMENT: DEVELOPMENT
-      # JWT_SECRET: mySecret
-      DB_HOST: coldbox_db
-      DB_PORT: 4306
-      DB_DATABASE: coldbox
+      APPNAME: cbGenesis
+      ENVIRONMENT: development
+      BOXLANG_DEBUG: "true"
+      ASSET_URL: /includes
+      # Leaving this unset closes ?fwreinit in production; harmless locally.
+      COLDBOX_REINIT_PASSWORD: ""
+      JWT_SECRET: ""
+      # Container-internal port: MySQL always listens on 3306 inside its own
+      # container, regardless of the host port it's published on above.
       DB_DRIVER: MySQL
+      DB_HOST: coldbox_db
+      DB_PORT: 3306
+      DB_SCHEMA: ""
+      DB_DATABASE: cbgenesis
       DB_USER: root
-      DB_PASSWORD: coldbox
-      DB_CONNECTIONSTRING: jdbc:mysql://127.0.0.1:3306/coldbox?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&useLegacyDatetimeCode=true
-    # Ports
+      DB_PASSWORD: cbgenesis
     ports:
       - "8080:8080"
       - "8443:8443"
-    # Data & Overrides
     volumes:
-      - ../:/app
+      - ../../:/app
