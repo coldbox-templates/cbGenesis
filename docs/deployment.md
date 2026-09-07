@@ -18,11 +18,38 @@ Compiles and fingerprints the frontend into `public/includes/` - see [Frontend](
 
 ## Docker
 
-A `Dockerfile` and `docker-compose.yml` live in `resources/docker/`. The `docker:*` package scripts run Docker directly; they do not replace the required BoxLang CLI installation for local `box` commands.
+A `Dockerfile` and `docker-compose.yml` live in `resources/docker/`. `box.json` also defines `docker:build`, `docker:run`, `docker:bash`, and `docker:stack` scripts (run them with `box run-script <name>`) as shortcuts for the single-argument commands below - they do not replace the required BoxLang CLI installation for local `box` commands, and are unrelated to `npm run` (there is no `npm run docker:*`).
+
+### Local development with Docker Compose
+
+`resources/docker/docker-compose.yml` runs the app (`ortussolutions/commandbox:boxlang`) alongside a MySQL 8 container, with the whole repo bind-mounted into the app container so host edits apply without a rebuild - no local BoxLang/MySQL install required. Run `docker compose` directly (rather than through the `docker:stack` package script) so multi-word commands like `up -d` pass through correctly:
 
 ```bash frame="terminal" title="Terminal"
-npm run docker:build
-npm run docker:stack -- up -d
+docker compose -f resources/docker/docker-compose.yml up -d
+docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate up
+docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed
+```
+
+Visit `http://127.0.0.1:8080`. MySQL is reachable from the host at `127.0.0.1:3406` (chosen to avoid colliding with a MySQL/MariaDB already running on `3306`); the app container talks to it over the internal Docker network on MySQL's real port, `3306`.
+
+The compose file does not run Vite - start that separately on the host for HMR:
+
+```bash frame="terminal" title="Terminal"
+npm install
+npm run dev
+```
+
+Commented-out PostgreSQL and Azure SQL Edge service blocks are included as a starting point if you swap the default database - update `DB_DRIVER` on `coldbox_app` to match.
+
+```bash frame="terminal" title="Terminal"
+docker compose -f resources/docker/docker-compose.yml down
+```
+
+### Production image
+
+```bash frame="terminal" title="Terminal"
+box run-script docker:build
+box run-script docker:run
 ```
 
 Build the frontend before creating a production image:

@@ -167,9 +167,9 @@ npm install
 npm run dev          # Development with HMR
 npm run build        # Production build
 
-# Docker (if enabled)
-docker-compose up -d
-docker-compose logs -f
+# Docker (local dev: app + MySQL, no local BoxLang/MySQL install needed)
+docker compose -f resources/docker/docker-compose.yml up -d
+docker compose -f resources/docker/docker-compose.yml logs -f
 ```
 
 ## Optional Features
@@ -177,7 +177,7 @@ docker-compose logs -f
 <!-- Mark which features are enabled in this project -->
 
 - **Vite:** Yes - Modern frontend asset building with hot module replacement
-- **Docker:** No - Containerized development and deployment
+- **Docker:** Yes - `resources/docker/Dockerfile` and `docker-compose.yml` (app + MySQL 8, for local development without installing BoxLang/MySQL) - see [Deployment](docs/deployment.md#docker)
 - **ORM:** Yes - Object-Relational Mapping via CBORM or Quick
 - **Migrations:** Yes - Database version control with CommandBox Migrations
 
