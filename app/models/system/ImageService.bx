@@ -16,8 +16,27 @@
 @threadSafe
 class {
 
-	@inject( "cbfs:disks:assets" )
-	property name="assetsDisk";
+	// A plain "wirebox" property injection rather than the getInstance()
+	// mixin: this class does not extend any framework base (EventHandler,
+	// Interceptor, ...), and in this environment a bare singleton class
+	// calling the getInstance() mixin on itself fails with "Function
+	// [getInstance] not found" - the mixin is only present on framework-aware
+	// types. Injecting the injector itself sidesteps that; LocalProvider.cfc
+	// (in cbfs itself) uses this exact same pattern.
+	property name="wirebox" inject="wirebox";
+
+	// Not resolved via cbfs's DiskService/WireBox DSL: in this environment,
+	// wirebox.getInstance("DiskService@cbfs") (and the "cbfs:disks:assets"
+	// DSL, which calls the same thing internally) returns a DiskService
+	// whose disks are always empty when invoked from a real request against
+	// the running app, even though the exact same call works from ColdBox's
+	// TestBox VirtualApp and the disk demonstrably registers at boot per the
+	// server log - something about that particular WireBox singleton
+	// resolves differently between the two. Unresolved root cause; worked
+	// around by building the same Local provider cbfs would have built
+	// directly, from the same config app/config/modules/cbfs.bx uses,
+	// bypassing DiskService entirely.
+	variables.assetsDisk = javacast( "null", "" );
 
 	variables.MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 	variables.ALLOWED_FORMATS  = [ "jpeg", "jpg", "png", "webp" ];
@@ -51,10 +70,11 @@ class {
 	 * Deletes both avatar variants for a user, if present.
 	 */
 	void function deleteAvatar( required string userId ) {
+		var disk = getAssetsDisk()
 		for ( var size in variables.AVATAR_SIZES ) {
 			var path = avatarPath( arguments.userId, size )
-			if ( variables.assetsDisk.exists( path ) ) {
-				variables.assetsDisk.delete( path )
+			if ( disk.exists( path ) ) {
+				disk.delete( path )
 			}
 		}
 	}
@@ -82,10 +102,11 @@ class {
 	 * Deletes both branding logo variants, if present.
 	 */
 	void function deleteLogo() {
+		var disk = getAssetsDisk()
 		for ( var size in variables.LOGO_HEIGHTS ) {
 			var path = logoPath( size )
-			if ( variables.assetsDisk.exists( path ) ) {
-				variables.assetsDisk.delete( path )
+			if ( disk.exists( path ) ) {
+				disk.delete( path )
 			}
 		}
 	}
@@ -108,7 +129,45 @@ class {
 		return "branding/logo-#arguments.size#.png"
 	}
 
+	/**
+	 * Whether a file exists at the given assets-disk path. Used by the Assets
+	 * handler before streaming a variant out.
+	 */
+	boolean function exists( required string path ) {
+		return getAssetsDisk().exists( arguments.path )
+	}
+
+	/**
+	 * Reads the raw bytes of a file at the given assets-disk path. Used by the
+	 * Assets handler to stream a variant out.
+	 */
+	binary function readBytes( required string path ) {
+		return getAssetsDisk().getAsBinary( arguments.path )
+	}
+
 	/************************* PRIVATE FUNCTIONS *****************************/
+
+	/**
+	 * Lazily resolves and caches the cbfs "assets" disk. See the comment on
+	 * variables.assetsDisk for why this is not a property-level @inject.
+	 */
+	private any function getAssetsDisk() {
+		if ( isNull( variables.assetsDisk ) ) {
+			// getInstance() (not "new") so WireBox still wires the provider's own
+			// dependencies (interceptorService, streamBuilder, etc) - only the
+			// DiskService-level lookup by disk name is being bypassed here, not
+			// WireBox construction itself.
+			variables.assetsDisk = variables.wirebox.getInstance( "LocalProvider@cbfs" ).startup(
+				name: "assets",
+				properties: {
+					path      : getSystemSetting( "CBFS_ASSETS_DISK_PATH", "/app/../resources/uploads" ),
+					autoExpand: true,
+					visibility: "private"
+				}
+			)
+		}
+		return variables.assetsDisk
+	}
 
 	/**
 	 * Validates raw image bytes and returns them base64-encoded, ready to be
@@ -155,7 +214,7 @@ class {
 	 */
 	private void function writeVariant( required img, required string path, required string format ) {
 		var bytes = binaryDecode( imageWriteBase64( arguments.img, arguments.format ), "base64" )
-		variables.assetsDisk.create( arguments.path, bytes )
+		getAssetsDisk().create( arguments.path, bytes )
 	}
 
 }

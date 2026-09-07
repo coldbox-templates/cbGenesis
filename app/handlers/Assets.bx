@@ -1,0 +1,92 @@
+/**
+ * Streams user avatars and the application branding logo from the cbfs
+ * "assets" disk (see app/config/modules/cbfs.bx). That disk is private and
+ * outside the webroot, so this handler is the only way to reach the files -
+ * nothing links to the disk directly.
+ *
+ * The logo action must stay public - the login screen and other
+ * unauthenticated pages render it - so this does not extend
+ * BaseSecureHandler (whose preHandler assumes an authenticated
+ * prc.authUser for the passkey-required gate). The avatar action opts into
+ * authentication itself via @secured.
+ *
+ * imageService is deliberately NOT a property-level @inject here. ColdBox
+ * builds handlers (and eagerly resolves their @inject properties) while
+ * registering routes, through a lighter WireBox path that does not mix in
+ * getInstance()/etc onto whatever gets built. Since ImageService is a
+ * singleton, the first build wins for the rest of the process - so an eager
+ * @inject here previously produced a permanently mixin-less ImageService
+ * instance. Resolving it inside the action methods instead forces that
+ * first build to happen through a real getInstance() call, at actual
+ * request time, well after the app has fully booted. See the comment on
+ * ImageService's getAssetsDisk() for the related cbfs DiskService issue.
+ */
+class extends="coldbox.system.EventHandler" {
+
+	// The only variant sizes ImageService ever produces.
+	variables.VALID_SIZES = "sm,lg";
+
+	/**
+	 * Streams one size variant of a user's avatar as JPEG. Requires an
+	 * authenticated session - avatars are only ever shown inside the app.
+	 *
+	 * 404s (rather than erroring) for an unrecognized userId/size shape or a
+	 * user who simply has no avatar - callers should not be able to tell the
+	 * difference between "no avatar" and "no such user" from this response.
+	 */
+	@secured
+	function avatar( event, rc, prc ) {
+		var imageService = getInstance( "imageService" )
+		if ( !isValidUserId( rc.userId ?: "" ) || !isValidSize( rc.size ?: "" ) ) {
+			return notFound( event )
+		}
+		return streamVariant( event, imageService, imageService.avatarPath( rc.userId, rc.size ), "image/jpeg" )
+	}
+
+	/**
+	 * Streams one size variant of the application branding logo as PNG.
+	 * Public - the login screen and other unauthenticated pages render it.
+	 */
+	function logo( event, rc, prc ) {
+		var imageService = getInstance( "imageService" )
+		if ( !isValidSize( rc.size ?: "" ) ) {
+			return notFound( event )
+		}
+		return streamVariant( event, imageService, imageService.logoPath( rc.size ), "image/png" )
+	}
+
+	/************************* PRIVATE FUNCTIONS *****************************/
+
+	private function streamVariant( event, required imageService, required string path, required string contentType ) {
+		if ( !arguments.imageService.exists( arguments.path ) ) {
+			return notFound( event )
+		}
+		return event.renderData(
+			type: "plain",
+			data: arguments.imageService.readBytes( arguments.path ),
+			contentType: arguments.contentType,
+			isBinary: true
+		)
+	}
+
+	private function notFound( event ) {
+		return event.renderData( type = "plain", data = "Not Found", statusCode = 404 )
+	}
+
+	/**
+	 * Guards the path segment built from rc.userId - it is user-controlled via
+	 * the URL, so only a hex-and-hyphens shape is accepted before it is ever
+	 * used to build a filesystem path. Hibernate's "uuid" ORM generator (see
+	 * User.bx) produces a 32-char hex id with no hyphens, not a dashed
+	 * 8-4-4-4-12 UUID, so this matches both that and the dashed shape used by
+	 * the seeded admin user rather than assuming one exact format.
+	 */
+	private boolean function isValidUserId( required string userId ) {
+		return reFindNoCase( "^[0-9a-f-]{8,40}$", arguments.userId ) > 0
+	}
+
+	private boolean function isValidSize( required string size ) {
+		return variables.VALID_SIZES.listFindNoCase( arguments.size ) > 0
+	}
+
+}
