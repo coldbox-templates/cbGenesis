@@ -12,7 +12,7 @@ tags: [reference, routing]
 
 Every `POST`, `PUT`, and `DELETE` route below requires a valid CSRF token in `rc.csrf`. `GET` routes do not — see [CSRF verification](../guides/handlers-routing.md#csrf-verification).
 
-The `:userId`, `:roleId`, `:permissionId`, `:settingId`, `:tokenId`, and `:passkeyId` placeholders are the literal parameter names the router binds into `rc`.
+The `:userId`, `:roleId`, `:permissionId`, `:settingId`, `:tokenId`, `:passkeyId`, and `:size` placeholders are the literal parameter names the router binds into `rc`. `:size` is `sm` or `lg`.
 
 | Method | URL | Handler.Action | Auth |
 |---|---|---|---|
@@ -82,6 +82,8 @@ The `:userId`, `:roleId`, `:permissionId`, `:settingId`, `:tokenId`, and `:passk
 | `GET` | `/profile/passkeys` | `Profile.listPasskeys` | Auth |
 | `POST` | `/profile/passkeys` | `Profile.updatePasskey` | Auth |
 | `DELETE` | `/profile/passkeys/:passkeyId` | `Profile.deletePasskey` | Auth |
+| `POST` | `/profile/avatar` | `Profile.uploadAvatar` | Auth |
+| `DELETE` | `/profile/avatar` | `Profile.deleteAvatar` | Auth |
 | `GET` | `/settings` | `Settings.index` | `settings:read,settings:admin` |
 | `POST` | `/settings` | `Settings.save` | `settings:write,settings:admin` |
 | `GET` | `/settings/registry` | `Settings.registry` | `settings:read,settings:admin` |
@@ -94,6 +96,10 @@ The `:userId`, `:roleId`, `:permissionId`, `:settingId`, `:tokenId`, and `:passk
 | `POST` | `/settings/clear-sessions-cache` | `Settings.clearSessionsCache` | `settings:admin` |
 | `POST` | `/settings/revoke-remember-tokens` | `Settings.revokeRememberTokens` | `settings:admin` |
 | `POST` | `/settings/flush-settings-cache` | `Settings.flushSettingsCache` | `settings:admin` |
+| `POST` | `/settings/logo` | `Settings.uploadLogo` | `settings:write,settings:admin` |
+| `DELETE` | `/settings/logo` | `Settings.deleteLogo` | `settings:write,settings:admin` |
+| `GET` | `/avatars/:userId/:size` | `Assets.avatar` | Auth |
+| `GET` | `/branding/logo/:size` | `Assets.logo` | Public |
 | `GET` | `/healthcheck` | Returns `Ok!` | Public |
 
 All routes also support the conventions-based catch-all pattern `/:handler/:action?`, matched last in `app/config/Router.bx`.

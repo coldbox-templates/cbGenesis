@@ -86,13 +86,14 @@ The following ColdBox modules are installed in this project. Use these when gene
 Current event handlers and their public actions (auto-updated on `coldbox ai refresh`):
 
 - **AuditLog**: index, search, show, export, purge, clear
+- **Assets**: avatar, logo
 - **Auth**: login, doLogin, register, checkEmailAvailability, doRegister, verifyRegistration, verifyEmailChange, activateInvitation, doActivateInvitation, forgotPassword, doForgotPassword, resetPassword, doResetPassword, logout
 - **Dashboard**: index, notAuthorized
 - **Main**: onAppInit, onRequestStart, onRequestEnd, onSessionStart, onSessionEnd, onException
 - **Permissions**: index, create, update, delete
-- **Profile**: index, passkeyRequired, save, requestEmailChange, cancelEmailChange, doPasswordChange, listTokens, createToken, updateToken, deleteToken, listPasskeys, updatePasskey, deletePasskey
+- **Profile**: index, passkeyRequired, save, requestEmailChange, cancelEmailChange, doPasswordChange, listTokens, createToken, updateToken, deleteToken, listPasskeys, updatePasskey, deletePasskey, uploadAvatar, deleteAvatar
 - **Roles**: index, create, update, delete, users, availableUsers, addUser, removeUser
-- **Settings**: index, registry, registrySearch, createRegistry, updateRegistry, toggleRegistryStatus, deleteRegistry, save, clearTemplateCache, clearSessionsCache, revokeRememberTokens, flushSettingsCache
+- **Settings**: index, registry, registrySearch, createRegistry, updateRegistry, toggleRegistryStatus, deleteRegistry, save, clearTemplateCache, clearSessionsCache, revokeRememberTokens, flushSettingsCache, uploadLogo, deleteLogo
 - **Users**: index, search, create, show, update, delete, resendInvitation, updateProfile, setStatus, resetPassword, forcePasswordReset, verify, revokeRememberTokens, addRole, removeRole, addPermission, removePermission, savePreferences, revokeToken, revokeAllTokens
 
 All handlers except `Auth` and `Main` extend `BaseSecureHandler`, whose `preHandler` verifies CSRF deny-by-default: any request that is not `GET`/`HEAD`/`OPTIONS` must carry a valid `rc.csrf`. Override `onInvalidCSRF()` in a handler that renders HTML instead of JSON.
