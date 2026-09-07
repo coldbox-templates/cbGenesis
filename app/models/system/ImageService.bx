@@ -25,13 +25,6 @@ class {
 	// (in cbfs itself) uses this exact same pattern.
 	property name="wirebox" inject="wirebox";
 
-	// The raw "assets" disk config from app/config/modules/cbfs.bx (provider
-	// name + its properties struct) - read directly rather than through
-	// cbfs's DiskService, for the reason on getAssetsDisk() below. Whatever
-	// provider that file configures (Local, S3, ...) is what gets built, so
-	// swapping storage backends there is still the only place to do it.
-	property name="cbfsModuleSettings" inject="coldbox:moduleSettings:cbfs";
-
 	// Not resolved via cbfs's DiskService/WireBox DSL: in this environment,
 	// wirebox.getInstance("DiskService@cbfs") (and the "cbfs:disks:assets"
 	// DSL, which calls the same thing internally) returns a DiskService
@@ -156,10 +149,20 @@ class {
 	/**
 	 * Lazily resolves and caches the cbfs "assets" disk. See the comment on
 	 * variables.assetsDisk for why this is not a property-level @inject.
+	 *
+	 * The module settings themselves (provider name + properties, from
+	 * app/config/modules/cbfs.bx) are resolved here too, via getInstance()
+	 * rather than a property-level @inject="coldbox:moduleSettings:cbfs" -
+	 * that eager form resolves the moment ImageService is built, which in
+	 * TestBox can run before the cbfs module has finished registering on a
+	 * cold boot, throwing "the module requested: cbfs does not exist in the
+	 * loaded modules" (observed in CI, not local runs with a warm module
+	 * cache). By the time any caller actually needs a disk, module loading
+	 * has long since finished either way.
 	 */
 	private any function getAssetsDisk() {
 		if ( isNull( variables.assetsDisk ) ) {
-			var diskConfig = variables.cbfsModuleSettings.disks.assets
+			var diskConfig = variables.wirebox.getInstance( dsl: "coldbox:moduleSettings:cbfs" ).disks.assets
 			// cbfs names its own provider WireBox mappings "{Provider}Provider@cbfs"
 			// (LocalProvider@cbfs, S3Provider@cbfs, RamProvider@cbfs, ...) - see
 			// DiskService.cfc's getRegisteredCoreProviders(). getInstance() (not

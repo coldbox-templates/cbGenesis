@@ -16,19 +16,11 @@ class extends="tests.resources.BaseIntegrationSpec" {
 	@inject( "@cbcsrf" )
 	property name="cbcsrf";
 
+	@inject
 	property name="imageService";
 
-	/**
-	 * imageService is resolved here via getInstance(), not an eager @inject
-	 * property, for the same reason Assets.bx resolves it inside its action
-	 * methods rather than as a property: it transitively depends on
-	 * coldbox:moduleSettings:cbfs, and an eager autowire can run before the
-	 * cbfs module has finished registering on a cold boot (observed in CI,
-	 * not local runs with a warm module cache).
-	 */
 	function beforeAll() {
 		super.beforeAll();
-		imageService = getInstance( "imageService" );
 	}
 
 	function run() {
