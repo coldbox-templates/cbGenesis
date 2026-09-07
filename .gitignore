@@ -22,6 +22,10 @@ app/logs/**
 runtime/logs/**
 tests/results/**
 
+# User-uploaded assets (cbfs "assets" disk - see app/config/modules/cbfs.bx)
+resources/uploads/**
+!resources/uploads/.gitkeep
+
 # npm
 **/node_modules/*
 npm-debug.log

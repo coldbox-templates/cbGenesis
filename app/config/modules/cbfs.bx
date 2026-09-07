@@ -1,0 +1,25 @@
+class {
+
+	function configure() {
+		return {
+			// Register the disks used by this application
+			"disks": {
+				// Private, non-web-accessible storage for user-uploaded assets (avatars,
+				// branding logo). Files are never served directly from this disk - the
+				// Assets handler streams them out, so nothing here needs a diskUrl.
+				// "resources" is a sibling of "app" and "public" at the repo root, so
+				// this is reached by traversing up from the existing "/app" mapping
+				// rather than registering a new one just for this.
+				"assets": {
+					provider  : "Local",
+					properties: {
+						path      : getSystemSetting( "CBFS_ASSETS_DISK_PATH", "/app/../resources/uploads" ),
+						autoExpand: true,
+						visibility: "private"
+					}
+				}
+			}
+		}
+	}
+
+}
