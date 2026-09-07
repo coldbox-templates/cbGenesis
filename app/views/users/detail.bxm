@@ -33,11 +33,12 @@
 <div class="cb-admin-detail-grid">
 	<aside class="detail-sidebar">
 		<section class="cb-content-card cb-profile-summary-card">
-			<div class="cb-profile-orb" x-text="( user.firstName?.[0] || '' ) + ( user.lastName?.[0] || '' )"></div>
+			<img class="cb-profile-orb" style="object-fit: cover;" x-show="user.hasAvatar" x-cloak :src="'/avatars/' + encodeURIComponent( user.userId ) + '/lg'" :alt="user.fullName">
+			<div class="cb-profile-orb" x-show="!user.hasAvatar" x-text="( user.firstName?.[0] || '' ) + ( user.lastName?.[0] || '' )"></div>
 			<h3 x-text="user.fullName"></h3><p x-text="user.email"></p>
 			<div class="cb-chip-row justify-content-center"><template x-for="( role, index ) in roles" :key="`${ role.roleId || 'role' }-${ index }`"><span class="cb-chip cb-chip-info" x-text="role.role"></span></template><span class="cb-chip" :class="user.isActive ? 'cb-chip-success' : 'cb-chip-danger'" x-text="user.isActive ? 'Active' : 'Disabled'"></span><span class="cb-chip" :class="user.isVerified ? 'cb-chip-success' : 'cb-chip-warning'" x-text="user.isVerified ? 'Verified' : 'Unverified'"></span></div>
 		</section>
-		<section class="cb-content-card cb-info-list-card"><h3>Account info</h3><dl><div><dt>Member since</dt><dd x-text="$formatDate( user.createdDate )"></dd></div><div><dt>Last login</dt><dd x-text="user.lastLogin ? $formatRelativeDate( user.lastLogin ) : 'Never'"></dd></div><div><dt>Verification</dt><dd x-text="user.verifiedAt ? $formatDate( user.verifiedAt ) : 'Pending'"></dd></div><div><dt>Password state</dt><dd x-text="user.isPasswordReset ? 'Reset required' : 'Current'"></dd></div></dl></section>
+		<section class="cb-content-card cb-info-list-card"><h3>Account info</h3><dl><div><dt>Member since</dt><dd x-text="$formatDate( user.createdDate )"></dd></div><div><dt>Last login</dt><dd x-text="user.lastLogin ? $relativeDate( user.lastLogin ) : 'Never'"></dd></div><div><dt>Verification</dt><dd x-text="user.verifiedAt ? $formatDate( user.verifiedAt ) : 'Pending'"></dd></div><div><dt>Password state</dt><dd x-text="user.isPasswordReset ? 'Reset required' : 'Current'"></dd></div></dl></section>
 	</aside>
 
 	<section class="detail-main">
@@ -184,7 +185,7 @@
 							<tr>
 								<td x-text="token.label"></td>
 								<td><code x-text="token.tokenSnapshot"></code></td>
-								<td x-text="token.lastUsed ? $formatRelativeDate( token.lastUsed ) : 'Never'"></td>
+								<td x-text="token.lastUsed ? $relativeDate( token.lastUsed ) : 'Never'"></td>
 								<td x-text="token.expiration ? $formatDate( token.expiration ) : 'Never'"></td>
 								<td class="text-end">
 									<button type="button" class="btn btn-sm btn-outline-danger" @click="revokeToken( token )">
