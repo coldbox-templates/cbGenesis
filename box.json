@@ -32,7 +32,8 @@
         "vite-helpers":"^2",
         "cborm":"be",
         "route-visualizer":"^2.2.0+2",
-        "cbsecurity-passkeys":"^1.0.8"
+        "cbsecurity-passkeys":"^1.0.8",
+        "cbfs":"^1.1.4+4"
     },
     "installPaths":{
         "coldbox":"lib/",

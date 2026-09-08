@@ -112,6 +112,10 @@ class {
 			GET : "listPasskeys",
 			POST: "updatePasskey"
 		})
+		route( "profile/avatar" ).withHandler( "Profile" ).toAction({
+			POST  : "uploadAvatar",
+			DELETE: "deleteAvatar"
+		})
 		route( "profile/passkey-required", "Profile.passkeyRequired" )
 		route( "profile/email-change" ).withHandler( "Profile" ).toAction({
 			POST  : "requestEmailChange",
@@ -143,11 +147,23 @@ class {
 			GET : "registry",
 			POST: "createRegistry"
 		})
+		route( "settings/logo" ).withHandler( "Settings" ).toAction({
+			POST  : "uploadLogo",
+			DELETE: "deleteLogo"
+		})
 		// Settings Manager
 		route( "settings" ).withHandler( "Settings" ).toAction({
 			GET: "index",
 			POST: "save"
 		})
+
+		/**
+		 * --------------------------------------------------------------------------
+		 * Assets Routing (avatars + branding logo)
+		 * --------------------------------------------------------------------------
+		 */
+		route( "avatars/:userId/:size", "Assets.avatar" )
+		route( "branding/logo/:size", "Assets.logo" )
 
 		/**
 		 * --------------------------------------------------------------------------

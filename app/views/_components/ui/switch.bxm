@@ -34,7 +34,7 @@
 		trueValue: '#encodeForHTMLAttribute( args.trueValue )#',
 		falseValue: '#encodeForHTMLAttribute( args.falseValue )#'
 	} )"
-	x-effect="#encodeForHTMLAttribute( localEffect )#"
+	<bx:if localEffect.len()>x-effect="#encodeForHTMLAttribute( localEffect )#"</bx:if>
 	:class="checked ? 'cb-switch--true' : 'cb-switch--false'"
 >
 	<bx:if len( localName )>

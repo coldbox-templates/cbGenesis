@@ -24,6 +24,7 @@ Copy `.env.example` to `.env` and fill in your own values - read anywhere in the
 | `DB_SCHEMA` | Schema the migration runner targets (`.cbmigrations.json`); leave blank for engines without one |
 | `DB_USER` / `DB_PASSWORD` | Database credentials |
 | `JWT_SECRET` | Signing key for `cbsecurity`'s JWT support |
+| `CBFS_ASSETS_DISK_PATH` | Filesystem path for the cbfs `assets` disk that stores avatars and the branding logo (defaults to `resources/uploads`) |
 | `COLDBOX_REINIT_PASSWORD` | Password required by `?fwreinit`. Unset means a fresh random value per boot, so reinit is closed - see [Deployment](../deployment.md#production-checklist) |
 
 ## Framework settings (`app/config/Coldbox.bx`)
@@ -69,6 +70,7 @@ Each installed module has its own settings file under `app/config/modules/`:
 | **cbauth** | `UserService` as the identity provider, cache-based session storage |
 | **cbmailservices** | BXMail protocol in production, files protocol in development — see [Email](email.md) |
 | **cborm** | Entity injection enabled, pagination `maxRows: 25` / `maxRowsLimit: 500` |
+| **cbfs** | `assets` disk (`Local` provider by default, path from `CBFS_ASSETS_DISK_PATH`, `visibility: "private"`) - stores avatars and the branding logo, streamed out by `Assets.bx` — see [Frontend](frontend.md#avatars-branding-logo) |
 | **cbstorages** | Cache storage (sessions cache, 60 min TTL), AES-encrypted cookie storage |
 | **mementifier** | ISO8601 dates, ORM auto-includes, UTC conversion |
 

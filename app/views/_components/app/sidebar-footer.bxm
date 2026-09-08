@@ -18,9 +18,13 @@
 				@click="$store.sidebar.close()">
 
 		<!--- User Avatar --->
-		<span class="cb-sidebar-user-avatar">
-			#( prc.authUser.getInitials() ?: "A" )#
-		</span>
+		#view( view: "_components/ui/avatar", args: {
+			userId   : prc.authUser.getUserId(),
+			hasAvatar: prc.authUser.getHasAvatar(),
+			initials : ( prc.authUser.getInitials() ?: "A" ),
+			class    : "cb-sidebar-user-avatar",
+			alt      : ( prc.authUser.getFullName() ?: "Admin User" )
+		} )#
 
 		<!--- User Info --->
 		<span class="cb-sidebar-user-info">

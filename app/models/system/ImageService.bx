@@ -1,0 +1,239 @@
+/**
+ * Crops, resizes, and stores the user avatar and application branding logo on
+ * the cbfs "assets" disk (see app/config/modules/cbfs.bx). There is no stored
+ * filename anywhere - paths are derived deterministically, so callers only
+ * ever need a userId (for avatars) or nothing (for the single logo).
+ *
+ * Avatars are center-cropped to a square, then resized down, and always saved
+ * as JPEG - a photo does not need transparency. The branding logo is scaled
+ * to fit its target height without cropping, and always saved as PNG so a
+ * transparent logo is preserved.
+ */
+// Not entity-backed, so this does not extend app.models.BaseService: that base
+// extends cborm's VirtualEntityService, which requires an entityName this
+// service has no corresponding ORM entity to supply.
+@singleton
+@threadSafe
+class {
+
+	// A plain "wirebox" property injection rather than the getInstance()
+	// mixin: this class does not extend any framework base (EventHandler,
+	// Interceptor, ...), and in this environment a bare singleton class
+	// calling the getInstance() mixin on itself fails with "Function
+	// [getInstance] not found" - the mixin is only present on framework-aware
+	// types. Injecting the injector itself sidesteps that; LocalProvider.cfc
+	// (in cbfs itself) uses this exact same pattern.
+	property name="wirebox" inject="wirebox";
+
+	// The ColdBox controller singleton - always available from the moment the
+	// app boots, unlike any module-scoped lookup, so injecting it eagerly
+	// carries none of the "module not registered yet" risk a property-level
+	// @inject="coldbox:moduleSettings:cbfs" has (see getAssetsDisk()).
+	property name="coldbox" inject="coldbox";
+
+	// Not resolved via cbfs's DiskService/WireBox DSL: in this environment,
+	// wirebox.getInstance("DiskService@cbfs") (and the "cbfs:disks:assets"
+	// DSL, which calls the same thing internally) returns a DiskService
+	// whose disks are always empty when invoked from a real request against
+	// the running app, even though the exact same call works from ColdBox's
+	// TestBox VirtualApp and the disk demonstrably registers at boot per the
+	// server log - something about that particular WireBox singleton
+	// resolves differently between the two. Unresolved root cause; worked
+	// around by building the configured provider directly, from the same
+	// config app/config/modules/cbfs.bx uses, bypassing DiskService entirely.
+	variables.assetsDisk = javacast( "null", "" );
+
+	variables.MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+	variables.ALLOWED_FORMATS  = [ "jpeg", "jpg", "png", "webp" ];
+	variables.AVATAR_SIZES     = { sm: 64, lg: 256 };
+	variables.LOGO_HEIGHTS     = { sm: 64, lg: 256 };
+
+	/**
+	 * Center-crops and resizes an uploaded image into the sm/lg avatar variants
+	 * and stores both on the assets disk as JPEG.
+	 *
+	 * @userId    The user to store an avatar for.
+	 * @imageData Raw bytes of the uploaded image.
+	 *
+	 * @throws Image.TooLarge      When imageData exceeds the configured upload limit.
+	 * @throws Image.InvalidFormat When imageData cannot be decoded as one of the allowed formats.
+	 */
+	void function storeAvatar( required string userId, required binary imageData ) {
+		var base64 = validate( arguments.imageData )
+
+		for ( var size in variables.AVATAR_SIZES ) {
+			// bx-image has no "clone" - a fresh decode per variant is what
+			// guarantees each size is independent of the others.
+			var variant = imageReadBase64( base64 )
+			squareCrop( variant )
+			variant.resize( variables.AVATAR_SIZES[ size ], variables.AVATAR_SIZES[ size ] )
+			writeVariant( variant, avatarPath( arguments.userId, size ), "jpg" )
+		}
+	}
+
+	/**
+	 * Deletes both avatar variants for a user, if present.
+	 */
+	void function deleteAvatar( required string userId ) {
+		var disk = getAssetsDisk()
+		for ( var size in variables.AVATAR_SIZES ) {
+			var path = avatarPath( arguments.userId, size )
+			if ( disk.exists( path ) ) {
+				disk.delete( path )
+			}
+		}
+	}
+
+	/**
+	 * Scales an uploaded image to fit the sm/lg logo heights (width follows
+	 * proportionally, no cropping) and stores both on the assets disk as PNG.
+	 *
+	 * @imageData Raw bytes of the uploaded image.
+	 *
+	 * @throws Image.TooLarge      When imageData exceeds the configured upload limit.
+	 * @throws Image.InvalidFormat When imageData cannot be decoded as one of the allowed formats.
+	 */
+	void function storeLogo( required binary imageData ) {
+		var base64 = validate( arguments.imageData )
+
+		for ( var size in variables.LOGO_HEIGHTS ) {
+			var variant = imageReadBase64( base64 )
+			imageScaleToFit( variant, "", variables.LOGO_HEIGHTS[ size ] )
+			writeVariant( variant, logoPath( size ), "png" )
+		}
+	}
+
+	/**
+	 * Deletes both branding logo variants, if present.
+	 */
+	void function deleteLogo() {
+		var disk = getAssetsDisk()
+		for ( var size in variables.LOGO_HEIGHTS ) {
+			var path = logoPath( size )
+			if ( disk.exists( path ) ) {
+				disk.delete( path )
+			}
+		}
+	}
+
+	/**
+	 * The deterministic cbfs path for a user's avatar variant.
+	 *
+	 * @size "sm" or "lg"
+	 */
+	string function avatarPath( required string userId, required string size ) {
+		return "avatars/#arguments.userId#/#arguments.size#.jpg"
+	}
+
+	/**
+	 * The deterministic cbfs path for a branding logo variant.
+	 *
+	 * @size "sm" or "lg"
+	 */
+	string function logoPath( required string size ) {
+		return "branding/logo-#arguments.size#.png"
+	}
+
+	/**
+	 * Whether a file exists at the given assets-disk path. Used by the Assets
+	 * handler before streaming a variant out.
+	 */
+	boolean function exists( required string path ) {
+		return getAssetsDisk().exists( arguments.path )
+	}
+
+	/**
+	 * Reads the raw bytes of a file at the given assets-disk path. Used by the
+	 * Assets handler to stream a variant out.
+	 */
+	binary function readBytes( required string path ) {
+		return getAssetsDisk().getAsBinary( arguments.path )
+	}
+
+	/************************* PRIVATE FUNCTIONS *****************************/
+
+	/**
+	 * Lazily resolves and caches the cbfs "assets" disk. See the comment on
+	 * variables.assetsDisk for why this is not a property-level @inject.
+	 *
+	 * The module settings themselves (provider name + properties, from
+	 * app/config/modules/cbfs.bx) are read here too, straight off the
+	 * ColdBox controller's own "modules" setting, rather than through a
+	 * property-level @inject="coldbox:moduleSettings:cbfs" or an equivalent
+	 * wirebox.getInstance(dsl:...) call - both go through WireBox's DSL
+	 * resolver, which either resolves too early (a property injects the
+	 * moment ImageService is built, which in TestBox can run before the
+	 * cbfs module has finished registering on a cold boot: "the module
+	 * requested: cbfs does not exist in the loaded modules") or, called
+	 * ad hoc outside of a property definition, doesn't parse at all ("The
+	 * DSL provided was not valid", name always blank - observed in CI on
+	 * both attempts). Reading it straight off the controller is exactly
+	 * what that DSL case does internally, without going through the DSL
+	 * parser at all, and by the time any caller actually needs a disk,
+	 * module loading has long since finished either way.
+	 */
+	private any function getAssetsDisk() {
+		if ( isNull( variables.assetsDisk ) ) {
+			var diskConfig = variables.coldbox.getSetting( "modules" ).cbfs.settings.disks.assets
+			// cbfs names its own provider WireBox mappings "{Provider}Provider@cbfs"
+			// (LocalProvider@cbfs, S3Provider@cbfs, RamProvider@cbfs, ...) - see
+			// DiskService.cfc's getRegisteredCoreProviders(). getInstance() (not
+			// "new") so WireBox still wires the provider's own dependencies
+			// (interceptorService, streamBuilder, etc) - only the DiskService-level
+			// lookup by disk name is being bypassed here, not WireBox construction.
+			variables.assetsDisk = variables.wirebox
+				.getInstance( "#diskConfig.provider#Provider@cbfs" )
+				.startup( name: "assets", properties: diskConfig.properties )
+		}
+		return variables.assetsDisk
+	}
+
+	/**
+	 * Validates raw image bytes and returns them base64-encoded, ready to be
+	 * decoded fresh (via imageReadBase64()) once per size variant.
+	 */
+	private string function validate( required binary imageData ) {
+		if ( arrayLen( arguments.imageData ) > variables.MAX_UPLOAD_BYTES ) {
+			throw(
+				type    = "Image.TooLarge",
+				message = "Image exceeds the maximum upload size of #variables.MAX_UPLOAD_BYTES / 1024 / 1024#MB."
+			)
+		}
+
+		var base64 = binaryEncode( arguments.imageData, "base64" )
+
+		try {
+			var img = imageReadBase64( base64 )
+		} catch ( any e ) {
+			throw( type = "Image.InvalidFormat", message = "The uploaded file is not a readable image." )
+		}
+
+		if ( !variables.ALLOWED_FORMATS.findNoCase( img.getFormat() ) ) {
+			throw(
+				type    = "Image.InvalidFormat",
+				message = "Unsupported image format [#img.getFormat()#]. Allowed formats: #variables.ALLOWED_FORMATS.toList( ', ' )#."
+			)
+		}
+
+		return base64
+	}
+
+	/**
+	 * Center-crops an image to a square in place, using the shorter dimension.
+	 */
+	private void function squareCrop( required img ) {
+		var side = min( arguments.img.getWidth(), arguments.img.getHeight() )
+		var x    = int( ( arguments.img.getWidth() - side ) / 2 )
+		var y    = int( ( arguments.img.getHeight() - side ) / 2 )
+		arguments.img.crop( x, y, side, side )
+	}
+
+	/**
+	 * Encodes an image variant to the given format and writes it to the assets disk.
+	 */
+	private void function writeVariant( required img, required string path, required string format ) {
+		var bytes = binaryDecode( imageWriteBase64( arguments.img, arguments.format ), "base64" )
+		getAssetsDisk().create( arguments.path, bytes )
+	}
+
+}

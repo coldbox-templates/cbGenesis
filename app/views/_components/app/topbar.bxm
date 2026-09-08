@@ -60,9 +60,13 @@
 					aria-expanded="false"
 				>
 
-                    <span class="cb-topbar-user-avatar">
-                        #( prc.authUser.getInitials() )#
-                    </span>
+                    #view( view: "_components/ui/avatar", args: {
+                        userId   : prc.authUser.getUserId(),
+                        hasAvatar: prc.authUser.getHasAvatar(),
+                        initials : prc.authUser.getInitials(),
+                        class    : "cb-topbar-user-avatar",
+                        alt      : prc.authUser.getFullName()
+                    } )#
 
                     <i class="ph-duotone ph-caret-down cb-topbar-user-chevron" aria-hidden="true"></i>
                 </button>

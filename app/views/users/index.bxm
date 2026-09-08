@@ -159,7 +159,12 @@
 						<tr>
 							<td class="cb-users-info-column">
 								<div class="cb-identity-cell">
-									<span class="cb-avatar-token" x-text="user.initials"></span>
+									<template x-if="user.hasAvatar">
+										<img class="cb-avatar-token" style="object-fit: cover;" :src="'/avatars/' + encodeURIComponent( user.userId ) + '/sm'" :alt="user.name">
+									</template>
+									<template x-if="!user.hasAvatar">
+										<span class="cb-avatar-token" x-text="user.initials"></span>
+									</template>
 									<span>
 											<a class="cb-user-detail-link" :href="user.detailUrl" :aria-label="'Manage ' + user.name">
 												<strong x-text="user.name"></strong>

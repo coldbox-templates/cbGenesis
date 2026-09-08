@@ -59,6 +59,7 @@ class extends="BaseSecureHandler" {
 				"isActive",
 				"isPasswordReset",
 				"is2FactorAuth",
+				"hasAvatar",
 				"createdDate",
 				"verifiedAt",
 				"lastLogin"
@@ -163,6 +164,7 @@ class extends="BaseSecureHandler" {
 				email: arguments.user.getEmail(),
 				biography: arguments.user.getBiography(),
 				isActive: arguments.user.getIsActive(),
+				hasAvatar: arguments.user.getHasAvatar(),
 				isVerified: arguments.user.isEmailVerified(),
 				verifiedAt: arguments.user.getVerifiedAt(),
 				isPasswordReset: arguments.user.getIsPasswordReset(),

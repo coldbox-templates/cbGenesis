@@ -21,8 +21,16 @@
 		<section class="cb-content-card cb-profile-hero">
 			<div class="cb-profile-hero-cover"></div>
 			<div class="cb-profile-hero-body">
-				<div class="cb-profile-orb small" data-profile-initials>#encodeForHTML( prc.authUser.getInitials() )#</div>
+				<div class="cb-profile-avatar-wrap">
+					<div class="cb-profile-orb small" data-profile-initials x-show="!avatar.hasAvatar">#encodeForHTML( prc.authUser.getInitials() )#</div>
+					<img class="cb-profile-orb small" style="object-fit: cover;" x-show="avatar.hasAvatar" x-cloak :src="avatarUrl" alt="#encodeForHTMLAttribute( prc.authUser.getFullName() )#">
+					<button type="button" class="cb-avatar-edit-btn" :disabled="avatar.loading" @click="$refs.avatarInput.click()" aria-label="Change avatar" title="Change avatar">
+						<i class="ph-duotone ph-camera" aria-hidden="true"></i>
+					</button>
+					<input type="file" accept="image/png,image/jpeg,image/webp" x-ref="avatarInput" class="visually-hidden" @change="onAvatarSelected( $event )">
+				</div>
 				<h3 data-profile-name>#encodeForHTML( prc.authUser.getFullName() )#</h3>
+				<button type="button" class="btn btn-link btn-sm" x-show="avatar.hasAvatar" x-cloak @click="removeAvatar()" :disabled="avatar.loading">Remove avatar</button>
 			</div>
 		</section>
 

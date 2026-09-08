@@ -130,6 +130,7 @@ These BXM partials live under `app/views/_components/` and are rendered with Col
 | `_components/ui/messagebox` | Dismissible info/success/warning/error alert. Supports static `message`/`title` or dynamic `messageExpression`/`typeExpression`/`dismissAction`, plus `autoDismiss` and `classes`. |
 | `_components/ui/globalProgress` | Global accessible progress bar. Include once per layout; controlled by `$progress.start()`, `$progress.set()`, and `$progress.stop()`. |
 | `_components/ui/globalToast` | Global toast stack. Include once per layout; accepts `duration`, `position`, and `maxVisible`, and receives notifications from `$toast()`. |
+| `_components/ui/avatar` | Renders a user's avatar image when `hasAvatar` is true, falling back to `initials` otherwise. Read-only display used by the sidebar, topbar, Users listing, and Users detail page — see [Avatars & branding logo](#avatars-branding-logo). |
 | `_components/ui/logo` | Reusable application logo/branding partial. |
 | `_components/ui/passwordMeter` | Password policy meter used beside password fields. |
 | `_components/ui/progressbar` | Inline progress bar partial for a local numeric value. |
@@ -161,8 +162,9 @@ These BXM partials live under `app/views/_components/` and are rendered with Col
 | `permissionsForm` | `components/security/PermissionsForm.js` | Permission listing and CRUD operations. |
 | `auditLogForm` | `components/security/AuditLogForm.js` | Audit filtering, pagination, detail drawer, CSV export, purge, and clear actions. |
 | `settingsForm` | `components/settings/SettingsForm.js` | Core application settings editing and cache-related feedback. |
+| `logoUploader` | `components/settings/LogoUploader.js` | Branding logo upload/remove for the "App Logo Path" field, alongside its existing manual URL input and live preview — see [Avatars & branding logo](#avatars-branding-logo). |
 | `settingsRegistryForm` | `components/settings/SettingsRegistryForm.js` | Registry search, pagination, create/update, enable/disable, and delete actions. |
-| `profileForm` | `components/profile/ProfileForm.js` | Profile fields, password policy, API token management, and the email-change request/cancel sub-form. |
+| `profileForm` | `components/profile/ProfileForm.js` | Profile fields, password policy, API token management, the email-change request/cancel sub-form, and avatar upload/remove. |
 | `preferencesForm` | `components/profile/PreferencesForm.js` | Persisting user preferences. |
 | `passkeyOnboarding` | `components/profile/PasskeyOnboarding.js` | Passkey registration and required-passkey onboarding. |
 
@@ -196,6 +198,15 @@ The source also contains `Header.js`, `Sidebar.js`, `TopBarNotifications.js`, an
 | `createRemoteListing()` | `utils/listing.js` | Shared remote listing state, loading, pagination, and error handling. |
 
 `AlpinePlugins.js` installs Collapse, Focus, Mask, and Persist. `passkeys.js` provides the browser-side WebAuthn integration. Keep new reusable browser APIs documented here and add their registration/import to `App.js` when they are global.
+
+## Avatars & branding logo
+
+User avatars and the application branding logo are stored on the private cbfs `assets` disk (see [Configuration](configuration.md#module-configuration)) and streamed out by `Assets.bx` (see [Handlers & Routing](handlers-routing.md#assets)) rather than served as static files.
+
+- **Display** goes through the `_components/ui/avatar` partial: it renders `<img src="/avatars/:userId/:size">` when `hasAvatar` is true, and falls back to an initials `<span>` otherwise. It is wired into the sidebar, topbar, and Users listing table (server-projected `hasAvatar` field), and inline in the Users detail page (`x-show`/`x-cloak` toggling on `user.hasAvatar`, since that page's avatar sits inside an Alpine-driven summary card rather than a static partial).
+- **Upload/remove** for the current user's own avatar lives on the Profile page, owned by `profileForm` (`ProfileForm.js`): a hidden file input reads the selected image as a base64 data URI (`readFileAsDataUrl()`) and posts it to `POST /profile/avatar`; `DELETE /profile/avatar` removes it. Both bump a `version` counter used as a cache-busting query param on the streamed URL, since the file path itself does not change between uploads.
+- **The branding logo** gets the same upload/remove treatment on the Settings page, via the `logoUploader` component (`LogoUploader.js`) against `POST`/`DELETE /settings/logo`. It replaces the `cbAppLogo` setting's text input value with the streamed path (`/branding/logo/lg`) on upload, and restores the configured default on removal — the manual URL text input and live `<img>` preview keep working exactly as before for anyone who wants to point `cbAppLogo` at an external URL instead.
+- Both upload endpoints accept the same shapes: images are decoded server-side with `BaseSecureHandler.decodeDataUri()`, then resized/cropped into `sm`/`lg` JPEG (avatar) or PNG (logo) variants by `ImageService` (`app/models/system/ImageService.bx`).
 
 ::: cards
 ::: card title="Extending the App" icon="phosphor-duotone:puzzle-piece" href="extending.md"

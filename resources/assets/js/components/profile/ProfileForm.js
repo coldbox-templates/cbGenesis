@@ -14,6 +14,15 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 		activeTab : "profile",
 		loading   : "",
 		notice    : { type: "", message: "" },
+		userId    : initialProfile.userId ?? "",
+		avatar    : {
+			hasAvatar : Boolean( initialProfile.hasAvatar ),
+			// Cache-busts the streamed avatar URL after an upload/removal so the
+			// browser does not keep showing an image it already cached at the
+			// same path.
+			version   : Date.now(),
+			loading   : false,
+		},
 		profile   : {
 			firstName    : initialProfile.firstName ?? "",
 			lastName     : initialProfile.lastName ?? "",
@@ -829,6 +838,96 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 				.join( "" );
 			if ( name ) this.$root.querySelector( "[data-profile-name]" ).textContent = name;
 			if ( initials ) this.$root.querySelector( "[data-profile-initials]" ).textContent = initials;
+		},
+
+		/**
+		 * Streamed URL for the authenticated user's large avatar variant, or an
+		 * empty string when they have none. The version query param busts the
+		 * browser cache after an upload/removal changes the file at this path.
+		 *
+		 * @returns {string} Avatar image URL, or an empty string.
+		 */
+		get avatarUrl() {
+			return this.avatar.hasAvatar
+				? `/avatars/${ encodeURIComponent( this.userId ) }/lg?v=${ this.avatar.version }`
+				: "";
+		},
+
+		/**
+		 * Reads a File as a base64 data URI.
+		 *
+		 * @param {File} file File selected from an <input type="file">.
+		 * @returns {Promise<string>} Resolves with the file's data URI.
+		 */
+		readFileAsDataUrl( file ) {
+			return new Promise( ( resolve, reject ) => {
+				const reader = new FileReader();
+				reader.onload  = () => resolve( reader.result );
+				reader.onerror = () => reject( new Error( "The selected file could not be read." ) );
+				reader.readAsDataURL( file );
+			} );
+		},
+
+		/**
+		 * Uploads the avatar image picked from the hidden file input.
+		 *
+		 * @param {InputEvent} event File input change event.
+		 * @returns {Promise<void>}
+		 */
+		async onAvatarSelected( event ) {
+			const file = event.target.files?.[ 0 ];
+			event.target.value = "";
+			if ( !file || this.avatar.loading ) return;
+			this.clearNotice();
+			this.avatar.loading = true;
+			try {
+				const dataUri = await this.readFileAsDataUrl( file );
+				const response = await fetch( "/profile/avatar", {
+					method      : "POST",
+					credentials : "same-origin",
+					headers     : { "Content-Type": "application/json", Accept: "application/json" },
+					body        : JSON.stringify( { avatar: dataUri, csrf: this.csrfToken } ),
+				} );
+				const payload = await response.json();
+				if ( !response.ok || payload.error ) {
+					throw new Error( payload.data?.avatar || payload.messages || "Avatar could not be saved." );
+				}
+				this.avatar.hasAvatar = true;
+				this.avatar.version = Date.now();
+				this.notice = { type: "success", message: payload.messages || "Avatar updated successfully." };
+			} catch ( error ) {
+				this.notice = { type: "error", message: error.message || "Avatar could not be saved." };
+			} finally {
+				this.avatar.loading = false;
+			}
+		},
+
+		/**
+		 * Permanently removes the authenticated user's avatar.
+		 *
+		 * @returns {Promise<void>}
+		 */
+		async removeAvatar() {
+			if ( !this.avatar.hasAvatar || this.avatar.loading ) return;
+			this.clearNotice();
+			this.avatar.loading = true;
+			try {
+				const response = await fetch( "/profile/avatar", {
+					method      : "DELETE",
+					credentials : "same-origin",
+					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+					body        : new URLSearchParams( { csrf: this.csrfToken } ),
+				} );
+				const payload = await response.json();
+				if ( !response.ok || payload.error ) throw new Error( payload.messages || "Avatar could not be removed." );
+				this.avatar.hasAvatar = false;
+				this.avatar.version = Date.now();
+				this.notice = { type: "success", message: payload.messages || "Avatar removed successfully." };
+			} catch ( error ) {
+				this.notice = { type: "error", message: error.message || "Avatar could not be removed." };
+			} finally {
+				this.avatar.loading = false;
+			}
 		},
 	};
 }

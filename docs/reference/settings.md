@@ -51,7 +51,7 @@ Select **Auth Center** or **Auth Split** at `/settings`, save the settings, and 
 | Setting | Purpose |
 |---|---|
 | `cbAppName` | Application display name |
-| `cbAppLogo` | Logo shown in the admin sidebar |
+| `cbAppLogo` | Logo shown in the admin sidebar. Either a manually-entered URL, or `/branding/logo/lg` after an upload via Settings — see [Avatars & branding logo](../guides/frontend.md#avatars-branding-logo) |
 | `cbAppTagline` | Tagline shown alongside the logo |
 | `cbAppBrandTagline` | Short branding label shown in the sidebar brand area |
 | `cbCopyrightNotice` | Copyright text rendered by the application footer |
