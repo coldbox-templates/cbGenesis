@@ -30,14 +30,22 @@
         "cbmailservices":"^2",
         "cbsecurity":"^3",
         "vite-helpers":"^2",
-        "cborm":"be",
+        "cborm":"^5.0.0",
         "route-visualizer":"^2.2.0+2",
         "cbsecurity-passkeys":"^1.0.8",
         "cbfs":"^1.1.4+4"
     },
     "installPaths":{
-        "coldbox":"lib/",
-        "testbox":"lib/"
+        "coldbox":"lib/coldbox/",
+        "testbox":"lib/testbox/",
+        "qb":"lib/modules/qb/",
+        "cbmailservices":"lib/modules/cbmailservices/",
+        "cbsecurity":"lib/modules/cbsecurity/",
+        "vite-helpers":"lib/modules/vite-helpers/",
+        "cborm":"lib/modules/cborm/",
+        "route-visualizer":"lib/modules/route-visualizer/",
+        "cbsecurity-passkeys":"lib/modules/cbsecurity-passkeys/",
+        "cbfs":"lib/modules/cbfs/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",
