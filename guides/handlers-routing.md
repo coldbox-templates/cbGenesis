@@ -13,6 +13,7 @@ tags: [guides, handlers, routing]
 | Handler | Base | Purpose |
 |---|---|---|
 | [`AuditLog.bx`](#auditlog) | `BaseSecureHandler` | Audit trail browsing, export, and purging |
+| [`Assets.bx`](#assets) | `EventHandler` | Streams user avatars and the branding logo |
 | [`Auth.bx`](#auth) | `EventHandler` | Login, registration, invitations, password reset - all public |
 | [`BaseSecureHandler.bx`](#basesecurehandler) | `RestHandler` | Base class for every admin handler |
 | [`Dashboard.bx`](#dashboard) | `BaseSecureHandler` | The authenticated landing page |
@@ -61,6 +62,15 @@ component extends="BaseSecureHandler" secured {
 - `purge` - `@secured("auditlog:admin,auditlog:delete")`, deletes entries older than a cutoff
 - `clear` - `@secured("auditlog:admin")`, deletes every entry
 
+### `Assets`
+
+No `@secured` annotation at the class level - it streams binary files from the private cbfs `assets` disk (see [Database & ORM](database-orm.md) and `app/config/modules/cbfs.bx`), which sits outside the webroot and is otherwise unreachable:
+
+- `avatar` - `@secured` (any authenticated user), streams a user's `sm`/`lg` avatar JPEG variant
+- `logo` - public, streams the `sm`/`lg` branding logo PNG variant so the login screen and other guest pages can render it
+
+Both actions 404 (rather than erroring) for an unrecognized `userId`/`size` shape or when the requested file simply does not exist, so a caller cannot distinguish "no avatar" from "no such user" by response shape alone. Resizing, cropping, and storage go through `ImageService` (`app/models/system/ImageService.bx`), invoked via `getInstance()` inside each action rather than an `@inject` property - see the docblock on `Assets.bx` for why (a WireBox boot-order quirk with handler-triggered singleton construction).
+
 ### `Auth`
 
 No `@secured` annotation - these actions must stay reachable by guests:
@@ -101,6 +111,7 @@ No `@secured` annotation - these actions must stay reachable by guests:
 - `requestEmailChange` / `cancelEmailChange` - starts/cancels a pending email change, confirmed via `Auth.verifyEmailChange`
 - `listTokens` / `createToken` / `updateToken` / `deleteToken` - API tokens
 - `listPasskeys` / `updatePasskey` / `deletePasskey`
+- `uploadAvatar` / `deleteAvatar` - accepts the image as a base64 data URI in `rc.avatar` (BoxLang has no multipart/form-data parser, so uploads travel as JSON), decoded via `BaseSecureHandler.decodeDataUri()`; streamed back by `Assets.avatar`
 
 Every one of these is CSRF-verified by `BaseSecureHandler` unless it is reached over a safe HTTP method - see [CSRF verification](#csrf-verification).
 
@@ -121,6 +132,7 @@ Every one of these is CSRF-verified by `BaseSecureHandler` unless it is reached 
 - `registry` / `registrySearch` - paginated settings registry
 - `createRegistry` / `updateRegistry` / `toggleRegistryStatus` / `deleteRegistry` - `settings:admin,settings:write`
 - `save` - bulk save of core settings
+- `uploadLogo` / `deleteLogo` - `settings:admin,settings:write`, same base64 data URI convention as `Profile.uploadAvatar`; stores/restores the `cbAppLogo` setting and streams back via `Assets.logo`
 - Admin utilities (all `settings:admin`): `clearTemplateCache`, `clearSessionsCache`, `revokeRememberTokens`, `flushSettingsCache`
 
 ### `Users`

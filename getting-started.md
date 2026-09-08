@@ -126,7 +126,7 @@ box migrate seed
 ```bash frame="terminal" title="Terminal"
 box server start
 ```
-This is the BoxLang CLI server command. The first run installs the BoxLang modules listed in `server.json` (`bx-esapi`, `bx-password-encrypt`, `bx-mail`, `bx-orm`, `bx-mysql`).
+This is the BoxLang CLI server command. The first run installs the BoxLang modules listed in `server.json` (`bx-esapi`, `bx-password-encrypt`, `bx-mail`, `bx-orm`, `bx-mysql`, `bx-image`).
 :::
 ::: step "Start Vite (in a second terminal)" color="success"
 ```bash frame="terminal" title="Terminal"

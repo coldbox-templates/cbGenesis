@@ -143,6 +143,7 @@ Configuration</h1>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>DB_SCHEMA</code></td><td>Schema the migration runner targets (<code>.cbmigrations.json</code>); leave blank for engines without one</td></tr>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>DB_USER</code> / <code>DB_PASSWORD</code></td><td>Database credentials</td></tr>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>JWT_SECRET</code></td><td>Signing key for <code>cbsecurity</code>'s JWT support</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>CBFS_ASSETS_DISK_PATH</code></td><td>Filesystem path for the cbfs <code>assets</code> disk that stores avatars and the branding logo (defaults to <code>resources/uploads</code>)</td></tr>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><code>COLDBOX_REINIT_PASSWORD</code></td><td>Password required by <code>?fwreinit</code>. Unset means a fresh random value per boot, so reinit is closed - see <a href="/cbGenesis/deployment/index.html#production-checklist">Deployment</a></td></tr>
 </tbody>
 </table></div>
@@ -184,6 +185,7 @@ Configuration</h1>
 <tr><td><strong>cbauth</strong></td><td><code>UserService</code> as the identity provider, cache-based session storage</td></tr>
 <tr><td><strong>cbmailservices</strong></td><td>BXMail protocol in production, files protocol in development — see <a href="/cbGenesis/guides/email/index.html">Email</a></td></tr>
 <tr><td><strong>cborm</strong></td><td>Entity injection enabled, pagination <code>maxRows: 25</code> / <code>maxRowsLimit: 500</code></td></tr>
+<tr><td><strong>cbfs</strong></td><td><code>assets</code> disk (<code>Local</code> provider by default, path from <code>CBFS_ASSETS_DISK_PATH</code>, <code>visibility: &quot;private&quot;</code>) - stores avatars and the branding logo, streamed out by <code>Assets.bx</code> — see <a href="/cbGenesis/guides/frontend/index.html#avatars-branding-logo">Frontend</a></td></tr>
 <tr><td><strong>cbstorages</strong></td><td>Cache storage (sessions cache, 60 min TTL), AES-encrypted cookie storage</td></tr>
 <tr><td><strong>mementifier</strong></td><td>ISO8601 dates, ORM auto-includes, UTC conversion</td></tr>
 </tbody>
@@ -193,7 +195,7 @@ Configuration</h1>
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/configuration.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/configuration.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 7, 2026, 4&#x3a;23&#x3a;54 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/configuration.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/configuration.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 8, 2026, 2&#x3a;18&#x3a;16 AM</span></div>
 
 				</article>
 

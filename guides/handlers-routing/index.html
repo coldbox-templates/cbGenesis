@@ -123,7 +123,7 @@ Handlers &amp; Routing</h1>
 
 
 
-	<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#handler-map">Handler map</a></li><li class="toc-level-3"><a href="#basesecurehandler">BaseSecureHandler</a></li><li class="toc-level-3"><a href="#auditlog">AuditLog</a></li><li class="toc-level-3"><a href="#auth">Auth</a></li><li class="toc-level-3"><a href="#dashboard">Dashboard</a></li><li class="toc-level-3"><a href="#permissions">Permissions</a></li><li class="toc-level-3"><a href="#profile">Profile</a></li><li class="toc-level-3"><a href="#roles">Roles</a></li><li class="toc-level-3"><a href="#settings">Settings</a></li><li class="toc-level-3"><a href="#users">Users</a></li><li class="toc-level-2"><a href="#csrf-verification">CSRF verification</a></li><li class="toc-level-2"><a href="#route-map-appconfigrouterbx">Route map &#x28; app&#x2f;config&#x2f;Router.bx &#x29;</a></li></ul></details>
+	<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#handler-map">Handler map</a></li><li class="toc-level-3"><a href="#basesecurehandler">BaseSecureHandler</a></li><li class="toc-level-3"><a href="#auditlog">AuditLog</a></li><li class="toc-level-3"><a href="#assets">Assets</a></li><li class="toc-level-3"><a href="#auth">Auth</a></li><li class="toc-level-3"><a href="#dashboard">Dashboard</a></li><li class="toc-level-3"><a href="#permissions">Permissions</a></li><li class="toc-level-3"><a href="#profile">Profile</a></li><li class="toc-level-3"><a href="#roles">Roles</a></li><li class="toc-level-3"><a href="#settings">Settings</a></li><li class="toc-level-3"><a href="#users">Users</a></li><li class="toc-level-2"><a href="#csrf-verification">CSRF verification</a></li><li class="toc-level-2"><a href="#route-map-appconfigrouterbx">Route map &#x28; app&#x2f;config&#x2f;Router.bx &#x29;</a></li></ul></details>
 
 					<svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
 <symbol id="adm-note">
@@ -143,6 +143,7 @@ Handlers &amp; Routing</h1>
 </thead>
 <tbody>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><a href="#auditlog"><code>AuditLog.bx</code></a></td><td><code>BaseSecureHandler</code></td><td>Audit trail browsing, export, and purging</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><a href="#assets"><code>Assets.bx</code></a></td><td><code>EventHandler</code></td><td>Streams user avatars and the branding logo</td></tr>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><a href="#auth"><code>Auth.bx</code></a></td><td><code>EventHandler</code></td><td>Login, registration, invitations, password reset - all public</td></tr>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><a href="#basesecurehandler"><code>BaseSecureHandler.bx</code></a></td><td><code>RestHandler</code></td><td>Base class for every admin handler</td></tr>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td><a href="#dashboard"><code>Dashboard.bx</code></a></td><td><code>BaseSecureHandler</code></td><td>The authenticated landing page</td></tr>
@@ -184,6 +185,13 @@ Handlers &amp; Routing</h1>
 <li><code>purge</code> - <code>@secured(&quot;auditlog:admin,auditlog:delete&quot;)</code>, deletes entries older than a cutoff</li>
 <li><code>clear</code> - <code>@secured(&quot;auditlog:admin&quot;)</code>, deletes every entry</li>
 </ul>
+<h3 id="assets"><a href="#assets" id="assets" name="assets" class="anchor"></a><code>Assets</code></h3>
+<p>No <code>@secured</code> annotation at the class level - it streams binary files from the private cbfs <code>assets</code> disk (see <a href="/cbGenesis/guides/database-orm/index.html">Database &amp; ORM</a> and <code>app/config/modules/cbfs.bx</code>), which sits outside the webroot and is otherwise unreachable:</p>
+<ul>
+<li><code>avatar</code> - <code>@secured</code> (any authenticated user), streams a user's <code>sm</code>/<code>lg</code> avatar JPEG variant</li>
+<li><code>logo</code> - public, streams the <code>sm</code>/<code>lg</code> branding logo PNG variant so the login screen and other guest pages can render it</li>
+</ul>
+<p>Both actions 404 (rather than erroring) for an unrecognized <code>userId</code>/<code>size</code> shape or when the requested file simply does not exist, so a caller cannot distinguish &quot;no avatar&quot; from &quot;no such user&quot; by response shape alone. Resizing, cropping, and storage go through <code>ImageService</code> (<code>app/models/system/ImageService.bx</code>), invoked via <code>getInstance()</code> inside each action rather than an <code>@inject</code> property - see the docblock on <code>Assets.bx</code> for why (a WireBox boot-order quirk with handler-triggered singleton construction).</p>
 <h3 id="auth"><a href="#auth" id="auth" name="auth" class="anchor"></a><code>Auth</code></h3>
 <p>No <code>@secured</code> annotation - these actions must stay reachable by guests:</p>
 <ul>
@@ -219,6 +227,7 @@ Handlers &amp; Routing</h1>
 <li><code>requestEmailChange</code> / <code>cancelEmailChange</code> - starts/cancels a pending email change, confirmed via <code>Auth.verifyEmailChange</code></li>
 <li><code>listTokens</code> / <code>createToken</code> / <code>updateToken</code> / <code>deleteToken</code> - API tokens</li>
 <li><code>listPasskeys</code> / <code>updatePasskey</code> / <code>deletePasskey</code></li>
+<li><code>uploadAvatar</code> / <code>deleteAvatar</code> - accepts the image as a base64 data URI in <code>rc.avatar</code> (BoxLang has no multipart/form-data parser, so uploads travel as JSON), decoded via <code>BaseSecureHandler.decodeDataUri()</code>; streamed back by <code>Assets.avatar</code></li>
 </ul>
 <p>Every one of these is CSRF-verified by <code>BaseSecureHandler</code> unless it is reached over a safe HTTP method - see <a href="#csrf-verification">CSRF verification</a>.</p>
 <h3 id="roles"><a href="#roles" id="roles" name="roles" class="anchor"></a><code>Roles</code></h3>
@@ -236,6 +245,7 @@ Handlers &amp; Routing</h1>
 <li><code>registry</code> / <code>registrySearch</code> - paginated settings registry</li>
 <li><code>createRegistry</code> / <code>updateRegistry</code> / <code>toggleRegistryStatus</code> / <code>deleteRegistry</code> - <code>settings:admin,settings:write</code></li>
 <li><code>save</code> - bulk save of core settings</li>
+<li><code>uploadLogo</code> / <code>deleteLogo</code> - <code>settings:admin,settings:write</code>, same base64 data URI convention as <code>Profile.uploadAvatar</code>; stores/restores the <code>cbAppLogo</code> setting and streams back via <code>Assets.logo</code></li>
 <li>Admin utilities (all <code>settings:admin</code>): <code>clearTemplateCache</code>, <code>clearSessionsCache</code>, <code>revokeRememberTokens</code>, <code>flushSettingsCache</code></li>
 </ul>
 <h3 id="users"><a href="#users" id="users" name="users" class="anchor"></a><code>Users</code></h3>
@@ -306,7 +316,7 @@ route( &quot;:handler/:action?&quot; ).end(); // conventions-based catch-all
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/handlers-routing.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/handlers-routing.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 7, 2026, 4&#x3a;23&#x3a;54 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/handlers-routing.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/guides/handlers-routing.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 8, 2026, 2&#x3a;18&#x3a;16 AM</span></div>
 
 				</article>
 
@@ -329,7 +339,7 @@ route( &quot;:handler/:action?&quot; ).end(); // conventions-based catch-all
 			</main>
 
 			<aside class="col-xl-2 toc-sidebar d-none d-xl-block">
-				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#handler-map">Handler map</a></li><li class="toc-level-3"><a href="#basesecurehandler">BaseSecureHandler</a></li><li class="toc-level-3"><a href="#auditlog">AuditLog</a></li><li class="toc-level-3"><a href="#auth">Auth</a></li><li class="toc-level-3"><a href="#dashboard">Dashboard</a></li><li class="toc-level-3"><a href="#permissions">Permissions</a></li><li class="toc-level-3"><a href="#profile">Profile</a></li><li class="toc-level-3"><a href="#roles">Roles</a></li><li class="toc-level-3"><a href="#settings">Settings</a></li><li class="toc-level-3"><a href="#users">Users</a></li><li class="toc-level-2"><a href="#csrf-verification">CSRF verification</a></li><li class="toc-level-2"><a href="#route-map-appconfigrouterbx">Route map &#x28; app&#x2f;config&#x2f;Router.bx &#x29;</a></li></ul></nav>
+				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#handler-map">Handler map</a></li><li class="toc-level-3"><a href="#basesecurehandler">BaseSecureHandler</a></li><li class="toc-level-3"><a href="#auditlog">AuditLog</a></li><li class="toc-level-3"><a href="#assets">Assets</a></li><li class="toc-level-3"><a href="#auth">Auth</a></li><li class="toc-level-3"><a href="#dashboard">Dashboard</a></li><li class="toc-level-3"><a href="#permissions">Permissions</a></li><li class="toc-level-3"><a href="#profile">Profile</a></li><li class="toc-level-3"><a href="#roles">Roles</a></li><li class="toc-level-3"><a href="#settings">Settings</a></li><li class="toc-level-3"><a href="#users">Users</a></li><li class="toc-level-2"><a href="#csrf-verification">CSRF verification</a></li><li class="toc-level-2"><a href="#route-map-appconfigrouterbx">Route map &#x28; app&#x2f;config&#x2f;Router.bx &#x29;</a></li></ul></nav>
 			</aside>
 
 		</div>
