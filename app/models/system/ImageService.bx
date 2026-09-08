@@ -25,6 +25,12 @@ class {
 	// (in cbfs itself) uses this exact same pattern.
 	property name="wirebox" inject="wirebox";
 
+	// The ColdBox controller singleton - always available from the moment the
+	// app boots, unlike any module-scoped lookup, so injecting it eagerly
+	// carries none of the "module not registered yet" risk a property-level
+	// @inject="coldbox:moduleSettings:cbfs" has (see getAssetsDisk()).
+	property name="coldbox" inject="coldbox";
+
 	// Not resolved via cbfs's DiskService/WireBox DSL: in this environment,
 	// wirebox.getInstance("DiskService@cbfs") (and the "cbfs:disks:assets"
 	// DSL, which calls the same thing internally) returns a DiskService
@@ -151,18 +157,24 @@ class {
 	 * variables.assetsDisk for why this is not a property-level @inject.
 	 *
 	 * The module settings themselves (provider name + properties, from
-	 * app/config/modules/cbfs.bx) are resolved here too, via getInstance()
-	 * rather than a property-level @inject="coldbox:moduleSettings:cbfs" -
-	 * that eager form resolves the moment ImageService is built, which in
-	 * TestBox can run before the cbfs module has finished registering on a
-	 * cold boot, throwing "the module requested: cbfs does not exist in the
-	 * loaded modules" (observed in CI, not local runs with a warm module
-	 * cache). By the time any caller actually needs a disk, module loading
-	 * has long since finished either way.
+	 * app/config/modules/cbfs.bx) are read here too, straight off the
+	 * ColdBox controller's own "modules" setting, rather than through a
+	 * property-level @inject="coldbox:moduleSettings:cbfs" or an equivalent
+	 * wirebox.getInstance(dsl:...) call - both go through WireBox's DSL
+	 * resolver, which either resolves too early (a property injects the
+	 * moment ImageService is built, which in TestBox can run before the
+	 * cbfs module has finished registering on a cold boot: "the module
+	 * requested: cbfs does not exist in the loaded modules") or, called
+	 * ad hoc outside of a property definition, doesn't parse at all ("The
+	 * DSL provided was not valid", name always blank - observed in CI on
+	 * both attempts). Reading it straight off the controller is exactly
+	 * what that DSL case does internally, without going through the DSL
+	 * parser at all, and by the time any caller actually needs a disk,
+	 * module loading has long since finished either way.
 	 */
 	private any function getAssetsDisk() {
 		if ( isNull( variables.assetsDisk ) ) {
-			var diskConfig = variables.wirebox.getInstance( dsl: "coldbox:moduleSettings:cbfs" ).disks.assets
+			var diskConfig = variables.coldbox.getSetting( "modules" ).cbfs.settings.disks.assets
 			// cbfs names its own provider WireBox mappings "{Provider}Provider@cbfs"
 			// (LocalProvider@cbfs, S3Provider@cbfs, RamProvider@cbfs, ...) - see
 			// DiskService.cfc's getRegisteredCoreProviders(). getInstance() (not
