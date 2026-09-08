@@ -37,8 +37,7 @@
     },
     "installPaths":{
         "coldbox":"lib/",
-        "testbox":"lib/",
-        "cbfs":"lib/modules/cbfs/"
+        "testbox":"lib/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",
