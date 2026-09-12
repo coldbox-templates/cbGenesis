@@ -45,7 +45,7 @@ class extends="cborm.models.VirtualEntityService" {
 	 * production behavior is unaffected.
 	 */
 	boolean function getUseTransactions() {
-		if ( structKeyExists( application, "cbTestTransactionActive" ) && application.cbTestTransactionActive ) {
+		if ( application?.cbTestTransactionActive ?: false ) {
 			return false;
 		}
 		return super.getUseTransactions();
