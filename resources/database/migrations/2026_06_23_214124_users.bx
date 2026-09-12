@@ -4,7 +4,7 @@ class {
 		// Main Users table
 		schema.create( "users", (table)=>{
 			// Base Fields
-			table.guid( "userId" ).primaryKey()
+			table.string( "userId", 36 ).primaryKey()
 			table.boolean( "isActive" ).default( true )
 			table.timestamps()
 
@@ -30,8 +30,8 @@ class {
 
 		// User Roles
 		schema.create( "user_roles", ( table ) => {
-			table.guid( "FK_userId" )
-			table.guid( "FK_roleId" )
+			table.string( "FK_userId", 36 )
+			table.string( "FK_roleId", 36 )
 
 			// Composite primary key
 			table.primaryKey( [ "FK_userId", "FK_roleId" ], "pk_user_roles" )
@@ -48,8 +48,8 @@ class {
 
 		// User a-la-carte Permissions
 		schema.create( "user_permissions", ( table ) => {
-			table.guid( "FK_userId" )
-			table.guid( "FK_permissionId" )
+			table.string( "FK_userId", 36 )
+			table.string( "FK_permissionId", 36 )
 
 			// Composite primary key
 			table.primaryKey( [ "FK_userId", "FK_permissionId" ], "pk_user_permissions" )
@@ -67,8 +67,8 @@ class {
 
 		// User Remember Tokens
 		schema.create( "user_remember_tokens", ( table ) => {
-			table.guid( "rememberTokenId" ).primaryKey()
-			table.guid( "FK_userId" )
+			table.string( "rememberTokenId", 36 ).primaryKey()
+			table.string( "FK_userId", 36 )
 			table.string( "token", 64 ).unique()
 			table.timestamps()
 			table.boolean( "isActive" ).default( true )
@@ -89,8 +89,8 @@ class {
 		// User API Tokens
 		schema.create( "user_api_tokens", ( table ) => {
 			// Fields
-			table.guid( "tokenId" ).primaryKey()
-			table.guid( "FK_userId" )
+			table.string( "tokenId", 36 ).primaryKey()
+			table.string( "FK_userId", 36 )
 			table.string( "label" )
 			table.string( "token", 64 ).unique()
 			table.string( "tokenSnapshot", 11 )
@@ -111,8 +111,8 @@ class {
 
 		// Purpose-bound, single-use hashes for registration, invitations, password actions, or whatever you want.
         schema.create( "user_action_tokens", ( table ) => {
-            table.guid( "tokenId" ).primaryKey()
-            table.guid( "FK_userId" )
+            table.string( "tokenId", 36 ).primaryKey()
+            table.string( "FK_userId", 36 )
 			table.boolean( "isActive" ).default( true )
 			table.timestamps()
             table.string( "tokenHash", 128 ).unique()
@@ -132,8 +132,8 @@ class {
 
 		// User Passkeys
 		schema.create( "user_passkeys", ( table ) => {
-			table.guid( "passkeyId" ).primaryKey()
-			table.guid( "FK_userId" )
+			table.string( "passkeyId", 36 ).primaryKey()
+			table.string( "FK_userId", 36 )
 			table.boolean( "isActive" ).default( true )
 			table.timestamps()
 			table.binary( "credentialId" )

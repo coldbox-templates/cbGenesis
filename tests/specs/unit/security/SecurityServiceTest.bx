@@ -11,7 +11,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 
 		// get the test fixture user
 		variables.testUser = userService.findWhere( {
-			email: "admin@cbGenesis.com"
+			email: "admin@cbgenesis.com"
 		} )
 	}
 

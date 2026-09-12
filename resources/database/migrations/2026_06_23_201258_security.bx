@@ -3,7 +3,7 @@ class {
 	function up( schema, qb ) {
 		// Permissions table
 		schema.create( "permissions", ( table ) => {
-			table.guid( "permissionId" ).primaryKey()
+			table.string( "permissionId", 36 ).primaryKey()
 			table.boolean( "isActive" ).default( true )
 			table.timestamps()
 
@@ -17,7 +17,7 @@ class {
 
 		// Roles table
 		schema.create( "roles", ( table ) => {
-			table.guid( "roleId" ).primaryKey()
+			table.string( "roleId", 36 ).primaryKey()
 			table.boolean( "isActive" ).default( true )
 			table.timestamps()
 
@@ -31,8 +31,8 @@ class {
 
 		// Role-Permissions join table
 		schema.create( "role_permissions", ( table ) => {
-			table.guid( "FK_roleId" )
-			table.guid( "FK_permissionId" )
+			table.string( "FK_roleId", 36 )
+			table.string( "FK_permissionId", 36 )
 
 			// Constraints
 			table.primaryKey( [ "FK_roleId", "FK_permissionId" ], "pk_role_permissions" )

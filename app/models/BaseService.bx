@@ -29,6 +29,29 @@ class extends="cborm.models.VirtualEntityService" {
 	property name="log";
 
 	/**
+	 * cborm's save()/delete() wrap every call in $transactioned(), which opens and commits
+	 * its own transaction{} block unless it sees request.cbox_aop_transaction set. BoxLang's
+	 * ORM transaction manager has no concept of nested transactions: closing that inner block
+	 * unconditionally commits whatever Hibernate transaction is currently active, which ends
+	 * an outer transaction{} block (e.g. the one integration tests wrap each spec in) before
+	 * it is done - the following query then runs on a connection whose prepared statements
+	 * were already invalidated when that transaction committed. Some databases' JDBC drivers
+	 * tolerate reusing it silently (MySQL); others don't (MSSQL, Postgres: "The statement is
+	 * closed."). request.cbox_aop_transaction is the documented way to suppress this, but it
+	 * did not reliably reach $transactioned() in practice. Instead, flip a boolean that
+	 * $transactioned() also honors: when useTransactions is false, it skips its own
+	 * transaction{} block entirely. Gate it on an application-scope flag (set only by
+	 * tests/resources/BaseIntegrationSpec.cfc for the life of its own outer transaction) so
+	 * production behavior is unaffected.
+	 */
+	boolean function getUseTransactions() {
+		if ( application?.cbTestTransactionActive ?: false ) {
+			return false;
+		}
+		return super.getUseTransactions();
+	}
+
+	/**
 	 * Ensure a sort order contains only an allowed column and direction.
 	 *
 	 * @sortOrder        The requested column, or column plus "asc" or "desc".

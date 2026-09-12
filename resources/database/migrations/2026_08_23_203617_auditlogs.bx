@@ -3,7 +3,7 @@ class {
 	function up( schema, qb ) {
 		// Audit Log table - append-only record of admin/auth/security activity
 		schema.create( "audit_logs", ( table ) => {
-			table.guid( "auditLogId" ).primaryKey()
+			table.string( "auditLogId", 36 ).primaryKey()
 			table.timestamp( "createdDate" )
 
 			// Classification
@@ -13,7 +13,7 @@ class {
 			table.longText( "message" )
 
 			// Actor (denormalized so the trail survives the actor being deleted)
-			table.guid( "FK_userId" ).nullable()
+			table.string( "FK_userId", 36 ).nullable()
 			table.string( "actorEmail" ).nullable()
 			table.string( "actorName" ).nullable()
 

@@ -89,10 +89,19 @@ class extends="app.models.BaseService" {
 	 * @return An array of API token entities belonging to the user.
 	 */
 	array function listForUser( required string userId ) {
-		return findAllWhere(
-			criteria: { "user": arguments.userId },
-			sortOrder: "label"
-		)
+		// cborm's save()/delete() always run inside their own transaction{} block, so they
+		// always get a freshly-validated connection - but read methods like findAllWhere()
+		// never do, so a read that happens to run right after a save's transaction just ended
+		// (and released its connection back to the pool) can be handed a Session bound to that
+		// now-invalid connection. Wrapping the read in its own transaction{} gets it the same
+		// fresh-connection guarantee saves already have. See BaseIntegrationSpec.bx for the
+		// failure this works around: "The statement is closed." on MSSQL/Postgres.
+		transaction {
+			return findAllWhere(
+				criteria: { "user": arguments.userId },
+				sortOrder: "label"
+			)
+		}
 	}
 
 	/**
