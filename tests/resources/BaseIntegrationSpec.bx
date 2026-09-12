@@ -73,6 +73,12 @@ class extends="coldbox.system.testing.BaseTestCase"{
         // committing its own nested transaction per call - which would end the physical DB
         // transaction mid-spec and leave the next query on an inconsistent connection.
         request.cbox_aop_transaction = true;
+        // Belt-and-suspenders for the same problem: request.cbox_aop_transaction did not
+        // reliably reach $transactioned() from inside service calls made during a spec, so
+        // app.models.BaseService.getUseTransactions() also checks this application-scope flag
+        // and returns false while it is set, which independently makes $transactioned() skip
+        // its own transaction{} block.
+        application.cbTestTransactionActive = true;
         try {
             transaction action="begin" {
                 try {
@@ -89,6 +95,7 @@ class extends="coldbox.system.testing.BaseTestCase"{
             }
         } finally {
             structDelete( request, "cbox_aop_transaction" );
+            structDelete( application, "cbTestTransactionActive" );
         }
     }
 
