@@ -79,7 +79,10 @@ class{
 		autoManageSession: false,
 		eventHandling: true,
 		EventHandler: "cborm.models.BXEventHandler",
-		ignoreParseErrors: true
+		ignoreParseErrors: true,
+		// Quote all table/column identifiers so reserved words (e.g. the "value"
+		// column on settings) don't break on databases like MSSQL that reserve them.
+		quoteIdentifiers: true
 	}
 
 	/**

@@ -51,12 +51,16 @@ class {
 		dbcreate: "none",
 		savemapping: false,
 		secondarycacheenabled: false,
-		logSQL: false,
+		// Temporarily enabled to diagnose an MSSQL-only SQLGrammarException; revert once resolved.
+		logSQL: true,
 		flushAtRequestEnd: false,
 		autoManageSession: false,
 		eventHandling: true,
 		eventHandler: "cborm.models.BXEventHandler",
-		ignoreParseErrors: true
+		ignoreParseErrors: true,
+		// Quote all table/column identifiers so reserved words (e.g. the "value"
+		// column on settings) don't break on databases like MSSQL that reserve them.
+		quoteIdentifiers: true
 	}
 
 	/**
