@@ -41,7 +41,7 @@
 	</script>
 	<link rel="stylesheet" href="/cbGenesis/assets/vendor/bootstrap/bootstrap.min.css">
 	<link rel="stylesheet" href="/cbGenesis/assets/vendor/highlight/github.min.css">
-	<link rel="stylesheet" href="/cbGenesis/assets/theme/style.48b930a5.css">
+	<link rel="stylesheet" href="/cbGenesis/assets/theme/style.075ccbb9.css">
 	
 
 
@@ -185,15 +185,33 @@ cd my-app
 </div></div><div class="bxsites-step"><div class="bxsites-step__marker">3</div><div class="bxsites-step__content"><div class="bxsites-step__title">Install Node dependencies</div><pre data-bxsites-title="Terminal" data-bxsites-frame="terminal"><code class="language-bash">npm install
 </code></pre>
 <p>Pulls in Alpine.js, Bootstrap 5, and Vite for the frontend build.</p>
-</div></div><div class="bxsites-step"><div class="bxsites-step__marker">4</div><div class="bxsites-step__content"><div class="bxsites-step__title">Install a JDBC driver</div><p>The template ships pre-configured for MySQL (<code>bx-mysql</code>, installed automatically on first server start via <code>server.json</code>'s <code>onServerInitialInstall</code>). Swap it for another database instead:</p>
-<pre data-bxsites-title="Terminal" data-bxsites-frame="terminal"><code class="language-bash">box install bx-postgresql   # PostgreSQL
-box install bx-mssql        # Microsoft SQL Server
-box install bx-h2           # H2 (embedded, dev only)
-box install bx-oracle       # Oracle
-box install bx-sqlite       # SQLite
+</div></div><div class="bxsites-step"><div class="bxsites-step__marker">4</div><div class="bxsites-step__content"><div class="bxsites-step__title">Install a JDBC driver</div><svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
+<symbol id="adm-tip">
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="m12.3 10c2.8-.7 4.2-3.8 2.1-7.4 8.1 3.2 7.5 18.1-2.6 18.4-8.1.2-9.8-11.4-4.4-14.8.2 3.3 2.8 4.3 4.9 3.8zm-3.2 5.8c.2 1.6 2.5 1.9 3.6 1.5 2.8-1 2.5-4 2.1-5.1-.8 1.4-1.3 1.7-2.2 2s-3.7-.7-3.5 1.6z" fill="currentColor"/>
+</svg>
+</symbol>
+</svg>
+<p>The template ships pre-configured for MySQL. <code>server.json</code>'s <code>onServerInitialInstall</code> installs the JDBC driver module matching your <code>DB_DRIVER</code> setting (<code>bx-${DB_DRIVER}</code>, defaulting to <code>bx-mysql</code>) the first time you run <code>box server start</code>. To use another database, set <code>DB_DRIVER</code> in <code>.env</code> <strong>before</strong> that first server start:</p>
+<pre data-bxsites-title="Terminal" data-bxsites-frame="terminal"><code class="language-bash">DB_DRIVER=postgresql   # installs bx-postgresql
+DB_DRIVER=mssql        # installs bx-mssql (Microsoft SQL Server)
+DB_DRIVER=h2           # installs bx-h2 (embedded, dev only)
+DB_DRIVER=oracle       # installs bx-oracle
+DB_DRIVER=sqlite       # installs bx-sqlite
 </code></pre>
-<p>Then update both <code>.env</code> (connection string) and the datasource block in <code>public/Application.bx</code>.</p>
-</div></div><div class="bxsites-step"><div class="bxsites-step__marker">5</div><div class="bxsites-step__content"><div class="bxsites-step__title">Configure your environment</div><pre data-bxsites-title="Terminal" data-bxsites-frame="terminal"><code class="language-bash">cp .env.example .env
+<p>Then update <code>.env</code>'s connection details and the datasource block in <code>public/Application.bx</code> (and <code>tests/Application.bx</code> for the test suite).</p>
+<div class="adm-block adm-tip adm-collapsed">
+<div class="adm-heading">
+<svg class="adm-icon"><use xlink:href="#adm-tip" /></svg><span>Switching drivers after the server has already started once</span>
+</div>
+<div class="adm-body">
+<p><code>onServerInitialInstall</code> only fires on a server's first-ever start, so changing <code>DB_DRIVER</code> afterward won't reinstall the driver on its own. Run <code>server forget</code> (which clears the server's install state) before starting it again so the new driver gets installed:</p>
+<pre data-bxsites-title="Terminal" data-bxsites-frame="terminal"><code class="language-bash">server forget
+box server start
+</code></pre>
+</div>
+</div>
+</div></div><div class="bxsites-step"><div class="bxsites-step__marker">5</div><div class="bxsites-step__content"><div class="bxsites-step__title">Configure your environment</div><pre><code class="language-bash">cp .env.example .env
 </code></pre>
 <p>Edit <code>.env</code> with your database credentials - see <a href="/cbGenesis/guides/configuration/index.html#environment-variables">Configuration</a> for what each variable does.</p>
 </div></div><div class="bxsites-step"><div class="bxsites-step__marker">6</div><div class="bxsites-step__content"><div class="bxsites-step__title">Migrate and seed the database</div><svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
@@ -238,7 +256,7 @@ box migrate seed
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/getting-started.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/getting-started.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 8, 2026, 2&#x3a;18&#x3a;16 AM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/getting-started.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/cbGenesis/getting-started.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 12, 2026, 1&#x3a;31&#x3a;48 PM</span></div>
 
 				</article>
 
@@ -290,6 +308,7 @@ box migrate seed
 	<script src="/cbGenesis/assets/conditional-content-init.js" defer></script>
 	<script src="/cbGenesis/assets/course-progress.js" defer></script>
 	<script src="/cbGenesis/assets/prompt-init.js" defer></script>
+	<script src="/cbGenesis/assets/contact-form-init.js" defer></script>
 
 	<script src="/cbGenesis/assets/page-actions-init.js" defer></script>
 
