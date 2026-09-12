@@ -51,7 +51,8 @@ class {
 		dbcreate: "none",
 		savemapping: false,
 		secondarycacheenabled: false,
-		logSQL: false,
+		// Temporarily enabled to diagnose an MSSQL-only SQLGrammarException; revert once resolved.
+		logSQL: true,
 		flushAtRequestEnd: false,
 		autoManageSession: false,
 		eventHandling: true,

@@ -125,7 +125,7 @@ class {
 
 		// Create Admin role
 		qb.newQuery().from( "roles" ).insert( {
-			roleId      : adminRoleId,
+			roleId      : { value: adminRoleId, sqltype: "other" },
 			role        : "Admin",
 			description : "System Administrator",
 			isActive    : true
@@ -135,15 +135,15 @@ class {
 		permissions.each( ( permission ) => {
 
 			qb.newquery().from( "permissions" ).insert( {
-				permissionId : permission.id,
+				permissionId : { value: permission.id, sqltype: "other" },
 				permission   : permission.permission,
 				description  : permission.description,
 				isActive     : true
 			} )
 
 			qb.newquery().from( "role_permissions" ).insert( {
-				FK_roleId       : adminRoleId,
-				FK_permissionId : permission.id
+				FK_roleId       : { value: adminRoleId, sqltype: "other" },
+				FK_permissionId : { value: permission.id, sqltype: "other" }
 			} )
 
 		} )
@@ -151,7 +151,7 @@ class {
 		// Create Admin user and assign Admin role
 		var adminUserId = "00000000-0000-0000-0000-000000000001"
 		qb.newQuery().from( "users" ).insert( {
-			userId    : adminUserId,
+			userId    : { value: adminUserId, sqltype: "other" },
 			isActive  : true,
 			firstName : "Admin",
 			lastName  : "User",
@@ -169,8 +169,8 @@ class {
 		} )
 		// Add the admin role to the admin user
 		qb.newQuery().from( "user_roles" ).insert( {
-			FK_userId : adminUserId,
-			FK_roleId : adminRoleId
+			FK_userId : { value: adminUserId, sqltype: "other" },
+			FK_roleId : { value: adminRoleId, sqltype: "other" }
 		} )
 
 	}
