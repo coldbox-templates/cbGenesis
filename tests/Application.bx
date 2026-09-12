@@ -33,15 +33,34 @@ class {
 	 * ORM + Datasource Settings
 	 * --------------------------------------------------------------------------
 	 */
+	_dbDriver = getSystemSetting( "DB_DRIVER", "mysql" )
+	// Experiment: work around the "The statement is closed." error on MSSQL/Postgres (see
+	// tests/resources/BaseIntegrationSpec.bx) by disabling driver/pool-side prepared-statement
+	// caching, in case a cached statement handle is surviving a physical connection release.
+	// Not needed on MySQL, which doesn't exhibit the failure.
+	_dbCustomProperties = {}
+	if ( _dbDriver == "mssql" ) {
+		_dbCustomProperties = {
+			"statementPoolingCacheSize": "0",
+			"disableStatementPooling": "true"
+		}
+	} else if ( _dbDriver == "postgresql" ) {
+		_dbCustomProperties = {
+			"prepareThreshold": "0",
+			"preparedStatementCacheQueries": "0"
+		}
+	}
+
 	this.datasource = "cbGenesis"
 	this.datasources = {
 		"cbGenesis" = {
-			driver: getSystemSetting( "DB_DRIVER", "mysql" ),
+			driver: _dbDriver,
 			host: getSystemSetting( "DB_HOST", "localhost" ),
 			port: getSystemSetting( "DB_PORT", 3306 ),
 			database: getSystemSetting( "DB_DATABASE", "cbGenesis" ),
 			username: getSystemSetting( "DB_USER", "" ),
-			password: getSystemSetting( "DB_PASSWORD", "" )
+			password: getSystemSetting( "DB_PASSWORD", "" ),
+			custom: _dbCustomProperties
 		}
 	}
 	// ORM SETTINGS
