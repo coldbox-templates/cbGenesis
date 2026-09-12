@@ -19,7 +19,7 @@ Copy `.env.example` to `.env` and fill in your own values - read anywhere in the
 | `ASSET_URL` | Public URL prefix for Vite production assets (defaults to `/includes`) |
 | `BOXLANG_DEBUG` | Enable BoxLang debug output |
 | `DB_CONNECTIONSTRING` | Full JDBC connection string |
-| `DB_DRIVER` | Database driver (`MySQL`, `PostgreSQL`, ...) |
+| `DB_DRIVER` | Database driver, lowercase, matching a `bx-*` JDBC driver module (`mysql`, `mssql`, `postgresql`, `h2`, `oracle`, `sqlite`) - `server.json`'s `onServerInitialInstall` installs `bx-${DB_DRIVER}` on first server start |
 | `DB_HOST` / `DB_PORT` / `DB_DATABASE` | Database connection details |
 | `DB_SCHEMA` | Schema the migration runner targets (`.cbmigrations.json`); leave blank for engines without one |
 | `DB_USER` / `DB_PASSWORD` | Database credentials |

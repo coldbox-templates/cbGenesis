@@ -88,17 +88,25 @@ npm install
 Pulls in Alpine.js, Bootstrap 5, and Vite for the frontend build.
 :::
 ::: step "Install a JDBC driver"
-The template ships pre-configured for MySQL (`bx-mysql`, installed automatically on first server start via `server.json`'s `onServerInitialInstall`). Swap it for another database instead:
+The template ships pre-configured for MySQL. `server.json`'s `onServerInitialInstall` installs the JDBC driver module matching your `DB_DRIVER` setting (`bx-${DB_DRIVER}`, defaulting to `bx-mysql`) the first time you run `box server start`. To use another database, set `DB_DRIVER` in `.env` **before** that first server start:
 
 ```bash frame="terminal" title="Terminal"
-box install bx-postgresql   # PostgreSQL
-box install bx-mssql        # Microsoft SQL Server
-box install bx-h2           # H2 (embedded, dev only)
-box install bx-oracle       # Oracle
-box install bx-sqlite       # SQLite
+DB_DRIVER=postgresql   # installs bx-postgresql
+DB_DRIVER=mssql        # installs bx-mssql (Microsoft SQL Server)
+DB_DRIVER=h2           # installs bx-h2 (embedded, dev only)
+DB_DRIVER=oracle       # installs bx-oracle
+DB_DRIVER=sqlite       # installs bx-sqlite
 ```
 
-Then update both `.env` (connection string) and the datasource block in `public/Application.bx`.
+Then update `.env`'s connection details and the datasource block in `public/Application.bx` (and `tests/Application.bx` for the test suite).
+
+??? tip "Switching drivers after the server has already started once"
+    `onServerInitialInstall` only fires on a server's first-ever start, so changing `DB_DRIVER` afterward won't reinstall the driver on its own. Run `server forget` (which clears the server's install state) before starting it again so the new driver gets installed:
+
+    ```bash frame="terminal" title="Terminal"
+    server forget
+    box server start
+    ```
 :::
 ::: step "Configure your environment"
 ```bash frame="terminal" title="Terminal"

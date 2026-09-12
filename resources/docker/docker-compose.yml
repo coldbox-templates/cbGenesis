@@ -75,7 +75,7 @@ services:
       JWT_SECRET: ""
       # Container-internal port: MySQL always listens on 3306 inside its own
       # container, regardless of the host port it's published on above.
-      DB_DRIVER: MySQL
+      DB_DRIVER: mysql
       DB_HOST: coldbox_db
       DB_PORT: 3306
       DB_SCHEMA: ""
