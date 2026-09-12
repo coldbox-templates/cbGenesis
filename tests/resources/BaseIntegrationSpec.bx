@@ -75,6 +75,10 @@ class extends="coldbox.system.testing.BaseTestCase"{
                 rethrow;
             } finally {
                 transaction action="rollback";
+                // The ORM session is shared across every spec in this bundle, so without this,
+                // an entity or statement cached from a prior (already rolled-back) spec's
+                // connection can leak into the next spec's query.
+                ormClearSession();
             }
         }
     }
