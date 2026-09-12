@@ -31,8 +31,6 @@ jobs:
       DB_SCHEMA: cbgenesis
       DB_USER: root
       DB_PASSWORD: root
-      DB_BUNDLENAME: ""
-      DB_BUNDLEVERSION: ""
       WEB_PORT: 60299
       JDK_VERSION: "21"
     strategy:
@@ -168,8 +166,6 @@ jobs:
       DB_SCHEMA: dbo
       DB_USER: sa
       DB_PASSWORD: "TestingMssql8"
-      DB_BUNDLENAME: ""
-      DB_BUNDLEVERSION: ""
       WEB_PORT: 60300
       JDK_VERSION: "21"
     strategy:
@@ -306,8 +302,6 @@ jobs:
       DB_SCHEMA: public
       DB_USER: postgres
       DB_PASSWORD: postgres
-      DB_BUNDLENAME: ""
-      DB_BUNDLEVERSION: ""
       WEB_PORT: 60301
       JDK_VERSION: "21"
     strategy:
