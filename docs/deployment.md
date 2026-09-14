@@ -18,7 +18,7 @@ Compiles and fingerprints the frontend into `public/includes/` - see [Frontend](
 
 ## Docker
 
-A `Dockerfile` and `docker-compose.yml` live in `resources/docker/`. `box.json` also defines `docker:build`, `docker:run`, `docker:bash`, and `docker:stack` scripts (run them with `box run-script <name>`) as shortcuts for the single-argument commands below - they do not replace the required BoxLang CLI installation for local `box` commands, and are unrelated to `npm run` (there is no `npm run docker:*`).
+A `Dockerfile` and database-specific Compose files live in `resources/docker/`. MySQL is the default; PostgreSQL and MSSQL alternatives are provided for the other CI-tested targets. MariaDB can use the MySQL configuration and `mysql` JDBC driver. `box.json` also defines `docker:build`, `docker:run`, `docker:bash`, and `docker:stack` scripts (run them with `box run-script <name>`) as shortcuts for the single-argument commands below - they do not replace the required BoxLang CLI installation for local `box` commands, and are unrelated to `npm run` (there is no `npm run docker:*`).
 
 ### Local development with Docker Compose
 
@@ -39,7 +39,7 @@ npm install
 npm run dev
 ```
 
-An MSSQL-specific Compose file is also available for testing against Azure SQL Edge. It installs the `bx-mssql` driver in the app container, creates the `cbgenesis` database, and keeps its data under `resources/docker/.db/mssql/`:
+An MSSQL-specific Compose file is also available for testing against SQL Server 2022. It installs the `bx-mssql` driver in the app container, creates the `cbgenesis` database, and keeps its data under `resources/docker/.db/mssql/`:
 
 ```bash frame="terminal" title="Terminal"
 docker compose -f resources/docker/docker-compose.mssql.yml up -d
@@ -53,7 +53,15 @@ The application remains available at `http://127.0.0.1:8080`; SQL Server is reac
 docker compose -f resources/docker/docker-compose.mssql.yml down
 ```
 
-The default MySQL Compose file remains unchanged. The commented-out PostgreSQL service is still included there as a starting point for another database swap.
+The PostgreSQL alternative uses PostgreSQL 16, publishes host port `5433`, and installs `bx-postgresql` automatically:
+
+```bash frame="terminal" title="Terminal"
+docker compose -f resources/docker/docker-compose.postgresql.yml up -d
+docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate up
+docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate seed
+```
+
+The default MySQL Compose file remains unchanged. Stop either alternative with its matching Compose file and `down`.
 
 ```bash frame="terminal" title="Terminal"
 docker compose -f resources/docker/docker-compose.yml down

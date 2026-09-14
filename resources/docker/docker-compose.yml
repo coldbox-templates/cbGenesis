@@ -15,7 +15,7 @@
 ################################################################################
 services:
 
-  ## PostgreSQL (swap in place of coldbox_db below; also update DB_DRIVER)
+  ## PostgreSQL is also available as resources/docker/docker-compose.postgresql.yml.
   # coldbox_db:
   #   image: postgres:12
   #   environment:
@@ -28,15 +28,7 @@ services:
   #     - .db/postgres/initdb:/docker-entrypoint-initdb.d
   #     - .db/postgres/data:/var/lib/postgresql/data
 
-  # mssql:
-  #   image: mcr.microsoft.com/azure-sql-edge:latest
-  #   ports:
-  #     - "1434:1433"
-  #   environment:
-  #     SA_PASSWORD: "T35t1ng1234!"
-  #     ACCEPT_EULA: "Y"
-  #   volumes:
-  #     - .db/mssql/tmp:/tmp/mssql
+  ## MSSQL is also available as resources/docker/docker-compose.mssql.yml.
 
   # MySQL 8 - the default database for this template
   coldbox_db:
