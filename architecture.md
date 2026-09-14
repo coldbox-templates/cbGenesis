@@ -160,7 +160,7 @@ cbgenesis/
 | CLI / Server | CommandBox + BoxLang MiniServer |
 | Dependency Injection | WireBox |
 | Security | cbsecurity + cbauth (session-based + JWT) |
-| Database | MySQL (default) via Hibernate ORM (cborm) — any JDBC-compatible DB |
+| Database | MySQL, MariaDB, PostgreSQL, and MSSQL via Hibernate ORM (cborm); all four database targets are supported and covered by the project's database testing workflow |
 | Query Builder | qb (fluent SQL) |
 | Migrations | cfmigrations |
 | Validation | cbvalidation |
