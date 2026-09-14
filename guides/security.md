@@ -161,6 +161,14 @@ A user who fails an `@secured` check is redirected:
 | `AuditLog` / `AuditLogService` | The audit trail. The `AuditLogger` interceptor writes sign-ins, sign-outs, and failed authentication/authorization automatically — see [Architecture](../architecture.md#interceptors) |
 | `Passkey` / `PasskeyService` | WebAuthn credential storage via `cbsecurity-passkeys`' `ICredentialRepository` contract |
 
+## Known issues
+
+### "This is an invalid domain" when registering a passkey
+
+Passkeys are configured for the `localhost` domain during local development. If you open the application with an IP address such as `http://127.0.0.1:8080`, WebAuthn treats that as a different origin and rejects the registration with **"This is an invalid domain."**
+
+Open the application at **[http://localhost:8080](http://localhost:8080)** instead. Passkeys registered for one origin are not interchangeable with another, so delete and register the passkey again if it was created while using a different host name.
+
 ::: cards
 ::: card title="Handlers & Routing" icon="phosphor-duotone:signpost" href="handlers-routing.md"
 See every `@secured` annotation in context, handler by handler.
