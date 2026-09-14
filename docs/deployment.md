@@ -39,7 +39,21 @@ npm install
 npm run dev
 ```
 
-Commented-out PostgreSQL and Azure SQL Edge service blocks are included as a starting point if you swap the default database - update `DB_DRIVER` on `coldbox_app` to match.
+An MSSQL-specific Compose file is also available for testing against Azure SQL Edge. It installs the `bx-mssql` driver in the app container, creates the `cbgenesis` database, and keeps its data under `resources/docker/.db/mssql/`:
+
+```bash frame="terminal" title="Terminal"
+docker compose -f resources/docker/docker-compose.mssql.yml up -d
+docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate up
+docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed
+```
+
+The application remains available at `http://127.0.0.1:8080`; SQL Server is reachable from the host at `127.0.0.1:1434`. The default `sa` password is intended for local testing only. Set `MSSQL_SA_PASSWORD` before starting the stack to override it. Stop this stack with:
+
+```bash frame="terminal" title="Terminal"
+docker compose -f resources/docker/docker-compose.mssql.yml down
+```
+
+The default MySQL Compose file remains unchanged. The commented-out PostgreSQL service is still included there as a starting point for another database swap.
 
 ```bash frame="terminal" title="Terminal"
 docker compose -f resources/docker/docker-compose.yml down
