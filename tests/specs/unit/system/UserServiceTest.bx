@@ -13,6 +13,28 @@ class extends="tests.resources.BaseIntegrationSpec" {
 
 	function beforeAll() {
 		super.beforeAll();
+
+		// requestEmailChange()/cancelEmailChange()/resetPassword() all send real mail via
+		// cbmailservices. CI has no SMTP credentials, so a live send fails unpredictably
+		// (sometimes just logged, sometimes an uncaught exception) - stub the mail service
+		// out so these tests only exercise UserService's own logic, not a live SMTP server.
+		variables.originalMailService = getProperty( userService, "mailService" );
+
+		var mockMail = createEmptyMock( "cbmailservices.models.Mail" );
+		mockMail.$( "configure" ).$results( mockMail );
+		mockMail.$( "setBody" ).$results( mockMail );
+		mockMail.$( "send" ).$results( mockMail );
+		mockMail.$( "getResults" ).$results( { error: false, messages: [] } );
+
+		var mockMailService = createStub();
+		mockMailService.$( "newMail" ).$results( mockMail );
+
+		prepareMock( userService ).$property( propertyName = "mailService", mock = mockMailService );
+	}
+
+	function afterAll() {
+		userService.$property( propertyName = "mailService", mock = variables.originalMailService );
+		super.afterAll();
 	}
 
 	/*********************************** BDD SUITES ***********************************/
