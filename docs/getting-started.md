@@ -88,7 +88,7 @@ npm install
 Pulls in Alpine.js, Bootstrap 5, and Vite for the frontend build.
 :::
 ::: step "Install a JDBC driver"
-The template ships pre-configured for MySQL. MySQL, MariaDB, PostgreSQL, and MSSQL are supported and tested database targets. `server.json`'s `onServerInitialInstall` installs the JDBC driver module matching your `DB_DRIVER` setting (`bx-${DB_DRIVER}`, defaulting to `bx-mysql`) the first time you run `box server start`. To use another database, set `DB_DRIVER` in `.env` **before** that first server start:
+The template ships pre-configured for MySQL. MySQL, MariaDB, PostgreSQL, MSSQL, and SQLite are supported and tested database targets. `server.json`'s `onServerInitialInstall` installs the JDBC driver module matching your `DB_DRIVER` setting (`bx-${DB_DRIVER}`, defaulting to `bx-mysql`) the first time you run `box server start`. To use another database, set `DB_DRIVER` in `.env` **before** that first server start:
 
 ```bash frame="terminal" title="Terminal"
 DB_DRIVER=postgresql   # installs bx-postgresql
