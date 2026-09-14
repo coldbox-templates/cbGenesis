@@ -9,19 +9,11 @@
  * BaseSecureHandler (whose preHandler assumes an authenticated
  * prc.authUser for the passkey-required gate). The avatar action opts into
  * authentication itself via @secured.
- *
- * imageService is deliberately NOT a property-level @inject here. ColdBox
- * builds handlers (and eagerly resolves their @inject properties) while
- * registering routes, through a lighter WireBox path that does not mix in
- * getInstance()/etc onto whatever gets built. Since ImageService is a
- * singleton, the first build wins for the rest of the process - so an eager
- * @inject here previously produced a permanently mixin-less ImageService
- * instance. Resolving it inside the action methods instead forces that
- * first build to happen through a real getInstance() call, at actual
- * request time, well after the app has fully booted. See the comment on
- * ImageService's getAssetsDisk() for the related cbfs DiskService issue.
  */
 class extends="coldbox.system.EventHandler" {
+
+	@inject( "provider:imageService" )
+	property name="imageService";
 
 	// The only variant sizes ImageService ever produces.
 	variables.VALID_SIZES = "sm,lg";
@@ -39,14 +31,13 @@ class extends="coldbox.system.EventHandler" {
 	 */
 	@secured
 	function avatar( event, rc, prc ) {
-		var imageService = getInstance( "imageService" )
 		if ( !isValidUserId( rc.userId ?: "" ) || !isValidSize( rc.size ?: "" ) ) {
 			return notFound( event )
 		}
 		if ( !canViewAvatar( prc.authUser, rc.userId ) ) {
 			return notFound( event )
 		}
-		return streamVariant( event, imageService, imageService.avatarPath( rc.userId, rc.size ), "image/jpeg" )
+		return streamVariant( event, imageService.avatarPath( rc.userId, rc.size ), "image/jpeg" )
 	}
 
 	/**
@@ -54,27 +45,42 @@ class extends="coldbox.system.EventHandler" {
 	 * Public - the login screen and other unauthenticated pages render it.
 	 */
 	function logo( event, rc, prc ) {
-		var imageService = getInstance( "imageService" )
 		if ( !isValidSize( rc.size ?: "" ) ) {
 			return notFound( event )
 		}
-		return streamVariant( event, imageService, imageService.logoPath( rc.size ), "image/png" )
+		return streamVariant( event, variables.imageService.logoPath( rc.size ), "image/png" )
 	}
 
 	/************************* PRIVATE FUNCTIONS *****************************/
 
-	private function streamVariant( event, required imageService, required string path, required string contentType ) {
-		if ( !arguments.imageService.exists( arguments.path ) ) {
+	/**
+	 * Streams a variant of an image file from the filesystem.
+	 *
+	 * @event The ColdBox event object.
+	 * @path The path to the image file.
+	 * @contentType The MIME type of the image.
+	 *
+	 * @return Renders the image as binary data or a 404 if not found.
+	 */
+	private function streamVariant( required event, required string path, required string contentType ) {
+		if ( !variables.imageService.exists( arguments.path ) ) {
 			return notFound( event )
 		}
 		return event.renderData(
 			type: "plain",
-			data: arguments.imageService.readBytes( arguments.path ),
+			data: variables.imageService.readBytes( arguments.path ),
 			contentType: arguments.contentType,
 			isBinary: true
 		)
 	}
 
+	/**
+	 * Renders a 404 Not Found response.
+	 *
+	 * @event The ColdBox event object.
+	 *
+	 * @return Renders a 404 Not Found response.
+	 */
 	private function notFound( event ) {
 		return event.renderData( type = "plain", data = "Not Found", statusCode = 404 )
 	}
@@ -91,6 +97,13 @@ class extends="coldbox.system.EventHandler" {
 		return reFindNoCase( "^[0-9a-f-]{8,40}$", arguments.userId ) > 0
 	}
 
+	/**
+	 * Validates the requested image size against the list of allowed sizes.
+	 *
+	 * @size The requested image size.
+	 *
+	 * @return True if the size is valid, false otherwise.
+	 */
 	private boolean function isValidSize( required string size ) {
 		return variables.VALID_SIZES.listFindNoCase( arguments.size ) > 0
 	}
@@ -98,6 +111,11 @@ class extends="coldbox.system.EventHandler" {
 	/**
 	 * A user can always view their own avatar; viewing someone else's requires
 	 * the same permissions that gate the Users section itself.
+	 *
+	 * @user The current user object.
+	 * @userId The ID of the user whose avatar is being viewed.
+	 *
+	 * @return True if the user can view the avatar, false otherwise.
 	 */
 	private boolean function canViewAvatar( required user, required string userId ) {
 		return arguments.user.getUserId() == arguments.userId || arguments.user.hasPermission( "users:read,users:admin" )
