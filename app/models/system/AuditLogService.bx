@@ -14,11 +14,18 @@ class extends="app.models.BaseService" {
 	 * Injections
 	 * --------------------------------------------------------------------------
 	 */
+
 	@inject( "provider:SecurityService" )
 	property name="securityService";
 
 	@inject( "provider:CBSecurity@cbsecurity" )
 	property name="cbsecurity";
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Static Constants
+	 * --------------------------------------------------------------------------
+	 */
 
 	static {
 		// Kept in sync with AuditLog::SEVERITIES / AuditLog::CATEGORIES -- duplicated here rather
