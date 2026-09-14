@@ -34,15 +34,22 @@ class {
 	 * --------------------------------------------------------------------------
 	 */
 	this.datasource = "cbGenesis"
+	cbGenesisDatasource = {
+		driver: getSystemSetting( "DB_DRIVER", "mysql" ),
+		host: getSystemSetting( "DB_HOST", "localhost" ),
+		port: getSystemSetting( "DB_PORT", 3306 ),
+		database: getSystemSetting( "DB_DATABASE", "cbGenesis" ),
+		username: getSystemSetting( "DB_USER", "" ),
+		password: getSystemSetting( "DB_PASSWORD", "" )
+	}
+	// SQLite only allows one writer at a time; without a busy timeout, a second
+	// connection's write while another is in-flight fails immediately with
+	// "SQLITE_BUSY: database is locked" instead of waiting for the lock to clear.
+	if ( cbGenesisDatasource.driver == "sqlite" ) {
+		cbGenesisDatasource.connectionInitSql = "PRAGMA busy_timeout = 5000;"
+	}
 	this.datasources = {
-		"cbGenesis" = {
-			driver: getSystemSetting( "DB_DRIVER", "mysql" ),
-			host: getSystemSetting( "DB_HOST", "localhost" ),
-			port: getSystemSetting( "DB_PORT", 3306 ),
-			database: getSystemSetting( "DB_DATABASE", "cbGenesis" ),
-			username: getSystemSetting( "DB_USER", "" ),
-			password: getSystemSetting( "DB_PASSWORD", "" )
-		}
+		"cbGenesis" = cbGenesisDatasource
 	}
 	// ORM SETTINGS
 	this.ormEnabled = true;
