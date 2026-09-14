@@ -18,7 +18,10 @@ class extends="tests.resources.BaseIntegrationSpec" {
 		// cbmailservices. CI has no SMTP credentials, so a live send fails unpredictably
 		// (sometimes just logged, sometimes an uncaught exception) - stub the mail service
 		// out so these tests only exercise UserService's own logic, not a live SMTP server.
-		variables.originalMailService = getProperty( userService, "mailService" );
+		// MockBox's $property()/getProperty() look for the property as a literal key in the
+		// variables scope, which doesn't find WireBox @inject-populated properties on a
+		// BoxLang class - so use UserService's own generated accessors instead.
+		variables.originalMailService = userService.getMailService();
 
 		var mockMail = createEmptyMock( "cbmailservices.models.Mail" );
 		mockMail.$( "configure" ).$results( mockMail );
@@ -29,11 +32,11 @@ class extends="tests.resources.BaseIntegrationSpec" {
 		var mockMailService = createStub();
 		mockMailService.$( "newMail" ).$results( mockMail );
 
-		prepareMock( userService ).$property( propertyName = "mailService", mock = mockMailService );
+		userService.setMailService( mockMailService );
 	}
 
 	function afterAll() {
-		userService.$property( propertyName = "mailService", mock = variables.originalMailService );
+		userService.setMailService( variables.originalMailService );
 		super.afterAll();
 	}
 
