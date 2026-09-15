@@ -24,7 +24,7 @@ Copy `.env.example` to `.env` and fill in your own values - read anywhere in the
 | `DB_SCHEMA` | Schema the migration runner targets (`.cbmigrations.json`); leave blank for engines without one |
 | `DB_USER` / `DB_PASSWORD` | Database credentials |
 | `JWT_SECRET` | Signing key for `cbsecurity`'s JWT support |
-| `CBFS_ASSETS_DISK_PATH` | Filesystem path for the cbfs `assets` disk that stores avatars and the branding logo (defaults to `resources/uploads`) |
+| `CBFS_ASSETS_DISK_PATH` | Filesystem path for the cbfs `assets` disk that stores avatars and the branding logo (defaults to `<app-root>/.cbfs`) |
 | `COLDBOX_REINIT_PASSWORD` | Password required by `?fwreinit`. Unset means a fresh random value per boot, so reinit is closed - see [Deployment](../deployment.md#production-checklist) |
 
 ## Framework settings (`app/config/Coldbox.bx`)
