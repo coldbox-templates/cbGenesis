@@ -11,7 +11,7 @@
  * @param {number} options.autoDismiss Milliseconds before the message hides.
  * @returns {Object} Alpine component state and lifecycle methods.
  */
-export function messageBox( { autoDismiss = 0 } = {} ) {
+export function messageBox( { autoDismiss = 5000 } = {} ) {
 	return {
 		visible : true,
 		_timer  : null,
@@ -23,7 +23,31 @@ export function messageBox( { autoDismiss = 0 } = {} ) {
 		 */
 		init() {
 			if ( autoDismiss > 0 ) {
-				this._timer = setTimeout( () => { this.visible = false; }, autoDismiss );
+				this.startAutoDismiss( () => { this.visible = false; } );
+			}
+		},
+
+		/**
+		 * Starts or resets the auto-dismiss timer with a caller-provided action.
+		 *
+		 * @param {Function} dismissAction Action to run when the timer expires.
+		 * @returns {void}
+		 */
+		startAutoDismiss( dismissAction ) {
+			this.cancelAutoDismiss();
+			if ( autoDismiss <= 0 || typeof dismissAction !== "function" ) return;
+			this._timer = setTimeout( dismissAction, autoDismiss );
+		},
+
+		/**
+		 * Cancels the pending auto-dismiss timer.
+		 *
+		 * @returns {void}
+		 */
+		cancelAutoDismiss() {
+			if ( this._timer ) {
+				clearTimeout( this._timer );
+				this._timer = null;
 			}
 		},
 
@@ -33,7 +57,7 @@ export function messageBox( { autoDismiss = 0 } = {} ) {
 		 * @returns {void}
 		 */
 		destroy() {
-			if ( this._timer ) clearTimeout( this._timer );
+			this.cancelAutoDismiss();
 		},
 
 		/**
@@ -42,6 +66,7 @@ export function messageBox( { autoDismiss = 0 } = {} ) {
 		 * @returns {void}
 		 */
 		dismiss() {
+			this.cancelAutoDismiss();
 			this.visible = false;
 		},
 	};

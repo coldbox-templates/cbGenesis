@@ -26,7 +26,7 @@
         message     : string — body text                 (required; renders nothing if empty)
         title       : string — bold heading above text   (default: "" = no title)
         dismissible : boolean — show ✕ button            (default: true)
-        autoDismiss : number  — ms until auto-hide       (default: 0 = never)
+        autoDismiss : number  — ms until auto-hide       (default: 5000)
         classes     : string  — extra CSS classes        (default: "")
         dynamic     : boolean — bind to surrounding Alpine state (default: false)
         messageExpression : string — Alpine expression for the message (default: "notice.message")
@@ -42,7 +42,7 @@
 <bx:param name="args.message" default=""/>
 <bx:param name="args.title" default=""/>
 <bx:param name="args.dismissible" default="true"/>
-<bx:param name="args.autoDismiss" default="0"/>
+<bx:param name="args.autoDismiss" default="5000"/>
 <bx:param name="args.classes" default=""/>
 <bx:param name="args.dynamic" default="false"/>
 <bx:param name="args.messageExpression" default="notice.message"/>
@@ -53,9 +53,11 @@
     <bx:output>
     <div
         class="cb-messagebox#( len( args.classes ) ? " " & args.classes : "" )#"
+        x-data="messageBox({ autoDismiss: #val( args.autoDismiss ) castAs int# })"
         :class="#encodeForHTMLAttribute( args.typeExpression )# ? 'cb-messagebox--' + #encodeForHTMLAttribute( args.typeExpression )# : ''"
         x-show="#encodeForHTMLAttribute( args.messageExpression )#"
         x-cloak
+        x-effect="if ( #encodeForHTMLAttribute( args.messageExpression )# ) startAutoDismiss( () => ( #encodeForHTMLAttribute( args.dismissAction )# ) ); else cancelAutoDismiss()"
         role="alert"
         aria-live="polite">
 
