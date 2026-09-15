@@ -12,7 +12,7 @@ tags: [reference, routing]
 
 Every `POST`, `PUT`, and `DELETE` route below requires a valid CSRF token in `rc.csrf`. `GET` routes do not — see [CSRF verification](../guides/handlers-routing.md#csrf-verification).
 
-The `:userId`, `:roleId`, `:permissionId`, `:settingId`, `:tokenId`, `:passkeyId`, and `:size` placeholders are the literal parameter names the router binds into `rc`. `:size` is `sm` or `lg`.
+The `:userId`, `:roleId`, `:permissionId`, `:auditLogId`, `:settingId`, `:tokenId`, `:passkeyId`, and `:size` placeholders are the literal parameter names the router binds into `rc`. `:size` is `sm` or `lg`.
 
 | Method | URL | Handler.Action | Auth |
 |---|---|---|---|
@@ -32,7 +32,7 @@ The `:userId`, `:roleId`, `:permissionId`, `:settingId`, `:tokenId`, `:passkeyId
 | `POST` | `/logout` | `Auth.logout` | Auth |
 | `GET` | `/dashboard` | `Dashboard.index` | Auth |
 | `GET` | `/auditlog` | `AuditLog.index` | `auditlog:read,auditlog:admin` |
-| `GET` | `/auditlog/:id` | `AuditLog.show` | `auditlog:read,auditlog:admin` |
+| `GET` | `/auditlog/:auditLogId` | `AuditLog.show` | `auditlog:read,auditlog:admin` |
 | `GET` | `/auditlog/search` | `AuditLog.search` | `auditlog:read,auditlog:admin` |
 | `GET` | `/auditlog/export` | `AuditLog.export` | `auditlog:export,auditlog:admin` |
 | `POST` | `/auditlog/purge` | `AuditLog.purge` | `auditlog:delete,auditlog:admin` |

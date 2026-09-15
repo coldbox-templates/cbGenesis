@@ -35,11 +35,13 @@ tests/
 │   ├── integration/
 │   │   ├── MainSpec.bx         Lifecycle events and exception handling
 │   │   ├── AuthTest.bx         Login, registration, and password reset
-│   │   └── ProfileTest.bx      Password change and profile validation
+│   │   ├── ProfileTest.bx      Password change and profile validation
+│   │   └── SettingsTest.bx     Settings handler CRUD and registry
 │   └── unit/
 │       ├── security/           APIToken, APITokenService, Permission,
-│       │                       PermissionService, RememberTokenService,
-│       │                       Role, RoleService, SecurityService
+│       │                       PermissionService, RateLimitService,
+│       │                       RememberTokenService, Role, RoleService,
+│       │                       SecurityService
 │       └── system/             AuditLog, AuditLogService, Setting,
 │                               SettingService, User, UserService
 └── resources/
@@ -70,7 +72,7 @@ component extends="tests.resources.BaseIntegrationSpec" {
 !!! tip "Always reset state in beforeEach()"
     Call `setup()` in `beforeEach()` for every integration spec, so state from one test never leaks into the next.
 
-The checked-in suite is **169 specs across 17 suites**: unit coverage for every security and system entity and service, plus integration specs for the application lifecycle (`MainSpec`), the authentication flows (`AuthTest`), and the profile handler (`ProfileTest`). Add integration coverage for new routes and handlers as you build them; a feature is not covered merely because its service has a unit spec.
+The checked-in suite is **185 specs across 19 suites**: unit coverage for every security and system entity and service, plus integration specs for the application lifecycle (`MainSpec`), the authentication flows (`AuthTest`), the profile handler (`ProfileTest`), and the settings handler (`SettingsTest`). There is no integration coverage yet for the `Users`, `Roles`, `Permissions`, or `AuditLog` admin handlers - add it as you build on them; a feature is not covered merely because its service has a unit spec.
 
 ::: cards
 ::: card title="Extending the App" icon="phosphor-duotone:puzzle-piece" href="extending.md"

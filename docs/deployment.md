@@ -109,6 +109,9 @@ The seeder creates `admin@cbgenesis.com` / `test`, flagged as reset-pending. Sig
 ::: step "Enable HTTPS"
 Via SSL configuration in `server.json`, or your reverse proxy / load balancer of choice.
 :::
+::: step "Update the passkey relying-party config" color="warning"
+`app/config/modules/cbsecurity-passkeys.bx` ships with dev-only placeholders (`relyingPartyId: "localhost"`, `allowedOrigins: ["http://localhost:8080"]`). Set these to your real production domain before go-live, or passkey registration will fail - see [Security & Permissions](guides/security.md#known-issues).
+:::
 ::: step "Build the frontend"
 `npm run build` for minified, fingerprinted assets.
 :::
