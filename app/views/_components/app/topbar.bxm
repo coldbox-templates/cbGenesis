@@ -97,6 +97,7 @@
 					<!--- Logout Link --->
 					<li>
                         <form method="POST" action="#event.route( "logout" )#" style="display:contents">
+                            <input type="hidden" name="csrf" value="#csrfToken()#">
                             <button type="submit" class="dropdown-item text-danger">
                                 <i class="ph-duotone ph-sign-out" aria-hidden="true"></i>
                                 Sign out
