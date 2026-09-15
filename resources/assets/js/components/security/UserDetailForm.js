@@ -50,6 +50,14 @@ export function userDetailForm( payload = {} ) {
 			} );
 		},
 
+		get displayName() {
+			const names = [
+				this.user.firstName,
+				this.user.lastName
+			];
+			return names.filter( Boolean ).join( " " );
+		},
+
 		get filteredPermissions() {
 			const query = this.search.trim().toLowerCase();
 			return this.permissionCatalog.filter( ( permission ) => !query || String( permission.permission || "" ).toLowerCase().includes( query ) );
@@ -97,7 +105,9 @@ export function userDetailForm( payload = {} ) {
 			this.roles = next.roles || [];
 			this.directPermissions = next.directPermissions || [];
 			this.effectivePermissions = next.effectivePermissions || [];
-			this.apiTokens = next.apiTokens || this.apiTokens;
+			if ( Object.prototype.hasOwnProperty.call( next, "apiTokens" ) ) {
+				this.apiTokens = Array.isArray( next.apiTokens ) ? next.apiTokens : [];
+			}
 			this.preferences = Object.entries( this.user.preferences || {} ).map(
 				( [
 					name,

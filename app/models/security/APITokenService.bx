@@ -97,10 +97,14 @@ class extends="app.models.BaseService" {
 		// fresh-connection guarantee saves already have. See BaseIntegrationSpec.bx for the
 		// failure this works around: "The statement is closed." on MSSQL/Postgres.
 		transaction {
-			return findAllWhere(
-				criteria: { "user": arguments.userId },
+			var tokens = findAllWhere(
+				criteria: {
+					"user"    : arguments.userId,
+					"isActive": true
+				},
 				sortOrder: "label"
 			)
+			return tokens.filter( ( token ) => token.getIsActive() )
 		}
 	}
 

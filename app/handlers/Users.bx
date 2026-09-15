@@ -399,7 +399,13 @@ class extends="BaseSecureHandler" {
 	function revokeAllTokens( event, rc, prc ) {
 		prc.user = getManagedUser( rc )
 		var revoked = apiTokenService.revokeAllForUser( prc.user.getUserId() )
-		event.getResponse().setData( data: { revoked: revoked }, message: "API tokens revoked successfully." )
+		event.getResponse().setData(
+			data: {
+				revoked  : revoked,
+				apiTokens: apiTokenService.listForUser( prc.user.getUserId() ).map( .getMemento )
+			},
+			message: "API tokens revoked successfully."
+		)
 	}
 
 	// Update an existing user
