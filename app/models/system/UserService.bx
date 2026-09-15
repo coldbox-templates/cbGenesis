@@ -501,7 +501,10 @@ class extends="app.models.BaseService" {
 			appName: settings.cbAppName,
 			appNameInitial: left( settings.cbAppName, 1 ),
 			linkTimeout: settings.cbPasswordResetExpiration,
-			ip: variables.cbSecurity.getRealIP(),
+			// trustUpstream: false -- this IP is shown to the user in the email as
+			// "requested from"; trusting a spoofable header here would let an attacker
+			// put an arbitrary IP in front of the real recipient.
+			ip: variables.cbSecurity.getRealIP( trustUpstream = false ),
 			linkToken: event.buildLink( "reset-password?token=#token#" ),
 			issuedBy: isNull( arguments.issuer ) ? "" : arguments.issuer.getFullName(),
 			issuedEmail: isNull( arguments.issuer ) ? "" : arguments.issuer.getEmail()
@@ -689,7 +692,9 @@ class extends="app.models.BaseService" {
 				company: settings.cbAppName,
 				companyInitial: left( settings.cbAppName, 1 ),
 				companyEmail: settings.cbDefaultEmail,
-				ip: variables.cbSecurity.getRealIP(),
+				// trustUpstream: false -- shown to the user as the IP that changed their
+				// password; must not be attacker-controllable via a spoofed header.
+				ip: variables.cbSecurity.getRealIP( trustUpstream = false ),
 				linkLogin: event.buildLink( "login" )
 			}
 

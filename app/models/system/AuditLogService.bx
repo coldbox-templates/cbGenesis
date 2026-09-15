@@ -97,7 +97,9 @@ class extends="app.models.BaseService" {
 			entry.setTargetType( arguments.targetType )
 			entry.setTargetId( arguments.targetId )
 			entry.setTargetLabel( arguments.targetLabel )
-			entry.setIpAddress( variables.cbsecurity.getRealIP() )
+			// trustUpstream: false -- an unauthenticated caller can set X-Forwarded-For to
+			// anything, and audit log IPs need to stay trustworthy for forensics.
+			entry.setIpAddress( variables.cbsecurity.getRealIP( trustUpstream = false ) )
 			entry.setUserAgent( cgi.http_user_agent ?: "" )
 			entry.setMetadata( jsonSerialize( sanitizeMetadata( arguments.metadata ) ) )
 
