@@ -150,30 +150,20 @@ class extends="BaseSecureHandler" {
 	}
 
 	private struct function buildDetailPayload( required user ) {
-		var directPermissions = arguments.user.getPermissions().map( .getMemento )
-		var roles = arguments.user.getRoles().map( .getMemento )
-		var effectivePermissions = arguments.user.getAllPermissions().toArray().sort( "text" )
+		var loadedUser = entityMerge( arguments.user )
+		var userMemento = loadedUser.getMemento()
+		var roles = userMemento.roles
+		var directPermissions = userMemento.permissions
+		var effectivePermissions = loadedUser.getAllPermissions()
+		var userPayload = userMemento.filter( ( key, value ) => ![ "roles", "permissions", "apiTokens" ].containsNoCase( key ) )
+		userPayload.isVerified = loadedUser.isEmailVerified()
+		userPayload.isPasswordReset = loadedUser.getIsPasswordReset()
 		return {
-			user: {
-				userId: arguments.user.getUserId(),
-				firstName: arguments.user.getFirstName(),
-				lastName: arguments.user.getLastName(),
-				fullName: arguments.user.getFullName(),
-				email: arguments.user.getEmail(),
-				biography: arguments.user.getBiography(),
-				isActive: arguments.user.getIsActive(),
-				hasAvatar: arguments.user.getHasAvatar(),
-				isVerified: arguments.user.isEmailVerified(),
-				verifiedAt: arguments.user.getVerifiedAt(),
-				isPasswordReset: arguments.user.getIsPasswordReset(),
-				lastLogin: arguments.user.getLastLogin(),
-				createdDate: arguments.user.getCreatedDate(),
-				preferences: arguments.user.getAllPreferences()
-			},
+			user: userPayload,
 			roles: roles,
 			directPermissions: directPermissions,
 			effectivePermissions: effectivePermissions,
-			apiTokens: apiTokenService.listForUser( arguments.user.getUserId() ).map( .getMemento ),
+			apiTokens: apiTokenService.listForUser( loadedUser.getUserId() ).map( .getMemento ),
 			roleCatalog: roleService.findAllWhere( criteria: { isActive: true }, sortOrder: "role" ).map( .getMemento ),
 			permissionCatalog: permissionService.findAllWhere( criteria: { isActive: true }, sortOrder: "permission" ).map( .getMemento ),
 			csrf: csrfToken()
@@ -398,7 +388,10 @@ class extends="BaseSecureHandler" {
 		var token = apiTokenService.getOrFail( rc.tokenId ?: "" )
 		if ( token.getUser().getUserId() != prc.user.getUserId() ) throw( type: "APIToken.NotFound", message: "API token not found" )
 		apiTokenService.revokeToken( rc.tokenId )
-		event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "API token revoked successfully." )
+		event.getResponse().setData(
+			data: { apiTokens: apiTokenService.listForUser( prc.user.getUserId() ).map( .getMemento ) },
+			message: "API token revoked successfully."
+		)
 	}
 
 	@remote( "Revoke all API tokens for a managed user" )

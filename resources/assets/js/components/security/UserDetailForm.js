@@ -14,6 +14,12 @@ export function userDetailForm( payload = {} ) {
 			value
 		], index ) => ( { id: `${ name }-${ index }`, name, value } )
 	);
+	const profileSnapshot = ( profile = user ) => JSON.stringify( {
+		firstName : profile.firstName || "",
+		lastName  : profile.lastName || "",
+		email     : profile.email || "",
+		biography : profile.biography || "",
+	} );
 
 	return {
 		user,
@@ -30,8 +36,19 @@ export function userDetailForm( payload = {} ) {
 		statusTarget          : null,
 		statusSubmitting      : false,
 		preferencesSubmitting : false,
+		profileSnapshot       : profileSnapshot(),
+		confirmTarget         : null,
 		error                 : "",
 		search                : "",
+
+		get profileDirty() {
+			return this.profileSnapshot !== JSON.stringify( {
+				firstName : this.user.firstName || "",
+				lastName  : this.user.lastName || "",
+				email     : this.user.email || "",
+				biography : this.user.biography || "",
+			} );
+		},
 
 		get filteredPermissions() {
 			const query = this.search.trim().toLowerCase();
@@ -54,9 +71,15 @@ export function userDetailForm( payload = {} ) {
 			this.error = "";
 			try {
 				const response = await fetch( path, { method, headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" }, body: method === "GET" ? undefined : new URLSearchParams( { ...data, csrf: this.csrfToken } ) } );
-				const result = await response.json();
+				const body = await response.text();
+				let result;
+				try {
+					result = JSON.parse( body );
+				} catch {
+					throw new Error( response.ok ? "The server returned an invalid response." : `Request failed (${ response.status }).` );
+				}
 				if ( !response.ok || result.error ) throw new Error( result.messages || "The user could not be updated." );
-				if ( result.data?.user ) this.applyPayload( result.data );
+				if ( result.data ) this.applyPayload( result.data );
 				window.$toast?.( result.messages || "User updated successfully.", "success", { title: "User updated" } );
 				return result;
 			} catch ( error ) {
@@ -81,12 +104,38 @@ export function userDetailForm( payload = {} ) {
 					value
 				], index ) => ( { id: `${ name }-${ index }`, name, value } )
 			);
+			this.profileSnapshot = profileSnapshot( this.user );
 		},
 
 		/** @param {Event} event Form submission event. @returns {Promise<void>} */
 		async saveProfile( event ) {
 			event.preventDefault();
+			if ( !this.profileDirty || this.loading ) return;
 			await this.request( `/users/${ encodeURIComponent( this.user.userId ) }/profile`, "PUT", { firstName: this.user.firstName, lastName: this.user.lastName, email: this.user.email, biography: this.user.biography || "" } );
+		},
+		/** @param {Object} target Confirmation configuration. @returns {void} */
+		openConfirm( target ) { this.confirmTarget = target; this.error = ""; },
+		/** @returns {void} */
+		cancelConfirm() { this.confirmTarget = null; },
+		/** @returns {void} */
+		askResetPassword() { this.openConfirm( { message: "Send password reset instructions to this user?", action: () => this.resetPassword() } ); },
+		/** @returns {void} */
+		askForcePasswordReset() { this.openConfirm( { message: "Require this user to set a new password on their next login?", action: () => this.forcePasswordReset() } ); },
+		/** @returns {void} */
+		askRevokeRememberTokens() { this.openConfirm( { message: "Revoke all remembered sessions for this user?", action: () => this.revokeRememberTokens() } ); },
+		/** @param {Object} role Role to remove. @returns {void} */
+		askRemoveRole( role ) { this.openConfirm( { message: `Remove the ${ role.role } role?`, action: () => this.removeRole( role ) } ); },
+		/** @param {Object} permission Permission to remove. @returns {void} */
+		askRemovePermission( permission ) { this.openConfirm( { message: `Remove the ${ permission.permission } permission?`, action: () => this.removePermission( permission ) } ); },
+		/** @param {Object} token Token to revoke. @returns {void} */
+		askRevokeToken( token ) { this.openConfirm( { message: `Revoke ${ token.label || "this token" }?`, action: () => this.revokeToken( token ) } ); },
+		/** @returns {void} */
+		askRevokeAllTokens() { this.openConfirm( { message: "Revoke every API token for this user?", action: () => this.revokeAllTokens() } ); },
+		/** @returns {Promise<void>} */
+		async confirmAction() {
+			if ( !this.confirmTarget ) return;
+			const action = this.confirmTarget.action;
+			try { await action(); this.confirmTarget = null; } catch ( error ) { /* request() has already displayed the error. */ }
 		},
 
 		/** @param {Object} user User whose status will change. @param {boolean} isActive Desired active state. @returns {void} */
@@ -112,17 +161,17 @@ export function userDetailForm( payload = {} ) {
 			}
 		},
 		/** @returns {Promise<void>} */
-		async resetPassword() { if ( window.confirm( "Send password reset instructions to this user?" ) ) await this.request( `/users/${ this.user.userId }/reset-password` ); },
+		async resetPassword() { await this.request( `/users/${ this.user.userId }/reset-password` ); },
 		/** @returns {Promise<void>} */
-		async forcePasswordReset() { if ( window.confirm( "Require this user to set a new password on their next login?" ) ) await this.request( `/users/${ this.user.userId }/force-password-reset` ); },
+		async forcePasswordReset() { await this.request( `/users/${ this.user.userId }/force-password-reset` ); },
 		/** @returns {Promise<void>} */
 		async verifyUser() { await this.request( `/users/${ this.user.userId }/verify` ); },
 		/** @returns {Promise<void>} */
-		async revokeRememberTokens() { if ( window.confirm( "Revoke all remembered sessions for this user?" ) ) await this.request( `/users/${ this.user.userId }/revoke-remember-tokens` ); },
+		async revokeRememberTokens() { await this.request( `/users/${ this.user.userId }/revoke-remember-tokens` ); },
 		/** @param {Object} role Role to add. @returns {Promise<void>} */
 		async addRole( role ) { await this.request( `/users/${ this.user.userId }/roles/${ role.roleId }` ); },
 		/** @param {Object} role Role to remove. @returns {Promise<void>} */
-		async removeRole( role ) { if ( window.confirm( `Remove the ${ role.role } role?` ) ) await this.request( `/users/${ this.user.userId }/roles/${ role.roleId }`, "DELETE" ); },
+		async removeRole( role ) { await this.request( `/users/${ this.user.userId }/roles/${ role.roleId }`, "DELETE" ); },
 		/** @param {Object} permission Permission to add. @returns {Promise<void>} */
 		async addPermission( permission ) { await this.request( `/users/${ this.user.userId }/permissions/${ permission.permissionId }` ); },
 		/** @param {Object} permission Permission to remove. @returns {Promise<void>} */
@@ -145,8 +194,8 @@ export function userDetailForm( payload = {} ) {
 		/** @param {string} id Preference identifier. @returns {void} */
 		removePreference( id ) { this.preferences = this.preferences.filter( ( entry ) => entry.id !== id ); },
 		/** @param {Object} token Token to revoke. @returns {Promise<void>} */
-		async revokeToken( token ) { if ( window.confirm( `Revoke ${ token.label || "this token" }?` ) ) await this.request( `/users/${ this.user.userId }/tokens/${ token.tokenId }`, "DELETE" ); },
+		async revokeToken( token ) { await this.request( `/users/${ this.user.userId }/tokens/${ token.tokenId }`, "DELETE" ); },
 		/** @returns {Promise<void>} */
-		async revokeAllTokens() { if ( window.confirm( "Revoke every API token for this user?" ) ) await this.request( `/users/${ this.user.userId }/tokens/revoke-all` ); },
+		async revokeAllTokens() { await this.request( `/users/${ this.user.userId }/tokens/revoke-all` ); },
 	};
 }

@@ -33,19 +33,108 @@
 <div class="cb-admin-detail-grid">
 	<aside class="detail-sidebar">
 		<section class="cb-content-card cb-profile-summary-card">
-			<img class="cb-profile-orb" style="object-fit: cover;" x-show="user.hasAvatar" x-cloak :src="'/avatars/' + encodeURIComponent( user.userId ) + '/lg'" :alt="user.fullName">
-			<div class="cb-profile-orb" x-show="!user.hasAvatar" x-text="( user.firstName?.[0] || '' ) + ( user.lastName?.[0] || '' )"></div>
-			<h3 x-text="user.fullName"></h3><p x-text="user.email"></p>
-			<div class="cb-chip-row justify-content-center"><template x-for="( role, index ) in roles" :key="`${ role.roleId || 'role' }-${ index }`"><span class="cb-chip cb-chip-info" x-text="role.role"></span></template><span class="cb-chip" :class="user.isActive ? 'cb-chip-success' : 'cb-chip-danger'" x-text="user.isActive ? 'Active' : 'Disabled'"></span><span class="cb-chip" :class="user.isVerified ? 'cb-chip-success' : 'cb-chip-warning'" x-text="user.isVerified ? 'Verified' : 'Unverified'"></span></div>
+			<img
+				class="cb-profile-orb"
+				style="object-fit: cover;"
+				x-show="user.hasAvatar"
+				x-cloak
+				:src="'/avatars/' + encodeURIComponent( user.userId ) + '/lg'"
+				:alt="user.fullName">
+			<div
+				class="cb-profile-orb"
+				x-show="!user.hasAvatar"
+				x-text="( user.firstName?.[0] || '' ) + ( user.lastName?.[0] || '' )"></div>
+			<h3 x-text="user.fullName"></h3>
+			<p x-text="user.email"></p>
+			<div class="cb-chip-row justify-content-center">
+				<template x-for="( role, index ) in roles" :key="`${ role.roleId || 'role' }-${ index }`">
+					<span class="cb-chip cb-chip-info" x-text="role.role"></span>
+				</template>
+				<span
+					class="cb-chip"
+					:class="user.isActive ? 'cb-chip-success' : 'cb-chip-danger'"
+					x-text="user.isActive ? 'Active' : 'Disabled'"></span>
+				<span
+					class="cb-chip"
+					:class="user.isVerified ? 'cb-chip-success' : 'cb-chip-warning'"
+					x-text="user.isVerified ? 'Verified' : 'Unverified'"></span>
+			</div>
 		</section>
-		<section class="cb-content-card cb-info-list-card"><h3>Account info</h3><dl><div><dt>Member since</dt><dd x-text="$formatDate( user.createdDate )"></dd></div><div><dt>Last login</dt><dd x-text="user.lastLogin ? $relativeDate( user.lastLogin ) : 'Never'"></dd></div><div><dt>Verification</dt><dd x-text="user.verifiedAt ? $formatDate( user.verifiedAt ) : 'Pending'"></dd></div><div><dt>Password state</dt><dd x-text="user.isPasswordReset ? 'Reset required' : 'Current'"></dd></div></dl></section>
+
+		<section class="cb-content-card cb-info-list-card">
+			<h3>Account info</h3>
+			<dl>
+				<div>
+					<dt>Member since</dt>
+					<dd
+						data-tooltip=""
+						:data-tooltip="$formatDateTime( user.createdDate )"
+						x-text="$formatDate( user.createdDate )"></dd>
+				</div>
+				<div>
+					<dt>Last login</dt>
+					<dd
+						:data-tooltip="user.lastLogin ? $formatDateTime( user.lastLogin ) : ''"
+						x-text="user.lastLogin ? $relativeDate( user.lastLogin ) : 'Never'"></dd>
+				</div>
+				<div>
+					<dt>Verification</dt>
+					<dd
+						:data-tooltip="user.verifiedAt ? $formatDateTime( user.verifiedAt ) : ''"
+						x-text="user.verifiedAt ? $formatDate( user.verifiedAt ) : 'Pending'"></dd>
+				</div>
+				<div>
+					<dt>Password state</dt>
+					<dd x-text="user.isPasswordReset ? 'Reset required' : 'Current'"></dd>
+				</div>
+			</dl>
+		</section>
 	</aside>
 
 	<section class="detail-main">
-		<div class="cb-segmented-control mb-3" role="tablist"><button type="button" :class="activeTab === 'overview' ? 'active' : ''" @click="activeTab = 'overview'">Overview</button><button type="button" :class="activeTab === 'access' ? 'active' : ''" @click="activeTab = 'access'">Access</button><button type="button" :class="activeTab === 'preferences' ? 'active' : ''" @click="activeTab = 'preferences'">Preferences</button><button type="button" :class="activeTab === 'tokens' ? 'active' : ''" @click="activeTab = 'tokens'">API tokens</button><button type="button" :class="activeTab === 'security' ? 'active' : ''" @click="activeTab = 'security'">Security</button></div>
+		<div class="cb-segmented-control mb-3" role="tablist">
+			<button type="button" :class="activeTab === 'overview' ? 'active' : ''" @click="activeTab = 'overview'">Overview</button>
+			<button type="button" :class="activeTab === 'access' ? 'active' : ''" @click="activeTab = 'access'">Access</button>
+			<button type="button" :class="activeTab === 'preferences' ? 'active' : ''" @click="activeTab = 'preferences'">Preferences</button>
+			<button type="button" :class="activeTab === 'tokens' ? 'active' : ''" @click="activeTab = 'tokens'">API tokens</button>
+			<button type="button" :class="activeTab === 'security' ? 'active' : ''" @click="activeTab = 'security'">Security</button>
+		</div>
 		<p class="alert alert-danger" x-show="error" x-text="error" x-cloak></p>
 
-		<section class="cb-content-card form-card" x-show="activeTab === 'overview'"><div class="cb-content-card-header"><div><h3 class="cb-content-card-title">Personal information</h3><p class="text-muted mb-0">Update the account's basic profile details.</p></div></div><form @submit="saveProfile" class="cb-form-grid"><label>First name<input type="text" x-model="user.firstName" required></label><label>Last name<input type="text" x-model="user.lastName" required></label><label class="cb-span-2">Email address<input type="email" x-model="user.email" required></label><label class="cb-span-2">Biography<textarea rows="4" x-model="user.biography"></textarea></label><div class="cb-span-2 d-flex justify-content-end"><bx:if prc.authUser.hasPermission( "users:write,users:admin" )><button type="submit" class="btn btn-primary" :disabled="loading"><i class="ph-duotone ph-floppy-disk"></i> Save profile</button></bx:if></div></form></section>
+		<section class="cb-content-card form-card" x-show="activeTab === 'overview'">
+			<div class="cb-content-card-header">
+				<div>
+					<h3 class="cb-content-card-title">Personal information</h3>
+					<p class="text-muted mb-0">Update the account's basic profile details.</p>
+				</div>
+			</div>
+			<form @submit="saveProfile" class="cb-form-grid">
+				<label>
+					First name
+					<input type="text" x-model.trim="user.firstName" required>
+				</label>
+				<label>
+					Last name
+					<input type="text" x-model.trim="user.lastName" required>
+				</label>
+				<label class="cb-span-2">
+					Email address
+					<input type="email" x-model.trim="user.email" required>
+				</label>
+				<label class="cb-span-2">
+					Biography
+					<textarea rows="4" x-model="user.biography"></textarea>
+				</label>
+				<div class="cb-span-2 d-flex justify-content-end">
+					<bx:if prc.authUser.hasPermission( "users:write,users:admin" )>
+						<button type="submit" class="btn btn-primary" :disabled="loading || !profileDirty">
+							<i class="ph-duotone ph-floppy-disk"></i>
+							Save profile
+						</button>
+					</bx:if>
+				</div>
+			</form>
+		</section>
 
 		<section class="cb-content-card form-card" x-show="activeTab === 'access'" x-cloak>
 			<div class="cb-content-card-header">
@@ -68,7 +157,7 @@
 					<span class="cb-chip cb-chip-info">
 						<span x-text="role.role"></span>
 						<bx:if prc.authUser.hasPermission( "users:admin" )>
-							<button type="button" class="btn btn-link p-0 ms-2" @click="removeRole( role )">
+							<button type="button" class="btn btn-link p-0 ms-2" @click="askRemoveRole( role )">
 								<i class="ph-duotone ph-x"></i>
 							</button>
 						</bx:if>
@@ -90,7 +179,7 @@
 					<span class="cb-chip">
 						<span x-text="permission.permission"></span>
 						<bx:if prc.authUser.hasPermission( "users:admin" )>
-							<button type="button" class="btn btn-link p-0 ms-2" @click="removePermission( permission )">
+							<button type="button" class="btn btn-link p-0 ms-2" @click="askRemovePermission( permission )">
 								<i class="ph-duotone ph-x"></i>
 							</button>
 						</bx:if>
@@ -164,7 +253,7 @@
 					</h3>
 					<p class="text-muted mb-0">Only safe token snapshots are displayed.</p>
 				</div>
-				<button type="button" class="btn btn-outline-danger btn-sm" @click="revokeAllTokens" :disabled="!apiTokens.length">
+				<button type="button" class="btn btn-outline-danger btn-sm" @click="askRevokeAllTokens" :disabled="!apiTokens.length">
 					Revoke all
 				</button>
 			</div>
@@ -188,7 +277,7 @@
 								<td x-text="token.lastUsed ? $relativeDate( token.lastUsed ) : 'Never'"></td>
 								<td x-text="token.expiration ? $formatDate( token.expiration ) : 'Never'"></td>
 								<td class="text-end">
-									<button type="button" class="btn btn-sm btn-outline-danger" @click="revokeToken( token )">
+									<button type="button" class="btn btn-sm btn-outline-danger" @click="askRevokeToken( token )">
 										<i class="ph-duotone ph-trash"></i>
 									</button>
 								</td>
@@ -215,7 +304,7 @@
 							<strong>Password reset</strong>
 							<small>Email reset instructions and require a password change at next login.</small>
 						</div>
-						<button type="button" class="btn btn-outline-warning btn-sm" @click="resetPassword">Send reset email</button>
+						<button type="button" class="btn btn-outline-warning btn-sm" @click="askResetPassword">Send reset email</button>
 					</div>
 
 					<div class="cb-setting-row">
@@ -223,7 +312,7 @@
 							<strong>Force password reset</strong>
 							<small x-text="user.isPasswordReset ? 'Already required on next login.' : 'Require a new password immediately on their next login, without emailing a link.'"></small>
 						</div>
-						<button type="button" class="btn btn-outline-warning btn-sm" @click="forcePasswordReset" :disabled="user.isPasswordReset">Force reset</button>
+						<button type="button" class="btn btn-outline-warning btn-sm" @click="askForcePasswordReset" :disabled="user.isPasswordReset">Force reset</button>
 					</div>
 
 					<div class="cb-setting-row">
@@ -239,7 +328,7 @@
 							<strong>Remembered sessions</strong>
 							<small>Sign out all remembered browsers and devices.</small>
 						</div>
-						<button type="button" class="btn btn-outline-danger btn-sm" @click="revokeRememberTokens">Revoke sessions</button>
+						<button type="button" class="btn btn-outline-danger btn-sm" @click="askRevokeRememberTokens">Revoke sessions</button>
 					</div>
 				</bx:if>
 
@@ -262,6 +351,16 @@
 			openExpression : "statusTarget",
 			closeExpression: "cancelStatusChange()",
 			contentView    : "users/statusConfirm"
+		} )#
+		#view( view: "_components/ui/confirm", args: {
+			id                : "cb-user-security-confirm",
+			title             : "Confirm security action",
+			messageExpression : "confirmTarget?.message || ''",
+			openExpression    : "confirmTarget",
+			closeExpression   : "cancelConfirm()",
+			confirmExpression : "confirmAction()",
+			confirmLabel      : "Confirm",
+			confirmClass      : "btn-danger"
 		} )#
 	</div>
 </div>
