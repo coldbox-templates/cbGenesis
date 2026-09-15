@@ -43,7 +43,7 @@
         <!--- ── Page content ─────────────────────────────────────── --->
         <main class="cb-main-content" id="main-content" tabindex="-1">
             <div class="container-fluid">
-                #renderView()#
+                #view()#
             </div>
         </main>
 

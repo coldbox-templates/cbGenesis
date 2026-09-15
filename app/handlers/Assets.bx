@@ -37,7 +37,8 @@ class extends="coldbox.system.EventHandler" {
 		if ( !canViewAvatar( prc.authUser, rc.userId ) ) {
 			return notFound( event )
 		}
-		return streamVariant( event, imageService.avatarPath( rc.userId, rc.size ), "image/jpeg" )
+
+		return streamVariant( event, variables.imageService.avatarPath( rc.userId, rc.size ), "image/jpeg" )
 	}
 
 	/**

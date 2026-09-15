@@ -9,7 +9,7 @@ build/**
 .tmp/**
 .env
 .engine/**
-.cbfs/**
+app/.cbfs/**
 docker/.db/**
 public/includes/hot
 
@@ -21,10 +21,6 @@ app/logs/**
 !app/logs/.gitkeep
 runtime/logs/**
 tests/results/**
-
-# User-uploaded assets (cbfs "assets" disk - see app/config/modules/cbfs.bx)
-resources/uploads/**
-!resources/uploads/.gitkeep
 
 # npm
 **/node_modules/*

@@ -23,7 +23,7 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			version   : Date.now(),
 			loading   : false,
 		},
-		profile   : {
+		profile : {
 			firstName    : initialProfile.firstName ?? "",
 			lastName     : initialProfile.lastName ?? "",
 			email        : initialProfile.email ?? "",
@@ -34,13 +34,13 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 		},
 		csrfToken,
 		emailChangeForm : {
-			open    : false,
-			newEmail: "",
-			errors  : {},
-			loading : false,
+			open     : false,
+			newEmail : "",
+			errors   : {},
+			loading  : false,
 		},
 		emailChangeLoading : false,
-		password : {
+		password           : {
 			currentPassword : "",
 			newPassword     : "",
 			passwordConfirm : "",
@@ -723,6 +723,48 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 		},
 
 		/**
+		 * Saves the preference form dispatched by the nested preferences component.
+		 *
+		 * @param {Object} detail Preference form payload and completion callbacks.
+		 * @returns {Promise<void>}
+		 */
+		async submitPreferences( detail = {} ) {
+			const form = detail.form;
+			if ( !form || this.loading ) {
+				detail.setSubmitting?.( false );
+				return;
+			}
+
+			this.clearNotice();
+			this.loading = "preferences";
+
+			try {
+				const formData = new FormData( form );
+				formData.set( "preferences", detail.preferences ?? "{}" );
+				const response = await fetch( form.action || "/profile", {
+					method      : "POST",
+					body        : formData,
+					credentials : "same-origin",
+					headers     : { Accept: "application/json" },
+				} );
+				const payload = await response.json();
+
+				if ( !response.ok || payload.error ) {
+					this.notice = { type: "error", message: payload.messages || "Preferences could not be saved." };
+					return;
+				}
+
+				detail.markSaved?.();
+				this.notice = { type: "success", message: payload.messages || "Preferences saved successfully." };
+			} catch ( error ) {
+				this.notice = { type: "error", message: "The request could not be completed. Please try again." };
+			} finally {
+				this.loading = "";
+				detail.setSubmitting?.( false );
+			}
+		},
+
+		/**
 		 * Prevents invalid password submissions and submits valid password changes.
 		 *
 		 * @param {SubmitEvent} event Form submit event.
@@ -880,6 +922,7 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			if ( !file || this.avatar.loading ) return;
 			this.clearNotice();
 			this.avatar.loading = true;
+			window.$progress?.start( { message: "Uploading avatar..." } );
 			try {
 				const dataUri = await this.readFileAsDataUrl( file );
 				const response = await fetch( "/profile/avatar", {
@@ -895,10 +938,13 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 				this.avatar.hasAvatar = true;
 				this.avatar.version = Date.now();
 				this.notice = { type: "success", message: payload.messages || "Avatar updated successfully." };
+				window.$toast?.( payload.messages || "Avatar updated successfully.", "success", { title: "Avatar updated" } );
 			} catch ( error ) {
 				this.notice = { type: "error", message: error.message || "Avatar could not be saved." };
+				window.$toast?.( error.message || "Avatar could not be saved.", "error", { title: "Avatar upload failed" } );
 			} finally {
 				this.avatar.loading = false;
+				window.$progress?.stop();
 			}
 		},
 
