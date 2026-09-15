@@ -53,6 +53,7 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 		passkeyLabel         : "",
 		selectedPasskey      : null,
 		confirmPasskeyOpen   : false,
+		confirmAvatarOpen    : false,
 		deletePasskeyLoading : false,
 		tokenSortKey         : "label",
 		tokenSortDirection   : "asc",
@@ -949,6 +950,26 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 		},
 
 		/**
+		 * Opens the shared confirmation dialog before removing the avatar.
+		 *
+		 * @returns {void}
+		 */
+		confirmAvatarRemoval() {
+			if ( !this.avatar.hasAvatar || this.avatar.loading ) return;
+			this.confirmAvatarOpen = true;
+		},
+
+		/**
+		 * Closes the avatar removal confirmation dialog.
+		 *
+		 * @returns {void}
+		 */
+		cancelAvatarRemoval() {
+			if ( this.avatar.loading ) return;
+			this.confirmAvatarOpen = false;
+		},
+
+		/**
 		 * Permanently removes the authenticated user's avatar.
 		 *
 		 * @returns {Promise<void>}
@@ -968,6 +989,7 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 				if ( !response.ok || payload.error ) throw new Error( payload.messages || "Avatar could not be removed." );
 				this.avatar.hasAvatar = false;
 				this.avatar.version = Date.now();
+				this.confirmAvatarOpen = false;
 				this.notice = { type: "success", message: payload.messages || "Avatar removed successfully." };
 			} catch ( error ) {
 				this.notice = { type: "error", message: error.message || "Avatar could not be removed." };
