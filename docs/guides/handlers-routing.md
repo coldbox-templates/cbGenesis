@@ -146,6 +146,8 @@ Every one of these is CSRF-verified by `BaseSecureHandler` unless it is reached 
 
 `ensureNotSelf()` guards several of these to block an admin from demoting or removing their own roles.
 
+![The Users admin page](../assets/screenshots/users.png)
+
 ## CSRF verification
 
 `app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false`, so there is no global interceptor. Instead, `BaseSecureHandler.preHandler()` verifies CSRF **deny-by-default** for every handler that extends it:

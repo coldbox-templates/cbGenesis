@@ -38,6 +38,8 @@ The authentication flow can use either shipped layout through the `cbLoginLayout
 
 Choose **Auth Center** or **Auth Split** on the `/settings` page. The selected layout applies to login, registration, invitation activation, and password-recovery pages. See [App Settings](../reference/settings.md#login-layout-selection) for the layout files and custom-layout instructions.
 
+![The login screen with the default AuthSplit layout](../assets/screenshots/login.png)
+
 ## Security layers
 
 | Layer | Implementation |
@@ -47,7 +49,7 @@ Choose **Auth Center** or **Auth Split** on the `/settings` page. The selected l
 | Password policy | `SettingService.isValidPassword()` — `cbMinPasswordLength` plus an uppercase letter, a lowercase letter, a digit, and a special character. Enforced server-side on registration, invitation activation, password reset, and profile password change; the Alpine `$passwordMeetsPolicy` helper mirrors it in the browser |
 | CSRF protection | cbsecurity rotating token (30 min); the auto-verifier is off, and `BaseSecureHandler` verifies deny-by-default on every unsafe HTTP method instead — see [Handlers & Routing](handlers-routing.md#csrf-verification) |
 | Handler security | `@secured` annotation → firewall redirects unauthenticated visitors to `login`, authorized-but-unpermitted users to `dashboard.notAuthorized` |
-| JWT support | Configured for API access (AES-256, HS512, 60 min, cache token storage) |
+| JWT support | Configured for API access (HS512, 60 min, cache token storage) |
 | Security headers | XSS protection, `frameOptions: SAMEORIGIN`, `referrerPolicy: same-origin` |
 | API tokens | SHA/BCrypt-hashed per-user tokens with expiration and a daily purge scheduler |
 | Rate limiting | `RateLimiter` interceptor throttles login, registration, and password reset by IP - see [Rate limiting](#rate-limiting) below |
@@ -116,6 +118,15 @@ Every permission is a slug in the form `resource:action`, seeded by `resources/d
 !!! info "`admin` is a superset"
     `admin` means "full administration of that resource" and is always OR'd alongside the specific action a route needs, so a user holding `roles:admin` passes any `roles:*` check without also needing `roles:read`/`roles:write`/`roles:delete` individually. The seeder assigns all 20 built-in permissions to a single **Admin** role, granted to the seeded `admin@cbgenesis.com` user.
 
+::: columns
+::: column
+![The Roles admin page](../assets/screenshots/roles.png)
+:::
+::: column
+![The Permissions admin page, grouped by resource](../assets/screenshots/permissions.png)
+:::
+:::
+
 **Enforce it on the handler** — this is the real security boundary, resolved by cbsecurity's `CBAuthValidator` against the authenticated user's permissions:
 
 ```boxlang title="app/handlers/Roles.bx" linenums="1"
@@ -160,6 +171,8 @@ A user who fails an `@secured` check is redirected:
 | `Passkey` / `PasskeyService` | WebAuthn credentials for passwordless sign-in; `cbRequirePasskey` makes `BaseSecureHandler` redirect a user with none to `profile/passkey-required` |
 | `AuditLog` / `AuditLogService` | The audit trail. The `AuditLogger` interceptor writes sign-ins, sign-outs, and failed authentication/authorization automatically — see [Architecture](../architecture.md#interceptors) |
 | `Passkey` / `PasskeyService` | WebAuthn credential storage via `cbsecurity-passkeys`' `ICredentialRepository` contract |
+
+![The Audit Log admin page, showing a recorded sign-in](../assets/screenshots/auditlog.png)
 
 ## Known issues
 
