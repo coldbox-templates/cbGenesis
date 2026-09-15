@@ -26,6 +26,7 @@ Copy `.env.example` to `.env` and fill in your own values - read anywhere in the
 | `JWT_SECRET` | Signing key for `cbsecurity`'s JWT support |
 | `CBFS_ASSETS_DISK_PATH` | Filesystem path for the cbfs `assets` disk that stores avatars and the branding logo (defaults to `<app-root>/.cbfs`) |
 | `COLDBOX_REINIT_PASSWORD` | Password required by `?fwreinit`. Unset means a fresh random value per boot, so reinit is closed - see [Deployment](../deployment.md#production-checklist) |
+| `COLDBOX_SESSION_TIMEOUT` | Session cache timeout, in minutes, for `cbstorages`' session storage (defaults to `60`) |
 
 ## Framework settings (`app/config/Coldbox.bx`)
 
@@ -66,12 +67,13 @@ Each installed module has its own settings file under `app/config/modules/`:
 
 | Module | Key settings |
 |---|---|
-| **cbsecurity** | cbauth provider, CSRF (rotating, 30 min), firewall with `@secured` annotation scanning, security headers, JWT (AES-256, HS512, 60 min) — see [Security & Permissions](security.md) |
+| **cbsecurity** | cbauth provider, CSRF (rotating, 30 min), firewall with `@secured` annotation scanning, security headers, JWT (HS512, 60 min) — see [Security & Permissions](security.md) |
 | **cbauth** | `UserService` as the identity provider, cache-based session storage |
 | **cbmailservices** | BXMail protocol in production, files protocol in development — see [Email](email.md) |
 | **cborm** | Entity injection enabled, pagination `maxRows: 25` / `maxRowsLimit: 500` |
-| **cbfs** | `assets` disk (`Local` provider by default, path from `CBFS_ASSETS_DISK_PATH`, `visibility: "private"`) - stores avatars and the branding logo, streamed out by `Assets.bx` — see [Frontend](frontend.md#avatars-branding-logo) |
-| **cbstorages** | Cache storage (sessions cache, 60 min TTL), AES-encrypted cookie storage |
+| **cbfs** | `assets` disk (`Local` provider by default, path from `CBFS_ASSETS_DISK_PATH`) - stores avatars and the branding logo, streamed out by `Assets.bx` — see [Frontend](frontend.md#avatars-branding-logo) |
+| **cbstorages** | Cache storage (sessions cache, timeout from `COLDBOX_SESSION_TIMEOUT`, default 60 min), cookie storage (encryption off by default) |
+| **cbsecurity-passkeys** | WebAuthn relying-party config for passkey sign-in - `relyingPartyId`/`allowedOrigins` are placeholder `localhost` values you **must** change before production, see [Deployment](../deployment.md#production-checklist) |
 | **mementifier** | ISO8601 dates, ORM auto-includes, UTC conversion |
 
 ::: cards
