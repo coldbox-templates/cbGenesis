@@ -24,6 +24,7 @@ Copy `.env.example` to `.env` and fill in your own values - read anywhere in the
 | `DB_SCHEMA` | Schema the migration runner targets (`.cbmigrations.json`); leave blank for engines without one |
 | `DB_USER` / `DB_PASSWORD` | Database credentials |
 | `JWT_SECRET` | Signing key for `cbsecurity`'s JWT support |
+| `COOKIE_ENCRYPTION_KEY` | Encryption key for `cbstorages`' cookie storage. Only matters once `useEncryption` is turned on (off by default) - set it before you do, or the key regenerates every boot and silently invalidates previously encrypted cookies |
 | `CBFS_ASSETS_DISK_PATH` | Filesystem path for the cbfs `assets` disk that stores avatars and the branding logo (defaults to `<app-root>/.cbfs`) |
 | `COLDBOX_REINIT_PASSWORD` | Password required by `?fwreinit`. Unset means a fresh random value per boot, so reinit is closed - see [Deployment](../deployment.md#production-checklist) |
 | `COLDBOX_SESSION_TIMEOUT` | Session cache timeout, in minutes, for `cbstorages`' session storage (defaults to `60`) |

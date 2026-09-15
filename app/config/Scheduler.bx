@@ -1,5 +1,8 @@
 class {
 
+	@inject( "logbox:logger:{this}" )
+	property name="log";
+
 	/**
 	 * Configure the ColdBox Scheduler
 	 * https://coldbox.ortusbooks.com/digging-deeper/scheduled-tasks
@@ -63,7 +66,10 @@ class {
 	 * @exception The ColdFusion exception object
 	 */
 	function onAnyTaskError( required task, required exception ) {
-
+		log.error(
+			"Scheduled task [#task.getName()#] failed: #exception.message#",
+			exception
+		)
 	}
 
 	/**
