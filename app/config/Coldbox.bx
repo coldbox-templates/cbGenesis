@@ -207,7 +207,6 @@ class {
 	function development() {
 		// coldbox.customErrorTemplate = "/coldbox/system/exceptions/BugReport.cfm"; // static bug reports
 		variables.coldbox.customErrorTemplate = "/coldbox/system/exceptions/Whoops.cfm"
-		variables.wirebox.singletonReload = true
 		variables.coldbox.debugMode = true
 		// Keep ?fwreinit=1 password-free while developing locally.
 		variables.coldbox.reinitPassword = ""
