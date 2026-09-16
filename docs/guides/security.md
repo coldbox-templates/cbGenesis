@@ -66,8 +66,15 @@ A caller that exceeds the limit is redirected back to the form with a flash erro
 |---|---|
 | `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, within the window (default: `5`) |
 | `cbRateLimitWindowSeconds` | Window length, in seconds (default: `300`). `0` disables rate limiting entirely |
+| `cbTrustProxyHeaders` | Whether the "per IP" in "per IP, per endpoint" comes from `X-Forwarded-For` or the raw socket address (default: `true`) - see [Deploying behind a reverse proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 
-Both are editable at `/settings` like any other app setting - see [App Settings](../reference/settings.md#password--token-policy).
+All three are editable at `/settings` like any other app setting - see [App Settings](../reference/settings.md#password--token-policy).
+
+!!! warning "`cbTrustProxyHeaders` is a deployment decision, not a code decision"
+    `X-Forwarded-For` is a plain HTTP header - any caller can set it to anything unless something in front of the app (a reverse proxy or load balancer) strips whatever the client sent and sets it itself. Whether that's true is something only the person deploying the app knows.
+
+    - **On (default)**: trusts `X-Forwarded-For`/`X-Cluster-Client-IP`, matching a typical deployment of this app behind a reverse proxy or load balancer. If your proxy does *not* overwrite that header (or you're directly internet-facing with nothing in front of the app), a caller can spoof it to get a fresh rate-limit bucket on every request and to fake the IP recorded in the audit trail - turn this off in that case.
+    - **Off**: `getRealIP()` uses the raw socket address instead. Correct when the app is directly internet-facing, but if you *are* behind a proxy, every caller looks like the proxy's own IP - one blocked "IP" blocks everyone behind it, and every audit log entry shows the proxy's address instead of the real client's.
 
 ::: cards
 ::: card title="How counting works" icon="phosphor-duotone:hourglass"

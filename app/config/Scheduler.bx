@@ -63,7 +63,10 @@ class {
 	 * @exception The ColdFusion exception object
 	 */
 	function onAnyTaskError( required task, required exception ) {
-
+		log.error(
+			"Scheduled task [#task.getName()#] failed: #exception.message#",
+			exception
+		)
 	}
 
 	/**

@@ -109,6 +109,9 @@ The seeder creates `admin@cbgenesis.com` / `test`, flagged as reset-pending. Sig
 ::: step "Enable HTTPS"
 Via SSL configuration in `server.json`, or your reverse proxy / load balancer of choice.
 :::
+::: step "Decide whether to trust proxy headers" color="warning"
+`cbTrustProxyHeaders` defaults **on**, matching a typical deployment behind a reverse proxy or load balancer. If the app is directly internet-facing instead, turn it off - see [Deploying behind a reverse proxy](#deploying-behind-a-reverse-proxy). Getting this backwards either defeats rate limiting or breaks it for everyone behind the proxy.
+:::
 ::: step "Update the passkey relying-party config" color="warning"
 `app/config/modules/cbsecurity-passkeys.bx` ships with dev-only placeholders (`relyingPartyId: "localhost"`, `allowedOrigins: ["http://localhost:8080"]`). Set these to your real production domain before go-live, or passkey registration will fail - see [Security & Permissions](guides/security.md#known-issues).
 :::
@@ -119,6 +122,17 @@ Via SSL configuration in `server.json`, or your reverse proxy / load balancer of
 Remove or restrict the public `/healthcheck` endpoint if it shouldn't be reachable from outside your infrastructure.
 :::
 :::
+
+## Deploying behind a reverse proxy
+
+`RateLimiter`, the audit trail, and the "reset requested from IP" security emails all read the caller's IP through `cbsecurity`'s `getRealIP()`. That function has two possible sources for the IP, and only you - the person deploying this app - know which one is correct for your setup:
+
+- **The raw socket address** (`cgi.remote_addr`) - correct when the app is directly internet-facing. If a reverse proxy sits in front, this is always the proxy's own address, not the visitor's.
+- **The `X-Forwarded-For` / `X-Cluster-Client-IP` request headers** - correct only when something in front of the app (nginx, a load balancer, a CDN) strips whatever value a client sent and sets the header itself. If nothing does that, any caller can set this header to anything, including a different value on every request.
+
+The `cbTrustProxyHeaders` setting (default `true`, editable at `/settings`) picks between them. Leaving it on when you're not actually behind a proxy that sanitizes the header re-opens the exact rate-limit bypass it exists to close - a caller can forge a new `X-Forwarded-For` value on every login attempt and never get blocked. Turning it off when you *are* behind such a proxy means every visitor shares the proxy's IP instead - one blocked caller blocks everyone behind it, and the audit trail records the proxy's address for every action.
+
+If you deploy directly internet-facing, with nothing in front of the app, turn this off. If you deploy behind a reverse proxy, confirm it actually overwrites `X-Forwarded-For` (rather than appending to or passing through a client-supplied value) before leaving this on.
 
 ::: cards
 ::: card title="Configuration" icon="phosphor-duotone:gear-six" href="guides/configuration.md"

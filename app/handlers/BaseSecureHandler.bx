@@ -45,9 +45,14 @@ class extends="coldbox.system.RestHandler"{
 
 		event.setLayout( "Admin" )
 
+		// "logout" stays reachable so a passkey-less user isn't trapped on this handler.
+		// "passkeyRequired" (profile/passkey-required) is the remediation page itself -
+		// excluding it too is what stops the redirect from looping back onto its own
+		// target; the actual WebAuthn registration ceremony that page calls out to lives
+		// entirely on cbsecurity-passkeys' own Registration handler, not this one.
 		if (
 			settingService.getSetting( "cbRequirePasskey", false )
-			&& event.getCurrentAction() != "logout"
+			&& !listFindNoCase( "logout,passkeyRequired", event.getCurrentAction() )
 			&& !passkeyService.listForUser( prc.authUser.getId() ).len()
 		) {
 			return relocate( "profile/passkey-required" )

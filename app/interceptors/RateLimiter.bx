@@ -46,7 +46,12 @@ class extends="coldbox.system.Interceptor" {
 		}
 
 		var result = variables.rateLimitService.attempt(
-			key          : "#currentEvent#:#variables.cbsecurity.getRealIP()#",
+			// trustUpstream mirrors cbTrustProxyHeaders: a caller can set X-Forwarded-For
+			// to anything, so trusting it without knowing the app sits behind a proxy that
+			// sets it itself would let an attacker get a fresh rate-limit bucket on every
+			// request just by changing the header. See SettingService's cbTrustProxyHeaders
+			// doc comment for the deployment-side tradeoff.
+			key          : "#currentEvent#:#variables.cbsecurity.getRealIP( trustUpstream = variables.settingService.getSetting( 'cbTrustProxyHeaders', true ) )#",
 			maxAttempts  : variables.settingService.getSetting( "cbRateLimitMaxAttempts", 5 ),
 			windowSeconds: variables.settingService.getSetting( "cbRateLimitWindowSeconds", 300 )
 		)

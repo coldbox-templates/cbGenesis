@@ -8,7 +8,9 @@ class {
 
 			// Setting specific fields
 			table.string( "name" ).unique()
-			table.longText( "value" ).default( "" )
+			// MySQL forbids a literal default on TEXT/BLOB/JSON columns; SettingService
+			// always supplies a value on insert, so this is nullable instead of defaulted.
+			table.longText( "value" ).nullable()
 
 			// Indexes
 			table.index( "isActive", "idx_settingActive" )

@@ -13,7 +13,10 @@ class {
 			table.string( "lastName" )
 			table.string( "email" ).unique()
 			table.string( "password" ).nullable()
-			table.text( "biography" ).default( "" )
+			// MySQL forbids a literal default on TEXT/BLOB/JSON columns; every insert
+			// path supplies a value (Users.bx falls back to ""), so this is nullable
+			// instead of defaulted.
+			table.text( "biography" ).nullable()
 			table.datetime( "verifiedAt" ).nullable()
 			table.datetime( "lastLogin" ).nullable()
 			table.json( "preferences" ).nullable()
