@@ -56,6 +56,24 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=https://example.com/cbsso/auth/Google
 ```
 
+### Enabling and disabling SSO
+
+There is no separate `SSO_ENABLED` setting. The effective provider switch is in
+[`app/config/modules/cbsso.bx`](../../app/config/modules/cbsso.bx): cbGenesis
+registers Google only when `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and
+`GOOGLE_REDIRECT_URI` are all populated. To disable Google SSO, clear any one of
+those values and restart or reinitialize the application. The provider will no
+longer appear on the login or profile pages.
+
+Do not confuse this with `enableCBAuthIntegration: false`. That setting disables
+cbSSO's optional generic cbauth listener; cbGenesis uses its own
+`SSOAuthorization` interceptor so it can enforce local account-linking,
+provisioning, identity-matching, and audit rules. See cbSSO's documentation for
+[configuration](https://cbsso.ortusbooks.com/),
+[identity-provider response handling](https://cbsso.ortusbooks.com/usage/handling-the-identity-provider-response.md),
+[interception points](https://cbsso.ortusbooks.com/usage/interception-points.md),
+and [cbauth integration](https://cbsso.ortusbooks.com/cbauth-integration/enabling-integration.md).
+
 ::: stepper
 ::: step "Prepare the database"
 From the project root, run the SSO identity migration:
