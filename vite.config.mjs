@@ -9,6 +9,7 @@ import { defineConfig } from "vite";
 import coldbox, { appRefreshPaths } from "coldbox-vite-plugin";
 
 export default defineConfig( {
+	base    : "/includes/",
 	plugins : [
 		coldbox( {
 			input : [

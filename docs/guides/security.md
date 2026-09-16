@@ -56,11 +56,70 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=https://example.com/cbsso/auth/Google
 ```
 
-Run the `user_sso_identities` migration before enabling a provider. Identities
-are matched by provider and immutable subject, never by email alone. Automatic
-provisioning is disabled by default; to enable it, set `CBSSO_AUTO_PROVISION=true`
-and provide a comma-separated `CBSSO_ALLOWED_DOMAINS` allowlist. Existing local
-accounts must be explicitly linked before they can be used through SSO.
+::: stepper
+::: step "Prepare the database"
+From the project root, run the SSO identity migration:
+
+```bash
+box migrate up
+```
+
+This creates the `user_sso_identities` table used to link a local account to an
+identity-provider subject. Run this before attempting the first SSO login.
+:::
+
+::: step "Create and configure the Google OAuth client"
+In [Google Cloud Console](https://console.cloud.google.com/), create or select
+a project, configure the OAuth consent screen, and create an **OAuth client ID**
+with application type **Web application**. Add this exact authorized redirect
+URI, using the public HTTPS URL of your app:
+
+```text
+https://your-domain.example/cbsso/auth/Google
+```
+
+Copy the client ID and client secret into the local `.env` file. The redirect
+URI must be the same value in Google Cloud and `GOOGLE_REDIRECT_URI`:
+
+```dotenv
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=https://your-domain.example/cbsso/auth/Google
+```
+
+Keep credentials out of source control. cbGenesis registers the Google provider
+only when all three `GOOGLE_*` settings are populated, so the application can
+still boot before SSO is configured.
+
+Automatic account creation is disabled by default. To allow new Google users,
+explicitly enable it and restrict the permitted email domains:
+
+```dotenv
+CBSSO_AUTO_PROVISION=true
+CBSSO_ALLOWED_DOMAINS=example.com,example.org
+```
+
+Leave `CBSSO_AUTO_PROVISION=false` when every SSO user must already have a local
+account. Those users must sign in locally and use the profile's **Link Google
+account** action before they can sign in with Google.
+:::
+
+::: step "Start the app and verify the flow"
+Start the application with your normal development or deployment command, then
+open `/login` and select **Continue with Google**. Confirm that Google redirects
+back to `/cbsso/auth/Google` and that the application sends you to the dashboard.
+
+For an existing local account, first sign in with the password, open the profile
+page, and link the Google account. Sign out, return to `/login`, and verify that
+Google SSO signs you back into the same local account. If provisioning is
+enabled, verify that a permitted domain creates a local user and that a domain
+outside `CBSSO_ALLOWED_DOMAINS` is rejected.
+:::
+:::
+
+After setup, identities are matched by provider and immutable subject, never by
+email alone. Existing local accounts must be explicitly linked before they can
+be used through SSO.
 
 For clustered SAML deployments, configure cbSSO's `samlRequestCacheName` to a
 distributed CacheBox region instead of using the default in-memory replay cache.
