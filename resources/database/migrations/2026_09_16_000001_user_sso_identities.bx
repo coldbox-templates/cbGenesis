@@ -1,0 +1,27 @@
+class {
+
+	function up( schema, qb ) {
+		schema.create( "user_sso_identities", ( table ) => {
+			table.string( "identityId", 36 ).primaryKey()
+			table.string( "FK_userId", 36 )
+			table.string( "provider", 64 )
+			table.string( "subject", 255 )
+			table.string( "nameIdFormat", 255 ).nullable()
+			table.boolean( "isActive" ).default( true )
+			table.timestamps()
+
+			table.foreignKey( "FK_userId" )
+				.references( "userId" )
+				.onTable( "users" )
+				.onDelete( "CASCADE" )
+
+			table.unique( [ "provider", "subject" ], "uq_ssoProviderSubject" )
+			table.index( "FK_userId", "idx_ssoIdentityUser" )
+		} )
+	}
+
+	function down( schema, qb ) {
+		schema.dropIfExists( "user_sso_identities" )
+	}
+
+}

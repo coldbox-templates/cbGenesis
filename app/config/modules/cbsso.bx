@@ -1,0 +1,31 @@
+class {
+
+	function configure() {
+		var googleClientId = getSystemSetting( "GOOGLE_CLIENT_ID", "" );
+		var googleClientSecret = getSystemSetting( "GOOGLE_CLIENT_SECRET", "" );
+		var googleRedirectUri = getSystemSetting( "GOOGLE_REDIRECT_URI", "" );
+		var providers = [];
+
+		// Keep the application bootable before an administrator configures a provider.
+		if (
+			len( trim( googleClientId ) ) && len( trim( googleClientSecret ) ) && len( trim( googleRedirectUri ) )
+		) {
+			providers
+				.append(
+					{
+						type         : "GoogleProvider@cbsso",
+						clientId     : googleClientId,
+						clientSecret : googleClientSecret,
+						redirectUri  : googleRedirectUri
+					}
+				);
+		}
+
+		return {
+			enableCBAuthIntegration : true,
+			errorRedirect           : "/login",
+			successRedirect         : "/dashboard",
+			providers               : providers
+		};
+	}
+}

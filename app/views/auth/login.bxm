@@ -92,6 +92,23 @@
 			<span x-show="passkeyLoading" x-cloak><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Waiting for device...</span>
 		</button>
 
+		<bx:if prc.ssoProviders.len()>
+			<div class="d-flex align-items-center gap-3 my-3 text-muted">
+				<hr class="flex-grow-1">
+				<span>or continue with</span>
+				<hr class="flex-grow-1">
+			</div>
+
+			<bx:loop array="#prc.ssoProviders#" index="providerIndex" item="ssoProvider">
+				<a
+					href="#event.buildLink( ssoProvider.url )#"
+					class="btn btn-outline-secondary w-100 mb-3"
+				>
+					Sign in with #encodeForHTML( ssoProvider.name )#
+				</a>
+			</bx:loop>
+		</bx:if>
+
     </form>
 
 	<bx:if prc.settings.cbAllowRegistration>

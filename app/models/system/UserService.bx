@@ -44,6 +44,8 @@ class extends="app.models.BaseService" {
 	property name="cbSecurity";
 
 	static{
+		SSO_AUTO_PROVISION = getSystemSetting( "CBSSO_AUTO_PROVISION", "false" )
+		SSO_ALLOWED_DOMAINS = getSystemSetting( "CBSSO_ALLOWED_DOMAINS", "" )
 		SORT_MAP = {
 			"firstName" : "firstName",
 			"lastName"  : "lastName",
@@ -113,6 +115,119 @@ class extends="app.models.BaseService" {
 
 		// https://boxlang.ortusbooks.com/boxlang-framework/modularity/password-encryption#bcrypt-hashing
 		return BCryptVerify( arguments.password, oUser.getPassword() );
+	}
+
+	/**
+	 * Find the local user mapped to an immutable provider subject.
+	 */
+	User function findBySSO( required any ssoAuthorizationEvent, required any provider ) {
+		var providerName = arguments.provider.getName()
+		var subject      = arguments.ssoAuthorizationEvent.getUserId()
+		var identity     = variables.qb
+			.newQuery()
+			.from( "user_sso_identities" )
+			.where( "provider", "=", providerName )
+			.where( "subject", "=", subject )
+			.where( "isActive", "=", true )
+			.first()
+
+		if ( isNull( identity ) || !structKeyExists( identity, "FK_userId" ) ) {
+			return null
+		}
+
+		try {
+			return retrieveUserById( identity.FK_userId )
+		} catch ( "EntityNotFound" e ) {
+			return null
+		}
+	}
+
+	/**
+	 * Provision a verified, passwordless user and bind the provider subject to it.
+	 * Automatic provisioning is disabled unless explicitly enabled and restricted by domain.
+	 */
+	User function createFromSSO( required any ssoAuthorizationEvent, required any provider ) {
+		var email = lcase( trim( arguments.ssoAuthorizationEvent.getEmail() ) )
+		if ( !isSSOProvisioningAllowed( email ) ) {
+			throw(
+				type    = "cbSSO.ProvisioningDisabled",
+				message = "This application does not allow automatic SSO account provisioning."
+			)
+		}
+
+		if ( !len( email ) || isEmailInUse( email ) ) {
+			throw(
+				type    = "cbSSO.AccountLinkRequired",
+				message = "An existing account must be linked before this SSO identity can be used."
+			)
+		}
+
+		var user = newEntity()
+		user
+			.setFirstName( trim( arguments.ssoAuthorizationEvent.getFirstName() ?: "" ) )
+			.setLastName( trim( arguments.ssoAuthorizationEvent.getLastName() ?: "" ) )
+			.setEmail( email )
+			.setPassword( "" )
+			.setVerifiedAt( now() )
+			.setIsPasswordReset( false )
+			.setIsActive( true )
+
+		transaction {
+			save( user )
+			bindSSOIdentity( user, arguments.ssoAuthorizationEvent, arguments.provider )
+		}
+
+		return user
+	}
+
+	/**
+	 * Refresh non-sensitive profile fields while retaining local account ownership.
+	 */
+	void function updateFromSSO(
+		required any user,
+		required any ssoAuthorizationEvent,
+		required any provider
+	) {
+		if ( !arguments.user.isActive() ) {
+			throw( type = "cbSSO.InactiveUser", message = "The local account is inactive." )
+		}
+
+		var firstName = trim( arguments.ssoAuthorizationEvent.getFirstName() ?: "" )
+		var lastName  = trim( arguments.ssoAuthorizationEvent.getLastName() ?: "" )
+		if ( len( firstName ) ) arguments.user.setFirstName( firstName )
+		if ( len( lastName ) ) arguments.user.setLastName( lastName )
+		save( arguments.user )
+	}
+
+	private void function bindSSOIdentity(
+		required any user,
+		required any ssoAuthorizationEvent,
+		required any provider
+	) {
+		variables.qb
+			.table( "user_sso_identities" )
+			.insert( {
+				identityId  : createUUID(),
+				FK_userId   : arguments.user.getId(),
+				provider    : arguments.provider.getName(),
+				subject     : arguments.ssoAuthorizationEvent.getUserId(),
+				nameIdFormat: arguments.ssoAuthorizationEvent.getNameIdFormat() ?: "",
+				isActive    : true
+			} )
+	}
+
+	private boolean function isSSOProvisioningAllowed( required string email ) {
+		if ( !isBoolean( static.SSO_AUTO_PROVISION ) || !static.SSO_AUTO_PROVISION ) {
+			return false
+		}
+
+		var allowedDomains = listToArray( static.SSO_ALLOWED_DOMAINS, ",", true )
+		if ( !allowedDomains.len() ) {
+			return false
+		}
+
+		var emailDomain = listLast( arguments.email, "@" )
+		return allowedDomains.some( ( domain ) => lcase( trim( domain ) ) == emailDomain )
 	}
 
 	/**

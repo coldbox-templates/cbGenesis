@@ -40,6 +40,31 @@ Choose **Auth Center** or **Auth Split** on the `/settings` page. The selected l
 
 ![The login screen with the default AuthSplit layout](../assets/screenshots/login.png)
 
+## Single sign-on
+
+cbSSO is enabled through `app/config/modules/cbsso.bx`. It uses cbauth as the
+session authority, so local password login, passkeys, and SSO share the same
+session and authorization rules. The login page renders a link for every
+configured provider.
+
+Google is the shipped example provider. Set these values in `.env` after
+registering the callback URL `/cbsso/auth/Google` with Google:
+
+```dotenv
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=https://example.com/cbsso/auth/Google
+```
+
+Run the `user_sso_identities` migration before enabling a provider. Identities
+are matched by provider and immutable subject, never by email alone. Automatic
+provisioning is disabled by default; to enable it, set `CBSSO_AUTO_PROVISION=true`
+and provide a comma-separated `CBSSO_ALLOWED_DOMAINS` allowlist. Existing local
+accounts must be explicitly linked before they can be used through SSO.
+
+For clustered SAML deployments, configure cbSSO's `samlRequestCacheName` to a
+distributed CacheBox region instead of using the default in-memory replay cache.
+
 ## Security layers
 
 | Layer | Implementation |

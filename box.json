@@ -33,7 +33,8 @@
         "cborm":"^5.0.0",
         "route-visualizer":"^2.2.0+2",
         "cbsecurity-passkeys":"^1.0.8",
-        "cbfs":"^1.2.0"
+        "cbfs":"^1.2.0",
+        "cbsso":"^3.0.0+17"
     },
     "installPaths":{
         "coldbox":"lib/",
