@@ -4,8 +4,8 @@ baseURL: "https://coldbox-templates.github.io/cbGenesis/"
 theme:
   name: bootstrap
   options: { navCollapsible: true, navExpandAll: false, tocPosition: sticky }
-  logo: "assets/coldbox-logo.svg"
-  favicon: "assets/favicon.png"
+  logo: "assets/cbgenesis-icon-full.svg"
+  favicon: "assets/favicon.ico"
 search: true
 nav: []
 markdown:
@@ -48,4 +48,4 @@ mermaid: true
 math: false
 openapi: false
 pageActions: true
-ogImage: "assets/og-image.png"
+ogImage: "assets/home-banner.png"
