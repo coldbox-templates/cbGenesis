@@ -104,7 +104,7 @@ class extends="app.models.BaseService" {
 			// An unauthenticated caller can set X-Forwarded-For to anything, so recording it
 			// unconditionally would make the audit trail's IPs untrustworthy for forensics.
 			entry.setIpAddress( variables.cbsecurity.getRealIP(
-				trustUpstream = variables.settingService.getSetting( "cbTrustProxyHeaders", false )
+				trustUpstream = variables.settingService.getSetting( "cbTrustProxyHeaders", true )
 			) )
 			entry.setUserAgent( cgi.http_user_agent ?: "" )
 			entry.setMetadata( jsonSerialize( sanitizeMetadata( arguments.metadata ) ) )
