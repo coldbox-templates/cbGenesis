@@ -93,10 +93,10 @@ class extends="BaseSecureHandler" {
 		}
 	}
 
-	@remote( "Save the authenticated user's profile remotely via AJAX" )
 	/**
 	 * Validate and save the authenticated user's profile, returning its safe memento.
 	 */
+	@remote( "Save the authenticated user's profile remotely via AJAX" )
 	function save( event, rc, prc ) {
 		var response = event.getResponse()
 		param rc.preferences = "{}"

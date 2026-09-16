@@ -39,10 +39,10 @@ class extends="BaseSecureHandler" {
 		event.setView( "permissions/index" )
 	}
 
-	@secured( "permissions:admin,permissions:write" )
 	/**
 	 * Validate and create a permission, then redirect back to the permissions view.
 	 */
+	@secured( "permissions:admin,permissions:write" )
 	function create( event, rc, prc ) {
 		try {
 			// Assign before validating so prc.permission is available to the catch below.
@@ -80,11 +80,11 @@ class extends="BaseSecureHandler" {
 		relocate( "permissions" )
 	}
 
-	@remote( "This action is submitted remotely via JavaScript" )
-	@secured( "permissions:admin,permissions:write" )
 	/**
 	 * Update a permission through AJAX and return validation or persistence results.
 	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "permissions:admin,permissions:write" )
 	function update( event, rc, prc ) {
 		var results = getApiResults()
 		try {
@@ -120,11 +120,11 @@ class extends="BaseSecureHandler" {
 		return results
 	}
 
-	@remote( "This action is submitted remotely via JavaScript" )
-	@secured( "permissions:admin,permissions:delete" )
 	/**
 	 * Delete a permission through AJAX and return the operation status.
 	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "permissions:admin,permissions:delete" )
 	function delete( event, rc, prc ) {
 		var results = getApiResults()
 		// --- Attempt to Delete Permission ---

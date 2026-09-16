@@ -16,8 +16,6 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="auditLogService";
 
-
-
 	/**
 	 * Render the roles management view with active roles and permissions.
 	 */
@@ -37,11 +35,11 @@ class extends="BaseSecureHandler" {
 		event.setView( "roles/index" )
 	}
 
-	@remote( "Create a role remotely via AJAX" )
-	@secured( "roles:admin,roles:write" )
 	/**
 	 * Validate and create a role through AJAX, returning its serialized data.
 	 */
+	@remote( "Create a role remotely via AJAX" )
+	@secured( "roles:admin,roles:write" )
 	function create( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -78,11 +76,11 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
-	@remote( "Update a role remotely via AJAX" )
-	@secured( "roles:admin,roles:write" )
 	/**
 	 * Validate and save an existing role through AJAX.
 	 */
+	@remote( "Update a role remotely via AJAX" )
+	@secured( "roles:admin,roles:write" )
 	function update( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -119,11 +117,11 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
-	@remote( "Delete a role remotely via AJAX" )
-	@secured( "roles:admin,roles:delete" )
 	/**
 	 * Delete a role and detach it from users and permissions in the service transaction.
 	 */
+	@remote( "Delete a role remotely via AJAX" )
+	@secured( "roles:admin,roles:delete" )
 	function delete( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -153,10 +151,10 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
-	@remote( "List users assigned to a role" )
 	/**
 	 * Return active, verified users currently assigned to the requested role.
 	 */
+	@remote( "List users assigned to a role" )
 	function users( event, rc, prc ) {
 		prc.users = userService.search(
 			max: 0,
@@ -168,10 +166,10 @@ class extends="BaseSecureHandler" {
 		event.getResponse().setData( data: prc.users.records )
 	}
 
-	@remote( "List users available for a role, only active and verified" )
 	/**
 	 * Return active, verified users who are not yet assigned to the requested role.
 	 */
+	@remote( "List users available for a role, only active and verified" )
 	function availableUsers( event, rc, prc ) {
 		prc.users = userService.search(
 			searchTerm    : rc.search ?: "",
@@ -185,11 +183,11 @@ class extends="BaseSecureHandler" {
 		event.getResponse().setData( data: prc.users.records )
 	}
 
-	@remote( "Assign a user to a role" )
-	@secured( "roles:admin" )
 	/**
 	 * Assign a user to a role when the relationship does not already exist.
 	 */
+	@remote( "Assign a user to a role" )
+	@secured( "roles:admin" )
 	function addUser( event, rc, prc ) {
 		prc.role = roleService.getOrFail( rc.roleId ?: "" )
 		prc.user = userService.getOrFail( rc.userId ?: "" )
@@ -205,11 +203,11 @@ class extends="BaseSecureHandler" {
 
 	}
 
-	@remote( "Remove a user from a role" )
-	@secured( "roles:admin" )
 	/**
 	 * Remove a user from a role and return the updated user data.
 	 */
+	@remote( "Remove a user from a role" )
+	@secured( "roles:admin" )
 	function removeUser( event, rc, prc ) {
 		prc.role = roleService.getOrFail( rc.roleId ?: "" )
 		prc.user = userService
