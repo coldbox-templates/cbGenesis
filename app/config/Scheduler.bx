@@ -1,8 +1,5 @@
 class {
 
-	@inject( "logbox:logger:{this}" )
-	property name="log";
-
 	/**
 	 * Configure the ColdBox Scheduler
 	 * https://coldbox.ortusbooks.com/digging-deeper/scheduled-tasks
