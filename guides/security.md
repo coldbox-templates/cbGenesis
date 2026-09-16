@@ -154,12 +154,12 @@ flowchart LR
     Browser[Browser] --> Start[cbSSO start route]
     Start --> Provider[Identity provider]
     Provider --> Callback[cbSSO callback route]
-    Callback --> Authorize[cbSSO Auth.authorize()]
+    Callback --> Authorize[cbSSO Auth.authorize]
     Authorize --> Event[CBSSOAuthorization]
     Event --> Interceptor[SSOAuthorization.bx]
     Interceptor --> UserService[UserService]
     UserService --> Identity[(SSO identity records)]
-    Interceptor --> Security[SecurityService.loginSSO()]
+    Interceptor --> Security[SecurityService.loginSSO]
     Security --> Session[(cbauth session)]
     Session --> Browser
 ```
@@ -256,11 +256,9 @@ All three are editable at `/settings` like any other app setting - see [App Sett
     - **On (default)**: trusts `X-Forwarded-For`/`X-Cluster-Client-IP`, matching a typical deployment of this app behind a reverse proxy or load balancer. If your proxy does *not* overwrite that header (or you're directly internet-facing with nothing in front of the app), a caller can spoof it to get a fresh rate-limit bucket on every request and to fake the IP recorded in the audit trail - turn this off in that case.
     - **Off**: `getRealIP()` uses the raw socket address instead. Correct when the app is directly internet-facing, but if you *are* behind a proxy, every caller looks like the proxy's own IP - one blocked "IP" blocks everyone behind it, and every audit log entry shows the proxy's address instead of the real client's.
 
-::: cards
-::: card title="How counting works" icon="phosphor-duotone:hourglass"
+### How counting works
+
 `RateLimitService.attempt()` is a **sliding window**: every attempt, allowed or blocked, resets the key's expiration to the full window from that moment. A key only cools down once it goes quiet for an entire window - which keeps blocking for as long as an attack continues, rather than reopening partway through. Each endpoint has its own counter (keyed by `event:ip`), so exhausting the login limit does not affect registration or password reset.
-:::
-:::
 
 !!! note "In-memory by default"
     Counters live in the `rateLimit` CacheBox region (`app/config/CacheBox.bx`), which is in-memory and therefore **per application instance**. Behind a load balancer with more than one instance, each instance enforces its own limit independently - a caller could get `cbRateLimitMaxAttempts` free attempts per instance rather than in total. To share counts across instances, swap the `rateLimit` region's `provider`/`properties` for a distributed CacheBox provider (Redis, Couchbase, or any provider CacheBox supports) - no code change needed in `RateLimitService` or `RateLimiter`, since both go through the injected `cachebox:rateLimit` region.
