@@ -8,7 +8,10 @@ class {
 			table.timestamps()
 
 			table.string( "permission" ).unique()
-			table.longText( "description" ).default( "" )
+			// MySQL forbids a literal default on TEXT/BLOB/JSON columns, so this
+			// relies on application code (Permission.bx's `default=""` property)
+			// to always supply a value on insert.
+			table.longText( "description" ).nullable()
 
 			// Indexes
 			table.index( "isActive", "idx_permissionIsActive" )
@@ -22,7 +25,9 @@ class {
 			table.timestamps()
 
 			table.string( "role" ).unique()
-			table.longText( "description" ).default( "" )
+			// See the permissions table above for why this is nullable instead
+			// of defaulted: MySQL rejects a literal default on TEXT columns.
+			table.longText( "description" ).nullable()
 
 			// Indexes
 			table.index( "isActive", "idx_roleIsActive" )
