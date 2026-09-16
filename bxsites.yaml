@@ -1,6 +1,6 @@
 name: "CBGenesis"
 description: "A production-ready ColdBox MVC starter template for BoxLang - authentication, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on."
-baseURL: "https://coldbox-templates.github.io/cbGenesis/"
+baseURL: "https://cbgenesis.coldbox.org/"
 theme:
   name: bootstrap
   options: { navCollapsible: true, navExpandAll: false, tocPosition: sticky }

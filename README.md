@@ -16,7 +16,7 @@ A production-ready ColdBox starter template for [BoxLang](https://boxlang.io).
 
 Full documentation lives here:
 
-- https://coldbox-templates.github.io/cbGenesis/
+- https://cbgenesis.coldbox.org/
 
 ## Quick Start
 
