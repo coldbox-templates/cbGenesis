@@ -186,11 +186,46 @@ registering the callback URL <code>/cbsso/auth/Google</code> with Google:</p>
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=https://example.com/cbsso/auth/Google
 </code></pre>
-<p>Run the <code>user_sso_identities</code> migration before enabling a provider. Identities
-are matched by provider and immutable subject, never by email alone. Automatic
-provisioning is disabled by default; to enable it, set <code>CBSSO_AUTO_PROVISION=true</code>
-and provide a comma-separated <code>CBSSO_ALLOWED_DOMAINS</code> allowlist. Existing local
-accounts must be explicitly linked before they can be used through SSO.</p>
+<div class="bxsites-stepper"><div class="bxsites-step"><div class="bxsites-step__marker">1</div><div class="bxsites-step__content"><div class="bxsites-step__title">Prepare the database</div><p>From the project root, run the SSO identity migration:</p>
+<pre><code class="language-bash">box migrate up
+</code></pre>
+<p>This creates the <code>user_sso_identities</code> table used to link a local account to an
+identity-provider subject. Run this before attempting the first SSO login.</p>
+</div></div><div class="bxsites-step"><div class="bxsites-step__marker">2</div><div class="bxsites-step__content"><div class="bxsites-step__title">Create and configure the Google OAuth client</div><p>In <a href="https://console.cloud.google.com/">Google Cloud Console</a>, create or select
+a project, configure the OAuth consent screen, and create an <strong>OAuth client ID</strong>
+with application type <strong>Web application</strong>. Add this exact authorized redirect
+URI, using the public HTTPS URL of your app:</p>
+<pre><code class="language-text">https://your-domain.example/cbsso/auth/Google
+</code></pre>
+<p>Copy the client ID and client secret into the local <code>.env</code> file. The redirect
+URI must be the same value in Google Cloud and <code>GOOGLE_REDIRECT_URI</code>:</p>
+<pre><code class="language-dotenv">GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=https://your-domain.example/cbsso/auth/Google
+</code></pre>
+<p>Keep credentials out of source control. cbGenesis registers the Google provider
+only when all three <code>GOOGLE_*</code> settings are populated, so the application can
+still boot before SSO is configured.</p>
+<p>Automatic account creation is disabled by default. To allow new Google users,
+explicitly enable it and restrict the permitted email domains:</p>
+<pre><code class="language-dotenv">CBSSO_AUTO_PROVISION=true
+CBSSO_ALLOWED_DOMAINS=example.com,example.org
+</code></pre>
+<p>Leave <code>CBSSO_AUTO_PROVISION=false</code> when every SSO user must already have a local
+account. Those users must sign in locally and use the profile's <strong>Link Google
+account</strong> action before they can sign in with Google.</p>
+</div></div><div class="bxsites-step"><div class="bxsites-step__marker">3</div><div class="bxsites-step__content"><div class="bxsites-step__title">Start the app and verify the flow</div><p>Start the application with your normal development or deployment command, then
+open <code>/login</code> and select <strong>Continue with Google</strong>. Confirm that Google redirects
+back to <code>/cbsso/auth/Google</code> and that the application sends you to the dashboard.</p>
+<p>For an existing local account, first sign in with the password, open the profile
+page, and link the Google account. Sign out, return to <code>/login</code>, and verify that
+Google SSO signs you back into the same local account. If provisioning is
+enabled, verify that a permitted domain creates a local user and that a domain
+outside <code>CBSSO_ALLOWED_DOMAINS</code> is rejected.</p>
+</div></div></div>
+<p>After setup, identities are matched by provider and immutable subject, never by
+email alone. Existing local accounts must be explicitly linked before they can
+be used through SSO.</p>
 <p>For clustered SAML deployments, configure cbSSO's <code>samlRequestCacheName</code> to a
 distributed CacheBox region instead of using the default in-memory replay cache.</p>
 <h3 id="how-cbsso-becomes-a-local-session"><a href="#how-cbsso-becomes-a-local-session" id="how-cbsso-becomes-a-local-session" name="how-cbsso-becomes-a-local-session" class="anchor"></a>How cbSSO becomes a local session</h3>
@@ -415,7 +450,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 16, 2026, 5&#x3a;47&#x3a;53 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 16, 2026, 5&#x3a;50&#x3a;56 PM</span></div>
 
 				</article>
 
