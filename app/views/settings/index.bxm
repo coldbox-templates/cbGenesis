@@ -226,6 +226,16 @@
 				</label>
 				<div class="cb-setting-row cb-span-2">
 					<div>
+						<strong>Trust Proxy Headers</strong>
+						<small>Trust X-Forwarded-For / X-Cluster-Client-IP for the caller's IP, used by rate limiting, the audit trail, and security emails. Turn this off only if the app is directly internet-facing with nothing in front of it.</small>
+					</div>
+					#view(
+						view = "_components/ui/switch",
+						args = { name: "cbTrustProxyHeaders", value: prc.settings.cbTrustProxyHeaders }
+					)#
+				</div>
+				<div class="cb-setting-row cb-span-2">
+					<div>
 						<strong>Require Passkey Enrollment</strong>
 						<small>Block authenticated users until they register at least one passkey.</small>
 					</div>
