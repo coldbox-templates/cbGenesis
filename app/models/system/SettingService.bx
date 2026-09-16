@@ -63,6 +63,14 @@ class extends="app.models.BaseService" {
 			cbRateLimitMaxAttempts   : 5,
 			// Rate limiting window, in seconds. 0 disables rate limiting entirely.
 			cbRateLimitWindowSeconds: 300,
+			// Whether to trust the X-Forwarded-For / X-Cluster-Client-IP headers for the
+			// "real" client IP used by rate limiting, audit logging, and security emails.
+			// Only turn this on when the app sits behind a reverse proxy or load balancer
+			// you control that sets/overwrites this header itself - otherwise any caller
+			// can forge it to get a fresh rate-limit bucket per request or spoof the IP
+			// recorded in the audit trail. Only the operator deploying the app knows
+			// whether that's true, so this defaults closed.
+			cbTrustProxyHeaders     : false,
 			// Mail Settings
 			cbMailHost               : "smtp.mailtrap.io",
 			cbMailPort               : 25,

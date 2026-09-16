@@ -21,6 +21,9 @@ class extends="app.models.BaseService" {
 	@inject( "provider:CBSecurity@cbsecurity" )
 	property name="cbsecurity";
 
+	@inject( "provider:SettingService" )
+	property name="settingService";
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Static Constants
@@ -97,9 +100,12 @@ class extends="app.models.BaseService" {
 			entry.setTargetType( arguments.targetType )
 			entry.setTargetId( arguments.targetId )
 			entry.setTargetLabel( arguments.targetLabel )
-			// trustUpstream: false -- an unauthenticated caller can set X-Forwarded-For to
-			// anything, and audit log IPs need to stay trustworthy for forensics.
-			entry.setIpAddress( variables.cbsecurity.getRealIP( trustUpstream = false ) )
+			// trustUpstream mirrors cbTrustProxyHeaders - see SettingService's doc comment.
+			// An unauthenticated caller can set X-Forwarded-For to anything, so recording it
+			// unconditionally would make the audit trail's IPs untrustworthy for forensics.
+			entry.setIpAddress( variables.cbsecurity.getRealIP(
+				trustUpstream = variables.settingService.getSetting( "cbTrustProxyHeaders", false )
+			) )
 			entry.setUserAgent( cgi.http_user_agent ?: "" )
 			entry.setMetadata( jsonSerialize( sanitizeMetadata( arguments.metadata ) ) )
 

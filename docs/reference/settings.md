@@ -46,6 +46,7 @@ Select **Auth Center** or **Auth Split** at `/settings`, save the settings, and 
 | `cbAuditLogRetentionDays` | Age, in days, at which the daily scheduled task hard-deletes audit log entries (default: `90`). `0` disables the purge - see [Scheduled Tasks](../architecture.md#scheduled-tasks) |
 | `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, before `RateLimiter` blocks login/registration/password-reset (default: `5`) - see [Rate limiting](../guides/security.md#rate-limiting) |
 | `cbRateLimitWindowSeconds` | Rate limit window, in seconds (default: `300`). `0` disables rate limiting entirely |
+| `cbTrustProxyHeaders` | Whether `RateLimiter`, the audit trail, and security emails trust the `X-Forwarded-For`/`X-Cluster-Client-IP` headers for the caller's IP (default: `false`). Only turn this on when the app sits behind a reverse proxy or load balancer you control that sets this header itself - see [Deployment behind a proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 | `cbEncryptionKey` / `cbSaltingKey` | Encryption/salting keys used by the security layer |
 
 ## Branding & appearance

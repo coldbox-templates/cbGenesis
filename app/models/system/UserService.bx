@@ -501,10 +501,11 @@ class extends="app.models.BaseService" {
 			appName: settings.cbAppName,
 			appNameInitial: left( settings.cbAppName, 1 ),
 			linkTimeout: settings.cbPasswordResetExpiration,
-			// trustUpstream: false -- this IP is shown to the user in the email as
-			// "requested from"; trusting a spoofable header here would let an attacker
-			// put an arbitrary IP in front of the real recipient.
-			ip: variables.cbSecurity.getRealIP( trustUpstream = false ),
+			// trustUpstream mirrors cbTrustProxyHeaders - see SettingService's doc comment.
+			// This IP is shown to the user in the email as "requested from"; trusting a
+			// spoofable header without knowing the app sits behind a trusted proxy would
+			// let an attacker put an arbitrary IP in front of the real recipient.
+			ip: variables.cbSecurity.getRealIP( trustUpstream = settings.cbTrustProxyHeaders ),
 			linkToken: event.buildLink( "reset-password?token=#token#" ),
 			issuedBy: isNull( arguments.issuer ) ? "" : arguments.issuer.getFullName(),
 			issuedEmail: isNull( arguments.issuer ) ? "" : arguments.issuer.getEmail()
@@ -692,9 +693,10 @@ class extends="app.models.BaseService" {
 				company: settings.cbAppName,
 				companyInitial: left( settings.cbAppName, 1 ),
 				companyEmail: settings.cbDefaultEmail,
-				// trustUpstream: false -- shown to the user as the IP that changed their
-				// password; must not be attacker-controllable via a spoofed header.
-				ip: variables.cbSecurity.getRealIP( trustUpstream = false ),
+				// trustUpstream mirrors cbTrustProxyHeaders - see SettingService's doc comment.
+				// Shown to the user as the IP that changed their password; must not be
+				// attacker-controllable via a spoofed header unless a trusted proxy sets it.
+				ip: variables.cbSecurity.getRealIP( trustUpstream = settings.cbTrustProxyHeaders ),
 				linkLogin: event.buildLink( "login" )
 			}
 
