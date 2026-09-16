@@ -123,7 +123,7 @@ Security &amp; Permissions</h1>
 
 
 
-	<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#login-flow">Login flow</a></li><li class="toc-level-2"><a href="#authentication-layouts">Authentication layouts</a></li><li class="toc-level-2"><a href="#single-sign-on">Single sign-on</a></li><li class="toc-level-2"><a href="#security-layers">Security layers</a></li><li class="toc-level-2"><a href="#rate-limiting">Rate limiting</a></li><li class="toc-level-2"><a href="#cbsecurity-configuration">cbsecurity configuration</a></li><li class="toc-level-2"><a href="#permission-model">Permission model</a></li><li class="toc-level-2"><a href="#related-security-services">Related security services</a></li><li class="toc-level-2"><a href="#known-issues">Known issues</a></li><li class="toc-level-3"><a href="#this-is-an-invalid-domain-when-registering-a-passkey">&amp;quot&#x3b;This is an invalid domain&amp;quot&#x3b; when registering a passkey</a></li></ul></details>
+	<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#login-flow">Login flow</a></li><li class="toc-level-2"><a href="#authentication-layouts">Authentication layouts</a></li><li class="toc-level-2"><a href="#single-sign-on">Single sign-on</a></li><li class="toc-level-3"><a href="#how-cbsso-becomes-a-local-session">How cbSSO becomes a local session</a></li><li class="toc-level-3"><a href="#why-this-interceptor-exists">Why this interceptor exists</a></li><li class="toc-level-2"><a href="#security-layers">Security layers</a></li><li class="toc-level-2"><a href="#rate-limiting">Rate limiting</a></li><li class="toc-level-2"><a href="#cbsecurity-configuration">cbsecurity configuration</a></li><li class="toc-level-2"><a href="#permission-model">Permission model</a></li><li class="toc-level-2"><a href="#related-security-services">Related security services</a></li><li class="toc-level-2"><a href="#known-issues">Known issues</a></li><li class="toc-level-3"><a href="#this-is-an-invalid-domain-when-registering-a-passkey">&amp;quot&#x3b;This is an invalid domain&amp;quot&#x3b; when registering a passkey</a></li></ul></details>
 
 					<svg xmlns="http://www.w3.org/2000/svg" class="adm-hidden">
 <symbol id="adm-note">
@@ -193,6 +193,74 @@ and provide a comma-separated <code>CBSSO_ALLOWED_DOMAINS</code> allowlist. Exis
 accounts must be explicitly linked before they can be used through SSO.</p>
 <p>For clustered SAML deployments, configure cbSSO's <code>samlRequestCacheName</code> to a
 distributed CacheBox region instead of using the default in-memory replay cache.</p>
+<h3 id="how-cbsso-becomes-a-local-session"><a href="#how-cbsso-becomes-a-local-session" id="how-cbsso-becomes-a-local-session" name="how-cbsso-becomes-a-local-session" class="anchor"></a>How cbSSO becomes a local session</h3>
+<p>cbSSO owns the provider protocol and callback validation. cbGenesis owns the
+decision that follows: which local account the verified identity belongs to,
+whether it may be provisioned or linked, and how it becomes an authenticated
+application session.</p>
+<pre><code class="language-mermaid">flowchart LR
+    Browser[Browser] --&gt; Start[cbSSO start route]
+    Start --&gt; Provider[Identity provider]
+    Provider --&gt; Callback[cbSSO callback route]
+    Callback --&gt; Authorize[cbSSO Auth.authorize()]
+    Authorize --&gt; Event[CBSSOAuthorization]
+    Event --&gt; Interceptor[SSOAuthorization.bx]
+    Interceptor --&gt; UserService[UserService]
+    UserService --&gt; Identity[(SSO identity records)]
+    Interceptor --&gt; Security[SecurityService.loginSSO()]
+    Security --&gt; Session[(cbauth session)]
+    Session --&gt; Browser
+</code></pre>
+<p>The application registers <code>app/interceptors/SSOAuthorization.bx</code> for cbSSO's
+documented <code>CBSSOAuthorization</code> interception point. The callback payload
+contains the verified provider response and the provider that handled it. The
+interceptor then follows one of two application-owned paths:</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant C as cbSSO callback
+    participant I as SSOAuthorization
+    participant U as UserService
+    participant S as SecurityService
+    participant A as AuditLogService
+
+    C-&gt;&gt;I: CBSSOAuthorization(response, provider)
+    alt Link intent
+        I-&gt;&gt;I: Verify logged-in user and matching session intent
+        I-&gt;&gt;U: linkSSOIdentity(user, response, provider)
+        U--&gt;&gt;I: Linked identity
+        I-&gt;&gt;A: Record link success
+    else Login intent
+        I-&gt;&gt;U: findBySSO(response, provider)
+        alt No local identity and provisioning allowed
+            I-&gt;&gt;U: createFromSSO(response, provider)
+        end
+        I-&gt;&gt;U: updateFromSSO(user, response, provider)
+        I-&gt;&gt;S: loginSSO(user)
+        S--&gt;&gt;I: cbauth session established
+        I-&gt;&gt;A: Record login or provisioning success
+    end
+    I--&gt;&gt;C: Store success or failure result for completion flow
+</code></pre>
+<h3 id="why-this-interceptor-exists"><a href="#why-this-interceptor-exists" id="why-this-interceptor-exists" name="why-this-interceptor-exists" class="anchor"></a>Why this interceptor exists</h3>
+<p>cbSSO also provides a generic <code>cbAuth</code> integration listener. cbGenesis
+intentionally sets <code>enableCBAuthIntegration: false</code> in
+<code>app/config/modules/cbsso.bx</code>, because the generic listener cannot enforce the
+application's identity and account-security rules. The custom interceptor is
+responsible for:</p>
+<ul>
+<li>Matching identities by provider and immutable subject, never by email alone.</li>
+<li>Requiring an authenticated session and matching intent for account linking.</li>
+<li>Applying the provisioning and allowed-domain policy before creating users.</li>
+<li>Keeping local password, remember-me, passkey, and SSO authentication paths
+under the same cbauth session authority.</li>
+<li>Recording successful and failed SSO operations in the audit trail.</li>
+</ul>
+<p>This separation is deliberate: cbSSO verifies <em>who the provider says the user
+is</em>; cbGenesis decides <em>what that identity is allowed to do in this application</em>.</p>
+<p>For the upstream contract and the alternative generic integration, see the
+<a href="https://cbsso.ortusbooks.com/usage/interception-points.md">cbSSO interception points</a>,
+<a href="https://cbsso.ortusbooks.com/usage/handling-the-identity-provider-response.md">identity-provider response handling</a>,
+and <a href="https://cbsso.ortusbooks.com/cbauth-integration/enabling-integration.md">cbAuth integration</a>
+documentation.</p>
 <h2 id="security-layers"><a href="#security-layers" id="security-layers" name="security-layers" class="anchor"></a>Security layers</h2>
 <div class="bxsites-table-wrap"><table class="table">
 <thead>
@@ -347,7 +415,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 16, 2026, 12&#x3a;57&#x3a;16 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 16, 2026, 5&#x3a;47&#x3a;53 PM</span></div>
 
 				</article>
 
@@ -370,7 +438,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 			</main>
 
 			<aside class="col-xl-2 toc-sidebar d-none d-xl-block">
-				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#login-flow">Login flow</a></li><li class="toc-level-2"><a href="#authentication-layouts">Authentication layouts</a></li><li class="toc-level-2"><a href="#single-sign-on">Single sign-on</a></li><li class="toc-level-2"><a href="#security-layers">Security layers</a></li><li class="toc-level-2"><a href="#rate-limiting">Rate limiting</a></li><li class="toc-level-2"><a href="#cbsecurity-configuration">cbsecurity configuration</a></li><li class="toc-level-2"><a href="#permission-model">Permission model</a></li><li class="toc-level-2"><a href="#related-security-services">Related security services</a></li><li class="toc-level-2"><a href="#known-issues">Known issues</a></li><li class="toc-level-3"><a href="#this-is-an-invalid-domain-when-registering-a-passkey">&amp;quot&#x3b;This is an invalid domain&amp;quot&#x3b; when registering a passkey</a></li></ul></nav>
+				<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#login-flow">Login flow</a></li><li class="toc-level-2"><a href="#authentication-layouts">Authentication layouts</a></li><li class="toc-level-2"><a href="#single-sign-on">Single sign-on</a></li><li class="toc-level-3"><a href="#how-cbsso-becomes-a-local-session">How cbSSO becomes a local session</a></li><li class="toc-level-3"><a href="#why-this-interceptor-exists">Why this interceptor exists</a></li><li class="toc-level-2"><a href="#security-layers">Security layers</a></li><li class="toc-level-2"><a href="#rate-limiting">Rate limiting</a></li><li class="toc-level-2"><a href="#cbsecurity-configuration">cbsecurity configuration</a></li><li class="toc-level-2"><a href="#permission-model">Permission model</a></li><li class="toc-level-2"><a href="#related-security-services">Related security services</a></li><li class="toc-level-2"><a href="#known-issues">Known issues</a></li><li class="toc-level-3"><a href="#this-is-an-invalid-domain-when-registering-a-passkey">&amp;quot&#x3b;This is an invalid domain&amp;quot&#x3b; when registering a passkey</a></li></ul></nav>
 			</aside>
 
 		</div>
