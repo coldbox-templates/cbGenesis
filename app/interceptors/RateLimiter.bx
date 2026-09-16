@@ -26,24 +26,39 @@ class extends="coldbox.system.Interceptor" {
 	@inject( "provider:CBSecurity@cbsecurity" )
 	property name="cbsecurity";
 
-	function configure() {
+	static {
 		// Events this interceptor throttles, and where to send a blocked request back to.
 		// tokenParam, when present, is echoed onto the redirect so the form still has what
 		// it needs to re-render (mirrors the existing error-handling redirects in Auth.bx).
-		variables.limitedActions = {
+		limitedActions = {
 			"Auth.doLogin"             : { redirectEvent: "login" },
 			"Auth.doRegister"          : { redirectEvent: "register" },
 			"Auth.doForgotPassword"    : { redirectEvent: "forgot-password" },
 			"Auth.doResetPassword"     : { redirectEvent: "reset-password", tokenParam: "token" },
-			"Auth.doActivateInvitation": { redirectEvent: "activate-invitation", tokenParam: "token" }
+			"Auth.doActivateInvitation": { redirectEvent: "activate-invitation", tokenParam: "token" },
+			"Profile.startSSO"          : { redirectEvent: "profile" },
+			"Profile.unlinkSSO"         : { redirectEvent: "profile" }
 		}
 	}
 
+	/**
+	 * Pre-processes requests to enforce rate limiting on sensitive actions.
+	 *
+	 * @event The ColdBox request context.
+	 * @interceptData Interception data.
+	 * @buffer The output buffer.
+	 * @rc The request collection.
+	 * @prc The private request collection.
+	 *
+	 * @return Nothing. Redirects and sets flash messages if the rate limit is exceeded.
+	 */
 	function preProcess( event, interceptData, buffer, rc, prc ) {
 		var currentEvent = event.getCurrentEvent()
-		if ( !variables.limitedActions.keyExists( currentEvent ) ) {
+		var isSSOCallback = currentEvent.findNoCase( "cbsso" ) && currentEvent.findNoCase( "authorize" )
+		if ( !static.limitedActions.keyExists( currentEvent ) && !isSSOCallback ) {
 			return
 		}
+		var limitKey = isSSOCallback ? "SSO.callback" : currentEvent
 
 		var result = variables.rateLimitService.attempt(
 			// trustUpstream mirrors cbTrustProxyHeaders: a caller can set X-Forwarded-For
@@ -51,7 +66,7 @@ class extends="coldbox.system.Interceptor" {
 			// sets it itself would let an attacker get a fresh rate-limit bucket on every
 			// request just by changing the header. See SettingService's cbTrustProxyHeaders
 			// doc comment for the deployment-side tradeoff.
-			key          : "#currentEvent#:#variables.cbsecurity.getRealIP( trustUpstream = variables.settingService.getSetting( 'cbTrustProxyHeaders', true ) )#",
+			key          : "#limitKey#:#variables.cbsecurity.getRealIP( trustUpstream = variables.settingService.getSetting( 'cbTrustProxyHeaders', true ) )#",
 			maxAttempts  : variables.settingService.getSetting( "cbRateLimitMaxAttempts", 5 ),
 			windowSeconds: variables.settingService.getSetting( "cbRateLimitWindowSeconds", 300 )
 		)
@@ -62,10 +77,10 @@ class extends="coldbox.system.Interceptor" {
 
 		variables.auditLogService.warn(
 			action     : "security.ratelimit.blocked",
-			message    : "Rate limit exceeded for [#currentEvent#].",
+			message    : "Rate limit exceeded for [#limitKey#].",
 			category   : "security",
 			targetType : "Event",
-			targetLabel: currentEvent
+			targetLabel: limitKey
 		)
 
 		flash.put( "messages", {
@@ -73,7 +88,7 @@ class extends="coldbox.system.Interceptor" {
 			message: "Too many attempts. Please wait a few minutes and try again."
 		} )
 
-		var target = variables.limitedActions[ currentEvent ]
+		var target = isSSOCallback ? { redirectEvent: "login" } : static.limitedActions[ currentEvent ]
 		var redirectTo = target.redirectEvent
 		if ( target.keyExists( "tokenParam" ) && len( rc[ target.tokenParam ] ?: "" ) ) {
 			redirectTo &= "?#target.tokenParam#=#encodeForURL( rc[ target.tokenParam ] )#"

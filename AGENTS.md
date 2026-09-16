@@ -454,3 +454,9 @@ This project has access to the following Model Context Protocol (MCP) documentat
 - Document parameters, return values, expected state, side effects, and important failure behavior where applicable.
 - Add short comments for non-obvious control flow, browser behavior, framework integration, and business rules; do not leave complex logic undocumented.
 - Keep documentation accurate when behavior changes, and use descriptive names so comments explain intent rather than restating syntax.
+
+### BoxLang Documentation
+
+- Every BoxLang class and method must have a Javadoc-style documentation comment, regardless of visibility.
+- Document method parameters, return values, thrown exceptions, side effects, and important control-flow or integration behavior where applicable.
+- Keep documentation accurate when behavior changes and use descriptive names so comments explain intent rather than restating syntax.

@@ -7,6 +7,9 @@
 @secured
 class extends="BaseSecureHandler" {
 
+	/**
+	 * Render the authenticated user's dashboard home page.
+	 */
 	function index( event, rc, prc ) {
 		prc.title = "Dashboard";
 		event.setView( "dashboard/index" )

@@ -32,7 +32,8 @@ class extends="app.models.BaseService" {
 	@inject( "provider:RoleService" )
 	property name="roleService";
 
-
+	@inject
+	property name="passkeyService";
 
 	@inject( "coldbox:RequestService" )
 	property name="requestService";
@@ -119,10 +120,18 @@ class extends="app.models.BaseService" {
 
 	/**
 	 * Find the local user mapped to an immutable provider subject.
+	 *
+	 * @ssoAuthorizationEvent The SSO authorization event containing the provider subject
+	 * @provider The SSO provider object
+	 *
+	 * @return The local user mapped to the provider subject, or null if not found
 	 */
 	User function findBySSO( required any ssoAuthorizationEvent, required any provider ) {
 		var providerName = arguments.provider.getName()
 		var subject      = arguments.ssoAuthorizationEvent.getUserId()
+		if ( !len( trim( subject ) ) ) {
+			return null
+		}
 		var identity     = variables.qb
 			.newQuery()
 			.from( "user_sso_identities" )
@@ -140,6 +149,116 @@ class extends="app.models.BaseService" {
 		} catch ( "EntityNotFound" e ) {
 			return null
 		}
+	}
+
+	/**
+	 * List safe provider metadata for one user's linked SSO identities.
+	 *
+	 * @userId The ID of the user whose linked SSO identities are being listed
+	 *
+	 * @return An array of safe provider metadata for the user's linked SSO identities
+	 */
+	array function listSSOIdentities( required string userId ) {
+		var rows = variables.qb
+			.newQuery()
+			.from( "user_sso_identities" )
+			.select( [ "identityId", "provider", "nameIdFormat" ] )
+			.where( "FK_userId", "=", arguments.userId )
+			.where( "isActive", "=", true )
+			.orderBy( "provider" )
+			.get()
+
+		return rows
+	}
+
+	/**
+	 * Link an immutable provider subject to an already authenticated local user.
+	 * Email is intentionally ignored: only the provider subject can establish ownership.
+	 *
+	 * @user The local user to link the SSO identity to
+	 * @ssoAuthorizationEvent The SSO authorization event containing the provider subject
+	 * @provider The SSO provider object
+	 *
+	 * @throws cbSSO.InvalidSubject If the provider did not return a stable subject
+	 * @throws cbSSO.IdentityOwned If the provider account is already linked to another account
+	 */
+	void function linkSSOIdentity(
+		required any user,
+		required any ssoAuthorizationEvent,
+		required any provider
+	) {
+		var providerName = arguments.provider.getName()
+		var subject = trim( arguments.ssoAuthorizationEvent.getUserId() )
+		if ( !len( subject ) ) {
+			throw( type = "cbSSO.InvalidSubject", message = "The provider did not return a stable subject." )
+		}
+
+		var existing = variables.qb
+			.newQuery()
+			.from( "user_sso_identities" )
+			.where( "provider", "=", providerName )
+			.where( "subject", "=", subject )
+			.where( "isActive", "=", true )
+			.first()
+
+		if ( !isNull( existing ) ) {
+			throw(
+				type    = "cbSSO.IdentityOwned",
+				message = "This provider account is already linked to another account or is already linked here."
+			)
+		}
+
+		variables.qb.table( "user_sso_identities" ).insert( {
+			identityId  : createUUID(),
+			FK_userId   : arguments.user.getId(),
+			provider    : providerName,
+			subject     : subject,
+			nameIdFormat: arguments.ssoAuthorizationEvent.getNameIdFormat() ?: "",
+			isActive    : true
+		} )
+	}
+
+	/**
+	 * Unlink one provider for the owning user without removing their final usable login method.
+	 *
+	 * @user The local user to unlink the SSO identity from
+	 * @provider The SSO provider to unlink
+	 *
+	 * @throws cbSSO.IdentityNotFound If the provider is not linked to the user's account
+	 * @throws cbSSO.LastCredential If this is the user's last sign-in method
+	 */
+	void function unlinkSSOIdentity( required any user, required string provider ) {
+		var providerName = trim( arguments.provider )
+		var identity = variables.qb
+			.newQuery()
+			.from( "user_sso_identities" )
+			.where( "FK_userId", "=", arguments.user.getId() )
+			.where( "provider", "=", providerName )
+			.where( "isActive", "=", true )
+			.first()
+
+		if ( isNull( identity ) ) {
+			throw( type = "cbSSO.IdentityNotFound", message = "That provider is not linked to your account." )
+		}
+
+		var remaining = variables.qb
+			.newQuery()
+			.from( "user_sso_identities" )
+			.where( "FK_userId", "=", arguments.user.getId() )
+			.where( "isActive", "=", true )
+			.where( "provider", "!=", providerName )
+			.count()
+		var hasPassword = !isNull( arguments.user.getPassword() ) && len( arguments.user.getPassword() ) && arguments.user.isEmailVerified()
+		var hasPasskey = variables.passkeyService.listForUser( arguments.user.getId() ).len() > 0
+
+		if ( remaining == 0 && !hasPassword && !hasPasskey ) {
+			throw( type = "cbSSO.LastCredential", message = "Add a password or another passkey before unlinking your final sign-in method." )
+		}
+
+		variables.qb
+			.table( "user_sso_identities" )
+			.where( "identityId", "=", identity.identityId )
+			.update( { isActive: false } )
 	}
 
 	/**

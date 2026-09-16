@@ -68,6 +68,22 @@ class extends="app.models.BaseService"{
 	}
 
 	/**
+	 * Establish an authenticated session for a user already verified by an external
+	 * identity provider and update local login telemetry.
+	 *
+	 * @user The local user already verified by the external identity provider
+	 *
+	 * @throws InvalidUser If the user is not active or cannot be authenticated
+	 *
+	 * @return The authenticated User object
+	 */
+	User function loginSSO( required User user ) {
+		var authenticatedUser = variables.cbauth.login( arguments.user )
+		updateLastLogin( authenticatedUser.getId() )
+		return authenticatedUser
+	}
+
+	/**
 	 * Log in a user with username and password.
 	 * Validates credentials via UserService, then authenticates through cbauth.
 	 * Updates the user's lastLogin timestamp on success.

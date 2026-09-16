@@ -1,0 +1,57 @@
+/**
+ * Google SSO provider with application-managed OAuth state validation.
+ *
+ * Extends cbSSO's Google provider for OAuth exchange and identity parsing while
+ * adding state protection required by the application's login and account-linking flows.
+ */
+class extends="cbsso.models.providers.GoogleProvider" {
+
+	/**
+	 * Build the Google authorization URL and store the state value for callback validation.
+	 *
+	 * @param event The current ColdBox request context used to build the callback URL.
+	 * @return A Google authorization URL containing the application OAuth state value.
+	 */
+	public string function startAuthenticationWorkflow( required any event ) {
+		var state = createUUID()
+		session.cbGenesisSSOState = {
+			value   : state,
+			provider: getName()
+		}
+
+		return oAuthService.buildAuthUrl(
+			authEndpoint  : getAuthEndpoint(),
+			client_id     : getClientId(),
+			redirect_uri  : getRedirectUri( event ),
+			response_type : "code",
+			state         : state,
+			extraParams   : { scope: getScope() }
+		)
+	}
+
+	/**
+	 * Validate the OAuth state value before delegating authorization-code processing to cbSSO.
+	 *
+	 * @param event The callback request context containing the provider response and state.
+	 *
+	 * @return An SSO authorization response, unsuccessful when the state is missing or invalid.
+	 */
+	public any function processAuthorizationEvent( required any event ) {
+		var response = getInstance( "SSOAuthorizationResponse@cbsso" )
+		var state = event.getValue( "state", "" )
+		var storedState = session.cbGenesisSSOState ?: {}
+
+		if (
+			!storedState.keyExists( "value" )
+			|| storedState.value != state
+			|| storedState.provider != getName()
+		) {
+			return response
+				.setWasSuccessful( false )
+				.setErrorMessage( "Invalid or expired SSO state." )
+		}
+
+		structDelete( session, "cbGenesisSSOState" )
+		return super.processAuthorizationEvent( event )
+	}
+}

@@ -20,28 +20,46 @@ class extends="coldbox.system.EventHandler" {
 	 * https://coldbox.ortusbooks.com/getting-started/configuration/coldbox.cfc/configuration-directives/coldbox#implicit-event-settings
 	 */
 
+	/**
+	 * Run application startup checks after ColdBox initializes the application.
+	 */
 	function onAppInit( event, rc, prc ) {
 		variables.settingService.preFlightCheck()
 	}
 
+	/**
+	 * Prepare every request with the current settings and authenticated user.
+	 */
 	function onRequestStart( event, rc, prc ) {
 		prc.settings = variables.settingService.getAllSettings()
 		prc.authUser = variables.securityService.getCurrentUser()
 	}
 
+	/**
+	 * Run application cleanup after request processing completes.
+	 */
 	function onRequestEnd( event, rc, prc ) {
 
 	}
 
+	/**
+	 * Initialize application-specific state when a new session is created.
+	 */
 	function onSessionStart( event, rc, prc ) {
 
 	}
 
+	/**
+	 * Release application-specific state when a user session expires.
+	 */
 	function onSessionEnd( event, rc, prc ) {
 		var sessionScope = event.getValue( "sessionReference" );
 		var applicationScope = event.getValue( "applicationReference" );
 	}
 
+	/**
+	 * Convert an unhandled ColdBox exception into a logged HTTP 500 response.
+	 */
 	function onException( event, rc, prc ) {
 		event.setHTTPHeader( statusCode = 500 );
 		// Grab Exception From private request collection, placed by ColdBox Exception Handling

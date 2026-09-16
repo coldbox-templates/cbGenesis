@@ -1,0 +1,21 @@
+/**
+ * Completes SSO authentication and account-linking redirects.
+ */
+class {
+
+	/**
+	 * Consume the SSO result stored in the session, flash its message, and route
+	 * the user to the appropriate profile, dashboard, or login page.
+	 */
+	function complete( event, rc, prc ) {
+		var result = session.cbGenesisSSOResult ?: { success: false, message: "SSO could not be completed." }
+		structDelete( session, "cbGenesisSSOResult" )
+
+		flash.put( "messages", {
+			type   : result.success ? "success" : "error",
+			message: result.message
+		} )
+
+		return relocate( result.success && result.intent == "link" ? "profile" : ( result.success ? "dashboard" : "login" ) )
+	}
+}

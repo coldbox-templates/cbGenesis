@@ -1,0 +1,126 @@
+/**
+ * Completes cbSSO authorization for login and authenticated account-linking flows.
+ *
+ * Coordinates provider responses with the application's user, security, and audit
+ * services while preserving the requested SSO intent in the session.
+ */
+class extends="coldbox.system.Interceptor" {
+
+	/** User lookup, provisioning, and SSO identity-linking service. */
+	@inject( "provider:UserService" )
+	property name="userService";
+
+	/** Application authentication service used to validate linking sessions and sign users in. */
+	@inject( "provider:SecurityService" )
+	property name="securityService";
+
+	/** Audit service used to record SSO successes and failures. */
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
+
+	/**
+	 * Configure this interceptor before it is registered by ColdBox.
+	 *
+	 * This interceptor currently relies on its default configuration and injected services.
+	 *
+	 * @return Nothing.
+	 */
+	function configure() {
+	}
+
+	/**
+	 * Process a cbSSO authorization response for login or account linking.
+	 *
+	 * Failed provider responses are recorded and returned to the completion flow. Login
+	 * responses resolve or provision a local user, while link responses require the
+	 * authenticated user's session intent to match the current user before linking.
+	 *
+	 * @param event The ColdBox request context for the authorization callback.
+	 * @param data Interception data containing `ssoAuthorizationEvent` and `provider`.
+	 *
+	 * @throws cbSSO.LinkSessionExpired When the account-linking session has expired.
+	 * @throws any Other errors encountered during user provisioning or login.
+	 *
+	 * @return Nothing. Stores the operation result in the session for the completion handler.
+	 */
+	function CBSSOAuthorization( event, data ) {
+		var response = data.ssoAuthorizationEvent
+		var provider = data.provider
+		var intent = session.cbGenesisSSOIntent ?: { type: "login" }
+		var result = { success: false, intent: intent.type, provider: provider.getName() }
+
+		// Handle unsuccessful SSO authorization responses first.
+		if ( !response.wasSuccessful() ) {
+			result.message = "Your identity provider could not verify your account."
+			variables.auditLogService.warn(
+				action  : "sso.login.failure",
+				message : "SSO authorization failed.",
+				category: "auth",
+				metadata: { provider: provider.getName(), error: response.getErrorMessage() }
+			)
+			session.cbGenesisSSOResult = result
+			return
+		}
+
+		try {
+			// Handle the SSO authorization response based on the intent type (link or login).
+
+			// Link intent requires the user to be logged in and the session to match the current user.
+			if ( intent.type == "link" ) {
+				if (
+					!variables.securityService.isLoggedIn()
+					|| intent.userId != variables.securityService.getCurrentUser().getId()
+				) {
+					throw( type = "cbSSO.LinkSessionExpired", message = "The account-linking session expired." )
+				}
+
+				variables.userService.linkSSOIdentity(
+					user                : variables.securityService.getCurrentUser(),
+					ssoAuthorizationEvent: response,
+					provider            : provider
+				)
+				result.success = true
+				result.message = "The #provider.getName()# account was linked successfully."
+				variables.auditLogService.info(
+					action     : "sso.link.success",
+					message    : "An SSO identity was linked.",
+					category   : "auth",
+					actor      : variables.securityService.getCurrentUser(),
+					targetType : "SSOIdentity",
+					targetLabel: provider.getName(),
+					metadata   : { provider: provider.getName() }
+				)
+			}
+			// Login intent handles signing in the user via SSO.
+			else {
+				var user = variables.userService.findBySSO( response, provider )
+				var provisioned = isNull( user )
+				if ( provisioned ) {
+					user = variables.userService.createFromSSO( response, provider )
+				}
+				variables.userService.updateFromSSO( user, response, provider )
+				variables.securityService.loginSSO( user )
+				result.success = true
+				result.message = "Signed in with #provider.getName()#."
+				variables.auditLogService.info(
+					action  : provisioned ? "sso.provision.success" : "sso.login.success",
+					message : provisioned ? "An account was provisioned from SSO." : "SSO sign-in succeeded.",
+					category: "auth",
+					actor   : user,
+					metadata: { provider: provider.getName() }
+				)
+			}
+		} catch ( any error ) {
+			result.message = error.type == "cbSSO.AccountLinkRequired" ? error.message : "This SSO account could not be used."
+			variables.auditLogService.warn(
+				action  : intent.type == "link" ? "sso.link.failure" : "sso.login.failure",
+				message : "SSO account operation failed.",
+				category: "auth",
+				metadata: { provider: provider.getName(), error: error.message }
+			)
+		}
+
+		structDelete( session, "cbGenesisSSOIntent" )
+		session.cbGenesisSSOResult = result
+	}
+}

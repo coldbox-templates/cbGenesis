@@ -13,7 +13,7 @@ class {
 			providers
 				.append(
 					{
-						type         : "GoogleProvider@cbsso",
+						type         : "app.models.security.GoogleSSOProvider",
 						clientId     : googleClientId,
 						clientSecret : googleClientSecret,
 						redirectUri  : googleRedirectUri
@@ -22,9 +22,9 @@ class {
 		}
 
 		return {
-			enableCBAuthIntegration : true,
-			errorRedirect           : "/login",
-			successRedirect         : "/dashboard",
+			enableCBAuthIntegration : false,
+			errorRedirect           : "/sso/complete",
+			successRedirect         : "/sso/complete",
 			providers               : providers
 		};
 	}

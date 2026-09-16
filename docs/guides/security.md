@@ -65,6 +65,84 @@ accounts must be explicitly linked before they can be used through SSO.
 For clustered SAML deployments, configure cbSSO's `samlRequestCacheName` to a
 distributed CacheBox region instead of using the default in-memory replay cache.
 
+### How cbSSO becomes a local session
+
+cbSSO owns the provider protocol and callback validation. cbGenesis owns the
+decision that follows: which local account the verified identity belongs to,
+whether it may be provisioned or linked, and how it becomes an authenticated
+application session.
+
+```mermaid
+flowchart LR
+    Browser[Browser] --> Start[cbSSO start route]
+    Start --> Provider[Identity provider]
+    Provider --> Callback[cbSSO callback route]
+    Callback --> Authorize[cbSSO Auth.authorize()]
+    Authorize --> Event[CBSSOAuthorization]
+    Event --> Interceptor[SSOAuthorization.bx]
+    Interceptor --> UserService[UserService]
+    UserService --> Identity[(SSO identity records)]
+    Interceptor --> Security[SecurityService.loginSSO()]
+    Security --> Session[(cbauth session)]
+    Session --> Browser
+```
+
+The application registers `app/interceptors/SSOAuthorization.bx` for cbSSO's
+documented `CBSSOAuthorization` interception point. The callback payload
+contains the verified provider response and the provider that handled it. The
+interceptor then follows one of two application-owned paths:
+
+```mermaid
+sequenceDiagram
+    participant C as cbSSO callback
+    participant I as SSOAuthorization
+    participant U as UserService
+    participant S as SecurityService
+    participant A as AuditLogService
+
+    C->>I: CBSSOAuthorization(response, provider)
+    alt Link intent
+        I->>I: Verify logged-in user and matching session intent
+        I->>U: linkSSOIdentity(user, response, provider)
+        U-->>I: Linked identity
+        I->>A: Record link success
+    else Login intent
+        I->>U: findBySSO(response, provider)
+        alt No local identity and provisioning allowed
+            I->>U: createFromSSO(response, provider)
+        end
+        I->>U: updateFromSSO(user, response, provider)
+        I->>S: loginSSO(user)
+        S-->>I: cbauth session established
+        I->>A: Record login or provisioning success
+    end
+    I-->>C: Store success or failure result for completion flow
+```
+
+### Why this interceptor exists
+
+cbSSO also provides a generic `cbAuth` integration listener. cbGenesis
+intentionally sets `enableCBAuthIntegration: false` in
+`app/config/modules/cbsso.bx`, because the generic listener cannot enforce the
+application's identity and account-security rules. The custom interceptor is
+responsible for:
+
+- Matching identities by provider and immutable subject, never by email alone.
+- Requiring an authenticated session and matching intent for account linking.
+- Applying the provisioning and allowed-domain policy before creating users.
+- Keeping local password, remember-me, passkey, and SSO authentication paths
+  under the same cbauth session authority.
+- Recording successful and failed SSO operations in the audit trail.
+
+This separation is deliberate: cbSSO verifies *who the provider says the user
+is*; cbGenesis decides *what that identity is allowed to do in this application*.
+
+For the upstream contract and the alternative generic integration, see the
+[cbSSO interception points](https://cbsso.ortusbooks.com/usage/interception-points.md),
+[identity-provider response handling](https://cbsso.ortusbooks.com/usage/handling-the-identity-provider-response.md),
+and [cbAuth integration](https://cbsso.ortusbooks.com/cbauth-integration/enabling-integration.md)
+documentation.
+
 ## Security layers
 
 | Layer | Implementation |

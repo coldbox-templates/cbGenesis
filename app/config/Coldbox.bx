@@ -152,6 +152,11 @@ class {
 				class      : "app.interceptors.RateLimiter",
 				name       : "RateLimiter",
 				properties : {}
+			},
+			{
+				class      : "app.interceptors.SSOAuthorization",
+				name       : "SSOAuthorization",
+				properties : {}
 			}
 		]
 

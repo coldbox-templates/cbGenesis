@@ -16,8 +16,17 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="passkeyService";
 
+	@inject( "ProviderService@cbsso" )
+	property name="ssoProviderService";
+
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
 
 
+
+	/**
+	 * Render the authenticated user's profile page with token policy settings.
+	 */
 	function index( event, rc, prc ) {
 		prc.title = "My Profile"
 		prc.profile = prc.authUser
@@ -25,12 +34,69 @@ class extends="BaseSecureHandler" {
 		event.setView( "profile/index" )
 	}
 
+	/**
+	 * Render the passkey enrollment page shown when mandatory passkey enrollment
+	 * blocks access to the secured application.
+	 */
 	function passkeyRequired( event, rc, prc ) {
 		prc.title = "Passkey Required"
 		event.setView( "profile/passkeyRequired" )
 	}
 
+	/**
+	 * List the authenticated user's linked SSO identities.
+	 */
+	function listSSO( event, rc, prc ) {
+		event.getResponse().setData( userService.listSSOIdentities( prc.authUser.getId() ) )
+	}
+
+	/**
+	 * Start the SSO linking process for the authenticated user.
+	 */
+	function startSSO( event, rc, prc ) {
+		var providerName = trim( rc.provider ?: "" )
+		if ( !ssoProviderService.has( providerName ) ) {
+			return event.getResponse().setErrorMessage( errorMessage: "That SSO provider is not available.", statusCode: 404 )
+		}
+
+		session.cbGenesisSSOIntent = {
+			type  : "link",
+			userId: prc.authUser.getId()
+		}
+		relocate( url: ssoProviderService.get( providerName ).startAuthenticationWorkflow( event ) )
+	}
+
+	/**
+	 * Unlink an SSO identity from the authenticated user's profile.
+	 */
+	function unlinkSSO( event, rc, prc ) {
+		var providerName = trim( rc.provider ?: "" )
+		try {
+			userService.unlinkSSOIdentity( prc.authUser, providerName )
+			auditLogService.info(
+				action     : "sso.unlink.success",
+				message    : "An SSO identity was unlinked.",
+				category   : "auth",
+				actor      : prc.authUser,
+				targetType : "SSOIdentity",
+				targetLabel: providerName,
+				metadata   : { provider: providerName }
+			)
+			event.getResponse().addMessage( "The SSO provider was unlinked successfully." )
+		} catch ( "cbSSO.LastCredential" error ) {
+			return event.getResponse().setErrorMessage( errorMessage: error.message, statusCode: 409 )
+		} catch ( "cbSSO.IdentityNotFound" error ) {
+			return event.getResponse().setErrorMessage( errorMessage: error.message, statusCode: 404 )
+		} catch ( any error ) {
+			log.error( "Error unlinking SSO provider: #error.message#", error )
+			return event.getResponse().setErrorMessage( errorMessage: "The SSO provider could not be unlinked.", statusCode: 500 )
+		}
+	}
+
 	@remote( "Save the authenticated user's profile remotely via AJAX" )
+	/**
+	 * Validate and save the authenticated user's profile, returning its safe memento.
+	 */
 	function save( event, rc, prc ) {
 		var response = event.getResponse()
 		param rc.preferences = "{}"
@@ -170,6 +236,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
+	/**
+	 * Verify the current password, enforce password policy, and save a new password.
+	 */
 	@remote( "Change the authenticated user's password remotely via AJAX" )
 	function doPasswordChange( event, rc, prc ) {
 		var response = event.getResponse()

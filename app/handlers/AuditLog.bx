@@ -9,7 +9,9 @@ class extends="BaseSecureHandler" {
 
 
 
-	// Present the audit log list view
+	/**
+	 * Render the audit log management view with empty records and summary filters.
+	 */
 	function index( event, rc, prc ) {
 		prc.title = "Audit Log"
 		prc.payload = {
@@ -22,7 +24,10 @@ class extends="BaseSecureHandler" {
 		event.setView( "auditlog/index" )
 	}
 
-	// Retrieve audit log listings
+	/**
+	 * Search audit log entries using the requested filters and pagination.
+	 * Returns records, the total count, and severity counts for the audit log UI.
+	 */
 	@remote( "Retrieve audit log listings remotely via AJAX" )
 	function search( event, rc, prc ) {
 		var pagination = getPagination( rc.page ?: 1, rc.limit ?: 25 )
@@ -55,7 +60,10 @@ class extends="BaseSecureHandler" {
 		} )
 	}
 
-	// Show a specific audit log entry's full detail (for the drawer)
+	/**
+	 * Retrieve one audit log entry with its serialized metadata for the detail drawer.
+	 * Returns a 404 response when the requested entry does not exist.
+	 */
 	@remote( "Retrieve a single audit log entry remotely via AJAX" )
 	function show( event, rc, prc ) {
 		var response = event.getResponse()
@@ -74,7 +82,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
-	// Export the currently filtered audit log entries as CSV
+	/**
+	 * Export the currently filtered audit log entries as a downloadable CSV file.
+	 */
 	@remote( "Export audit log entries as CSV" )
 	@secured( "auditlog:admin,auditlog:export" )
 	function export( event, rc, prc ) {
@@ -89,7 +99,10 @@ class extends="BaseSecureHandler" {
 		return event.renderData( type: "plain", data: csv, contentType: "text/csv" )
 	}
 
-	// Purge audit log entries older than the given number of days
+	/**
+	 * Permanently remove audit log entries older than the requested number of days.
+	 * Returns the number of entries removed.
+	 */
 	@remote( "Purge old audit log entries remotely via AJAX" )
 	@secured( "auditlog:admin,auditlog:delete" )
 	function purge( event, rc, prc ) {
@@ -108,7 +121,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
-	// Clear every audit log entry
+	/**
+	 * Permanently remove every audit log entry and report the number removed.
+	 */
 	@remote( "Clear all audit log entries remotely via AJAX" )
 	@secured( "auditlog:admin" )
 	function clear( event, rc, prc ) {

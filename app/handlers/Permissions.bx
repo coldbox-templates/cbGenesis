@@ -24,6 +24,9 @@ class extends="BaseSecureHandler" {
 		return relocate( "permissions" )
 	}
 
+	/**
+	 * Render the permissions management view with the active permission catalog.
+	 */
 	function index( event, rc, prc ) {
 		prc.title = "Permissions"
 		prc.permissionCatalog = permissionService.findAllWhere(
@@ -37,6 +40,9 @@ class extends="BaseSecureHandler" {
 	}
 
 	@secured( "permissions:admin,permissions:write" )
+	/**
+	 * Validate and create a permission, then redirect back to the permissions view.
+	 */
 	function create( event, rc, prc ) {
 		try {
 			// Assign before validating so prc.permission is available to the catch below.
@@ -76,6 +82,9 @@ class extends="BaseSecureHandler" {
 
 	@remote( "This action is submitted remotely via JavaScript" )
 	@secured( "permissions:admin,permissions:write" )
+	/**
+	 * Update a permission through AJAX and return validation or persistence results.
+	 */
 	function update( event, rc, prc ) {
 		var results = getApiResults()
 		try {
@@ -113,6 +122,9 @@ class extends="BaseSecureHandler" {
 
 	@remote( "This action is submitted remotely via JavaScript" )
 	@secured( "permissions:admin,permissions:delete" )
+	/**
+	 * Delete a permission through AJAX and return the operation status.
+	 */
 	function delete( event, rc, prc ) {
 		var results = getApiResults()
 		// --- Attempt to Delete Permission ---

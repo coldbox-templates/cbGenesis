@@ -25,7 +25,9 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="auditLogService";
 
-	// Present the users list view
+	/**
+	 * Render the user management list with counts and role lookup data.
+	 */
 	function index( event, rc, prc ) {
 		prc.title = "Users"
 		prc.payload = {
@@ -37,7 +39,9 @@ class extends="BaseSecureHandler" {
 		event.setView( "users/index" )
 	}
 
-	// Retrieve user listings
+	/**
+	 * Search users using filters and pagination, returning records and summary counts.
+	 */
 	@remote( "Retrieve user listings remotely via AJAX" )
 	function search( event, rc, prc ) {
 		var pagination = getPagination( rc.page ?: 1, rc.limit ?: 25 )
@@ -70,7 +74,9 @@ class extends="BaseSecureHandler" {
 		} )
 	}
 
-	// Create a new user
+	/**
+	 * Validate a new user's invitation data, create the account, and send its invitation.
+	 */
 	@remote( "Create a new user remotely via AJAX" )
 	@secured( "users:admin,users:write" )
 	function create( event, rc, prc ) {
@@ -119,7 +125,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
-	// Re-send an invitation to an unverified user
+	/**
+	 * Re-send an invitation email to an existing unverified user.
+	 */
 	@remote( "Re-send a user invitation remotely via AJAX" )
 	@secured( "users:admin,users:write" )
 	function resendInvitation( event, rc, prc ) {
@@ -140,7 +148,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
-	// Show a specific user detail page
+	/**
+	 * Render the management page for one user with roles, permissions, tokens, and catalogs.
+	 */
 	@secured( "users:read" )
 	function show( event, rc, prc ) {
 		prc.user = userService.getOrFail( rc.userId ?: "" )
@@ -149,6 +159,9 @@ class extends="BaseSecureHandler" {
 		event.setView( "users/detail" )
 	}
 
+	/**
+	 * Build the safe, fully populated payload used by the managed-user detail page.
+	 */
 	private struct function buildDetailPayload( required user ) {
 		var loadedUser = entityMerge( arguments.user )
 		var userMemento = loadedUser.getMemento()
@@ -170,16 +183,25 @@ class extends="BaseSecureHandler" {
 		}
 	}
 
+	/**
+	 * Load the user identified by the request and throw when it cannot be managed.
+	 */
 	private any function getManagedUser( required rc ) {
 		return userService.getOrFail( arguments.rc.userId ?: "" )
 	}
 
+	/**
+	 * Reject administrative actions that would modify the currently authenticated user.
+	 */
 	private void function ensureNotSelf( required user, required prc ) {
 		if ( arguments.user.getUserId() == arguments.prc.authUser.getUserId() ) {
 			throw( type: "UserManagement.SelfAction", message: "This action cannot be performed on your own account." )
 		}
 	}
 
+	/**
+	 * Validate and save a managed user's profile, returning the refreshed detail payload.
+	 */
 	@remote( "Update a managed user's profile" )
 	@secured( "users:admin,users:write" )
 	function updateProfile( event, rc, prc ) {
@@ -202,6 +224,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
+	/**
+	 * Enable or disable a managed user while preventing self-deactivation.
+	 */
 	@remote( "Enable or disable a managed user" )
 	@secured( "users:admin,users:write" )
 	function setStatus( event, rc, prc ) {
@@ -226,6 +251,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
+	/**
+	 * Issue password-reset instructions for a managed user and return refreshed details.
+	 */
 	@remote( "Issue a password reset for a managed user" )
 	@secured( "users:admin" )
 	function resetPassword( event, rc, prc ) {
@@ -247,6 +275,9 @@ class extends="BaseSecureHandler" {
 	 * the existing reset-password flow before they reach the dashboard. No email is sent -
 	 * useful for an admin who wants to force a change without waiting on the user to open
 	 * an email.
+	 */
+	/**
+	 * Mark a managed user so their next login must enter the password-reset flow.
 	 */
 	@remote( "Force a managed user to set a new password on their next login" )
 	@secured( "users:admin" )
@@ -271,6 +302,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
+	/**
+	 * Mark a managed user's email as verified and revoke outstanding invitation tokens.
+	 */
 	@remote( "Manually verify a managed user" )
 	@secured( "users:admin" )
 	function verify( event, rc, prc ) {
@@ -286,6 +320,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
+	/**
+	 * Revoke all remembered-browser sessions for a managed user.
+	 */
 	@remote( "Revoke remembered sessions for a managed user" )
 	@secured( "users:admin" )
 	function revokeRememberTokens( event, rc, prc ) {
@@ -300,6 +337,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
+	/**
+	 * Add a role to a managed user when it is not already assigned.
+	 */
 	@remote( "Add a role to a managed user" )
 	@secured( "users:admin" )
 	function addRole( event, rc, prc ) {
@@ -324,6 +364,9 @@ class extends="BaseSecureHandler" {
 		}
 	}
 
+	/**
+	 * Remove a role from a managed user while preventing self-lockout actions.
+	 */
 	@remote( "Remove a role from a managed user" )
 	@secured( "users:admin" )
 	function removeRole( event, rc, prc ) {
@@ -347,6 +390,9 @@ class extends="BaseSecureHandler" {
 		}
 	}
 
+	/**
+	 * Add a direct permission to a managed user when it is not already assigned.
+	 */
 	@remote( "Add a direct permission to a managed user" )
 	@secured( "users:admin" )
 	function addPermission( event, rc, prc ) {
@@ -360,6 +406,9 @@ class extends="BaseSecureHandler" {
 		}
 	}
 
+	/**
+	 * Remove a direct permission from a managed user.
+	 */
 	@remote( "Remove a direct permission from a managed user" )
 	@secured( "users:admin" )
 	function removePermission( event, rc, prc ) {
@@ -373,6 +422,9 @@ class extends="BaseSecureHandler" {
 		}
 	}
 
+	/**
+	 * Save a managed user's serialized preferences and return refreshed detail data.
+	 */
 	@remote( "Save a managed user's preferences" )
 	@secured( "users:admin,users:write" )
 	function savePreferences( event, rc, prc ) {
@@ -381,6 +433,9 @@ class extends="BaseSecureHandler" {
 		event.getResponse().setData( data: buildDetailPayload( prc.user ), message: "Preferences saved successfully." )
 	}
 
+	/**
+	 * Revoke one API token after confirming that it belongs to the managed user.
+	 */
 	@remote( "Revoke one API token for a managed user" )
 	@secured( "users:admin" )
 	function revokeToken( event, rc, prc ) {
@@ -394,6 +449,9 @@ class extends="BaseSecureHandler" {
 		)
 	}
 
+	/**
+	 * Revoke all API tokens for a managed user and return the remaining token list.
+	 */
 	@remote( "Revoke all API tokens for a managed user" )
 	@secured( "users:admin" )
 	function revokeAllTokens( event, rc, prc ) {
@@ -408,7 +466,9 @@ class extends="BaseSecureHandler" {
 		)
 	}
 
-	// Update an existing user
+	/**
+	 * Populate, validate, and save an existing user through AJAX.
+	 */
 	@remote( "Update an existing user remotely via AJAX" )
 	@secured( "users:admin,users:write" )
 	function update( event, rc, prc ) {
@@ -447,7 +507,9 @@ class extends="BaseSecureHandler" {
 		return response
 	}
 
-	// Delete a user
+	/**
+	 * Delete a managed user and return the operation status.
+	 */
 	@remote( "Delete a user remotely via AJAX" )
 	@secured( "users:admin,users:delete" )
 	function delete( event, rc, prc ) {

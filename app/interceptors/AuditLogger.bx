@@ -13,9 +13,16 @@
  */
 class extends="coldbox.system.Interceptor" {
 
+	/**
+	 * Service used to persist structured authentication and security audit events.
+	 */
 	@inject( "provider:AuditLogService" )
 	property name="auditLogService";
 
+	/**
+	 * Configures the interceptor. This interceptor relies on its injected audit
+	 * service and does not require additional runtime configuration.
+	 */
 	function configure() {
 	}
 
@@ -76,6 +83,22 @@ class extends="coldbox.system.Interceptor" {
 			category   : "security",
 			targetType : "Event",
 			targetLabel: event.getCurrentEvent()
+		)
+	}
+
+	/**
+	 * Records a request for an SSO provider that is not configured or available.
+	 *
+	 * @param event         The current ColdBox request context.
+	 * @param data          Interception data containing the requested provider name.
+	 */
+	function CBSSOMissingProvider( event, data ) {
+		variables.auditLogService.warn(
+			action     : "sso.provider.error",
+			message    : "An unknown SSO provider was requested.",
+			category   : "auth",
+			targetType : "SSOProvider",
+			targetLabel: data.providerName ?: ""
 		)
 	}
 

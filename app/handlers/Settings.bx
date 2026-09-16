@@ -24,11 +24,17 @@ class extends="BaseSecureHandler" {
 		return relocate( "settings" )
 	}
 
+	/**
+	 * Render the main application settings page.
+	 */
 	function index( event, rc, prc ) {
 		prc.title = "Settings"
 		event.setView( "settings/index" )
 	}
 
+	/**
+	 * Render the advanced settings registry page with empty initial result data.
+	 */
 	function registry( event, rc, prc ) {
 		prc.title = "Settings Registry"
 		prc.payload = { records: [], count: 0, counts: { active: 0, inactive: 0, all: 0 } }
@@ -37,6 +43,9 @@ class extends="BaseSecureHandler" {
 
 	@remote( "Retrieve settings registry records remotely via AJAX" )
 	@secured( "settings:admin,settings:read" )
+	/**
+	 * Search registry settings with filters and pagination for the settings UI.
+	 */
 	function registrySearch( event, rc, prc ) {
 		var response = event.getResponse()
 		var pagination = getPagination( rc.page ?: 1, rc.limit ?: 25 )
@@ -57,6 +66,9 @@ class extends="BaseSecureHandler" {
 
 	@remote( "Create a settings registry record remotely via AJAX" )
 	@secured( "settings:admin,settings:write" )
+	/**
+	 * Validate and create a registry setting, then flush the settings cache.
+	 */
 	function createRegistry( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -75,6 +87,9 @@ class extends="BaseSecureHandler" {
 
 	@remote( "Update a settings registry record remotely via AJAX" )
 	@secured( "settings:admin,settings:write" )
+	/**
+	 * Validate and update an existing registry setting, then flush the settings cache.
+	 */
 	function updateRegistry( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -92,6 +107,9 @@ class extends="BaseSecureHandler" {
 
 	@remote( "Toggle a settings registry record remotely via AJAX" )
 	@secured( "settings:admin,settings:write" )
+	/**
+	 * Toggle a registry setting's active state and reload the settings cache.
+	 */
 	function toggleRegistryStatus( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -106,6 +124,9 @@ class extends="BaseSecureHandler" {
 
 	@remote( "Delete a settings registry record remotely via AJAX" )
 	@secured( "settings:admin,settings:write" )
+	/**
+	 * Delete a registry setting and flush the settings cache.
+	 */
 	function deleteRegistry( event, rc, prc ) {
 		var response = event.getResponse()
 		try {
@@ -177,6 +198,9 @@ class extends="BaseSecureHandler" {
 	}
 
 	@secured( "settings:admin,settings:write" )
+	/**
+	 * Save the submitted application settings and redirect back to the settings page.
+	 */
 	function save( event, rc, prc ) {
 		try {
 			settingService.bulkSave( rc )
@@ -197,6 +221,9 @@ class extends="BaseSecureHandler" {
 	}
 
 	@secured( "settings:admin" )
+	/**
+	 * Clear the template cache and return to the settings page.
+	 */
 	function clearTemplateCache( event, rc, prc ) {
 		getCache( "template" ).clearAll()
 		flash.put( "messages", { type: "success", message: "Action ran successfully: template cache cleared." } )
@@ -204,6 +231,9 @@ class extends="BaseSecureHandler" {
 	}
 
 	@secured( "settings:admin" )
+	/**
+	 * Clear active sessions, flash state, and password-reset session data.
+	 */
 	function clearSessionsCache( event, rc, prc ) {
 		getCache( "sessions" ).clearAll()
 		flash.put( "messages", {
@@ -214,6 +244,9 @@ class extends="BaseSecureHandler" {
 	}
 
 	@secured( "settings:admin" )
+	/**
+	 * Revoke all remembered-browser login tokens and report the number revoked.
+	 */
 	function revokeRememberTokens( event, rc, prc ) {
 		var count = securityService.revokeAllRememberTokens()
 		flash.put( "messages", {
@@ -224,6 +257,9 @@ class extends="BaseSecureHandler" {
 	}
 
 	@secured( "settings:admin" )
+	/**
+	 * Flush the settings cache and reload configuration overrides.
+	 */
 	function flushSettingsCache( event, rc, prc ) {
 		settingService.flushSettingsCache()
 		flash.put( "messages", { type: "success", message: "Action ran successfully: settings cache flushed and configuration overrides reloaded." } )

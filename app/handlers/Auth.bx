@@ -153,6 +153,9 @@ class extends="coldbox.system.EventHandler"{
 	// Register
 	// ============================================================
 
+	/**
+	 * Render the self-registration form when new account creation is available.
+	 */
 	function register( event, rc, prc ) {
 		prc.title = "Create Account"
 		event.setView( "auth/register" )
@@ -261,7 +264,10 @@ class extends="coldbox.system.EventHandler"{
 		return relocate( "login" )
 	}
 
-	/** Verify a self-registration email without changing the selected password. */
+	/**
+	 * Verify a self-registration email without changing the selected password.
+	 * Invalid or expired tokens redirect back to the login page with an error.
+	 */
 	function verifyRegistration( event, rc, prc ) {
 		param rc.token = ""
 		try {
@@ -300,7 +306,9 @@ class extends="coldbox.system.EventHandler"{
 		return securityService.isLoggedIn() ? relocate( "profile" ) : relocate( "login" )
 	}
 
-	/** Display the password form for an administrator invitation. */
+	/**
+	 * Display the password form for an administrator invitation after validating its token.
+	 */
 	function activateInvitation( event, rc, prc ) {
 		param rc.token = ""
 		try {
@@ -315,7 +323,10 @@ class extends="coldbox.system.EventHandler"{
 		}
 	}
 
-	/** Set the initial password and complete an administrator invitation. */
+	/**
+	 * Set the initial password, verify the invited account, consume its token, and
+	 * redirect the user to login.
+	 */
 	function doActivateInvitation( event, rc, prc ) {
 		param rc.token = ""
 		param rc.password = ""
@@ -347,6 +358,9 @@ class extends="coldbox.system.EventHandler"{
 	// Forgot Password
 	// ============================================================
 
+	/**
+	 * Render the password-recovery form when forgot-password requests are enabled.
+	 */
 	function forgotPassword( event, rc, prc ) {
 		// --- Verify Forgot Password Enabled ---
 		if( !prc.settings.cbAllowForgotPassword ){
@@ -357,6 +371,10 @@ class extends="coldbox.system.EventHandler"{
 		event.setView( "auth/forgotPassword" )
 	}
 
+	/**
+	 * Validate a password-recovery request and send a reset email without revealing
+	 * whether the submitted address belongs to an account.
+	 */
 	function doForgotPassword( event, rc, prc ) {
 		// --- Verify Forgot Password Enabled ---
 		if( !prc.settings.cbAllowForgotPassword ){
@@ -416,6 +434,9 @@ class extends="coldbox.system.EventHandler"{
 	// Reset Password
 	// ============================================================
 
+	/**
+	 * Validate a password-reset token and render the form for choosing a new password.
+	 */
 	function resetPassword( event, rc, prc ) {
 		prc.title = "Set New Password"
 		param rc.token = ""
@@ -436,6 +457,10 @@ class extends="coldbox.system.EventHandler"{
 		event.setView( "auth/resetPassword" )
 	}
 
+	/**
+	 * Validate a password-reset token and password policy, save the new password,
+	 * and redirect to login.
+	 */
 	function doResetPassword( event, rc, prc ) {
 		param rc.token = ""
 		param rc.password = ""
@@ -501,6 +526,10 @@ class extends="coldbox.system.EventHandler"{
 	// Logout
 	// ============================================================
 
+	/**
+	 * Verify the logout request's CSRF token, end the authenticated session, and
+	 * redirect to login.
+	 */
 	function logout( event, rc, prc ) {
 		// Auth does not extend BaseSecureHandler, so it does not inherit the deny-by-default
 		// CSRF rule. Logout is a POST and was the one state-changing action here with no

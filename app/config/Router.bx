@@ -96,6 +96,9 @@ class {
 		 * Profile Routing
 		 * --------------------------------------------------------------------------
 		 */
+		route( "profile/sso/:provider/start", "Profile.startSSO" )
+		route( "profile/sso/:provider" ).withHandler( "Profile" ).toAction({ DELETE: "unlinkSSO" })
+		route( "profile/sso", "Profile.listSSO" )
 		post( "profile/password", "Profile.doPasswordChange" )
 		route( "profile/api-tokens/:tokenId" ).withHandler( "Profile" ).toAction({
 			POST  : "updateToken",
@@ -194,6 +197,7 @@ class {
 			GET: "resetPassword",
 			POST: "doResetPassword"
 		})
+		route( "sso/complete", "SSO.complete" )
 
 		// @app_routes@
 

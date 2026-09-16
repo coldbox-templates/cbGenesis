@@ -76,7 +76,7 @@ sequenceDiagram
 
 ## Interceptors
 
-`app/config/Coldbox.bx` registers two application interceptors, in this order:
+`app/config/Coldbox.bx` registers three application interceptors, in this order:
 
 **`app/interceptors/AuditLogger.bx`** writes to the audit trail on four interception points:
 
@@ -88,6 +88,14 @@ sequenceDiagram
 | `cbSecurity_onInvalidAuthorization` | An authenticated user missing the required permission |
 
 **`app/interceptors/RateLimiter.bx`** fires on `preProcess` - before routing, before any handler - and throttles five unauthenticated `Auth` actions (login, register, forgot/reset password, invitation activation) by client IP. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
+
+**`app/interceptors/SSOAuthorization.bx`** handles cbSSO's
+`CBSSOAuthorization` interception point. It connects a verified provider
+identity to the local user model, enforces login-versus-linking policy,
+provisions users when allowed, and creates the cbauth session. See
+[Single sign-on](guides/security.md#single-sign-on) for the callback flow and
+the reason cbGenesis uses a custom handler instead of cbSSO's generic cbAuth
+integration.
 
 Add your own to the `variables.interceptors` array in `Coldbox.bx`; they fire in declaration order.
 
@@ -128,7 +136,7 @@ cbgenesis/
 │   │   └── _components/        Reusable UI partials (app, auth, ui)
 │   ├── email_templates/       Token-based email body templates
 │   ├── helpers/               ApplicationHelper.bxm — global view helpers
-│   └── interceptors/           AuditLogger (audit trail), RateLimiter (throttling)
+│   └── interceptors/           AuditLogger, RateLimiter, SSOAuthorization
 ├── public/
 │   ├── Application.bx         Entry point — ColdBox + ORM bootstrap
 │   ├── index.bxm               Front controller placeholder
