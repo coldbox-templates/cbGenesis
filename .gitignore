@@ -5,6 +5,10 @@ WEB-INF
 build/**
 *.code-workspace
 
+# BxSites
+.cache/**
+site/**
+
 # Engines + Database + CBFS + Secrets
 .tmp/**
 .env
