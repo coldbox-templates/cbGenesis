@@ -34,7 +34,7 @@ Install BoxLang with either the quick installer or BVM, then install `bx-cli`:
 
 After BoxLang is available, install the CLI module:
 
-```bash
+```bash linenums="1"
 install-bx-module bx-cli
 box version
 ```
@@ -61,7 +61,7 @@ Run these from the project root. They are all executed by `bx-cli`:
 
 The frontend uses Node.js separately:
 
-```bash
+```bash linenums="1"
 npm install
 npm run dev
 npm run build
@@ -71,7 +71,7 @@ npm run lint:scss
 
 ## First-run sequence
 
-```bash
+```bash linenums="1"
 install-bx-module bx-cli
 box install
 npm install

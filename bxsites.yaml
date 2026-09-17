@@ -11,6 +11,12 @@ nav: []
 markdown:
   enableFootnotes: true
   enableDefinitionLists: true
+# Screenshots are 1440px-wide desktop UI captures; the default [400, 800] variants
+# would be served into an 800px layout slot and upscaled (blurry). Match the native width.
+assets:
+  images:
+    widths: [ 720, 1440 ]
+    formats: [ original, webp ]
 repo:
   url: "https://github.com/coldbox-templates/cbGenesis"
   editUri: "edit/development/docs/"

@@ -10,7 +10,10 @@ tags: [reference, configuration, settings]
 
 These live in `SettingService.static.DEFAULTS`, are seeded on boot by `preFlightCheck()`, cached with a 2-hour TTL, and editable at `/settings` by anyone with the `settings:write` (or `settings:admin`) permission — see [Configuration](../guides/configuration.md#app-settings-vs-framework-config).
 
-![The Global Settings admin page](../assets/screenshots/settings.png)
+<figure>
+	<img src="../assets/screenshots/settings.png" alt="The Global Settings admin page">
+	<figcaption>The Global Settings admin page.</figcaption>
+</figure>
 
 ## Authentication & registration
 

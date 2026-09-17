@@ -49,7 +49,7 @@ Add the `resource:action` slug to `resources/database/seeds/AdminData.bx` and as
 `@secured( "resource:action,resource:admin" )` — comma means OR. See [Security & Permissions](security.md#permission-model).
 :::
 ::: step "Gate the view"
-```html
+```html linenums="1"
 <bx:if prc.authUser.hasPermission( "resource:action,resource:admin" )>
 ```
 so the UI never offers something the handler would reject.
@@ -67,7 +67,7 @@ Add a new key to the `DEFAULTS` struct in `SettingService.bx`. `preFlightCheck()
 
 Layouts live in `app/layouts/`. Selection happens per-handler, typically in `preHandler`:
 
-```boxlang title="app/handlers/BaseSecureHandler.bx"
+```boxlang title="app/handlers/BaseSecureHandler.bx" linenums="1"
 function preHandler( event, rc, prc ){
     event.setLayout( "Admin" );
 }

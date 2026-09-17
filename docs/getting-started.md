@@ -153,11 +153,17 @@ npm run dev
 
 Visit **[http://127.0.0.1:8080](http://127.0.0.1:8080)** - you'll land on the login page. Sign in with the seeded admin credentials above.
 
-![The login screen, using the default AuthSplit layout](assets/screenshots/login.png)
+<figure>
+	<img src="assets/screenshots/login.png" alt="The login screen, using the default AuthSplit layout">
+	<figcaption>The login screen using the default <code>AuthSplit</code> layout.</figcaption>
+</figure>
 
 Once you're in, you'll land on the dashboard, with the admin sidebar ready for Users, Roles, Permissions, Audit Log, and Settings:
 
-![The admin dashboard after signing in](assets/screenshots/dashboard.png)
+<figure>
+	<img src="assets/screenshots/dashboard.png" alt="The admin dashboard after signing in">
+	<figcaption>The admin dashboard after signing in.</figcaption>
+</figure>
 
 ::: cards
 ::: card title="Architecture" icon="phosphor-duotone:tree-structure" href="architecture.md"

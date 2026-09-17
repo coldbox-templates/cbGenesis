@@ -29,7 +29,7 @@ SCSS + JS from `resources/assets/` compile into `public/includes/`, served at th
 
 ## Alpine.js architecture
 
-```text title="resources/assets/js/ layout"
+```text title="resources/assets/js/ layout" linenums="1"
 App.js (entry)
   ├── Registers all Alpine stores + components
   ├── Imports Bootstrap JS + Phosphor icons + Tippy.js
@@ -49,7 +49,7 @@ App.js (entry)
 Each component is a standalone module returning an Alpine `x-data` object:
 
 === "Component"
-    ```js title="resources/assets/js/components/ui/MessageBox.js"
+    ```js title="resources/assets/js/components/ui/MessageBox.js" linenums="1"
     export default () => ( {
         visible: true,
         init() {
@@ -58,7 +58,7 @@ Each component is a standalone module returning an Alpine `x-data` object:
     } );
     ```
 === "Usage in a view"
-    ```html title="app/views/_components/ui/messagebox.bxm"
+    ```html title="app/views/_components/ui/messagebox.bxm" linenums="1"
     <div x-data="messageBox" x-show="visible" x-transition>
         <!-- alert content -->
     </div>
@@ -66,7 +66,7 @@ Each component is a standalone module returning an Alpine `x-data` object:
 
 ## SCSS structure
 
-```text title="resources/assets/scss/ layout"
+```text title="resources/assets/scss/ layout" linenums="1"
 app.scss
   ├── _variables.scss   Bootstrap variable overrides
   ├── bootstrap          Full Bootstrap 5.3 import
@@ -203,7 +203,10 @@ The source also contains `Header.js`, `Sidebar.js`, `TopBarNotifications.js`, an
 
 User avatars and the application branding logo are stored on the private cbfs `assets` disk (see [Configuration](configuration.md#module-configuration)) and streamed out by `Assets.bx` (see [Handlers & Routing](handlers-routing.md#assets)) rather than served as static files.
 
-![The Profile page, showing the avatar upload and assigned role](../assets/screenshots/profile.png)
+<figure>
+	<img src="../assets/screenshots/profile.png" alt="The Profile page, showing the avatar upload and assigned role">
+	<figcaption>The Profile page, showing the avatar upload and assigned role.</figcaption>
+</figure>
 
 - **Display** goes through the `_components/ui/avatar` partial: it renders `<img src="/avatars/:userId/:size">` when `hasAvatar` is true, and falls back to an initials `<span>` otherwise. It is wired into the sidebar, topbar, and Users listing table (server-projected `hasAvatar` field), and inline in the Users detail page (`x-show`/`x-cloak` toggling on `user.hasAvatar`, since that page's avatar sits inside an Alpine-driven summary card rather than a static partial).
 - **Upload/remove** for the current user's own avatar lives on the Profile page, owned by `profileForm` (`ProfileForm.js`): a hidden file input reads the selected image as a base64 data URI (`readFileAsDataUrl()`) and posts it to `POST /profile/avatar`; `DELETE /profile/avatar` removes it. Both bump a `version` counter used as a cache-busting query param on the streamed URL, since the file path itself does not change between uploads.

@@ -38,7 +38,10 @@ The authentication flow can use either shipped layout through the `cbLoginLayout
 
 Choose **Auth Center** or **Auth Split** on the `/settings` page. The selected layout applies to login, registration, invitation activation, and password-recovery pages. See [App Settings](../reference/settings.md#login-layout-selection) for the layout files and custom-layout instructions.
 
-![The login screen with the default AuthSplit layout](../assets/screenshots/login.png)
+<figure>
+	<img src="../assets/screenshots/login.png" alt="The login screen with the default AuthSplit layout">
+	<figcaption>The login screen using the default <code>AuthSplit</code> layout.</figcaption>
+</figure>
 
 ## Single sign-on
 
@@ -50,7 +53,7 @@ configured provider.
 Google is the shipped example provider. Set these values in `.env` after
 registering the callback URL `/cbsso/auth/Google` with Google:
 
-```dotenv
+```dotenv linenums="1"
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=https://example.com/cbsso/auth/Google
@@ -78,7 +81,7 @@ and [cbauth integration](https://cbsso.ortusbooks.com/cbauth-integration/enablin
 ::: step "Prepare the database"
 From the project root, run the SSO identity migration:
 
-```bash
+```bash linenums="1"
 box migrate up
 ```
 
@@ -92,14 +95,14 @@ a project, configure the OAuth consent screen, and create an **OAuth client ID**
 with application type **Web application**. Add this exact authorized redirect
 URI, using the public HTTPS URL of your app:
 
-```text
+```text linenums="1"
 https://your-domain.example/cbsso/auth/Google
 ```
 
 Copy the client ID and client secret into the local `.env` file. The redirect
 URI must be the same value in Google Cloud and `GOOGLE_REDIRECT_URI`:
 
-```dotenv
+```dotenv linenums="1"
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_REDIRECT_URI=https://your-domain.example/cbsso/auth/Google
@@ -112,7 +115,7 @@ still boot before SSO is configured.
 Automatic account creation is disabled by default. To allow new Google users,
 explicitly enable it and restrict the permitted email domains:
 
-```dotenv
+```dotenv linenums="1"
 CBSSO_AUTO_PROVISION=true
 CBSSO_ALLOWED_DOMAINS=example.com,example.org
 ```
@@ -267,7 +270,7 @@ All three are editable at `/settings` like any other app setting - see [App Sett
 
 `app/config/modules/cbsecurity.bx` is the single source of truth for the firewall:
 
-```boxlang title="app/config/modules/cbsecurity.bx (excerpt)" hl_lines="3 8 9"
+```boxlang title="app/config/modules/cbsecurity.bx (excerpt)" hl_lines="3 8 9" linenums="1"
 {
     authentication : {
         provider          : "authenticationService@cbauth",
@@ -305,10 +308,16 @@ Every permission is a slug in the form `resource:action`, seeded by `resources/d
 
 ::: columns
 ::: column
-![The Roles admin page](../assets/screenshots/roles.png)
+<figure>
+	<img src="../assets/screenshots/roles.png" alt="The Roles admin page">
+	<figcaption>The Roles admin page.</figcaption>
+</figure>
 :::
 ::: column
-![The Permissions admin page, grouped by resource](../assets/screenshots/permissions.png)
+<figure>
+	<img src="../assets/screenshots/permissions.png" alt="The Permissions admin page, grouped by resource">
+	<figcaption>The Permissions admin page, grouped by resource.</figcaption>
+</figure>
 :::
 :::
 
@@ -331,7 +340,7 @@ A comma-separated list is an **OR** check — any one of the listed permissions 
 
 **Mirror it in the view** — UX only, *never* the security boundary on its own. `User.bx` exposes `hasPermission()` on `prc.authUser`, available in any view or layout rendered through a secured handler:
 
-```html title="Example view guard"
+```html title="Example view guard" linenums="1"
 <bx:if prc.authUser.hasPermission( "roles:write,roles:admin" )>
     <button type="button" class="btn btn-primary" @click="openCreate()">New Role</button>
 </bx:if>
@@ -357,7 +366,10 @@ A user who fails an `@secured` check is redirected:
 | `AuditLog` / `AuditLogService` | The audit trail. The `AuditLogger` interceptor writes sign-ins, sign-outs, and failed authentication/authorization automatically — see [Architecture](../architecture.md#interceptors) |
 | `Passkey` / `PasskeyService` | WebAuthn credential storage via `cbsecurity-passkeys`' `ICredentialRepository` contract |
 
-![The Audit Log admin page, showing a recorded sign-in](../assets/screenshots/auditlog.png)
+<figure>
+	<img src="../assets/screenshots/auditlog.png" alt="The Audit Log admin page, showing a recorded sign-in">
+	<figcaption>The Audit Log admin page, showing a recorded sign-in.</figcaption>
+</figure>
 
 ## Known issues
 
