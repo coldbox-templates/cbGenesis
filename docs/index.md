@@ -2,7 +2,7 @@
 title: Home
 order: 1
 icon: phosphor-duotone:lightning
-summary: A production-ready ColdBox HMVC starter template for BoxLang - authentication, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.
+summary: A production-ready ColdBox HMVC starter template for BoxLang - authentication, SSO, passkeys, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.
 toc: false
 ---
 
@@ -14,7 +14,7 @@ toc: false
 	</div>
 </div>
 
-A production-ready **ColdBox HMVC** starter template for [BoxLang](https://boxlang.io) - the modern, dynamic JVM language. It ships with authentication, role-based permissions, API tokens, dark mode, and an Alpine-powered admin panel, so you spend your first day building features instead of scaffolding auth.
+A production-ready **ColdBox HMVC** starter template for [BoxLang](https://boxlang.io) - the modern, dynamic JVM language. It ships with authentication, SSO, passkeys, role-based permissions, API tokens, dark mode, and an Alpine-powered admin panel, so you spend your first day building features instead of scaffolding auth.
 
 ::: cards
 ::: card title="Get Started in Minutes" icon="phosphor-duotone:rocket-launch" href="getting-started.md"
@@ -25,6 +25,9 @@ Application code lives in `app/`, fully separated from the public webroot in `pu
 :::
 ::: card title="Auth & RBAC, Batteries Included" icon="phosphor-duotone:shield-check" href="guides/security.md"
 Session auth via cbauth, `@secured` handler annotations, CSRF rotation, JWT support, and a `resource:action` permission model.
+:::
+::: card title="SSO & Passkeys" icon="phosphor-duotone:key" href="guides/security.md#single-sign-on"
+cbSSO with a shipped Google OAuth provider and account linking, plus WebAuthn passkeys for passwordless sign-in.
 :::
 ::: card title="Hibernate ORM + qb" icon="phosphor-duotone:database" href="guides/database-orm.md"
 `BaseEntity`/`BaseService` conventions on top of cborm, migrations via cfmigrations, and qb for anything raw SQL does better.
@@ -40,6 +43,70 @@ Environment variables for the essentials, DB-backed admin settings for everythin
 :::
 ::: card title="Production Ready" icon="phosphor-duotone:cloud-arrow-up" href="deployment.md"
 A real go-live checklist, Docker support, and a choice of CommandBox or the BoxLang MiniServer.
+:::
+:::
+
+## Screenshots
+
+The admin panel, end to end - login through audit trail:
+
+::: columns
+::: column
+<figure>
+	<img src="assets/screenshots/login.png" alt="The login screen using the default AuthSplit layout">
+	<figcaption>Login - the default <code>AuthSplit</code> layout.</figcaption>
+</figure>
+:::
+::: column
+<figure>
+	<img src="assets/screenshots/dashboard.png" alt="The admin dashboard after signing in">
+	<figcaption>Dashboard - after signing in.</figcaption>
+</figure>
+:::
+:::
+
+::: columns
+::: column
+<figure>
+	<img src="assets/screenshots/users.png" alt="The Users admin page">
+	<figcaption>Users - search, invite, and manage accounts.</figcaption>
+</figure>
+:::
+::: column
+<figure>
+	<img src="assets/screenshots/roles.png" alt="The Roles admin page">
+	<figcaption>Roles - group permissions and assign users.</figcaption>
+</figure>
+:::
+:::
+
+::: columns
+::: column
+<figure>
+	<img src="assets/screenshots/permissions.png" alt="The Permissions admin page, grouped by resource">
+	<figcaption>Permissions - the <code>resource:action</code> model, grouped by resource.</figcaption>
+</figure>
+:::
+::: column
+<figure>
+	<img src="assets/screenshots/settings.png" alt="The Global Settings admin page">
+	<figcaption>Settings - DB-backed configuration, no redeploy needed.</figcaption>
+</figure>
+:::
+:::
+
+::: columns
+::: column
+<figure>
+	<img src="assets/screenshots/profile.png" alt="The Profile page, showing the avatar upload and assigned role">
+	<figcaption>Profile - avatar, passkeys, API tokens, and account settings.</figcaption>
+</figure>
+:::
+::: column
+<figure>
+	<img src="assets/screenshots/auditlog.png" alt="The Audit Log admin page, showing a recorded sign-in">
+	<figcaption>Audit Log - every sign-in, sign-out, and access failure.</figcaption>
+</figure>
 :::
 :::
 
