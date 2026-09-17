@@ -76,7 +76,7 @@ box run-script docker:run
 
 Build the frontend before creating a production image:
 
-```bash
+```bash linenums="1"
 npm run build
 ```
 
