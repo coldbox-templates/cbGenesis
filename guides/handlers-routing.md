@@ -28,7 +28,7 @@ tags: [guides, handlers, routing]
 
 Every protected handler extends `BaseSecureHandler`, whose `preHandler` [verifies CSRF on every state-changing request](#csrf-verification), forces the `Admin` layout, and redirects to `profile/passkey-required` when `cbRequirePasskey` is on and the user has none. It also provides shared helpers (`getApiResults()`, `ensureSortDirection()`, `getPagination()`):
 
-```boxlang title="app/handlers/BaseSecureHandler.bx"
+```boxlang title="app/handlers/BaseSecureHandler.bx" linenums="1"
 component extends="coldbox.system.RestHandler" {
 
     function preHandler( event, rc, prc ){
@@ -42,7 +42,7 @@ component extends="coldbox.system.RestHandler" {
 
 Building a new secured handler starts the same way every time:
 
-```boxlang title="Example: a new secured handler"
+```boxlang title="Example: a new secured handler" linenums="1"
 component extends="BaseSecureHandler" secured {
 
     function index( event, rc, prc ){
@@ -146,13 +146,16 @@ Every one of these is CSRF-verified by `BaseSecureHandler` unless it is reached 
 
 `ensureNotSelf()` guards several of these to block an admin from demoting or removing their own roles.
 
-![The Users admin page](../assets/screenshots/users.png)
+<figure>
+	<img src="../assets/screenshots/users.png" alt="The Users admin page">
+	<figcaption>The Users admin page.</figcaption>
+</figure>
 
 ## CSRF verification
 
 `app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false`, so there is no global interceptor. Instead, `BaseSecureHandler.preHandler()` verifies CSRF **deny-by-default** for every handler that extends it:
 
-```boxlang title="app/handlers/BaseSecureHandler.bx (excerpt)"
+```boxlang title="app/handlers/BaseSecureHandler.bx (excerpt)" linenums="1"
 static {
     // The safe methods of RFC 9110, exempt from CSRF verification below.
     SAFE_HTTP_METHODS = "GET,HEAD,OPTIONS"
@@ -182,7 +185,7 @@ What this means when you extend a secured handler:
 
 All routes are declared in one `configure()` function:
 
-```boxlang title="app/config/Router.bx (excerpt)"
+```boxlang title="app/config/Router.bx (excerpt)" linenums="1"
 route( "/healthcheck" ).to( () => "Ok!" );
 
 get( "dashboard" ).to( "Dashboard.index" );

@@ -10,7 +10,7 @@ tags: [guides, email]
 
 Email templates use [cbmailservices](https://coldbox-mailservices.ortusbooks.com) with simple `@token@` placeholders, replaced at send time:
 
-```html title="app/email_templates/password_verification.bxm"
+```html title="app/email_templates/password_verification.bxm" linenums="1"
 <h1>Reset Your Password</h1>
 <p>Click the link below to reset your password:</p>
 <a href="@linkToken@">Reset Password</a>

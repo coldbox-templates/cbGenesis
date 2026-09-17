@@ -74,7 +74,7 @@ component
 ```
 
 === "Entity"
-    ```boxlang title="app/models/security/Role.bx"
+    ```boxlang title="app/models/security/Role.bx" linenums="1"
     /**
      * A role: a named bundle of permissions.
      */
@@ -91,7 +91,7 @@ component
     }
     ```
 === "Service"
-    ```boxlang title="app/models/security/RoleService.bx"
+    ```boxlang title="app/models/security/RoleService.bx" linenums="1"
     component extends="app.models.BaseService" singleton threadSafe {
 
         function getAllForLookup(){

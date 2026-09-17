@@ -174,7 +174,10 @@ Security &amp; Permissions</h1>
 </tbody>
 </table></div>
 <p>Choose <strong>Auth Center</strong> or <strong>Auth Split</strong> on the <code>/settings</code> page. The selected layout applies to login, registration, invitation activation, and password-recovery pages. See <a href="/reference/settings/index.html#login-layout-selection">App Settings</a> for the layout files and custom-layout instructions.</p>
-<p><picture><source type="image/webp" srcset="/assets/screenshots/login-400w.95986929.webp 400w, /assets/screenshots/login-800w.95986929.webp 800w, /assets/screenshots/login-1200w.95986929.webp 1200w, /assets/screenshots/login-1440w.95986929.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/login.png" srcset="/assets/screenshots/login-400w.95986929.png 400w, /assets/screenshots/login-800w.95986929.png 800w, /assets/screenshots/login-1200w.95986929.png 1200w" sizes="(min-width: 800px) 800px, 100vw"  alt="The login screen with the default AuthSplit layout" /></picture></p>
+<figure>
+	<picture><source type="image/webp" srcset="/assets/screenshots/login-720w.95986929.webp 720w, /assets/screenshots/login-1440w.95986929.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/login.png" srcset="/assets/screenshots/login-720w.95986929.png 720w" sizes="(min-width: 800px) 800px, 100vw"  alt="The login screen with the default AuthSplit layout"></picture>
+	<figcaption>The login screen using the default <code>AuthSplit</code> layout.</figcaption>
+</figure>
 <h2 id="single-sign-on"><a href="#single-sign-on" id="single-sign-on" name="single-sign-on" class="anchor"></a>Single sign-on</h2>
 <p>cbSSO is enabled through <code>app/config/modules/cbsso.bx</code>. It uses cbauth as the
 session authority, so local password login, passkeys, and SSO share the same
@@ -182,7 +185,7 @@ session and authorization rules. The login page renders a link for every
 configured provider.</p>
 <p>Google is the shipped example provider. Set these values in <code>.env</code> after
 registering the callback URL <code>/cbsso/auth/Google</code> with Google:</p>
-<pre><code class="language-dotenv">GOOGLE_CLIENT_ID=
+<pre data-bxsites-start-line="1"><code class="language-dotenv">GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=https://example.com/cbsso/auth/Google
 </code></pre>
@@ -202,7 +205,7 @@ provisioning, identity-matching, and audit rules. See cbSSO's documentation for
 <a href="https://cbsso.ortusbooks.com/usage/interception-points.md">interception points</a>,
 and <a href="https://cbsso.ortusbooks.com/cbauth-integration/enabling-integration.md">cbauth integration</a>.</p>
 <div class="bxsites-stepper"><div class="bxsites-step"><div class="bxsites-step__marker">1</div><div class="bxsites-step__content"><div class="bxsites-step__title">Prepare the database</div><p>From the project root, run the SSO identity migration:</p>
-<pre><code class="language-bash">box migrate up
+<pre data-bxsites-start-line="1"><code class="language-bash">box migrate up
 </code></pre>
 <p>This creates the <code>user_sso_identities</code> table used to link a local account to an
 identity-provider subject. Run this before attempting the first SSO login.</p>
@@ -210,11 +213,11 @@ identity-provider subject. Run this before attempting the first SSO login.</p>
 a project, configure the OAuth consent screen, and create an <strong>OAuth client ID</strong>
 with application type <strong>Web application</strong>. Add this exact authorized redirect
 URI, using the public HTTPS URL of your app:</p>
-<pre><code class="language-text">https://your-domain.example/cbsso/auth/Google
+<pre data-bxsites-start-line="1"><code class="language-text">https://your-domain.example/cbsso/auth/Google
 </code></pre>
 <p>Copy the client ID and client secret into the local <code>.env</code> file. The redirect
 URI must be the same value in Google Cloud and <code>GOOGLE_REDIRECT_URI</code>:</p>
-<pre><code class="language-dotenv">GOOGLE_CLIENT_ID=your-google-client-id
+<pre data-bxsites-start-line="1"><code class="language-dotenv">GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_REDIRECT_URI=https://your-domain.example/cbsso/auth/Google
 </code></pre>
@@ -223,7 +226,7 @@ only when all three <code>GOOGLE_*</code> settings are populated, so the applica
 still boot before SSO is configured.</p>
 <p>Automatic account creation is disabled by default. To allow new Google users,
 explicitly enable it and restrict the permitted email domains:</p>
-<pre><code class="language-dotenv">CBSSO_AUTO_PROVISION=true
+<pre data-bxsites-start-line="1"><code class="language-dotenv">CBSSO_AUTO_PROVISION=true
 CBSSO_ALLOWED_DOMAINS=example.com,example.org
 </code></pre>
 <p>Leave <code>CBSSO_AUTO_PROVISION=false</code> when every SSO user must already have a local
@@ -369,7 +372,7 @@ documentation.</p>
 </div>
 <h2 id="cbsecurity-configuration"><a href="#cbsecurity-configuration" id="cbsecurity-configuration" name="cbsecurity-configuration" class="anchor"></a><code>cbsecurity</code> configuration</h2>
 <p><code>app/config/modules/cbsecurity.bx</code> is the single source of truth for the firewall:</p>
-<pre data-bxsites-hl-lines="3,8,9" data-bxsites-title="app&#x2f;config&#x2f;modules&#x2f;cbsecurity.bx &#x28;excerpt&#x29;"><code class="language-boxlang">{
+<pre data-bxsites-hl-lines="3,8,9" data-bxsites-start-line="1" data-bxsites-title="app&#x2f;config&#x2f;modules&#x2f;cbsecurity.bx &#x28;excerpt&#x29;"><code class="language-boxlang">{
     authentication : {
         provider          : &quot;authenticationService@cbauth&quot;,
         prcUserVariable   : &quot;authUser&quot;
@@ -411,8 +414,14 @@ documentation.</p>
 <p><code>admin</code> means &quot;full administration of that resource&quot; and is always OR'd alongside the specific action a route needs, so a user holding <code>roles:admin</code> passes any <code>roles:*</code> check without also needing <code>roles:read</code>/<code>roles:write</code>/<code>roles:delete</code> individually. The seeder assigns all 20 built-in permissions to a single <strong>Admin</strong> role, granted to the seeded <code>admin@cbgenesis.com</code> user.</p>
 </div>
 </div>
-<div class="bxsites-columns"><div class="bxsites-column"><p><picture><source type="image/webp" srcset="/assets/screenshots/roles-400w.54bcc9db.webp 400w, /assets/screenshots/roles-800w.54bcc9db.webp 800w, /assets/screenshots/roles-1200w.54bcc9db.webp 1200w, /assets/screenshots/roles-1440w.54bcc9db.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/roles.png" srcset="/assets/screenshots/roles-400w.54bcc9db.png 400w, /assets/screenshots/roles-800w.54bcc9db.png 800w, /assets/screenshots/roles-1200w.54bcc9db.png 1200w" sizes="(min-width: 800px) 800px, 100vw"  alt="The Roles admin page" /></picture></p>
-</div><div class="bxsites-column"><p><picture><source type="image/webp" srcset="/assets/screenshots/permissions-400w.c436fcce.webp 400w, /assets/screenshots/permissions-800w.c436fcce.webp 800w, /assets/screenshots/permissions-1200w.c436fcce.webp 1200w, /assets/screenshots/permissions-1440w.c436fcce.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/permissions.png" srcset="/assets/screenshots/permissions-400w.c436fcce.png 400w, /assets/screenshots/permissions-800w.c436fcce.png 800w, /assets/screenshots/permissions-1200w.c436fcce.png 1200w" sizes="(min-width: 800px) 800px, 100vw"  alt="The Permissions admin page, grouped by resource" /></picture></p>
+<div class="bxsites-columns"><div class="bxsites-column"><figure>
+	<picture><source type="image/webp" srcset="/assets/screenshots/roles-720w.54bcc9db.webp 720w, /assets/screenshots/roles-1440w.54bcc9db.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/roles.png" srcset="/assets/screenshots/roles-720w.54bcc9db.png 720w" sizes="(min-width: 800px) 800px, 100vw"  alt="The Roles admin page"></picture>
+	<figcaption>The Roles admin page.</figcaption>
+</figure>
+</div><div class="bxsites-column"><figure>
+	<picture><source type="image/webp" srcset="/assets/screenshots/permissions-720w.c436fcce.webp 720w, /assets/screenshots/permissions-1440w.c436fcce.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/permissions.png" srcset="/assets/screenshots/permissions-720w.c436fcce.png 720w" sizes="(min-width: 800px) 800px, 100vw"  alt="The Permissions admin page, grouped by resource"></picture>
+	<figcaption>The Permissions admin page, grouped by resource.</figcaption>
+</figure>
 </div></div>
 <p><strong>Enforce it on the handler</strong> — this is the real security boundary, resolved by cbsecurity's <code>CBAuthValidator</code> against the authenticated user's permissions:</p>
 <pre data-bxsites-start-line="1" data-bxsites-title="app&#x2f;handlers&#x2f;Roles.bx"><code class="language-boxlang">@secured( &quot;roles:admin,roles:read&quot; )     // class-level: applies to index and any action without its own annotation
@@ -428,7 +437,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 </code></pre>
 <p>A comma-separated list is an <strong>OR</strong> check — any one of the listed permissions is enough.</p>
 <p><strong>Mirror it in the view</strong> — UX only, <em>never</em> the security boundary on its own. <code>User.bx</code> exposes <code>hasPermission()</code> on <code>prc.authUser</code>, available in any view or layout rendered through a secured handler:</p>
-<pre data-bxsites-title="Example view guard"><code class="language-html">&lt;bx:if prc.authUser.hasPermission( &quot;roles:write,roles:admin&quot; )&gt;
+<pre data-bxsites-start-line="1" data-bxsites-title="Example view guard"><code class="language-html">&lt;bx:if prc.authUser.hasPermission( &quot;roles:write,roles:admin&quot; )&gt;
     &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; @click=&quot;openCreate()&quot;&gt;New Role&lt;/button&gt;
 &lt;/bx:if&gt;
 </code></pre>
@@ -454,7 +463,10 @@ class extends=&quot;BaseSecureHandler&quot; {
 <tr><td><code>Passkey</code> / <code>PasskeyService</code></td><td>WebAuthn credential storage via <code>cbsecurity-passkeys</code>' <code>ICredentialRepository</code> contract</td></tr>
 </tbody>
 </table></div>
-<p><picture><source type="image/webp" srcset="/assets/screenshots/auditlog-400w.1b6feef3.webp 400w, /assets/screenshots/auditlog-800w.1b6feef3.webp 800w, /assets/screenshots/auditlog-1200w.1b6feef3.webp 1200w, /assets/screenshots/auditlog-1440w.1b6feef3.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/auditlog.png" srcset="/assets/screenshots/auditlog-400w.1b6feef3.png 400w, /assets/screenshots/auditlog-800w.1b6feef3.png 800w, /assets/screenshots/auditlog-1200w.1b6feef3.png 1200w" sizes="(min-width: 800px) 800px, 100vw"  alt="The Audit Log admin page, showing a recorded sign-in" /></picture></p>
+<figure>
+	<picture><source type="image/webp" srcset="/assets/screenshots/auditlog-720w.1b6feef3.webp 720w, /assets/screenshots/auditlog-1440w.1b6feef3.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/auditlog.png" srcset="/assets/screenshots/auditlog-720w.1b6feef3.png 720w" sizes="(min-width: 800px) 800px, 100vw"  alt="The Audit Log admin page, showing a recorded sign-in"></picture>
+	<figcaption>The Audit Log admin page, showing a recorded sign-in.</figcaption>
+</figure>
 <h2 id="known-issues"><a href="#known-issues" id="known-issues" name="known-issues" class="anchor"></a>Known issues</h2>
 <h3 id="this-is-an-invalid-domain-when-registering-a-passkey"><a href="#this-is-an-invalid-domain-when-registering-a-passkey" id="this-is-an-invalid-domain-when-registering-a-passkey" name="this-is-an-invalid-domain-when-registering-a-passkey" class="anchor"></a>&quot;This is an invalid domain&quot; when registering a passkey</h3>
 <p>Passkeys are configured for the <code>localhost</code> domain during local development. If you open the application with an IP address such as <code>http://127.0.0.1:8080</code>, WebAuthn treats that as a different origin and rejects the registration with <strong>&quot;This is an invalid domain.&quot;</strong></p>
@@ -465,7 +477,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 </div></a></div>
 
 
-	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 16, 2026, 6&#x3a;04&#x3a;45 PM</span></div>
+	<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/security.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/guides/security.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 17, 2026, 11&#x3a;13&#x3a;02 AM</span></div>
 
 				</article>
 
