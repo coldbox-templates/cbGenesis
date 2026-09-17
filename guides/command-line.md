@@ -15,18 +15,18 @@ CB Genesis is a BoxLang application. Its `box` commands must be provided by the 
 Install BoxLang with either the quick installer or BVM, then install `bx-cli`:
 
 === "Quick installer"
-    ```bash
+    ```bash linenums="1"
     /bin/bash -c "$(curl -fsSL https://install.boxlang.io)"
     ```
 
     To install with a Java 21 runtime when Java is not already available:
 
-    ```bash
+    ```bash linenums="1"
     curl -fsSL https://install.boxlang.io | bash -s -- --with-jre
     ```
 
 === "BVM"
-    ```bash
+    ```bash linenums="1"
     curl -fsSL https://install-bvm.boxlang.io | bash
     bvm install latest
     bvm use latest

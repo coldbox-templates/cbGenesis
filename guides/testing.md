@@ -26,7 +26,7 @@ The runner (`tests/runner.bxm`, wired up by `box.json`'s `testbox.runner` key) a
 
 ## Test structure
 
-```text title="tests/ layout"
+```text title="tests/ layout" linenums="1"
 tests/
 ├── Application.bx              Virtual ColdBox app (appMapping="/app")
 ├── runner.bxm                  TestBox CLI runner entry
