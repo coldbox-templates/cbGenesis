@@ -4,7 +4,17 @@ order: 1
 icon: phosphor-duotone:lightning
 summary: A production-ready ColdBox HMVC starter template for BoxLang - authentication, SSO, passkeys, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.
 toc: false
+layout: home
+ogImage: assets/home-banner.png
 ---
+
+<!--
+	This page renders through theme/home.bxm (the `layout: home` above),
+	which hardcodes the whole page and never includes this file's own
+	rendered body - everything below is kept, unused, as the starting
+	point for reverting to the normal layout.bxm + page.bxm rendering if
+	`layout: home` is ever removed.
+-->
 
 <div class="bxsites-hero">
 	<img class="bxsites-hero__banner" src="assets/home-banner.png" alt="CB Genesis Docs - The official ColdBox project starter. Everything you need to Scaffold. Build. Accelerate. Built for developers, by developers, backed by ColdBox.">
