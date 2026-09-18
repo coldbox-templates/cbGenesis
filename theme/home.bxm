@@ -283,7 +283,7 @@
 			<div class="hero-mark">#homeIcon( "cbgenesis" )#</div>
 			<span class="eyebrow">The official ColdBox starter</span>
 			<h1>Scaffold. Build.<br><span class="grad">Accelerate.</span></h1>
-			<p class="lead">A production-ready ColdBox HMVC starter for BoxLang &mdash; authentication, RBAC permissions, API tokens, an Alpine-powered admin panel, and a real test suite, so you spend day one building features instead of scaffolding auth.</p>
+			<p class="lead">A production-ready ColdBox HMVC starter for BoxLang &mdash; authentication, Google SSO, RBAC permissions, API tokens, rate limiting, an Alpine-powered admin panel, and a real test suite, so you spend day one building features instead of scaffolding auth.</p>
 			<div class="hero-actions">
 				<a class="bxh-btn bxh-btn-primary" href="#variables.basePath#getting-started/">Get Started &rarr;</a>
 <bx:if len( variables.repoUrl )>
@@ -297,6 +297,7 @@
 				<span>#homeIcon( "shield-check" )#BoxLang 1.16+</span>
 				<span>#homeIcon( "shield-check" )#Java 21+</span>
 				<span>#homeIcon( "shield-check" )#Node 18+</span>
+				<span>#homeIcon( "shield-check" )#CommandBox (no-lang) + bx-cli</span>
 			</div>
 		</div>
 		<div class="preview">
@@ -363,7 +364,7 @@
 		<div class="bxh-grid">
 			<div class="bxh-card"><div class="icon">#homeIcon( "rocket" )#</div><h3><a href="#variables.basePath#getting-started/">Get Started in Minutes</a></h3><p>Install BoxLang, clone the template, run migrations, and be looking at the login screen in under ten minutes.</p></div>
 			<div class="bxh-card"><div class="icon">#homeIcon( "folders" )#</div><h3><a href="#variables.basePath#architecture/">Modern Template Structure</a></h3><p>Application code lives in <code>app/</code>, fully separated from the public webroot in <code>public/</code> &mdash; enhanced security by default.</p></div>
-			<div class="bxh-card"><div class="icon">#homeIcon( "shield-check" )#</div><h3><a href="#variables.basePath#guides/security/">Auth &amp; RBAC, Batteries Included</a></h3><p>Session auth via cbauth, <code>@secured</code> handler annotations, CSRF rotation, JWT support, and a <code>resource:action</code> permission model.</p></div>
+			<div class="bxh-card"><div class="icon">#homeIcon( "shield-check" )#</div><h3><a href="#variables.basePath#guides/security/">Auth &amp; RBAC, Batteries Included</a></h3><p>Session auth via cbauth, Google SSO via cbSSO, <code>@secured</code> handler annotations, CSRF rotation, JWT support, IP-based rate limiting, and a <code>resource:action</code> permission model.</p></div>
 			<div class="bxh-card"><div class="icon">#homeIcon( "database" )#</div><h3><a href="#variables.basePath#guides/database-orm/">Hibernate ORM + qb</a></h3><p><code>BaseEntity</code>/<code>BaseService</code> conventions on top of cborm, migrations via cfmigrations, and qb for anything raw SQL does better.</p></div>
 			<div class="bxh-card"><div class="icon">#homeIcon( "palette" )#</div><h3><a href="#variables.basePath#guides/frontend/">Alpine.js + Bootstrap 5 UI</a></h3><p>Server-rendered BXM views, sprinkled with small Alpine components, compiled by Vite with hot module reload.</p></div>
 			<div class="bxh-card"><div class="icon">#homeIcon( "test-tube" )#</div><h3><a href="#variables.basePath#guides/testing/">A Real Test Suite</a></h3><p>TestBox unit specs for every entity and service, plus integration specs that exercise real HTTP requests.</p></div>
@@ -417,6 +418,14 @@
 				<div class="sec-item">
 					<div class="icon">#homeIcon( "key" )#</div>
 					<div><h4>JWT &amp; API tokens</h4><p>First-class token auth alongside sessions &mdash; issue, list, and revoke tokens straight from a user's profile.</p></div>
+				</div>
+				<div class="sec-item">
+					<div class="icon">#homeIcon( "users" )#</div>
+					<div><h4>Google SSO via cbSSO</h4><p>Local password, passkeys, and SSO all share the same cbauth session authority &mdash; account linking, provisioning, and identity rules enforced by a dedicated interceptor.</p></div>
+				</div>
+				<div class="sec-item">
+					<div class="icon">#homeIcon( "shield-check" )#</div>
+					<div><h4>Rate limiting, by IP</h4><p>A <code>RateLimiter</code> interceptor throttles login, registration, and password-reset attempts per IP, with a configurable max attempt count and window.</p></div>
 				</div>
 			</div>
 		</div>
