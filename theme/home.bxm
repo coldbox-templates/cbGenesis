@@ -297,7 +297,7 @@
 				<span>#homeIcon( "shield-check" )#BoxLang 1.16+</span>
 				<span>#homeIcon( "shield-check" )#Java 21+</span>
 				<span>#homeIcon( "shield-check" )#Node 18+</span>
-				<span>#homeIcon( "shield-check" )#CommandBox (no-lang) + bx-cli</span>
+				<span>#homeIcon( "shield-check" )#bx-cli</span>
 			</div>
 		</div>
 		<div class="preview">
