@@ -477,13 +477,13 @@
 			<div class="eco-hero-mark">#homeIcon( "coldbox" )#</div>
 		</div>
 		<div class="eco-row">
-			<a class="eco-card" href="https://coldbox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "coldbox" )#</div><b>ColdBox</b><span>The HMVC framework cbGenesis is built on.</span></a>
+			<a class="eco-card" href="https://www.coldbox.org" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "coldbox" )#</div><b>ColdBox</b><span>The HMVC framework cbGenesis is built on.</span></a>
 			<a class="eco-card" href="https://boxlang.io" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "boxlang" )#</div><b>BoxLang</b><span>The modern, dynamic JVM language it runs on.</span></a>
 			<a class="eco-card" href="https://wirebox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "wirebox" )#</div><b>WireBox</b><span>Dependency injection for every handler and service.</span></a>
 			<a class="eco-card" href="https://cachebox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "cachebox" )#</div><b>CacheBox</b><span>Caching for settings, permissions, and lookups.</span></a>
 			<a class="eco-card" href="https://logbox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "logbox" )#</div><b>LogBox</b><span>Structured logging for every layer of the app.</span></a>
-			<a class="eco-card" href="https://testbox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "testbox" )#</div><b>TestBox</b><span>The BDD/TDD framework cbGenesis's own specs run on.</span></a>
-			<a class="eco-card eco-card-wide" href="https://commandbox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "commandbox" )#</div><b>CommandBox</b><span>The package manager and CLI that installs, migrates, and serves cbGenesis in three commands.</span></a>
+			<a class="eco-card" href="https://testbox.run" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "testbox" )#</div><b>TestBox</b><span>The BDD/TDD framework cbGenesis's own specs run on.</span></a>
+			<a class="eco-card eco-card-wide" href="https://commandbox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "commandbox" )#</div><b>CommandBox (bx-cli)</b><span>The package manager and CLI that installs, migrates, and serves cbGenesis in three commands.</span></a>
 		</div>
 	</div>
 </section>
