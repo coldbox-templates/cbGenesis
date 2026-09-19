@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - 'development'
+    # Docs-only changes are handled by docs.yml instead - skip the full
+    # test + snapshot release build when a push only touches those paths.
+    paths-ignore:
+      - "docs/**"
+      - "theme/**"
+      - "bxsites.yaml"
+      - ".github/workflows/docs.yml"
 
   # Manual Trigger
   workflow_dispatch:
