@@ -17,6 +17,7 @@ on:
       - development
     paths:
       - "docs/**"
+      - "theme/**"
       - "bxsites.yaml"
       - ".github/workflows/docs.yml"
 
