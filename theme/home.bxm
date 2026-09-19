@@ -475,17 +475,95 @@
 		<div class="section-head" style="text-align:center;margin-inline:auto">
 			<span class="eyebrow" style="justify-content:center">Built on the ColdBox platform</span>
 			<h2>Not a one‑off template. A whole platform.</h2>
-			<div class="eco-hero-mark">#homeIcon( "coldbox" )#</div>
 		</div>
-		<div class="eco-row">
-			<a class="eco-card" href="https://www.coldbox.org" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "coldbox" )#</div><b>ColdBox</b><span>The HMVC framework cbGenesis is built on.</span></a>
-			<a class="eco-card" href="https://boxlang.io" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "boxlang" )#</div><b>BoxLang</b><span>The modern, dynamic JVM language it runs on.</span></a>
-			<a class="eco-card" href="https://wirebox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "wirebox" )#</div><b>WireBox</b><span>Dependency injection for every handler and service.</span></a>
-			<a class="eco-card" href="https://cachebox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "cachebox" )#</div><b>CacheBox</b><span>Caching for settings, permissions, and lookups.</span></a>
-			<a class="eco-card" href="https://logbox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "logboxfull" )#</div><b>LogBox</b><span>Structured logging for every layer of the app.</span></a>
-			<a class="eco-card" href="https://testbox.run" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "testbox" )#</div><b>TestBox</b><span>The BDD/TDD framework cbGenesis's own specs run on.</span></a>
-			<a class="eco-card eco-card-wide" href="https://commandbox.ortusbooks.com" target="_blank" rel="noopener noreferrer"><div class="icon">#homeIcon( "commandbox" )#</div><b>CommandBox (bx-cli)</b><span>The package manager and CLI that installs, migrates, and serves cbGenesis in three commands.</span></a>
+
+		<div class="stack-diagram">
+			<div class="stack-aura" aria-hidden="true"></div>
+
+			<div class="stack-main">
+				<div class="layer layer-modules">
+					<div class="layer-tag">
+						<span class="tag-main"><span class="tag-icon">#homeIcon( "coldbox" )#</span><span class="tag-name">ColdBox Modules</span></span>
+						<span class="role">extend the platform for app design</span>
+					</div>
+					<div class="pill-row">
+						<span class="pill">cbSecurity</span>
+						<span class="pill">cbORM</span>
+						<span class="pill">qb</span>
+						<span class="pill">cbMailServices</span>
+						<span class="pill">cbSSO</span>
+						<span class="pill">cbFS</span>
+					</div>
+				</div>
+
+				<div class="connector d1"><div class="line"></div><span class="pulse"></span></div>
+
+				<div class="layer layer-platform">
+					<div class="platform-head">
+						<div class="platform-logo">#homeIcon( "coldbox" )#</div>
+						<div>
+							<div class="platform-name">ColdBox</div>
+							<div class="platform-sub">The MVC application platform &mdash; built from three core engines</div>
+						</div>
+					</div>
+					<div class="engine-row">
+						<div class="engine-card engine-1">
+							<div class="engine-icon">#homeIcon( "wirebox" )#</div>
+							<b>WireBox</b>
+							<small>Dependency Injection</small>
+						</div>
+						<div class="engine-card engine-2">
+							<div class="engine-icon">#homeIcon( "cachebox" )#</div>
+							<b>CacheBox</b>
+							<small>Caching</small>
+						</div>
+						<div class="engine-card engine-3">
+							<div class="engine-icon">#homeIcon( "logboxfull" )#</div>
+							<b>LogBox</b>
+							<small>Logging</small>
+						</div>
+					</div>
+				</div>
+
+				<div class="connector d2"><div class="line"></div><span class="pulse"></span></div>
+
+				<div class="layer layer-language">
+					<div class="platform-head">
+						<div class="platform-logo">#homeIcon( "boxlang" )#</div>
+						<div>
+							<div class="platform-name">BoxLang</div>
+							<div class="platform-sub">The modern, dynamic JVM language it all runs on</div>
+						</div>
+					</div>
+					<div class="pill-row">
+						<span class="pill">bx-orm</span>
+						<span class="pill">bx-mail</span>
+						<span class="pill">bx-image</span>
+						<span class="pill">bx-esapi</span>
+						<span class="pill">bx-mysql</span>
+						<span class="pill">bx-postgresql</span>
+						<span class="pill">bx-mssql</span>
+						<span class="pill">bx-oracle</span>
+						<span class="pill">bx-sqlite</span>
+						<span class="pill">bx-derby</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="stack-tooling">
+				<div class="tooling-label">⚙ Productivity tooling</div>
+				<a class="tool-card" href="https://commandbox.ortusbooks.com" target="_blank" rel="noopener noreferrer">
+					<div class="icon">#homeIcon( "commandbox" )#</div>
+					<div><b>CommandBox</b><span>bx‑cli &middot; package manager</span></div>
+				</a>
+				<a class="tool-card" href="https://testbox.run" target="_blank" rel="noopener noreferrer">
+					<div class="icon">#homeIcon( "testbox" )#</div>
+					<div><b>TestBox</b><span>BDD / TDD test engine</span></div>
+				</a>
+			</div>
 		</div>
+
+		<p class="foot-caption">Language, platform, and modules &mdash; three real layers, not marketing copy. Energy flows bottom‑up: BoxLang powers ColdBox's three core engines, which app‑facing modules extend.</p>
 	</div>
 </section>
 
