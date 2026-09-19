@@ -258,11 +258,17 @@
 .stack-aura {
 	position: absolute; inset: -60px -10% -60px 10%; z-index: 0; pointer-events: none;
 	background: conic-gradient(from 0deg, rgba(47,124,246,.16), rgba(139,92,246,.12), rgba(22,185,129,.14), rgba(47,124,246,.16));
-	filter: blur(70px); opacity: .5; border-radius: 50%;
+	filter: blur(44px); opacity: .5; border-radius: 50%;
 }
 [data-theme="dark"] .stack-aura { opacity: .8; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .stack-aura { opacity: .8; } }
-@media (prefers-reduced-motion: no-preference) { .stack-aura { animation: bxh-aura-spin 22s linear infinite; } }
+/* A continuously-rotating large blur is one of the most GPU-expensive things
+   CSS can do - cheap on desktop, but a common cause of scroll jank on phones.
+   Keep the movement on desktop, drop it to a static glow below 860px (the
+   same breakpoint the stack itself switches to a single column at). */
+@media (prefers-reduced-motion: no-preference) and (min-width: 861px) {
+	.stack-aura { animation: bxh-aura-spin 22s linear infinite; will-change: transform; }
+}
 @keyframes bxh-aura-spin { to { transform: rotate(360deg); } }
 
 .stack-main { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: stretch; }
