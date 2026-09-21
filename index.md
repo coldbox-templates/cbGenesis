@@ -9,7 +9,7 @@ ogImage: assets/home-banner.png
 ---
 
 <!--
-	This page renders through theme/home.bxm (the `layout: home` above),
+	This page renders through docs/.theme/home.bxm (the `layout: home` above),
 	which hardcodes the whole page and never includes this file's own
 	rendered body - everything below is kept, unused, as the starting
 	point for reverting to the normal layout.bxm + page.bxm rendering if
