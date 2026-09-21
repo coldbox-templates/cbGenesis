@@ -5,6 +5,13 @@ on:
     branches:
       - master
       - main
+    # Docs-only changes are handled by docs.yml instead - skip the full
+    # release build when a push only touches those paths.
+    paths-ignore:
+      - "docs/**"
+      - "docs/.theme/**"
+      - "bxsites.yaml"
+      - ".github/workflows/docs.yml"
 
   # Reusable workflow
   workflow_call:
