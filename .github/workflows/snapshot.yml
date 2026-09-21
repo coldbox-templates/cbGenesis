@@ -8,7 +8,7 @@ on:
     # test + snapshot release build when a push only touches those paths.
     paths-ignore:
       - "docs/**"
-      - "theme/**"
+      - "docs/.theme/**"
       - "bxsites.yaml"
       - ".github/workflows/docs.yml"
 
