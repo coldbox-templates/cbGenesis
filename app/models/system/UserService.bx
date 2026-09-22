@@ -533,7 +533,22 @@ class extends="app.models.BaseService" {
 			.when( !isNull( arguments.isVerified ), ( c ) => isVerified ? c.isNotNull( "verifiedAt" ) : c.isNull( "verifiedAt" )  )
 			// Role Filters
 			.when( !isNull( arguments.roleId ) && len( arguments.roleId ), ( c ) => c.eq( "roles.roleId", roleId ) )
-			.when( len( arguments.excludeRoleId ), ( c ) => c.ne( "roles.roleId", excludeRoleId ) )
+			// `ne( "roles.roleId", excludeRoleId )` would implicitly INNER JOIN the roles
+			// collection, which only matches users who have some *other* role - it drops
+			// users with zero roles entirely and still matches users who also hold the
+			// excluded role. Look up who actually holds that role first (same association
+			// traversal used below for `rolesByUser`) and exclude by userId instead.
+			.when( len( arguments.excludeRoleId ), ( c ) => {
+				var excludedUserIds = roleService
+					.newCriteria()
+					.eq( "roleId", excludeRoleId )
+					.createAlias( "users", "user" )
+					.withProjections( property = "user.userId" )
+					.list()
+				if ( excludedUserIds.len() ) {
+					c.notIn( "userId", excludedUserIds )
+				}
+			} )
 
 		// Run Results
 		results.count = c.count( "userId" )
@@ -582,6 +597,12 @@ class extends="app.models.BaseService" {
 				var invitation = invitationsByUser[ user.userId ] ?: {}
 				user.invitationInvitedAt = invitation.invitedAt ?: null
 				user.invitationExpiresAt = invitation.expiresAt ?: null
+				// Callers that project a restricted propertyList without "verifiedAt"
+				// (e.g. availableUsers()'s user picker) never asked for invitation
+				// status, so skip it rather than blow up on a struct key that isn't there.
+				if ( !structKeyExists( user, "verifiedAt" ) ) {
+					return
+				}
 				user.invitationStatus = user.verifiedAt != null
 					? "Accepted"
 					: structKeyExists( invitation, "expiresAt" )
