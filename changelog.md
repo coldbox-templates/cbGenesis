@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `box migrate down` failed on SQL Server with `The object 'df_users_hasAvatar' is dependent on column 'hasAvatar'.` The `hasAvatar` and `pendingEmail` rollback migrations dropped their columns by name only, so qb's SQL Server grammar had no way to know it first needed to drop the column's default constraint. Both migrations now pass the full column definition to `dropColumn()` instead.
 - Self-service registration and admin invitations were both broken: `doRegister` called a non-existent `.validate()` on the user entity, and the `email` field was silently dropped by the entity's population exclude list. ([#31](https://github.com/coldbox-templates/cbGenesis/pull/31))
 - Every validation error path in the handlers returned a 500 instead of the validation messages, calling the singular `getValidationResult()` where cborm defines `getValidationResults()`. ([#30](https://github.com/coldbox-templates/cbGenesis/pull/30))
 - Changing your password from the profile page always failed: `isValidPassword()` was called on `securityService`, which does not define it, instead of `settingService`. ([#32](https://github.com/coldbox-templates/cbGenesis/pull/32))
