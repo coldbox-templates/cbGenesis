@@ -12,11 +12,15 @@ class {
 			table.string( "firstName" )
 			table.string( "lastName" )
 			table.string( "email" ).unique()
+			// Staged address for the self-service email change flow: set while a
+			// change is pending confirmation, cleared once it lands on `email`.
+			table.string( "pendingEmail" ).nullable().default( "" )
 			table.string( "password" ).nullable()
 			// MySQL forbids a literal default on TEXT/BLOB/JSON columns; every insert
 			// path supplies a value (Users.bx falls back to ""), so this is nullable
 			// instead of defaulted.
 			table.text( "biography" ).nullable()
+			table.boolean( "hasAvatar" ).default( false )
 			table.datetime( "verifiedAt" ).nullable()
 			table.datetime( "lastLogin" ).nullable()
 			table.json( "preferences" ).nullable()
@@ -156,6 +160,25 @@ class {
 
 			table.index( "FK_userId", "idx_passkeyUser" )
 		} );
+
+		// User SSO Identities
+		schema.create( "user_sso_identities", ( table ) => {
+			table.string( "identityId", 36 ).primaryKey()
+			table.string( "FK_userId", 36 )
+			table.string( "provider", 64 )
+			table.string( "subject", 255 )
+			table.string( "nameIdFormat", 255 ).nullable()
+			table.boolean( "isActive" ).default( true )
+			table.timestamps()
+
+			table.foreignKey( "FK_userId" )
+				.references( "userId" )
+				.onTable( "users" )
+				.onDelete( "CASCADE" )
+
+			table.unique( [ "provider", "subject" ], "uq_ssoProviderSubject" )
+			table.index( "FK_userId", "idx_ssoIdentityUser" )
+		} )
     }
 
     function down( schema, qb ) {
@@ -165,6 +188,7 @@ class {
 		schema.dropIfExists( "user_remember_tokens" )
 		schema.dropIfExists( "user_action_tokens" )
 		schema.dropIfExists( "user_passkeys" )
+		schema.dropIfExists( "user_sso_identities" )
 		schema.dropIfExists( "users" )
     }
 

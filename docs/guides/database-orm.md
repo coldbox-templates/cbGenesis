@@ -118,10 +118,8 @@ Migrations run in filename/timestamp order:
 |---|---|
 | `..._settings.bx` | `settings` (GUID PK, unique `name`, longtext `value`) |
 | `..._security.bx` | `permissions`, `roles`, `role_permissions` (composite-PK join table, cascading FKs) |
-| `..._users.bx` | `users` (GUID PK, unique `email`, nullable `password`, JSON `preferences`), plus `user_roles`, `user_permissions`, `user_remember_tokens`, `user_api_tokens`, `user_action_tokens`, `user_passkeys` — every child table FK'd to `users.userId` with `ON DELETE CASCADE` |
+| `..._users.bx` | `users` (GUID PK, unique `email`, nullable `pendingEmail` for self-service email-change requests, nullable `password`, JSON `preferences`, boolean `hasAvatar` tracking whether a user has an uploaded avatar on the cbfs `assets` disk), plus `user_roles`, `user_permissions`, `user_remember_tokens`, `user_api_tokens`, `user_action_tokens`, `user_passkeys`, `user_sso_identities` — every child table FK'd to `users.userId` with `ON DELETE CASCADE` (see [Security & Permissions](security.md#related-security-services) and [Frontend](frontend.md#avatars-branding-logo)) |
 | `..._auditlogs.bx` | `audit_logs` append-only activity records with severity/category/action, actor and request metadata, and query indexes |
-| `..._add_pending_email_to_users.bx` | Adds nullable `pendingEmail` to `users`, for self-service email-change requests (see [Security & Permissions](security.md#related-security-services)) |
-| `..._add_has_avatar_to_users.bx` | Adds boolean `hasAvatar` (default `false`) to `users`, tracking whether a user has an uploaded avatar on the cbfs `assets` disk (see [Frontend](frontend.md#avatars-branding-logo)) |
 
 ## Seed data
 
