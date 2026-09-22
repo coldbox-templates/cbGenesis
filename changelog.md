@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CSRF verification is now deny-by-default. `BaseSecureHandler.preHandler()` rejects any request into a secured handler that is not `GET`, `HEAD`, or `OPTIONS` and does not carry a valid `rc.csrf`, replacing the per-handler `static.csrfVerify` opt-in maps. Handlers that render HTML override `onInvalidCSRF()` to flash and redirect instead of returning a bare 403. ([#35](https://github.com/coldbox-templates/cbGenesis/pull/35))
 - The seeded `admin@cbgenesis.com` account is created reset-pending. The bootstrap password hash ships in this repository and is public, so signing in with it no longer grants a session; it sends you straight to the reset-password form. ([#29](https://github.com/coldbox-templates/cbGenesis/pull/29))
 - The password policy (`cbMinPasswordLength` plus upper, lower, digit, and special character) and a confirmation-match check are now enforced on password reset, not just on registration. ([#34](https://github.com/coldbox-templates/cbGenesis/pull/34))
+- Pre-release migration cleanup: the `pendingEmail`, `hasAvatar`, and `user_sso_identities` migrations are folded into the base `..._users.bx` migration now that they ship together, so a fresh install runs one `users` migration instead of four.
 
 ### Fixed
 
