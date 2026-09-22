@@ -536,12 +536,19 @@ class extends="app.models.BaseService" {
 			// `ne( "roles.roleId", excludeRoleId )` would implicitly INNER JOIN the roles
 			// collection, which only matches users who have some *other* role - it drops
 			// users with zero roles entirely and still matches users who also hold the
-			// excluded role. A NOT EXISTS subquery is the only correct way to exclude by
-			// membership in a to-many association.
-			.when( len( arguments.excludeRoleId ), ( c ) => c.sql(
-				"not exists (select 1 from user_roles ur where ur.FK_userId = {alias}.userId and ur.FK_roleId = ?)",
-				[ { value: excludeRoleId, type: "string" } ]
-			) )
+			// excluded role. Look up who actually holds that role first (same association
+			// traversal used below for `rolesByUser`) and exclude by userId instead.
+			.when( len( arguments.excludeRoleId ), ( c ) => {
+				var excludedUserIds = roleService
+					.newCriteria()
+					.eq( "roleId", excludeRoleId )
+					.createAlias( "users", "user" )
+					.withProjections( property = "user.userId" )
+					.list()
+				if ( excludedUserIds.len() ) {
+					c.notIn( "userId", excludedUserIds )
+				}
+			} )
 
 		// Run Results
 		results.count = c.count( "userId" )
