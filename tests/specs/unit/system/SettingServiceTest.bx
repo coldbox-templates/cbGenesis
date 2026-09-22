@@ -85,6 +85,25 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( () => settingService.bulkSave( { cbRateLimitWindowSeconds: 86401 } ) ).toThrow( "Setting.Invalid" )
 			} )
 
+			it( "self-heals a bulkSave when a cached setting key has no backing database row", () => {
+				// GH #61: bulkSave() used to assume findWhere() always finds a row for any
+				// key the settings cache recognizes, and crashed with "Cannot invoke method
+				// [setValue()] on a null object" the moment that assumption broke - e.g. a
+				// stale cache still listing a key whose row was deleted, or a key added to
+				// DEFAULTS since this instance's last preFlightCheck(). Simulate that by
+				// caching a key with no persisted row, then saving a new value for it.
+				var missingKey = "cbTestMissingSettingRow"
+				var currentSettings = settingService.getAllSettings( force = true )
+				currentSettings[ missingKey ] = "stale-cached-value"
+				settingService.storeSettings( currentSettings )
+
+				var memento = {}
+				memento[ missingKey ] = "healed-value"
+				settingService.bulkSave( memento )
+
+				expect( settingService.getSetting( missingKey ) ).toBe( "healed-value" )
+			} )
+
 			it( "searches settings through the criteria builder", () => {
 				var service = prepareMock( settingService )
 				var criteria = createEmptyMock( "cborm.models.criterion.CriteriaBuilder" )

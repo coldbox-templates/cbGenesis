@@ -302,7 +302,11 @@ class extends="app.models.BaseService" {
 			// Build out array of settings to save
 			.each(
 				( key, value ) => {
-					var thisSetting = findWhere( { name: key } )
+					// Recognized settings can still be missing their row - e.g. a stale
+					// settings cache still listing a key whose row was deleted, or a key
+					// added to DEFAULTS since this instance's last preFlightCheck() - so
+					// fall back to creating it rather than assuming findWhere() found one.
+					var thisSetting = findWhere( { name: key } ) ?: new( { name: key } )
 					thisSetting.setValue( toString( value ) )
 					newOptions.append( thisSetting )
 				}
