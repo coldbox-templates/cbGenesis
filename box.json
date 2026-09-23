@@ -25,7 +25,7 @@
         "commandbox-migrations":"*"
     },
     "dependencies":{
-        "coldbox":"be",
+        "coldbox":"^8.2.0",
         "qb":"^13",
         "cbmailservices":"^2",
         "cbsecurity":"^3",
