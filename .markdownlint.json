@@ -7,5 +7,10 @@
 		"maximum": 2
 	},
 	"no-inline-html" : false,
-	"no-bare-urls": false
+	"no-bare-urls": false,
+	"blanks-around-fences": false,
+	"code-block-style": {
+		"enabled": false
+	},
+	"no-hard-tabs": false
 }

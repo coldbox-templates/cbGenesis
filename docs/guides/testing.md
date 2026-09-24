@@ -8,7 +8,7 @@ tags: [guides, testing, testbox]
 
 # Testing
 
-CB Genesis ships with a [TestBox](https://testbox.ortusbooks.com) suite covering every service and entity, plus integration specs that exercise real requests.
+CBGenesis ships with a [TestBox](https://testbox.ortusbooks.com) suite covering every service and entity, plus integration specs that exercise real requests.
 
 ## Running tests
 

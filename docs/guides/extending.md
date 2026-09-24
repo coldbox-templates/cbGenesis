@@ -8,7 +8,7 @@ tags: [guides, extending]
 
 # Extending the App
 
-CB Genesis is a launchpad, not a finished product. These are the same steps its own Users/Roles/Permissions/Settings modules follow - use them as the template for anything new.
+CBGenesis is a launchpad, not a finished product. These are the same steps its own Users/Roles/Permissions/Settings modules follow - use them as the template for anything new.
 
 ## Adding a new CRUD module
 
