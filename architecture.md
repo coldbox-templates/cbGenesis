@@ -8,7 +8,7 @@ tags: [architecture]
 
 # Architecture
 
-CB Genesis follows ColdBox's **modern template** layout: application code is fully separated from the public webroot, so nothing under `app/` is ever directly web-accessible.
+CBGenesis follows ColdBox's **modern template** layout: application code is fully separated from the public webroot, so nothing under `app/` is ever directly web-accessible.
 
 ## Layered overview
 

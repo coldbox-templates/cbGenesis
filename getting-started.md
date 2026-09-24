@@ -11,42 +11,50 @@ tags: [guides, setup]
 ## System requirements
 
 - **Java 21+** (JDK or JRE)
-- **Node.js 18+** (for the Vite frontend)
-- **A supported database**: MySQL 8+ (default), MariaDB, PostgreSQL, or MSSQL
-- macOS, Linux, or Windows
+- **BoxLang 1.17+**
+- **CommandBox 7+** (`bx-cli`)
+- **Node.js 22+** (for the Vite frontend)
+- **A supported database**: MySQL 8+ (default), MariaDB, PostgreSQL, SQLite, Oracle, or MSSQL
+- Any operating system
 
 ## Install BoxLang
 
 === "Quick installer"
-    ```bash frame="terminal" title="Terminal"
-    # macOS & Linux
-    /bin/bash -c "$(curl -fsSL https://install.boxlang.io)"
 
-    # ...with automatic Java 21 installation
-    curl -fsSL https://install.boxlang.io | bash -s -- --with-jre
-    ```
+	### MacOS & Linux
 
-    ```powershell frame="terminal" title="PowerShell (Windows)"
-    powershell -NoExit -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://install-windows.boxlang.io'))"
-    ```
+	```bash frame="terminal" title="Terminal"
+	# macOS & Linux
+	/bin/bash -c "$(curl -fsSL https://install.boxlang.io)"
+
+	# ...with automatic Java 21 installation
+	curl -fsSL https://install.boxlang.io | bash -s -- --with-jre
+	```
+
+	### Windows
+
+	```powershell frame="terminal" title="PowerShell (Windows)"
+	powershell -NoExit -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://install-windows.boxlang.io'))"
+	```
 
 === "BVM (version manager)"
-    Use [BVM](https://boxlang.ortusbooks.com) instead if you need to switch between multiple BoxLang versions:
 
-    ```bash frame="terminal" title="Terminal"
-    curl -fsSL https://install-bvm.boxlang.io | bash
+	Use [BVM](https://boxlang.ortusbooks.com) instead if you need to switch between multiple BoxLang versions:
 
-    bvm install latest && bvm use latest
-    ```
+	```bash frame="terminal" title="Terminal"
+	curl -fsSL https://install-bvm.boxlang.io | bash
 
-Verify the install:
+	bvm install latest && bvm use latest
+	```
 
-```bash frame="terminal" title="Terminal"
-boxlang --version
-```
+	Verify the install:
+
+	```bash frame="terminal" title="Terminal"
+	boxlang --version
+	```
 
 !!! danger "Use bx-cli, not regular CommandBox"
-    CB Genesis is a BoxLang template. Do not install the standard Lucee-based CommandBox distribution. After installing BoxLang with the quick installer or BVM, install the BoxLang-native CLI module. This is required before running `box install`, `box server`, `box migrate`, or `box testbox`:
+    CBGenesis is a BoxLang template. Do not install the standard Lucee-based CommandBox distribution. After installing BoxLang with the quick installer or BVM, install the BoxLang-native CLI module. This is required before running `box install`, `box server`, `box migrate`, or `box testbox`:
 
     ```bash frame="terminal" title="Terminal"
     install-bx-module bx-cli
@@ -68,62 +76,38 @@ boxlang --version
 
 ## Scaffold your app
 
+Go into the CommandBox Shell by typing `box` first:
+
 ::: stepper
-::: step "Clone the template"
+::: step "Install the latest ColdBox CLI"
 ```bash frame="terminal" title="Terminal"
-git clone https://github.com/coldbox-templates/cbGenesis my-app
-cd my-app
+install coldbox-cli
 ```
 :::
-::: step "Install BoxLang dependencies"
+
+::: step "Create the CBGenesis app"
 ```bash frame="terminal" title="Terminal"
-box install
+coldbox create app name="my-app" skeleton="cbgenesis"
 ```
-Runs through `bx-cli` and installs ColdBox, WireBox/CacheBox/LogBox, TestBox, qb, cbsecurity, cborm, cbmailservices, and every other `box.json` dependency into `lib/`.
 :::
+
 ::: step "Install Node dependencies"
 ```bash frame="terminal" title="Terminal"
-npm install
+!npm install
 ```
-Pulls in Alpine.js, Bootstrap 5, and Vite for the frontend build.
 :::
-::: step "Install a JDBC driver"
-The template ships pre-configured for MySQL. MySQL, MariaDB, PostgreSQL, and MSSQL are supported and tested database targets. `server.json`'s `onServerInitialInstall` installs the JDBC driver module matching your `DB_DRIVER` setting (`bx-${DB_DRIVER}`, defaulting to `bx-mysql`) the first time you run `box server start`. To use another database, set `DB_DRIVER` in `.env` **before** that first server start:
 
-```bash frame="terminal" title="Terminal"
-DB_DRIVER=postgresql   # installs bx-postgresql
-DB_DRIVER=mssql        # installs bx-mssql (Microsoft SQL Server)
-DB_DRIVER=h2           # installs bx-h2 (embedded, dev only)
-DB_DRIVER=oracle       # installs bx-oracle
-DB_DRIVER=sqlite       # installs bx-sqlite
-```
-
-Then update `.env`'s connection details and the datasource block in `public/Application.bx` (and `tests/Application.bx` for the test suite).
-
-MariaDB uses the MySQL JDBC driver setting:
-
-```bash frame="terminal" title="Terminal"
-DB_DRIVER=mysql
-```
-
-??? tip "Switching drivers after the server has already started once"
-    `onServerInitialInstall` only fires on a server's first-ever start, so changing `DB_DRIVER` afterward won't reinstall the driver on its own. Run `server forget` (which clears the server's install state) before starting it again so the new driver gets installed:
-
-    ```bash frame="terminal" title="Terminal"
-    server forget
-    box server start
-    ```
+::: step "Update Database Credentials & Configuration"
+Open the `.env` file in your preferred text editor and update the database credentials accordingly.  The template ships pre-configured for MySQL. MySQL, MariaDB, PostgreSQL, and MSSQL are supported and tested database targets. `server.json`'s `onServerInitialInstall` installs the JDBC driver module matching your `DB_DRIVER` setting (`bx-${DB_DRIVER}`, defaulting to `bx-mysql`) the first time you run `box server start`. To use another database, set `DB_DRIVER` in `.env` **before** that first server start
 :::
-::: step "Configure your environment"
+
+::: step "Migrate & Seed"
+
+Once your `.env` is set, then run the following commands to initialize and seed the database.  It should automatically download the necessary drivers to connect the CLI to the configured database.  If there are any issues connecting, ensure that the correct `DB_DRIVER` is set and that the corresponding JDBC driver module is installed.
+
 ```bash frame="terminal" title="Terminal"
-cp .env.example .env
-```
-Edit `.env` with your database credentials - see [Configuration](guides/configuration.md#environment-variables) for what each variable does.
-:::
-::: step "Migrate and seed the database"
-```bash frame="terminal" title="Terminal"
-box migrate up
-box migrate seed
+migrate init
+migrate up --seed
 ```
 
 ??? tip "What does the seeder create?"
@@ -135,12 +119,24 @@ box migrate seed
     | Password | `test` (reset-pending) |
 
     This account is seeded as reset-pending, so signing in with `test` does not give you a session - it takes you straight to the reset-password form to choose a real password. That is deliberate: the bootstrap hash ships in this repository and is public. See the [production checklist](deployment.md#production-checklist).
+
 :::
+
 ::: step "Start the server" color="success"
+
 ```bash frame="terminal" title="Terminal"
-box server start
+server start
 ```
+
 This is the BoxLang CLI server command. The first run installs the BoxLang modules listed in `server.json` (`bx-esapi`, `bx-password-encrypt`, `bx-mail`, `bx-orm`, the JDBC driver selected by `DB_DRIVER`, and `bx-image`).
+
+??? tip "Switching drivers after the server has already started once"
+    `onServerInitialInstall` only fires on a server's first-ever start, so changing `DB_DRIVER` afterward won't reinstall the driver on its own. Run `server forget` (which clears the server's install state) before starting it again so the new driver gets installed:
+
+    ```bash frame="terminal" title="Terminal"
+    server forget
+    server start
+    ```
 :::
 ::: step "Start Vite (in a second terminal)" color="success"
 ```bash frame="terminal" title="Terminal"

@@ -17,7 +17,7 @@ ogImage: assets/home-banner.png
 -->
 
 <div class="bxsites-hero">
-	<img class="bxsites-hero__banner" src="assets/home-banner.png" alt="CB Genesis Docs - The official ColdBox project starter. Everything you need to Scaffold. Build. Accelerate. Built for developers, by developers, backed by ColdBox.">
+	<img class="bxsites-hero__banner" src="assets/home-banner.png" alt="CBGenesis Docs - The official ColdBox project starter. Everything you need to Scaffold. Build. Accelerate. Built for developers, by developers, backed by ColdBox.">
 	<div class="bxsites-hero__actions">
 		<a class="bxsites-hero__btn bxsites-hero__btn--primary" href="getting-started.md">Get Started</a>
 		<a class="bxsites-hero__btn bxsites-hero__btn--secondary" href="https://github.com/coldbox-templates/cbGenesis">View on GitHub</a>
@@ -122,7 +122,7 @@ The admin panel, end to end - login through audit trail:
 
 ## See it, don't just read about it
 
-CB Genesis's request lifecycle, from browser to database and back:
+CBGenesis's request lifecycle, from browser to database and back:
 
 ```mermaid
 sequenceDiagram
@@ -144,7 +144,7 @@ sequenceDiagram
 :::
 ::: column
 !!! faq "Grow it your way"
-    New CRUD module? New setting? New scheduled task? [Extending CB Genesis](guides/extending.md) walks through the exact files to touch, in the order the existing code already follows.
+    New CRUD module? New setting? New scheduled task? [Extending CBGenesis](guides/extending.md) walks through the exact files to touch, in the order the existing code already follows.
 :::
 :::
 

@@ -8,7 +8,7 @@ tags: [guides, setup, cli, boxlang]
 
 # BoxLang CLI
 
-CB Genesis is a BoxLang application. Its `box` commands must be provided by the BoxLang-native `bx-cli` module. The regular Lucee-based CommandBox distribution is not supported for this template.
+CBGenesis is a BoxLang application. Its `box` commands must be provided by the BoxLang-native `bx-cli` module. The regular Lucee-based CommandBox distribution is not supported for this template.
 
 ## Required installation
 
