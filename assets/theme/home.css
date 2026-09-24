@@ -63,8 +63,11 @@
 .bxsites-home .eyebrow {
 	font-family: var(--mono); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase;
 	color: var(--brand1); display: inline-flex; align-items: center; gap: .5em;
+	margin-bottom: 10px;
 }
 .bxsites-home .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--grad); box-shadow: 0 0 10px var(--brand2); }
+.bxsites-home .eyebrow-icon { display: inline-flex; color: var(--brand2); }
+.bxsites-home .eyebrow-icon svg { width: 17px; height: 17px; }
 
 /* ---------- nav ---------- */
 .bxh-nav { position: sticky; top: 0; z-index: 40; background: var(--nav-bg); backdrop-filter: blur(14px) saturate(140%); border-bottom: 1px solid var(--border); transition: background-color .2s ease, border-color .2s ease; }
@@ -165,6 +168,8 @@
 @media (max-width: 640px) { .bxsites-home section { padding-block: 48px; } }
 .section-head { max-width: 640px; margin-bottom: 44px; }
 .bxsites-home .section-head h2 { font-size: clamp(1.7rem,2.6vw,2.3rem); margin-top: 12px; }
+.bxsites-home .battery-mark { display: inline-flex; color: var(--brand2); vertical-align: -0.1em; }
+.bxsites-home .battery-mark svg { width: .88em; height: .88em; }
 .section-head p { color: var(--muted); margin-top: 12px; line-height: 1.6; font-size: 1rem; }
 
 /* ---------- request-lifecycle flow diagram ---------- */
@@ -223,6 +228,8 @@
 .stack-strip { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-top: 22px; }
 .stack-strip .label { font-family: var(--mono); font-size: .76rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted-2); }
 .stack-strip svg { width: 21px; height: 21px; color: var(--muted); }
+.stack-strip__item { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); cursor: help; }
+.stack-strip__item:focus-visible { outline: 2px solid var(--brand1); outline-offset: 5px; border-radius: 2px; }
 
 /* ---------- security spotlight ---------- */
 .sec-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 48px; align-items: center; margin-top: 8px; }
@@ -390,6 +397,9 @@
 .bxsites-home .cta h2 { font-size: clamp(1.7rem,3vw,2.35rem); }
 .cta p { color: var(--muted); max-width: 44ch; margin: 14px auto 0; line-height: 1.6; }
 .cta .hero-actions { justify-content: center; margin-top: 30px; }
+.sponsor-cta { padding: 42px 32px; }
+.sponsor-logo { display: block; width: min(100%, 160px); margin: 16px auto 4px; }
+.sponsor-logo img { display: block; width: 100%; height: auto; }
 
 /* ---------- footer ---------- */
 .bxh-footer { border-top: 1px solid var(--border); color: var(--muted-2); font-size: .84rem; }
