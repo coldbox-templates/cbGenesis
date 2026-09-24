@@ -1,11 +1,14 @@
-# CB Genesis
+# CBGenesis
 
-A production-ready ColdBox starter template for [BoxLang](https://boxlang.io).
+![alt text](public/includes/images/cbgenesis-icon-full.svg)
+
+A production-ready ColdBox HMVC starter for the [BoxLang](https://boxlang.io) language - authentication, SSO, RBAC permissions, API tokens, rate limiting, an Alpine-powered admin panel, and a real test suite, so you spend day one building features instead of scaffolding.
+
 
 ## What You Get
 
 - **[Auth & RBAC, Batteries Included](https://cbgenesis.coldbox.org/guides/security/)** - Session auth via cbauth, `@secured` handler annotations, CSRF rotation, JWT support, and a `resource:action` permission model with roles and permissions admin screens.
-- **[Single Sign-On](https://cbgenesis.coldbox.org/guides/security/#single-sign-on)** - cbSSO with a shipped Google OAuth provider, account linking, auto-provisioning by allowed email domain, and full audit trail integration.
+- **[Single Sign-On](https://cbgenesis.coldbox.org/guides/security/#single-sign-on)** - cbSSO with a shipped Google OAuth provider (More included), account linking, auto-provisioning by allowed email domain, and full audit trail integration.
 - **[Passkeys / WebAuthn](https://cbgenesis.coldbox.org/guides/security/)** - Passwordless sign-in backed by `cbsecurity-passkeys`, with an optional policy that requires a passkey before a user can proceed.
 - **[Modern Template Structure](https://cbgenesis.coldbox.org/architecture/)** - Application code lives in `app/`, fully separated from the public webroot in `public/` - enhanced security by default.
 - **[Hibernate ORM + qb](https://cbgenesis.coldbox.org/guides/database-orm/)** - `BaseEntity`/`BaseService` conventions on top of cborm, migrations and seed data via cfmigrations, and qb for anything raw SQL does better.
@@ -22,34 +25,76 @@ Full documentation lives here:
 
 - https://cbgenesis.coldbox.org/
 
-## Quick Start
-
-> **Required CLI:** This template runs on BoxLang. Do not install or use the regular Lucee-based CommandBox distribution. Install BoxLang first, then install the BoxLang CLI module before running any `box` command.
-
-```bash
-git clone https://github.com/coldbox-templates/cbGenesis my-app
-cd my-app
-
-# Install BoxLang first, then add the BoxLang-native CommandBox CLI
-# (use either the BoxLang quick installer or BVM; see docs/getting-started.md)
-install-bx-module bx-cli
-
-box install
-npm install
-cp .env.example .env
-box migrate up
-box migrate seed
-box server start
-```
-
 ## Requirements
 
-- BoxLang 1.16+
-- BoxLang CLI (`bx-cli`) - required; regular Lucee CommandBox is not supported
-- Java 21+
-- Node.js 18+
-- MySQL 8+ (or any JDBC-compatible database)
+- BoxLang 1.17+ (with `bx-cli`)
+- Node.js 22+
+- ColdBox 8.2+
+- MySQL/PostgreSQL/MSSQL/SQLite/Oracle/MariaDB
+
+## Quick Start
+
+Easily get started with the cbGenesis template by following these 5 steps:
+
+### 1. BoxLang & CommandBox (`bx-cli`)
+
+Install BoxLang into your operating system using our [Quick Installer](https://boxlang.ortusbooks.com/getting-started/installation/boxlang-quick-installer) or the [BoxLang Version Manager](https://boxlang.ortusbooks.com/getting-started/installation/boxlang-version-manager-bvm) (BVM).  Once installed, you can proceed with adding the BoxLang-native CommandBox CLI module.
+
+> **Warning**: Make sure you have the BoxLang-native CommandBox CLI installed, as the regular Lucee CommandBox is not supported.
+
+```bash
+# Install CommandBox
+install-bx-module bx-cli
+# Install the ColdBox CLI Module
+box install coldbox-cli
+```
+
+This installs the BoxLang-native CommandBox CLI module and the ColdBox CLI module, allowing you to use the `box` commands specific to BoxLang.
+
+### 2. Node.js
+
+This template requires Vite and UI elements that require Node.js 22+ to build and run properly.  So make sure you have [Node.js 22+](https://nodejs.org/en/download) installed on your system.
+
+### 3. Scaffold the Project
+
+Use the `coldbox-cli` to scaffold a new project.
+
+```bash
+box coldbox create app name="my-app" skeleton="cbgenesis"
+```
+
+### 3. Install Dependencies
+
+```bash
+# Install BoxLang Dependencies
+box install
+# Install Node.js Dependencies
+npm install
+```
+
+### 4. Database Setup
+
+Configure your database connection in the `.env` file and run the necessary migrations to set up the database schema.
+
+```bash
+box migrate up
+box migrate seed
+```
+
+### 5. Start the Server
+
+```bash
+box server start
+```
 
 ## License
 
 Apache 2.0 License
+
+## Issues
+
+You can report issues and bugs related to this project on the [GitHub Issues](https://github.com/coldbox-templates/cbGenesis/issues) page.
+
+## ❤️ Support Us
+
+You can support the development of this project by [starring](https://github.com/coldbox-templates/cbGenesis) the repository on GitHub, contributing to the codebase, or providing financial support through platforms like [Patreon](https://www.patreon.com/ortussolutions) or purchasing a [BoxLang license](https://boxlang.io/plans). Your support helps us maintain and improve the project for the community.
