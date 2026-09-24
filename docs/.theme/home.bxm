@@ -199,7 +199,11 @@
 				<div class="hero-mark">#homeIcon( "cbgenesis" )#</div>
 				<span class="eyebrow">The official ColdBox starter</span>
 				<h1>Scaffold. Build.<br><span class="grad">Accelerate.</span></h1>
-				<p class="lead">A production-ready ColdBox HMVC starter for BoxLang &mdash; authentication, Google SSO, RBAC permissions, API tokens, rate limiting, an Alpine-powered admin panel, and a real test suite, so you spend day one building features instead of scaffolding auth.</p>
+				<p class="lead">
+					A production-ready ColdBox HMVC starter for BoxLang &mdash; authentication,
+					 Multi-Provider SSO, RBAC permissions, API tokens, rate limiting, an Alpine-powered admin panel,
+					 and a real test suite, so you spend day one building features instead of scaffolding auth.
+				</p>
 				<div class="hero-actions">
 					<a class="bxh-btn bxh-btn-primary" href="#variables.basePath#getting-started/">Get Started &rarr;</a>
 					<bx:if len( variables.repoUrl )>
@@ -207,13 +211,13 @@
 					</bx:if>
 				</div>
 				<div class="install-chip">
-					<span>$</span><span>git clone coldbox-templates/cbGenesis &amp;&amp; box install</span>
+					<span>$</span><span>coldbox create app name=myApp skeleton=cbGenesis</span>
 				</div>
 				<div class="req-row">
-					<span>#homeIcon( "shield-check" )#BoxLang 1.16+</span>
-					<span>#homeIcon( "shield-check" )#Java 21+</span>
-					<span>#homeIcon( "shield-check" )#Node 18+</span>
-					<span>#homeIcon( "shield-check" )#bx-cli</span>
+					<span>#homeIcon( "shield-check" )#BoxLang 1.17+</span>
+					<span>#homeIcon( "shield-check" )#Node 22+</span>
+					<span>#homeIcon( "shield-check" )#CommandBox 7+</span>
+					<span>#homeIcon( "shield-check" )#ColdBox 8+</span>
 				</div>
 			</div>
 			<div class="preview">
@@ -277,17 +281,90 @@
 			<div class="section-head">
 				<span class="eyebrow">Everything included</span>
 				<h2>Day one, not sprint six.</h2>
-				<p>Every card below is already wired up and tested in the template &mdash; not a TODO in the README.</p>
+				<p>Core workflows are wired and tested; configure production providers where your deployment requires them.</p>
 			</div>
 			<div class="bxh-grid">
-				<div class="bxh-card"><div class="icon">#homeIcon( "rocket" )#</div><h3><a href="#variables.basePath#getting-started/">Get Started in Minutes</a></h3><p>Install BoxLang, clone the template, run migrations, and be looking at the login screen in under ten minutes.</p></div>
-				<div class="bxh-card"><div class="icon">#homeIcon( "folders" )#</div><h3><a href="#variables.basePath#architecture/">Modern Template Structure</a></h3><p>Application code lives in <code>app/</code>, fully separated from the public webroot in <code>public/</code> &mdash; enhanced security by default.</p></div>
-				<div class="bxh-card"><div class="icon">#homeIcon( "shield-check" )#</div><h3><a href="#variables.basePath#guides/security/">Auth &amp; RBAC, Batteries Included</a></h3><p>Session auth via cbauth, Google SSO via cbSSO, <code>@secured</code> handler annotations, CSRF rotation, JWT support, IP-based rate limiting, and a <code>resource:action</code> permission model.</p></div>
-				<div class="bxh-card"><div class="icon">#homeIcon( "database" )#</div><h3><a href="#variables.basePath#guides/database-orm/">Hibernate ORM + qb</a></h3><p><code>BaseEntity</code>/<code>BaseService</code> conventions on top of cborm, migrations via cfmigrations, and qb for anything raw SQL does better.</p></div>
-				<div class="bxh-card"><div class="icon">#homeIcon( "palette" )#</div><h3><a href="#variables.basePath#guides/frontend/">Alpine.js + Bootstrap 5 UI</a></h3><p>Server-rendered BXM views, sprinkled with small Alpine components, compiled by Vite with hot module reload.</p></div>
-				<div class="bxh-card"><div class="icon">#homeIcon( "test-tube" )#</div><h3><a href="#variables.basePath#guides/testing/">A Real Test Suite</a></h3><p>TestBox unit specs for every entity and service, plus integration specs that exercise real HTTP requests.</p></div>
-				<div class="bxh-card"><div class="icon">#homeIcon( "sliders" )#</div><h3><a href="#variables.basePath#guides/configuration/">Easy Configuration</a></h3><p>Environment variables for the essentials, DB-backed admin settings for everything else &mdash; no redeploy needed to change them.</p></div>
-				<div class="bxh-card"><div class="icon">#homeIcon( "deploy" )#</div><h3><a href="#variables.basePath#deployment/">Production Ready</a></h3><p>A real go-live checklist, Docker support, and a choice of CommandBox or the BoxLang MiniServer.</p></div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "rocket" )#</div>
+					<h3><a href="#variables.basePath#getting-started/">Get Started in Minutes</a></h3>
+					<p>Install BoxLang, clone the template, run migrations, and be looking at the login screen in under ten minutes.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "folders" )#</div>
+					<h3><a href="#variables.basePath#architecture/">Modern Template Structure</a></h3>
+					<p>Application code lives in <code>app/</code>, fully separated from the public webroot in <code>public/</code> &mdash; enhanced security by default.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "shield-check" )#</div>
+					<h3><a href="#variables.basePath#guides/security/">Auth &amp; RBAC, Batteries Included</a></h3>
+					<p>Session auth via cbauth, <code>@secured</code> handler annotations, CSRF rotation, JWT support, IP-based rate limiting, and a <code>resource:action</code> permission model.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "key" )#</div>
+					<h3><a href="#variables.basePath#guides/security/">Passkey Security &amp; Management</a></h3>
+					<p>WebAuthn passkey enrollment, optional required-enrollment gating, and profile tools to list and remove credentials.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "sliders" )#</div>
+					<h3><a href="#variables.basePath#guides/frontend/">User Preferences</a></h3>
+					<p>Per-user preferences persist with the account and can be updated from the profile or managed from the admin user detail view.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "users" )#</div>
+					<h3><a href="#variables.basePath#guides/security/##single-sign-on">Multi-Provider Single Sign-On</a></h3>
+					<p>Google OAuth is the shipped example; cbSSO can register additional providers, with account linking and provisioning governed by cbGenesis.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "folders" )#</div>
+					<h3><a href="#variables.basePath#guides/frontend/##avatars-branding-logo">Multi-Provider CBFS Storage &amp; Avatars</a></h3>
+					<p>Configure named cbfs disks with the storage providers your app needs. This template uses a private local assets disk for user avatars and branding-logo uploads.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "image" )#</div>
+					<h3><a href="#variables.basePath#guides/frontend/##avatars-branding-logo">BoxLang Image Library</a></h3>
+					<p><code>bx-image</code> crops and resizes avatar and logo uploads into small and large variants, ready to serve at the size each UI needs.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "mail" )#</div>
+					<h3><a href="#variables.basePath#guides/email/">Email Templates &amp; Mail Providers</a></h3>
+					<p>Token-based account emails use cbmailservices, with file delivery in development and configurable production mail protocols such as SMTP, Postmark, or SendGrid.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "database" )#</div>
+					<h3><a href="#variables.basePath#guides/database-orm/">BoxLang ORM + qb</a></h3>
+					<p><code>BaseEntity</code>/<code>BaseService</code> conventions on top of <code>bx-orm</code>,
+						migrations, and <code>qb</code> for anything raw SQL does better.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "palette" )#</div>
+					<h3><a href="#variables.basePath#guides/frontend/">Alpine.js + Bootstrap 5 UI</a></h3>
+					<p>Server-rendered BXM views, sprinkled with small Alpine components, compiled by Vite with hot module reload.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "test-tube" )#</div>
+					<h3><a href="#variables.basePath#guides/testing/">A Real Test Suite</a></h3>
+					<p>TestBox unit specs for every entity and service, plus integration specs that exercise real HTTP requests.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "sliders" )#</div>
+					<h3><a href="#variables.basePath#guides/configuration/">Easy Configuration</a></h3>
+					<p>Environment variables for the essentials, DB-backed admin settings for everything else &mdash; no redeploy needed to change them.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "deploy" )#</div>
+					<h3><a href="#variables.basePath#deployment/">Production Ready</a></h3>
+					<p>A real go-live checklist, Docker support, and a choice of CommandBox or the BoxLang MiniServer.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "users" )#</div>
+					<h3><a href="#variables.basePath#guides/handlers-routing/##users">Admin User Management</a></h3>
+					<p>Invite users, manage account status, assign roles and permissions, and administer tokens and profile settings from the admin panel.</p>
+				</div>
+				<div class="bxh-card">
+					<div class="icon">#homeIcon( "logbox" )#</div>
+					<h3><a href="#variables.basePath#guides/handlers-routing/##auditlog">Searchable Audit Trail</a></h3>
+					<p>Automatically record sign-ins, sign-outs, and access failures; filter and inspect activity, export CSV, and manage log retention.</p>
+				</div>
 			</div>
 		</div>
 	</section>
@@ -301,20 +378,32 @@
 				<p>No separate build system to learn &mdash; one CLI, from a fresh clone to a running server.</p>
 				<div class="stack-strip">
 					<span class="label">Works with</span>
-					<span title="ColdBox">#homeIcon( "coldbox" )#</span>
-					<span title="BoxLang">#homeIcon( "boxlang" )#</span>
-					<span title="Bootstrap 5">#homeIcon( "palette" )#</span>
-					<span title="Vite">#bxsitesIcon( "sparkle" )#</span>
-					<span title="qb">#homeIcon( "database" )#</span>
+					<span class="stack-strip__item" title="ColdBox" role="img" aria-label="ColdBox" tabindex="0">#homeIcon( "coldbox" )#</span>
+					<span class="stack-strip__item" title="TestBox" role="img" aria-label="TestBox" tabindex="0">#homeIcon( "testbox" )#</span>
+					<span class="stack-strip__item" title="BoxLang" role="img" aria-label="BoxLang" tabindex="0">#homeIcon( "boxlang" )#</span>
+					<span class="stack-strip__item" title="CommandBox" role="img" aria-label="CommandBox" tabindex="0">#homeIcon( "commandbox" )#</span>
+					<span class="stack-strip__item" title="Bootstrap 5" role="img" aria-label="Bootstrap 5" tabindex="0">#homeIcon( "palette" )#</span>
+					<span class="stack-strip__item" title="Vite" role="img" aria-label="Vite" tabindex="0">#bxsitesIcon( "sparkle" )#</span>
+					<span class="stack-strip__item" title="qb" role="img" aria-label="qb" tabindex="0">#homeIcon( "database" )#</span>
 				</div>
 			</div>
 			<div class="term-panel">
 				<div class="preview-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
 				<div class="term-body">
-					<div class="term-line" style="animation-delay:0s"><span class="ok">&check;</span> <span class="term-cmd">box install</span></div>
-					<div class="term-line" style="animation-delay:1.2s"><span class="ok">&check;</span> <span class="term-cmd">box migrate up &amp;&amp; box migrate seed</span></div>
-					<div class="term-line" style="animation-delay:2.4s"><span class="ok">&check;</span> 7 migrations run &middot; admin user seeded</div>
-					<div class="term-line" style="animation-delay:3.6s"><span class="ok">&check;</span> <span class="term-cmd">box server start</span><span class="term-cursor"></span></div>
+					<div class="term-line" style="animation-delay:0s">
+						<span class="ok">&check;</span>
+						<span class="term-cmd">coldbox create app name=my-app skeleton=cbgenesis</span>
+					</div>
+					<div class="term-line" style="animation-delay:1.2s">
+						<span class="ok">&check;</span>
+						<span class="term-cmd">migrate up --seed</span>
+					</div>
+					<div class="term-line" style="animation-delay:2.4s">
+						<span class="ok">&check;</span> 7 migrations run &middot; admin user seeded</div>
+					<div class="term-line" style="animation-delay:3.6s">
+						<span class="ok">&check;</span>
+						<span class="term-cmd">server start</span><span class="term-cursor"></span>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -325,7 +414,7 @@
 		<div class="bxh-wrap sec-grid">
 			<div>
 				<span class="eyebrow">Secured by convention</span>
-				<h2>The firewall, not an if-check.</h2>
+				<h2>Built-in firewall, not an if-check.</h2>
 				<div class="sec-list">
 					<div class="sec-item">
 						<div class="icon">#homeIcon( "shield-check" )#</div>
@@ -341,7 +430,10 @@
 					</div>
 					<div class="sec-item">
 						<div class="icon">#homeIcon( "users" )#</div>
-						<div><h4>Google SSO via cbSSO</h4><p>Local password, passkeys, and SSO all share the same cbauth session authority &mdash; account linking, provisioning, and identity rules enforced by a dedicated interceptor.</p></div>
+						<div>
+							<h4>Multi-Provider SSO via cbSSO</h4>
+							<p>Local password, passkeys, and SSO all share the same cbauth session authority &mdash; account linking, provisioning, and identity rules enforced by a dedicated interceptor.</p>
+						</div>
 					</div>
 					<div class="sec-item">
 						<div class="icon">#homeIcon( "shield-check" )#</div>
@@ -369,21 +461,116 @@
 		<div class="bxh-wrap">
 			<div class="section-head">
 				<span class="eyebrow">How we compare</span>
-				<h2>Batteries included, on purpose.</h2>
-				<p>Most starters give you routing and a "good luck." cbGenesis gives you the parts every real app ends up building anyway.</p>
+				<h2>Batteries <span class="battery-mark" aria-hidden="true">#homeIcon( "battery" )#</span> included, on purpose.</h2>
+				<p>Full-color checks are wired into <strong>cbGenesis</strong>. Muted checks mark framework or official-package support that is not included by Breeze or Devise and needs setup; crosses mean no comparable capability in the named baseline.</p>
 			</div>
 			<div class="compare-wrap">
 				<table class="compare">
-					<thead><tr><th>&nbsp;</th><th class="us">cbGenesis</th><th>Vanilla ColdBox</th><th>Laravel + Breeze</th><th>Rails + Devise</th></tr></thead>
+					<thead>
+						<tr>
+							<th>&nbsp;</th>
+							<th class="us">#homeIcon( "cbgenesis", 60 )# <br> cbGenesis</th>
+							<th>Laravel + Breeze</th>
+							<th>Rails + Devise</th>
+						</tr>
+					</thead>
 					<tbody>
-						<tr><td>Auth &amp; sessions out of the box</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td></tr>
-						<tr><td>RBAC permission model</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
-						<tr><td>API tokens included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
-						<tr><td>Admin UI included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
-						<tr><td>ORM + migrations</td><td class="us yes">&check;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td></tr>
-						<tr><td>Real test suite included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td></tr>
-						<tr><td>Docker included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="no">&cross;</td></tr>
-						<tr><td>Production go-live checklist</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
+						<tr>
+							<td>Auth + sessions out of the box</td>
+							<td class="us yes">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+						</tr>
+						<tr>
+							<td>RBAC permission model</td>
+							<td class="us yes">&check;</td>
+							<td class="no">&cross;</td>
+							<td class="no">&cross;</td>
+						</tr>
+						<tr>
+							<td>API tokens included</td>
+							<td class="us yes">&check;</td>
+							<td class="no">&cross;</td>
+							<td class="no">&cross;</td>
+						</tr>
+						<tr>
+							<td>Admin UI included</td>
+							<td class="us yes">&check;</td>
+							<td class="no">&cross;</td>
+							<td class="no">&cross;</td>
+						</tr>
+						<tr>
+							<td>Audit log services</td>
+							<td class="us yes">&check;</td>
+							<td class="no">&cross;</td>
+							<td class="no">&cross;</td>
+						</tr>
+						<tr>
+							<td>Passkey security &amp; management</td>
+							<td class="us yes">&check;</td>
+							<td class="no">&cross;</td>
+							<td class="no">&cross;</td>
+						</tr>
+						<tr>
+							<td>User preferences</td>
+							<td class="us yes">&check;</td>
+							<td class="no">&cross;</td>
+							<td class="no">&cross;</td>
+						</tr>
+						<tr>
+							<td>Multi-provider SSO</td>
+							<td class="us yes">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+						</tr>
+						<tr>
+							<td>Avatar management workflow</td>
+							<td class="us yes">&check;</td>
+							<td class="no">&cross;</td>
+							<td class="no">&cross;</td>
+						</tr>
+						<tr>
+							<td>Multi-provider file storage</td>
+							<td class="us yes">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+						</tr>
+						<tr>
+							<td>Image resizing &amp; transformations</td>
+							<td class="us yes">&check;</td>
+							<td class="no">&cross;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+						</tr>
+						<tr>
+							<td>Email templates &amp; configurable mail providers</td>
+							<td class="us yes">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+						</tr>
+						<tr>
+							<td>ORM + migrations</td>
+							<td class="us yes">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+						</tr>
+						<tr>
+							<td>Real test suite included</td>
+							<td class="us yes">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+						</tr>
+						<tr>
+							<td>Docker included</td>
+							<td class="us yes">&check;</td>
+							<td class="yes" style="color:var(--muted)">&check;</td>
+							<td class="no">&cross;</td>
+						</tr>
+						<tr>
+							<td>Production go-live checklist</td>
+							<td class="us yes">&check;</td>
+							<td class="no">&cross;</td>
+							<td class="no">&cross;</td>
+						</tr>
 					</tbody>
 				</table>
 			</div>
@@ -395,6 +582,7 @@
 		<div class="bxh-wrap">
 			<div class="section-head" style="text-align:center;margin-inline:auto">
 				<span class="eyebrow" style="justify-content:center">Built on the ColdBox platform</span>
+				<div>#homeIcon( "coldbox", 200 )#</div>
 				<h2>Not a one‑off template. A whole platform.</h2>
 			</div>
 
@@ -510,11 +698,29 @@
 		<div class="bxh-wrap">
 			<div class="cta">
 				<span class="eyebrow">Need a hand building on cbGenesis?</span>
-				<h2>ColdBox is free &amp; open source &mdash; or let the team who builds it do the work.</h2>
+				<h2>Need Help?</h2>
 				<p><a href="https://www.ortussolutions.com" target="_blank" rel="noopener noreferrer">Ortus Solutions</a> builds and maintains ColdBox, and offers professional services for custom builds, migrations, and production hardening.</p>
 				<div class="hero-actions">
 					<a class="bxh-btn bxh-btn-primary" href="mailto:consulting@ortussolutions.com">Email consulting@ortussolutions.com</a>
 					<a class="bxh-btn bxh-btn-ghost" href="https://www.ortussolutions.com/services" target="_blank" rel="noopener noreferrer">Consulting &amp; Professional Services</a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!--- Sponsorship Section --->
+	<section>
+		<div class="bxh-wrap">
+			<div class="cta sponsor-cta">
+				<span class="eyebrow">Built with community support</span>
+				<a class="sponsor-logo" href="https://loebelectric.com/" target="_blank" rel="noopener noreferrer" aria-label="Visit Loeb Electric website">
+					<img src="https://loebelectric.com/wp-content/themes/loebelectric/images/loeb-electric-logo.png" alt="Loeb Electric">
+				</a>
+				<p>Loeb Electric and Gary Knight are sponsoring the cbGenesis initiative. Their support helps make this work possible.</p>
+				<p>Help sponsor cbGenesis development and new features through Patreon or by contacting us directly.</p>
+				<div class="hero-actions">
+					<a class="bxh-btn bxh-btn-primary" href="https://www.patreon.com/ortussolutions" target="_blank" rel="noopener noreferrer">Sponsor us on Patreon</a>
+					<a class="bxh-btn bxh-btn-ghost" href="mailto:consulting@ortussolutions.com">Email us about sponsoring</a>
 				</div>
 			</div>
 		</div>
@@ -569,6 +775,7 @@
 	</footer>
 
 	<!--- Extra JavaScript --->
+	<script src="#variables.basePath#assets/theme/tooltips.js" defer></script>
 	#renderExtraJs( variables.siteConfig.extraJs ?: [] )#
 </body>
 </html>

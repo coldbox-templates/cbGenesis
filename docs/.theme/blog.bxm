@@ -340,6 +340,7 @@
 	</bx:if>
 
 	<!--- Extra JS --->
+	<script src="#variables.basePath#assets/theme/tooltips.js" defer></script>
 	#renderExtraJs( variables.siteConfig.extraJs ?: [] )#
 </body>
 </html>

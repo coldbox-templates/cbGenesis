@@ -92,6 +92,66 @@
     display: none !important;
 }
 
+.bxsites-tooltip {
+    position: fixed;
+    z-index: 1200;
+    max-width: min(18rem, calc(100vw - 16px));
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--bxsites-border);
+    border-radius: 6px;
+    background: var(--bxsites-bg);
+    color: var(--bxsites-text);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+    font: 600 0.75rem/1.4 "Poppins", sans-serif;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 4px);
+    transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s ease;
+}
+
+.bxsites-tooltip.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+}
+
+.bxsites-tooltip::after {
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    width: 8px;
+    height: 8px;
+    border-right: 1px solid var(--bxsites-border);
+    border-bottom: 1px solid var(--bxsites-border);
+    background: var(--bxsites-bg);
+    content: "";
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.bxsites-tooltip[data-placement="bottom"] {
+    transform: translate(-50%, -4px);
+}
+
+.bxsites-tooltip[data-placement="bottom"].is-visible {
+    transform: translate(-50%, 0);
+}
+
+.bxsites-tooltip[data-placement="bottom"]::after {
+    top: -5px;
+    bottom: auto;
+    border: 0;
+    border-top: 1px solid var(--bxsites-border);
+    border-left: 1px solid var(--bxsites-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bxsites-tooltip {
+        transition: none;
+    }
+}
+
 body {
     font-family: "Poppins", sans-serif;
     background: var(--bxsites-bg);
