@@ -5,6 +5,8 @@
 
 
 
+
+
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
@@ -14,21 +16,32 @@
 	<meta property="og:type" content="website">
 	<meta property="og:site_name" content="CBGenesis">
 	<meta property="og:title" content="Home">
+
+	
 	
 
-	<link rel="canonical" href="https&#x3a;&#x2f;&#x2f;cbgenesis.coldbox.org&#x2f;index.html">
+	
+	
+		<link rel="canonical" href="https&#x3a;&#x2f;&#x2f;cbgenesis.coldbox.org&#x2f;index.html">
+	
 
+	
+	
+		<meta name="description" content="A production-ready ColdBox HMVC starter template for BoxLang - authentication, SSO, passkeys, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.">
+		<meta property="og:description" content="A production-ready ColdBox HMVC starter template for BoxLang - authentication, SSO, passkeys, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.">
+	
 
-	<meta name="description" content="A production-ready ColdBox HMVC starter template for BoxLang - authentication, SSO, passkeys, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.">
-	<meta property="og:description" content="A production-ready ColdBox HMVC starter template for BoxLang - authentication, SSO, passkeys, RBAC permissions, API tokens, dark mode, and an Alpine-powered admin panel, ready to build on.">
+	
+	
+		<meta property="og:image" content="/assets/home-banner.png">
+		<meta name="twitter:card" content="summary_large_image">
+	
+	
+	
+		<link rel="icon" href="/assets/favicon.ico">
+	
 
-
-	<meta property="og:image" content="/assets/home-banner.png">
-	<meta name="twitter:card" content="summary_large_image">
-
-
-	<link rel="icon" href="/assets/favicon.ico">
-
+	
 	<script>
 		( function () {
 			var configuredMode = "auto";
@@ -40,419 +53,454 @@
 			}
 		} )();
 	</script>
+
+	
 	<link rel="stylesheet" href="/assets/vendor/bootstrap/bootstrap.min.css">
 	<link rel="stylesheet" href="/assets/vendor/highlight/github.min.css">
 	<link rel="stylesheet" href="/assets/theme/style.de0a3c16.css">
 	<link rel="stylesheet" href="/assets/theme/home.css">
+
+	
 	
 
+	
+	
 
+	
+	
 
+	
+	
 
+	
+	
 
-	<script>window.__BXSITES_BASE_PATH__ = "/";</script>
-	<script>window.__BXSITES_SEARCH_NO_RESULTS__ = "No\x20results\x20found.";</script>
-	<script src="/assets/vendor/minisearch/minisearch.js"></script>
-	<script src="/assets/search.js" defer></script>
+	
+	
+		<script>window.__BXSITES_BASE_PATH__ = "/";</script>
+		<script>window.__BXSITES_SEARCH_NO_RESULTS__ = "No\x20results\x20found.";</script>
+		<script src="/assets/vendor/minisearch/minisearch.js"></script>
+		<script src="/assets/search.js" defer></script>
+	
 
+	
+	
 
+	
+	
 
+	
 	<script src="/assets/vendor/alpine/cdn.min.js" defer></script>
 </head>
-<body class="bxsites-home" x-data="{ dark: document.documentElement.getAttribute( 'data-theme' ) === 'dark' }" x-init="$watch( 'dark', v => { document.documentElement.setAttribute( 'data-theme', v ? 'dark' : 'light' ); localStorage.setItem( 'bxsites-theme', v ? 'dark' : 'light' ) } )">
+<body
+	class="bxsites-home"
+	x-data="{ dark: document.documentElement.getAttribute( 'data-theme' ) === 'dark' }"
+	x-init="$watch( 'dark', v => { document.documentElement.setAttribute( 'data-theme', v ? 'dark' : 'light' ); localStorage.setItem( 'bxsites-theme', v ? 'dark' : 'light' ) } )">
 
-<header class="bxh-nav">
-	<div class="bxh-wrap bxh-navrow">
-		<a class="bxh-brand" href="/"><img class="brand-logo" src="/assets/cbgenesis-icon-full.svg" alt=""><span class="brand-name">CBGenesis</span></a>
-		<nav class="bxh-navlinks">
-			<a href="/getting-started/">Getting Started</a>
-			<a href="/architecture/">Architecture</a>
-			<a href="/guides/security/">Security</a>
-			<a href="/guides/database-orm/">Database</a>
-		</nav>
-		<div class="bxh-navcta">
-			<div class="bxh-nav-utils">
-
-
-				<button type="button" class="bxh-theme-toggle" @click="dark = !dark" aria-label="Toggle dark mode">
-					<span x-show="!dark"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg></span>
-					<span x-show="dark" x-cloak><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></span>
-				</button>
-			</div>
-
-			<a class="bxh-btn bxh-btn-ghost bxh-btn-sm" href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.333-1.754-1.333-1.754-1.089-.744.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.303-5.467-1.332-5.467-5.93 0-1.31.468-2.38 1.235-3.22-.123-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.301 1.23A11.5 11.5 0 0 1 12 5.803c1.02.005 2.045.138 3.003.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.873.118 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.625-5.48 5.92.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 21.795 24 17.298 24 12c0-6.63-5.37-12-12-12"/></svg> Star</a>
-
-			<a class="bxh-btn bxh-btn-primary bxh-btn-sm" href="/getting-started/">Get Started</a>
-		</div>
-	</div>
-</header>
-
-<main class="bxh-wrap bxh-hero">
-	<div class="bxh-hero-grid">
-		<div>
-			<div class="hero-mark"><svg viewBox="0 0 252 250" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#cbgClip)"><path d="M142.295 244.921C84.603 244.921 37.6709 198.016 37.6709 140.359C37.6709 82.701 84.603 35.7969 142.295 35.7969C199.987 35.7969 246.919 82.701 246.919 140.359C246.919 198.016 199.987 244.921 142.295 244.921Z" fill="#0D87C5"/><path opacity="0.1" d="M43.5718 174.974C57.8985 215.671 96.7416 244.92 142.295 244.92C187.848 244.92 226.696 215.665 241.023 174.968C227.549 133.332 188.445 103.215 142.295 103.215C96.1444 103.215 57.0407 133.332 43.5664 174.968L43.5718 174.974Z" fill="#33CFFF"/><path opacity="0.2" d="M60.292 205.224C79.472 229.395 109.102 244.923 142.294 244.923C175.486 244.923 205.116 229.39 224.296 205.219C223.401 160.724 187.033 124.926 142.294 124.926C97.5553 124.926 61.1877 160.724 60.292 205.219V205.224Z" fill="#33CFFF"/><path opacity="0.4" d="M142.294 140.359C105.52 140.359 75.71 170.151 75.71 206.904C75.71 212.248 76.3451 217.446 77.534 222.427C95.3623 236.506 117.859 244.921 142.294 244.921C166.729 244.921 189.226 236.506 207.055 222.427C208.244 217.446 208.879 212.248 208.879 206.904C208.879 170.151 179.069 140.359 142.294 140.359Z" fill="#33CFFF"/><path d="M142.294 40.8754C168.885 40.8754 193.879 51.222 212.684 70.0162C231.484 88.805 241.842 113.79 241.842 140.364C241.842 166.939 231.49 191.918 212.684 210.712C193.884 229.501 168.885 239.853 142.294 239.853C115.704 239.853 90.7097 229.507 71.9043 210.712C53.1043 191.924 42.7462 166.939 42.7462 140.364C42.7462 113.79 53.0989 88.8105 71.9043 70.0162C90.7043 51.2275 115.704 40.8754 142.294 40.8754ZM142.294 30.7188C81.7033 30.7188 32.5889 79.804 32.5889 140.359C32.5889 200.914 81.7033 249.999 142.294 249.999C202.885 249.999 252 200.914 252 140.359C252 79.804 202.885 30.7188 142.294 30.7188Z" fill="white"/><path d="M41.3299 8.86719C39.8641 31.2857 33.6535 37.498 11.2217 38.9575C33.6535 40.4224 39.8695 46.6292 41.3299 69.0478C42.7956 46.6292 49.0062 40.417 71.4381 38.9575C49.0062 37.4926 42.7902 31.2857 41.3299 8.86719Z" fill="white"/><path d="M77.089 77.0703C76.3778 87.9866 73.3486 91.0086 62.4258 91.7248C73.3486 92.4356 76.3724 95.463 77.089 106.379C77.8002 95.463 80.8294 92.441 91.7522 91.7248C80.8294 91.0141 77.8056 87.9866 77.089 77.0703Z" fill="#33CFFF"/><path d="M81.9211 0C80.971 14.5134 76.9537 18.5338 62.4316 19.4778C76.9537 20.4273 80.9765 24.4423 81.9211 38.9557C82.8711 24.4423 86.8884 20.4219 101.411 19.4778C86.8884 18.5284 82.8657 14.5134 81.9211 0Z" fill="#33CFFF"/><path d="M22.0953 59.2109C21.0204 75.6613 16.4602 80.2188 0 81.2931C16.4602 82.3673 21.0204 86.9248 22.0953 103.375C23.1702 86.9248 27.7304 82.3673 44.1905 81.2931C27.7304 80.2188 23.1702 75.6613 22.0953 59.2109Z" fill="#33CFFF"/><path d="M94.4773 110.461L86.4372 119.842C84.2005 122.451 83.3102 125.88 83.9996 129.244L89.1462 154.468C89.6673 157.023 91.4317 159.107 93.8638 160.045C96.2959 160.984 99.0049 160.626 101.106 159.09L110.319 152.352C102.284 140.589 96.8714 126.255 94.4773 110.461Z" fill="white"/><path d="M174.27 152.352L183.483 159.09C185.584 160.631 188.293 160.984 190.725 160.045C191.735 159.655 192.63 159.063 193.369 158.325C194.406 157.289 195.133 155.954 195.437 154.468L200.584 129.244C201.273 125.88 200.383 122.451 198.146 119.842L190.106 110.461C187.712 126.255 182.299 140.589 174.265 152.352H174.27Z" fill="white"/><path d="M165.741 149.822C166.018 149.546 166.273 149.247 166.507 148.922C169.96 144.082 172.793 138.917 175.074 133.578H109.51C111.795 138.917 114.624 144.082 118.076 148.922C119.439 150.831 121.654 151.944 123.999 151.944H160.584C162.533 151.944 164.39 151.173 165.741 149.822Z" fill="white"/><path d="M178.857 60.962C171.371 37.4476 155.28 20.7693 147.175 13.5045C144.395 11.0141 140.199 11.0141 137.419 13.5045C136.1 14.6873 134.569 16.1196 132.897 17.7907C124.303 26.3794 112.007 41.2726 105.737 60.962C100.753 76.6094 98.9778 101.876 106.437 125.288C106.605 125.266 106.774 125.255 106.947 125.255H177.641C177.815 125.255 177.983 125.271 178.152 125.288C185.611 101.876 183.836 76.6094 178.852 60.962H178.857ZM121.464 71.6993C121.464 60.2187 130.807 50.8813 142.294 50.8813C147.859 50.8813 153.087 53.0461 157.023 56.9797C160.959 60.9132 163.125 66.138 163.125 71.6993C163.125 77.4395 160.79 82.6427 157.017 86.4135C153.244 90.1842 148.038 92.5172 142.294 92.5172C136.73 92.5172 131.502 90.3524 127.566 86.4189C123.63 82.4853 121.464 77.2605 121.464 71.6993Z" fill="white"/><path d="M142.295 84.1903C149.184 84.1903 154.792 78.5857 154.792 71.7006C154.792 68.3639 153.495 65.2279 151.133 62.8678C148.772 60.5077 145.634 59.2109 142.295 59.2109C138.848 59.2109 135.726 60.6107 133.462 62.8732C131.198 65.1357 129.798 68.2554 129.798 71.7006C129.798 75.0374 131.095 78.1733 133.457 80.5335C135.818 82.8936 138.956 84.1903 142.295 84.1903Z" fill="white"/><path d="M170.607 243.472C172.121 242.712 173.663 242.018 175.232 241.394C170.878 235.431 161.616 221.563 152.36 200.051C152.36 200.051 164.021 232.919 170.607 243.472Z" fill="white"/><path d="M161.703 210.145C161.703 210.145 170.981 227.382 179.042 239.996C180.237 239.595 181.436 239.226 182.647 238.884C176.952 232.243 169.558 222.71 161.697 210.145H161.703Z" fill="white"/><path d="M108.886 243.398C108.967 243.409 109.049 243.409 109.13 243.425C110.645 243.729 112.159 244.033 113.669 244.332C120.346 231.175 129.597 205.094 129.597 205.094C121.671 223.519 113.734 236.351 108.886 243.393V243.398Z" fill="white"/><path d="M102.16 240.523C103.039 241.023 103.859 241.614 104.641 242.292C112.246 230.068 120.249 215.191 120.249 215.191C113.647 225.75 107.371 234.159 102.154 240.523H102.16Z" fill="white"/><path d="M124.667 189.907C125.818 189.907 126.861 189.44 127.615 188.686C128.37 187.932 128.837 186.89 128.837 185.74V166.517C128.837 164.216 126.969 162.355 124.673 162.355C122.371 162.355 120.509 164.222 120.509 166.517V185.74C120.509 188.04 122.376 189.901 124.673 189.901L124.667 189.907Z" fill="white"/><path d="M146.464 166.521C146.464 164.22 144.602 162.359 142.3 162.359C139.998 162.359 138.136 164.226 138.136 166.521V186.107C136.502 197.295 131.888 218.243 118.924 242.289C121.513 242.88 124.135 243.374 126.796 243.77C129.483 236.424 132.398 227.233 135.004 216.301C135.004 216.301 132.528 230.809 129.505 244.139C132.328 244.486 135.183 244.714 138.071 244.828C139.732 234.601 141.372 221.645 141.975 207.755C141.975 207.755 142.17 228.101 141.486 244.915C141.757 244.915 142.029 244.926 142.3 244.926C145.579 244.926 148.82 244.769 152.023 244.47C150.205 235.404 148.945 228.025 148.945 228.025C150.367 233.988 151.882 239.424 153.402 244.334C157.637 243.884 161.801 243.19 165.872 242.246C152.311 217.087 147.897 195.32 146.47 184.593V166.521H146.464Z" fill="white"/><path d="M159.922 189.907C161.073 189.907 162.115 189.44 162.87 188.686C163.625 187.932 164.091 186.89 164.091 185.74V166.517C164.091 164.216 162.224 162.355 159.928 162.355C157.631 162.355 155.764 164.222 155.764 166.517V185.74C155.764 188.04 157.631 189.901 159.928 189.901L159.922 189.907Z" fill="white"/></g><defs><clipPath id="cbgClip"><rect width="252" height="250" fill="white"/></clipPath></defs></svg></div>
-			<span class="eyebrow">The official ColdBox starter</span>
-			<h1>Scaffold. Build.<br><span class="grad">Accelerate.</span></h1>
-			<p class="lead">A production-ready ColdBox HMVC starter for BoxLang &mdash; authentication, Google SSO, RBAC permissions, API tokens, rate limiting, an Alpine-powered admin panel, and a real test suite, so you spend day one building features instead of scaffolding auth.</p>
-			<div class="hero-actions">
-				<a class="bxh-btn bxh-btn-primary" href="/getting-started/">Get Started &rarr;</a>
-
-				<a class="bxh-btn bxh-btn-ghost" href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.333-1.754-1.333-1.754-1.089-.744.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.303-5.467-1.332-5.467-5.93 0-1.31.468-2.38 1.235-3.22-.123-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.301 1.23A11.5 11.5 0 0 1 12 5.803c1.02.005 2.045.138 3.003.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.873.118 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.625-5.48 5.92.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 21.795 24 17.298 24 12c0-6.63-5.37-12-12-12"/></svg> View on GitHub</a>
-
-			</div>
-			<div class="install-chip">
-				<span>$</span><span>git clone coldbox-templates/cbGenesis &amp;&amp; box install</span>
-			</div>
-			<div class="req-row">
-				<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>BoxLang 1.16+</span>
-				<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>Java 21+</span>
-				<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>Node 18+</span>
-				<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>bx-cli</span>
-			</div>
-		</div>
-		<div class="preview">
-			<div class="float-badge badge-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg> RBAC &middot; resource:action</div>
-			<div class="preview-card">
-				<div class="preview-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">app.local/admin/permissions</span></div>
-				<div class="admin-shell">
-					<div class="admin-side">
-						<div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Dashboard</div>
-						<div class="grp">Access</div>
-						<div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c1-3.8 3.7-5.5 6.5-5.5s5.5 1.7 6.5 5.5"/><circle cx="18" cy="8.5" r="2.3"/><path d="M16 14.3c2 .2 3.6 1.7 4.3 4.4"/></svg> Users</div>
-						<div class="item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg> Permissions</div>
-						<div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Audit Log</div>
-					</div>
-					<div class="admin-main">
-						<h4>Roles &amp; Permissions</h4>
-						<div class="sub">resource:action grants, per role</div>
-						<table class="perm-table">
-							<thead><tr><th>Resource</th><th>view</th><th>edit</th><th>admin</th></tr></thead>
-							<tbody>
-								<tr><td>users</td><td class="yes">&check;</td><td class="yes">&check;</td><td class="no">&ndash;</td></tr>
-								<tr><td>roles</td><td class="yes">&check;</td><td class="no">&ndash;</td><td class="no">&ndash;</td></tr>
-								<tr><td>settings</td><td class="yes">&check;</td><td class="yes">&check;</td><td class="yes">&check;</td></tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-			<div class="float-badge badge-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> CSRF protected by default</div>
-		</div>
-	</div>
-</main>
-
-<section>
-	<div class="bxh-wrap bxh-orbit-wrap">
-		<div class="section-head" style="text-align:center;margin-inline:auto">
-			<span class="eyebrow" style="justify-content:center">Request lifecycle</span>
-			<h2>Browser to database, in six hops.</h2>
-		</div>
-		<div class="flow-row">
-			<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></div><span>Browser</span></div>
-			<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:0s"></span></div>
-			<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h16M4 12l4-4M4 12l4 4M20 12l-4-4M20 12l-4 4"/></svg></div><span>Router</span></div>
-			<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:.5s"></span></div>
-			<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div><span>Handler</span></div>
-			<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:1s"></span></div>
-			<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg></div><span>Service</span></div>
-			<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:1.5s"></span></div>
-			<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></div><span>ORM / qb</span></div>
-			<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:2s"></span></div>
-			<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div><span>View / Layout</span></div>
-		</div>
-		<p class="orbit-caption">The same request path cbGenesis's own login screen runs on &mdash; convention over ceremony, every hop.</p>
-	</div>
-</section>
-
-<section>
-	<div class="bxh-wrap">
-		<div class="section-head">
-			<span class="eyebrow">Everything included</span>
-			<h2>Day one, not sprint six.</h2>
-			<p>Every card below is already wired up and tested in the template &mdash; not a TODO in the README.</p>
-		</div>
-		<div class="bxh-grid">
-			<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 6v6c0 5 3.4 7.7 8 9 4.6-1.3 8-4 8-9V6l-8-4Z"/><path d="M9 12l2 2 4-4"/></svg></div><h3><a href="/getting-started/">Get Started in Minutes</a></h3><p>Install BoxLang, clone the template, run migrations, and be looking at the login screen in under ten minutes.</p></div>
-			<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></div><h3><a href="/architecture/">Modern Template Structure</a></h3><p>Application code lives in <code>app/</code>, fully separated from the public webroot in <code>public/</code> &mdash; enhanced security by default.</p></div>
-			<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg></div><h3><a href="/guides/security/">Auth &amp; RBAC, Batteries Included</a></h3><p>Session auth via cbauth, Google SSO via cbSSO, <code>@secured</code> handler annotations, CSRF rotation, JWT support, IP-based rate limiting, and a <code>resource:action</code> permission model.</p></div>
-			<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></div><h3><a href="/guides/database-orm/">Hibernate ORM + qb</a></h3><p><code>BaseEntity</code>/<code>BaseService</code> conventions on top of cborm, migrations via cfmigrations, and qb for anything raw SQL does better.</p></div>
-			<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21v-6m0 0 3-9 3 9m-6 0h6m5 6v-9m0 0 3-6 3 6m-6 0h6"/></svg></div><h3><a href="/guides/frontend/">Alpine.js + Bootstrap 5 UI</a></h3><p>Server-rendered BXM views, sprinkled with small Alpine components, compiled by Vite with hot module reload.</p></div>
-			<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M12 8v4M7 20l2.5-8h5L17 20"/><path d="M9 20h6"/></svg></div><h3><a href="/guides/testing/">A Real Test Suite</a></h3><p>TestBox unit specs for every entity and service, plus integration specs that exercise real HTTP requests.</p></div>
-			<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h13M21 18h-2"/><circle cx="15" cy="6" r="2"/><circle cx="7" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></div><h3><a href="/guides/configuration/">Easy Configuration</a></h3><p>Environment variables for the essentials, DB-backed admin settings for everything else &mdash; no redeploy needed to change them.</p></div>
-			<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div><h3><a href="/deployment/">Production Ready</a></h3><p>A real go-live checklist, Docker support, and a choice of CommandBox or the BoxLang MiniServer.</p></div>
-		</div>
-	</div>
-</section>
-
-<section>
-	<div class="bxh-wrap">
-		<div class="section-head">
-			<span class="eyebrow">Already wired up</span>
-			<h2>A stack you already know how to run.</h2>
-			<p>No separate build system to learn &mdash; one CLI, from a fresh clone to a running server.</p>
-			<div class="stack-strip">
-				<span class="label">Works with</span>
-				<span title="ColdBox"><svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="cbgColdboxMask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="500"><path d="M298.004 473.018C177.35 473.018 79.549 375.57 79.549 255.352C79.549 135.134 177.35 37.6858 298.004 37.6858C358.853 37.6858 413.859 62.4876 453.472 102.502C407.841 40.3865 334.136 0 250.931 0C112.348 0 0 111.918 0 250C0 388.082 112.348 500 250.906 500C313.422 500 370.566 477.156 414.53 439.445C380.786 460.704 340.85 473.043 298.004 473.043" fill="url(#cbgColdboxG0)"/><path d="M373.105 72.6709C425.623 103.32 460.934 160.109 460.934 225.124C460.934 322.646 381.584 401.685 283.733 401.709C192.671 401.709 117.697 333.275 107.701 245.218C107.527 248.687 107.402 252.155 107.402 255.649C107.402 363.677 195.307 451.239 303.701 451.239C412.096 451.239 500 363.652 500 255.649C500 171.977 447.257 100.619 373.105 72.6709Z" fill="url(#cbgColdboxG1)"/><path d="M278.466 86.2104C212.593 86.2104 156.966 129.868 139.087 189.729C159.055 145.328 203.79 114.407 255.787 114.407C326.409 114.407 383.652 171.443 383.652 241.81C383.652 312.177 326.409 369.214 255.787 369.214C244.249 369.214 233.059 367.653 222.416 364.803C239.648 371.989 258.597 375.953 278.466 375.978C358.785 375.978 423.862 311.087 423.862 231.082C423.862 151.052 358.761 86.2104 278.466 86.2104Z" fill="url(#cbgColdboxG2)"/></mask><g mask="url(#cbgColdboxMask)"><rect x="-14.2969" y="-14.2725" width="521.426" height="521.428" fill="url(#cbgColdboxG3)"/></g><defs><linearGradient id="cbgColdboxG0" x1="403.351" y1="50" x2="84.9543" y2="426.495" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG1" x1="456.608" y1="110.528" x2="222.861" y2="426.58" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG2" x1="392.387" y1="115.187" x2="210.873" y2="347.767" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG3" x1="399.31" y1="108.408" x2="80.3399" y2="483.458" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient></defs></svg></span>
-				<span title="BoxLang"><svg viewBox="0 0 500 500"><defs><linearGradient id="cbgBoxlangGrad" x1="15.624" y1="250" x2="484.376" y2="250" gradientUnits="userSpaceOnUse"><stop stop-color="#00DBFF"/><stop offset="1" stop-color="#00FF75"/></linearGradient></defs><path d="M177.94 75.3152L223.47 37.5453L223.516 37.4998L223.608 37.5681C225.22 37.8185 226.809 38.069 228.421 38.3649C326.228 57.6255 389.56 151.697 370.054 248.228C350.755 343.939 257.278 406.229 160.668 388.721C181.51 384.054 201.546 374.583 219.048 360.081C277.705 311.406 285.374 224.938 236.136 166.951C207.925 133.712 167.14 117.069 126.423 118.048L177.964 75.2925L177.94 75.3152Z" fill="url(#cbgBoxlangGrad)"/><path d="M21.6043 419.494C12.5262 408.044 13.9467 390.952 24.7561 381.336C35.5655 371.72 51.7019 373.224 60.7801 384.674C69.8582 396.124 68.4376 413.217 57.6282 422.833C46.8188 432.449 30.6824 430.944 21.6043 419.494Z" fill="url(#cbgBoxlangGrad)"/><path d="M276.864 495.023C194.023 511.236 112.53 486.871 53.9785 436.035C57.3953 434.608 60.6727 432.706 63.6479 430.238C69.7843 425.211 73.9217 418.735 75.9439 411.76C88.7745 418.939 102.326 425.052 116.597 429.808C238.488 470.635 371.141 407.39 412.91 288.667C454.819 169.921 389.899 40.6914 268.031 0C374.163 17.0284 458.282 96.1695 479.271 198.725C507.35 335.019 416.768 467.623 276.864 495V495.023Z" fill="url(#cbgBoxlangGrad)"/></svg></span>
-				<span title="Bootstrap 5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21v-6m0 0 3-9 3 9m-6 0h6m5 6v-9m0 0 3-6 3 6m-6 0h6"/></svg></span>
-				<span title="Vite"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 2c.3 3.6 1 6.2 2.1 7.9C15.2 11.5 17 12.5 20 13c-3 .5-4.8 1.5-5.9 3.1C13 17.8 12.3 20.4 12 24c-.3-3.6-1-6.2-2.1-7.9C8.8 14.5 7 13.5 4 13c3-.5 4.8-1.5 5.9-3.1C11 8.2 11.7 5.6 12 2Z"/></svg></span>
-				<span title="qb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span>
-			</div>
-		</div>
-		<div class="term-panel">
-			<div class="preview-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-			<div class="term-body">
-				<div class="term-line" style="animation-delay:0s"><span class="ok">&check;</span> <span class="term-cmd">box install</span></div>
-				<div class="term-line" style="animation-delay:1.2s"><span class="ok">&check;</span> <span class="term-cmd">box migrate up &amp;&amp; box migrate seed</span></div>
-				<div class="term-line" style="animation-delay:2.4s"><span class="ok">&check;</span> 7 migrations run &middot; admin user seeded</div>
-				<div class="term-line" style="animation-delay:3.6s"><span class="ok">&check;</span> <span class="term-cmd">box server start</span><span class="term-cursor"></span></div>
-			</div>
-		</div>
-	</div>
-</section>
-
-<section>
-	<div class="bxh-wrap sec-grid">
-		<div>
-			<span class="eyebrow">Secured by convention</span>
-			<h2>The firewall, not an if-check.</h2>
-			<div class="sec-list">
-				<div class="sec-item">
-					<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg></div>
-					<div><h4>@secured, everywhere</h4><p>Every admin handler extends <code>BaseSecureHandler</code> and carries a <code>@secured( "resource:action,resource:admin" )</code> annotation &mdash; enforced before the handler ever runs.</p></div>
-				</div>
-				<div class="sec-item">
-					<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
-					<div><h4>CSRF, deny by default</h4><p>Any non-GET request must carry a valid <code>rc.csrf</code> token, rotated per session &mdash; no hand-rolled checks scattered through controllers.</p></div>
-				</div>
-				<div class="sec-item">
-					<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v10M12 13l7-4M12 13l-7-4M12 13v8M5 17l7 4 7-4"/></svg></div>
-					<div><h4>JWT &amp; API tokens</h4><p>First-class token auth alongside sessions &mdash; issue, list, and revoke tokens straight from a user's profile.</p></div>
-				</div>
-				<div class="sec-item">
-					<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c1-3.8 3.7-5.5 6.5-5.5s5.5 1.7 6.5 5.5"/><circle cx="18" cy="8.5" r="2.3"/><path d="M16 14.3c2 .2 3.6 1.7 4.3 4.4"/></svg></div>
-					<div><h4>Google SSO via cbSSO</h4><p>Local password, passkeys, and SSO all share the same cbauth session authority &mdash; account linking, provisioning, and identity rules enforced by a dedicated interceptor.</p></div>
-				</div>
-				<div class="sec-item">
-					<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg></div>
-					<div><h4>Rate limiting, by IP</h4><p>A <code>RateLimiter</code> interceptor throttles login, registration, and password-reset attempts per IP, with a configurable max attempt count and window.</p></div>
-				</div>
-			</div>
-		</div>
-		<div class="matrix-card">
-			<div class="cap">Roles &middot; live in the admin panel</div>
-			<table class="perm-table">
-				<thead><tr><th>Role</th><th>users</th><th>roles</th><th>settings</th><th>audit</th></tr></thead>
-				<tbody>
-					<tr><td>Admin</td><td class="yes">&check;</td><td class="yes">&check;</td><td class="yes">&check;</td><td class="yes">&check;</td></tr>
-					<tr><td>Manager</td><td class="yes">&check;</td><td class="no">&ndash;</td><td class="no">&ndash;</td><td class="yes">&check;</td></tr>
-					<tr><td>Support</td><td class="yes">&check;</td><td class="no">&ndash;</td><td class="no">&ndash;</td><td class="no">&ndash;</td></tr>
-					<tr><td>Member</td><td class="no">&ndash;</td><td class="no">&ndash;</td><td class="no">&ndash;</td><td class="no">&ndash;</td></tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-</section>
-
-<section>
-	<div class="bxh-wrap">
-		<div class="section-head">
-			<span class="eyebrow">How we compare</span>
-			<h2>Batteries included, on purpose.</h2>
-			<p>Most starters give you routing and a "good luck." cbGenesis gives you the parts every real app ends up building anyway.</p>
-		</div>
-		<div class="compare-wrap">
-			<table class="compare">
-				<thead><tr><th>&nbsp;</th><th class="us">cbGenesis</th><th>Vanilla ColdBox</th><th>Laravel + Breeze</th><th>Rails + Devise</th></tr></thead>
-				<tbody>
-					<tr><td>Auth &amp; sessions out of the box</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td></tr>
-					<tr><td>RBAC permission model</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
-					<tr><td>API tokens included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
-					<tr><td>Admin UI included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
-					<tr><td>ORM + migrations</td><td class="us yes">&check;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td></tr>
-					<tr><td>Real test suite included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td></tr>
-					<tr><td>Docker included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="no">&cross;</td></tr>
-					<tr><td>Production go-live checklist</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-</section>
-
-<section>
-	<div class="bxh-wrap">
-		<div class="section-head" style="text-align:center;margin-inline:auto">
-			<span class="eyebrow" style="justify-content:center">Built on the ColdBox platform</span>
-			<h2>Not a one‑off template. A whole platform.</h2>
-		</div>
-
-		<div class="stack-diagram">
-			<div class="stack-aura" aria-hidden="true"></div>
-
-			<div class="stack-main">
-				<div class="layer layer-modules">
-					<div class="layer-tag">
-						<span class="tag-main"><span class="tag-icon"><svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="cbgColdboxMask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="500"><path d="M298.004 473.018C177.35 473.018 79.549 375.57 79.549 255.352C79.549 135.134 177.35 37.6858 298.004 37.6858C358.853 37.6858 413.859 62.4876 453.472 102.502C407.841 40.3865 334.136 0 250.931 0C112.348 0 0 111.918 0 250C0 388.082 112.348 500 250.906 500C313.422 500 370.566 477.156 414.53 439.445C380.786 460.704 340.85 473.043 298.004 473.043" fill="url(#cbgColdboxG0)"/><path d="M373.105 72.6709C425.623 103.32 460.934 160.109 460.934 225.124C460.934 322.646 381.584 401.685 283.733 401.709C192.671 401.709 117.697 333.275 107.701 245.218C107.527 248.687 107.402 252.155 107.402 255.649C107.402 363.677 195.307 451.239 303.701 451.239C412.096 451.239 500 363.652 500 255.649C500 171.977 447.257 100.619 373.105 72.6709Z" fill="url(#cbgColdboxG1)"/><path d="M278.466 86.2104C212.593 86.2104 156.966 129.868 139.087 189.729C159.055 145.328 203.79 114.407 255.787 114.407C326.409 114.407 383.652 171.443 383.652 241.81C383.652 312.177 326.409 369.214 255.787 369.214C244.249 369.214 233.059 367.653 222.416 364.803C239.648 371.989 258.597 375.953 278.466 375.978C358.785 375.978 423.862 311.087 423.862 231.082C423.862 151.052 358.761 86.2104 278.466 86.2104Z" fill="url(#cbgColdboxG2)"/></mask><g mask="url(#cbgColdboxMask)"><rect x="-14.2969" y="-14.2725" width="521.426" height="521.428" fill="url(#cbgColdboxG3)"/></g><defs><linearGradient id="cbgColdboxG0" x1="403.351" y1="50" x2="84.9543" y2="426.495" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG1" x1="456.608" y1="110.528" x2="222.861" y2="426.58" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG2" x1="392.387" y1="115.187" x2="210.873" y2="347.767" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG3" x1="399.31" y1="108.408" x2="80.3399" y2="483.458" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient></defs></svg></span><span class="tag-name">ColdBox Modules</span></span>
-						<span class="role">extend the platform for app design</span>
-					</div>
-					<div class="pill-row">
-						<span class="pill">cbSecurity</span>
-						<span class="pill">cbORM</span>
-						<span class="pill">qb</span>
-						<span class="pill">cbMailServices</span>
-						<span class="pill">cbSSO</span>
-						<span class="pill">cbFS</span>
-					</div>
-				</div>
-
-				<div class="connector d1"><div class="line"></div><span class="pulse"></span></div>
-
-				<div class="layer layer-platform">
-					<div class="platform-head">
-						<div class="platform-logo"><svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="cbgColdboxMask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="500"><path d="M298.004 473.018C177.35 473.018 79.549 375.57 79.549 255.352C79.549 135.134 177.35 37.6858 298.004 37.6858C358.853 37.6858 413.859 62.4876 453.472 102.502C407.841 40.3865 334.136 0 250.931 0C112.348 0 0 111.918 0 250C0 388.082 112.348 500 250.906 500C313.422 500 370.566 477.156 414.53 439.445C380.786 460.704 340.85 473.043 298.004 473.043" fill="url(#cbgColdboxG0)"/><path d="M373.105 72.6709C425.623 103.32 460.934 160.109 460.934 225.124C460.934 322.646 381.584 401.685 283.733 401.709C192.671 401.709 117.697 333.275 107.701 245.218C107.527 248.687 107.402 252.155 107.402 255.649C107.402 363.677 195.307 451.239 303.701 451.239C412.096 451.239 500 363.652 500 255.649C500 171.977 447.257 100.619 373.105 72.6709Z" fill="url(#cbgColdboxG1)"/><path d="M278.466 86.2104C212.593 86.2104 156.966 129.868 139.087 189.729C159.055 145.328 203.79 114.407 255.787 114.407C326.409 114.407 383.652 171.443 383.652 241.81C383.652 312.177 326.409 369.214 255.787 369.214C244.249 369.214 233.059 367.653 222.416 364.803C239.648 371.989 258.597 375.953 278.466 375.978C358.785 375.978 423.862 311.087 423.862 231.082C423.862 151.052 358.761 86.2104 278.466 86.2104Z" fill="url(#cbgColdboxG2)"/></mask><g mask="url(#cbgColdboxMask)"><rect x="-14.2969" y="-14.2725" width="521.426" height="521.428" fill="url(#cbgColdboxG3)"/></g><defs><linearGradient id="cbgColdboxG0" x1="403.351" y1="50" x2="84.9543" y2="426.495" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG1" x1="456.608" y1="110.528" x2="222.861" y2="426.58" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG2" x1="392.387" y1="115.187" x2="210.873" y2="347.767" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG3" x1="399.31" y1="108.408" x2="80.3399" y2="483.458" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient></defs></svg></div>
-						<div>
-							<div class="platform-name">ColdBox</div>
-							<div class="platform-sub">The MVC application platform &mdash; built from three core engines</div>
-						</div>
-					</div>
-					<div class="engine-row">
-						<div class="engine-card engine-1">
-							<div class="engine-icon"><svg width="250" height="252" viewBox="0 0 250 252" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M125.002 250.571L16.25 188.071V63.0762L125.002 0.576172L233.75 63.0762V188.076L125.002 250.576V250.571ZM18.2492 186.93L125.002 248.284L231.761 186.93V64.2224L125.002 2.86859L18.2492 64.2224V186.93Z" fill="url(#cbgWireboxG0)"/><path d="M125.659 1.60532H124.331V249.303H125.659V1.60532Z" fill="url(#cbgWireboxG1)"/><path d="M71.4452 32.0726L70.7811 33.2172L232.494 126.193L233.158 125.048L71.4452 32.0726Z" fill="url(#cbgWireboxG2)"/><path d="M178.731 32.195L16.833 124.978L17.4955 126.123L179.394 33.3405L178.731 32.195Z" fill="url(#cbgWireboxG3)"/><path d="M17.5704 63.063L16.9064 64.2077L232.378 188.042L233.042 186.897L17.5704 63.063Z" fill="url(#cbgWireboxG4)"/><path d="M17.5826 125.009L16.9188 126.154L178.554 219.01L179.217 217.866L17.5826 125.009Z" fill="url(#cbgWireboxG5)"/><path d="M232.48 125.042L70.9851 217.818L71.6488 218.963L233.144 126.187L232.48 125.042Z" fill="url(#cbgWireboxG6)"/><path d="M232.437 63.0792L17.0329 186.874L17.6969 188.019L233.101 64.2239L232.437 63.0792Z" fill="url(#cbgWireboxG7)"/><path d="M71.981 32.6602H70.6532V218.365H71.981V32.6602Z" fill="url(#cbgWireboxG8)"/><path d="M179.724 32.7578H178.396V218.239H179.724V32.7578Z" fill="url(#cbgWireboxG9)"/><path d="M121.386 63.6566C121.386 61.6617 123.008 60.0473 125.012 60.0473C127.016 60.0473 128.638 61.6666 128.638 63.6566C128.638 65.6466 127.016 67.2659 125.012 67.2659C123.008 67.2659 121.386 65.6515 121.386 63.6566Z" fill="#33CFFF"/><path d="M175.618 94.7652C175.618 92.7703 177.24 91.1558 179.244 91.1558C181.248 91.1558 182.87 92.7703 182.87 94.7652C182.87 96.7601 181.248 98.3745 179.244 98.3745C177.24 98.3745 175.618 96.7552 175.618 94.7652Z" fill="#33CFFF"/><path d="M67.8701 94.4091C67.8701 92.4142 69.4919 90.7998 71.496 90.7998C73.5 90.7998 75.1219 92.4142 75.1219 94.4091C75.1219 96.404 73.5 98.0185 71.496 98.0185C69.4919 98.0185 67.8701 96.3991 67.8701 94.4091Z" fill="#33CFFF"/><path d="M175.618 156.456C175.618 154.461 177.24 152.846 179.244 152.846C181.248 152.846 182.87 154.465 182.87 156.456C182.87 158.446 181.248 160.065 179.244 160.065C177.24 160.065 175.618 158.45 175.618 156.456Z" fill="#33CFFF"/><path d="M67.6937 156.456C67.6937 154.461 69.3155 152.846 71.3196 152.846C73.3236 152.846 74.9455 154.465 74.9455 156.456C74.9455 158.446 73.3236 160.065 71.3196 160.065C69.3155 160.065 67.6937 158.45 67.6937 156.456Z" fill="#33CFFF"/><path d="M121.475 187.301C121.475 185.306 123.096 183.691 125.1 183.691C127.104 183.691 128.726 185.311 128.726 187.301C128.726 189.291 127.104 190.91 125.1 190.91C123.096 190.91 121.475 189.296 121.475 187.301Z" fill="#33CFFF"/><path d="M127.751 190.113C127.245 190.586 126.613 190.925 125.909 191.074V247.475L176.743 218.259L127.751 190.113ZM73.3184 218.291L124.081 247.466V191.024C123.447 190.853 122.878 190.525 122.417 190.085L73.3184 218.291ZM128.864 186.382C128.937 186.676 128.977 186.984 128.977 187.301C128.977 187.752 128.897 188.184 128.754 188.587L178.146 216.961V160.156C177.467 159.957 176.866 159.579 176.397 159.075L128.864 186.382ZM74.0039 159.236C73.5173 159.702 72.9096 160.043 72.2314 160.206V216.813L121.432 188.548C121.298 188.157 121.225 187.737 121.225 187.301C121.225 186.999 121.26 186.705 121.326 186.423L74.0039 159.236ZM19.4229 187.315L70.4033 216.615V160.205C69.6647 160.027 69.0093 159.639 68.5039 159.107L19.4229 187.315ZM181.863 159.299C181.344 159.774 180.694 160.108 179.974 160.245V216.403L230.6 187.308L181.863 159.299ZM18.499 185.742L67.5957 157.526C67.4974 157.186 67.4434 156.827 67.4434 156.455C67.4434 156.137 67.4819 155.828 67.5547 155.532L18.499 127.351V185.742ZM182.946 155.312C183.059 155.674 183.12 156.057 183.12 156.455C183.12 156.921 183.036 157.368 182.884 157.782L231.511 185.729V127.414L182.946 155.312ZM75.0342 155.354C75.1385 155.703 75.1953 156.073 75.1953 156.455C75.1953 156.89 75.121 157.309 74.9873 157.699L122.152 184.794C122.651 184.213 123.319 183.782 124.081 183.576V127.167L75.0342 155.354ZM125.909 183.525C126.744 183.702 127.478 184.147 128.02 184.764L175.508 157.482C175.418 157.155 175.368 156.811 175.368 156.455C175.368 156.168 175.4 155.888 175.46 155.618L125.909 127.141V183.525ZM126.847 125.577L176.269 153.98C176.753 153.404 177.403 152.972 178.146 152.754V98.4658C177.385 98.2421 176.721 97.7928 176.233 97.1943L126.847 125.577ZM19.0107 125.542L68.4004 153.915C68.9182 153.326 69.6136 152.895 70.4033 152.705V98.1113C69.7419 97.918 69.1545 97.5541 68.6914 97.0703L19.0107 125.542ZM74.0322 97.3262C73.5286 97.7606 72.9122 98.0682 72.2314 98.1982V152.704C72.9605 152.879 73.6081 153.261 74.1113 153.781L123.188 125.577L74.0322 97.3262ZM182.018 97.46C181.475 98.0133 180.768 98.4042 179.974 98.5547V152.665C180.762 152.815 181.465 153.203 182.006 153.75L230.983 125.613L182.018 97.46ZM127.829 66.3047C127.319 66.8424 126.656 67.2337 125.909 67.4102V124.013L175.446 95.543C175.395 95.2919 175.368 95.0318 175.368 94.7656C175.368 94.4032 175.418 94.0521 175.512 93.7197L127.829 66.3047ZM75.2168 93.3311C75.3165 93.6733 75.3721 94.0347 75.3721 94.4092C75.3721 94.9137 75.273 95.3945 75.0967 95.8359L124.081 123.987V67.4023C123.378 67.2299 122.751 66.8679 122.258 66.3721L75.2168 93.3311ZM182.863 93.3838C183.028 93.8127 183.12 94.2785 183.12 94.7656C183.12 95.1583 183.059 95.5367 182.95 95.8936L231.511 123.813V65.4258L182.863 93.3838ZM18.499 123.734L67.7764 95.4941C67.6751 95.1498 67.6201 94.7858 67.6201 94.4092C67.6201 94.1604 67.6444 93.9172 67.6895 93.6816L18.499 65.4111V123.734ZM128.754 62.6494C128.841 62.9705 128.888 63.308 128.888 63.6562C128.888 64.0265 128.834 64.3845 128.736 64.7236L176.409 92.1328C176.876 91.635 177.473 91.2609 178.146 91.0635V34.3428L128.754 62.6494ZM19.4199 63.8379L68.4531 92.0176C68.9447 91.3982 69.6228 90.9327 70.4033 90.7051V34.5361L19.4199 63.8379ZM179.974 90.9746C180.674 91.1073 181.307 91.4267 181.819 91.8799L230.602 63.8447L179.974 34.748V90.9746ZM72.2314 90.6191C73.0412 90.7738 73.76 91.1801 74.3057 91.752L121.312 64.8125C121.198 64.4477 121.137 64.059 121.137 63.6562C121.137 63.2716 121.193 62.9002 121.298 62.5498L72.2314 34.3389V90.6191ZM125.909 59.9023C126.677 60.0838 127.358 60.4916 127.873 61.0527L176.877 32.9688L125.909 3.67676V59.9023ZM73.3184 32.8604L122.222 60.9775C122.72 60.4629 123.361 60.0868 124.081 59.9102V3.68555L73.3184 32.8604ZM234 188.221L233.875 188.293L125.127 250.793L124.753 251.008V250.716L16.125 188.288L16 188.216V62.9316L16.125 62.8594L124.878 0.359375L125.003 0.288086L125.127 0.359375L233.875 62.8594L234 62.9316V188.221Z" stroke="url(#cbgWireboxG10)" stroke-width="0.5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M120.615 130.282L55.3939 91.6172L55.3857 166.82L120.615 204.434V130.282Z" fill="url(#cbgWireboxG11)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M125.943 118.001L191.091 79.2877L125.943 41.7148L60.7217 79.3285L125.943 118.001Z" fill="url(#cbgWireboxG12)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M131.285 130.277V204.421L196.498 166.816V91.5234L131.285 130.277Z" fill="url(#cbgWireboxG13)"/><defs><linearGradient id="cbgWireboxG0" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG1" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG2" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG3" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG4" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG5" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG6" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG7" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG8" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG9" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG10" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG11" x1="107.127" y1="118.16" x2="42.1089" y2="162.363" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG12" x1="164.134" y1="59.6633" x2="126.417" y2="135.452" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG13" x1="183.014" y1="118.086" x2="117.972" y2="162.262" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient></defs></svg></div>
-							<b>WireBox</b>
-							<small>Dependency Injection</small>
-						</div>
-						<div class="engine-card engine-2">
-							<div class="engine-icon"><svg width="250" height="250" viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#cbgCacheboxClip)"><g opacity="0.95"><path fill-rule="evenodd" clip-rule="evenodd" d="M125 70.0542C180.228 70.0542 224.999 100.011 224.999 124.997C224.999 149.984 180.228 179.941 125 179.941C194.035 179.941 250 155.34 250 124.997C250 94.6552 194.035 70.0542 125 70.0542ZM25.001 125.002C25.001 100.016 69.7717 70.059 125 70.059C55.9646 70.059 0 94.6601 0 125.002C0 155.345 55.9646 179.946 125 179.946C69.7717 179.946 25.001 149.984 25.001 125.002Z" fill="#0D87C5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M125 25.0005C149.987 25.0005 179.944 69.7703 179.944 124.998C179.944 55.9635 155.348 0 125 0C94.6524 0 70.0557 55.9635 70.0557 124.998C70.0557 69.7703 100.013 25.0005 125 25.0005ZM125 225C100.013 225 70.0557 180.23 70.0557 125.002C70.0557 194.036 94.6524 250 125 250C155.348 250 179.944 194.036 179.944 125.002C179.944 180.23 149.987 225 125 225Z" fill="#33CFFF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M63.6936 125.003C63.6936 109.815 90.9035 91.6093 124.476 91.6093C82.5153 91.6093 48.5005 106.561 48.5005 125.003C48.5005 143.444 82.5153 158.396 124.476 158.396C90.9083 158.396 63.6936 140.186 63.6936 125.003ZM124.476 91.6045C158.043 91.6045 185.253 109.815 185.253 124.998C185.253 140.181 158.043 158.391 124.476 158.391C166.436 158.391 200.451 143.439 200.451 124.998C200.451 106.557 166.436 91.6045 124.476 91.6045Z" fill="#0D87C5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M124.476 64.2215C139.659 64.2215 157.87 91.4309 157.87 124.997C157.87 83.0381 142.917 49.0239 124.476 49.0239C106.034 49.0239 91.0815 83.0381 91.0815 124.997C91.0815 91.4309 109.292 64.2215 124.476 64.2215ZM124.476 185.778C109.287 185.778 91.0815 158.569 91.0815 124.997C91.0815 166.957 106.034 200.971 124.476 200.971C142.917 200.971 157.87 166.957 157.87 124.997C157.87 158.564 139.659 185.778 124.476 185.778Z" fill="#33CFFF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M123.56 130.557C123.56 128.747 122.285 126.509 120.731 125.581L107.063 117.467C105.504 116.543 104.233 117.269 104.233 119.079V134.811C104.233 136.62 105.518 138.844 107.087 139.748L120.716 147.617C122.285 148.521 123.57 147.78 123.57 145.971V130.552L123.56 130.557Z" fill="url(#cbgCacheboxG0)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M122.309 122.842C123.868 123.766 126.414 123.766 127.973 122.842L141.622 114.724C143.176 113.8 143.166 112.298 141.598 111.394L127.993 103.54C126.424 102.635 123.859 102.635 122.29 103.54L108.661 111.408C107.092 112.313 107.082 113.81 108.641 114.734L122.309 122.847V122.842Z" fill="url(#cbgCacheboxG1)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M129.558 125.581C128.004 126.505 126.729 128.748 126.729 130.557V145.971C126.729 147.781 128.013 148.522 129.582 147.617L143.207 139.754C144.775 138.849 146.06 136.625 146.06 134.816V119.06C146.06 117.251 144.785 116.524 143.231 117.453L129.563 125.586H129.558V125.581Z" fill="url(#cbgCacheboxG2)"/></g></g><defs><linearGradient id="cbgCacheboxG0" x1="119.572" y1="124.344" x2="101.273" y2="137.793" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgCacheboxG1" x1="135.481" y1="107.725" x2="125.255" y2="128.258" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgCacheboxG2" x1="142.063" y1="124.331" x2="123.758" y2="137.773" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><clipPath id="cbgCacheboxClip"><rect width="250" height="250" fill="white"/></clipPath></defs></svg></div>
-							<b>CacheBox</b>
-							<small>Caching</small>
-						</div>
-						<div class="engine-card engine-3">
-							<div class="engine-icon"><svg width="250" height="250" viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#cbgLogboxFullClip)"><path fill-rule="evenodd" clip-rule="evenodd" d="M123.352 130.883C123.352 128.313 121.546 125.14 119.335 123.829L107.834 117.006C105.627 115.695 103.816 116.723 103.816 119.292V132.5C103.816 135.07 105.637 138.22 107.858 139.507L119.302 146.114C121.527 147.396 123.348 146.349 123.348 143.78V130.888L123.352 130.883Z" fill="url(#cbgLogboxFullG0)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M120.933 121.06C123.14 122.371 126.757 122.371 128.964 121.06L140.446 114.232C142.652 112.916 142.638 110.795 140.413 109.507L128.992 102.915C126.766 101.632 123.126 101.632 120.905 102.915L109.465 109.521C107.24 110.804 107.23 112.931 109.437 114.241L120.938 121.069V121.06H120.933Z" fill="#33CFFF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M130.563 123.823C128.356 125.139 126.55 128.312 126.55 130.882V143.769C126.55 146.339 128.37 147.391 130.596 146.103L142.035 139.502C144.261 138.219 146.081 135.065 146.081 132.495V119.263C146.081 116.693 144.275 115.67 142.068 116.981L130.567 123.823H130.563Z" fill="url(#cbgLogboxFullG1)"/><path d="M84.7426 31.6232V73.4064C84.7426 80.2154 84.4409 85.0016 83.8326 87.7742C83.229 90.5469 82.1822 92.7773 80.7063 94.4654C78.3863 97.2098 75.5335 99.1619 72.1572 100.322C68.781 101.482 64.108 102.062 58.143 102.062H54.6866V76.5704L9.88086 121.376H60.2791C71.1528 121.376 79.2303 120.466 84.5069 118.646C89.7834 116.826 94.5082 113.676 98.6767 109.187C102.529 105.174 105.245 100.638 106.83 95.5688C108.414 90.5045 109.206 83.3795 109.206 74.1939V5L84.7426 31.6232Z" fill="#33CFFF"/><path d="M240.12 121.376L195.314 76.5704V102.062H191.858C185.893 102.062 181.22 101.482 177.844 100.322C174.468 99.1619 171.615 97.2098 169.295 94.4654C167.819 92.7773 166.777 90.5469 166.169 87.7742C165.56 85.0063 165.258 80.2154 165.258 73.4064V31.6232L140.795 5V74.1986C140.795 83.3795 141.592 90.5044 143.171 95.5735C144.751 100.643 147.472 105.179 151.324 109.192C155.493 113.676 160.218 116.831 165.494 118.651C170.771 120.471 178.848 121.381 189.722 121.381H220.679L240.12 121.376Z" fill="#0D87C5"/><path d="M106.825 154.427C105.245 149.358 102.524 144.822 98.672 140.809C94.5035 136.325 89.7787 133.17 84.5022 131.35C79.2256 129.53 71.1481 128.62 60.2744 128.62L29.3178 128.615V128.625H9.88086L54.6866 173.43V147.934H58.1383C64.1033 147.934 68.7763 148.514 72.1525 149.674C75.5287 150.834 78.3816 152.786 80.7015 155.531C82.1775 157.219 83.2196 159.449 83.8279 162.222C84.4361 164.99 84.7379 169.781 84.7379 176.59V218.373L109.201 244.996V175.802C109.201 166.621 108.409 159.496 106.825 154.427Z" fill="#0D87C5"/><path d="M240.12 128.623H189.722C178.848 128.623 170.771 129.533 165.494 131.353C160.218 133.173 155.493 136.323 151.324 140.812C147.472 144.825 144.756 149.361 143.171 154.43C141.587 159.495 140.795 166.62 140.795 175.805V244.999L165.258 218.376V176.593C165.258 169.789 165.56 164.998 166.169 162.225C166.772 159.452 167.814 157.222 169.295 155.534C171.615 152.789 174.468 150.837 177.844 149.677C181.22 148.517 185.893 147.937 191.858 147.937H195.314V173.429L240.12 128.623Z" fill="#33CFFF"/></g><defs><linearGradient id="cbgLogboxFullG0" x1="119.313" y1="123.547" x2="101.264" y2="137.264" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgLogboxFullG1" x1="142.042" y1="123.526" x2="123.987" y2="137.236" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><clipPath id="cbgLogboxFullClip"><rect width="230.239" height="240" fill="white" transform="translate(9.88086 5)"/></clipPath></defs></svg></div>
-							<b>LogBox</b>
-							<small>Logging</small>
-						</div>
-					</div>
-				</div>
-
-				<div class="connector d2"><div class="line"></div><span class="pulse"></span></div>
-
-				<div class="layer layer-language">
-					<div class="platform-head">
-						<div class="platform-logo"><svg viewBox="0 0 500 500"><defs><linearGradient id="cbgBoxlangGrad" x1="15.624" y1="250" x2="484.376" y2="250" gradientUnits="userSpaceOnUse"><stop stop-color="#00DBFF"/><stop offset="1" stop-color="#00FF75"/></linearGradient></defs><path d="M177.94 75.3152L223.47 37.5453L223.516 37.4998L223.608 37.5681C225.22 37.8185 226.809 38.069 228.421 38.3649C326.228 57.6255 389.56 151.697 370.054 248.228C350.755 343.939 257.278 406.229 160.668 388.721C181.51 384.054 201.546 374.583 219.048 360.081C277.705 311.406 285.374 224.938 236.136 166.951C207.925 133.712 167.14 117.069 126.423 118.048L177.964 75.2925L177.94 75.3152Z" fill="url(#cbgBoxlangGrad)"/><path d="M21.6043 419.494C12.5262 408.044 13.9467 390.952 24.7561 381.336C35.5655 371.72 51.7019 373.224 60.7801 384.674C69.8582 396.124 68.4376 413.217 57.6282 422.833C46.8188 432.449 30.6824 430.944 21.6043 419.494Z" fill="url(#cbgBoxlangGrad)"/><path d="M276.864 495.023C194.023 511.236 112.53 486.871 53.9785 436.035C57.3953 434.608 60.6727 432.706 63.6479 430.238C69.7843 425.211 73.9217 418.735 75.9439 411.76C88.7745 418.939 102.326 425.052 116.597 429.808C238.488 470.635 371.141 407.39 412.91 288.667C454.819 169.921 389.899 40.6914 268.031 0C374.163 17.0284 458.282 96.1695 479.271 198.725C507.35 335.019 416.768 467.623 276.864 495V495.023Z" fill="url(#cbgBoxlangGrad)"/></svg></div>
-						<div>
-							<div class="platform-name">BoxLang</div>
-							<div class="platform-sub">The modern, dynamic JVM language it all runs on</div>
-						</div>
-					</div>
-					<div class="pill-row">
-						<span class="pill">bx-orm</span>
-						<span class="pill">bx-mail</span>
-						<span class="pill">bx-image</span>
-						<span class="pill">bx-esapi</span>
-						<span class="pill">bx-mysql</span>
-						<span class="pill">bx-postgresql</span>
-						<span class="pill">bx-mssql</span>
-						<span class="pill">bx-oracle</span>
-						<span class="pill">bx-sqlite</span>
-						<span class="pill">bx-derby</span>
-					</div>
-				</div>
-			</div>
-
-			<div class="stack-tooling">
-				<div class="tooling-label">⚙ Productivity tooling</div>
-				<a class="tool-card" href="https://commandbox.ortusbooks.com" target="_blank" rel="noopener noreferrer">
-					<div class="icon"><svg viewBox="0 0 500 500"><defs><linearGradient id="cbgCmdboxGrad" x1="0" y1="249.999" x2="500" y2="249.999" gradientUnits="userSpaceOnUse"><stop stop-color="#00DBFF"/><stop offset="1" stop-color="#00FF75"/></linearGradient></defs><path d="M0 107.162L116.795 228.266V278.504L0 400.432V345.152L88.5586 253.385L0 162.351V107.162Z" fill="url(#cbgCmdboxGrad)"/><path d="M351.212 414.649C262.653 414.832 190.505 343.233 190.321 254.675C190.138 166.116 261.737 93.9673 350.295 93.784C393.383 93.6006 434.637 110.927 464.981 141.547C405.117 59.2223 289.881 41.0705 207.465 100.935C125.048 160.799 106.988 276.035 166.852 358.452C226.717 440.776 341.953 458.928 424.369 399.064C428.403 396.13 432.436 392.922 436.103 389.805C410.893 406.215 381.282 415.015 351.212 414.649Z" fill="url(#cbgCmdboxGrad)"/><path d="M405.849 119.451C467.822 155.663 488.816 235.329 452.787 297.302C416.575 359.275 336.909 380.269 274.937 344.24C239.366 323.613 215.806 287.309 211.222 246.33V253.848C211.222 333.697 275.853 398.237 355.611 398.237C435.369 398.237 500 333.606 500 253.848C499.175 194.075 461.863 140.628 405.849 119.451Z" fill="url(#cbgCmdboxGrad)"/><path d="M336.63 129.624C289.142 129.44 247.521 160.793 234.228 206.265C255.772 158.96 311.602 138.15 358.907 159.693C406.211 181.237 427.022 237.068 405.478 284.372C390.26 318.017 356.615 339.378 319.853 339.378C311.602 339.194 303.352 338.186 295.376 336.261C308.485 341.853 322.512 344.695 336.905 344.511C396.219 344.145 444.073 295.832 443.707 236.518C443.157 177.387 395.485 129.807 336.63 129.624Z" fill="url(#cbgCmdboxGrad)"/></svg></div>
-					<div><b>CommandBox</b><span>bx‑cli &middot; package manager</span></div>
-				</a>
-				<a class="tool-card" href="https://testbox.run" target="_blank" rel="noopener noreferrer">
-					<div class="icon"><svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#cbgTestboxClip)"><path d="M500.011 253.749L420.595 144.895V192.95H376.113L376.167 177.035L305.149 135.576V81.0649H352.211L245.601 0L144.863 81.0649H186.053V139.057L119.864 178.663V197.441H79.4156V149.386L0 258.268L79.4156 356.624V314.576H119.864V328.835L191.926 371.894V418.938H150.736L251.474 500.003L358.084 418.938H311.021V367.627L375.728 328.835V310.056H420.595V356.596L500.011 253.749ZM241.979 377.171L139.32 316.288L139.128 195.112L242.061 255.826L241.979 377.171ZM249.059 245.777L146.126 185.091L249.031 124.713L351.992 185.063L249.086 245.777H249.059ZM357.26 317.635L254.629 378.518L254.547 257.173L357.48 196.459L357.26 317.635Z" fill="url(#cbgTestboxGrad)"/></g><defs><linearGradient id="cbgTestboxGrad" x1="396.619" y1="117.64" x2="90.7572" y2="477.285" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><clipPath id="cbgTestboxClip"><rect width="500" height="500" fill="white"/></clipPath></defs></svg></div>
-					<div><b>TestBox</b><span>BDD / TDD test engine</span></div>
-				</a>
-			</div>
-		</div>
-
-		<p class="foot-caption">Language, platform, and modules &mdash; three real layers, not marketing copy. Energy flows bottom‑up: BoxLang powers ColdBox's three core engines, which app‑facing modules extend.</p>
-	</div>
-</section>
-
-<section>
-	<div class="bxh-wrap">
-		<div class="cta">
-			<span class="eyebrow">Free &amp; open source</span>
-			<h2>Ready to scaffold your next ColdBox app?</h2>
-			<p>Clone it, run three commands, and start building on top of auth that's already done.</p>
-			<div class="hero-actions">
-				<a class="bxh-btn bxh-btn-primary" href="/getting-started/">Get Started &rarr;</a>
-
-				<a class="bxh-btn bxh-btn-ghost" href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer">View on GitHub</a>
-
-			</div>
-		</div>
-	</div>
-</section>
-
-<section>
-	<div class="bxh-wrap">
-		<div class="cta">
-			<span class="eyebrow">Need a hand building on cbGenesis?</span>
-			<h2>ColdBox is free &amp; open source &mdash; or let the team who builds it do the work.</h2>
-			<p><a href="https://www.ortussolutions.com" target="_blank" rel="noopener noreferrer">Ortus Solutions</a> builds and maintains ColdBox, and offers professional services for custom builds, migrations, and production hardening.</p>
-			<div class="hero-actions">
-				<a class="bxh-btn bxh-btn-primary" href="mailto:consulting@ortussolutions.com">Email consulting@ortussolutions.com</a>
-				<a class="bxh-btn bxh-btn-ghost" href="https://www.ortussolutions.com/services" target="_blank" rel="noopener noreferrer">Consulting &amp; Professional Services</a>
-			</div>
-		</div>
-	</div>
-</section>
-
-<footer class="bxh-footer">
-	<div class="bxh-wrap footer-top">
-		<div class="footer-brand">
+	
+	<header class="bxh-nav">
+		<div class="bxh-wrap bxh-navrow">
 			<a class="bxh-brand" href="/"><img class="brand-logo" src="/assets/cbgenesis-icon-full.svg" alt=""><span class="brand-name">CBGenesis</span></a>
-			<p>The official ColdBox project starter &mdash; auth, RBAC, and an admin panel, ready to build on.</p>
-
-			<div class="social-row"><a class="social-link" href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer" aria-label="cbGenesis on GitHub" title="cbGenesis on GitHub"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.333-1.754-1.333-1.754-1.089-.744.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.303-5.467-1.332-5.467-5.93 0-1.31.468-2.38 1.235-3.22-.123-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.301 1.23A11.5 11.5 0 0 1 12 5.803c1.02.005 2.045.138 3.003.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.873.118 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.625-5.48 5.92.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 21.795 24 17.298 24 12c0-6.63-5.37-12-12-12"/></svg></a><a class="social-link" href="https://x.com/coldbox" target="_blank" rel="noopener noreferrer" aria-label="X &#x28;Twitter&#x29;" title="X &#x28;Twitter&#x29;"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a><a class="social-link" href="https://www.youtube.com/@OrtusSolutions" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M23.498 6.186a3.02 3.02 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.02 3.02 0 0 0 .502 6.186 31.7 31.7 0 0 0 0 12a31.7 31.7 0 0 0 .502 5.814 3.02 3.02 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.02 3.02 0 0 0 2.122-2.136A31.7 31.7 0 0 0 24 12a31.7 31.7 0 0 0-.502-5.814ZM9.545 15.568V8.432L15.818 12l-6.273 3.568Z"/></svg></a><a class="social-link" href="https://www.linkedin.com/company/ortussolutions" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286ZM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124ZM7.119 20.452H3.554V9h3.565v11.452ZM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003Z"/></svg></a><a class="social-link" href="https://www.facebook.com/ortussolutions" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073Z"/></svg></a><a class="social-link" href="https://bsky.app/profile/coldbox.bsky.social" target="_blank" rel="noopener noreferrer" aria-label="Bluesky" title="Bluesky"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.203-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"/></svg></a><a class="social-link" href="https://www.threads.com/@ortussolutions" target="_blank" rel="noopener noreferrer" aria-label="Threads" title="Threads"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.056 7.164 1.43 1.781 3.63 2.695 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.29a13.85 13.85 0 0 1 3.02.142c-.13-.808-.394-1.45-.789-1.916-.54-.635-1.362-.958-2.444-.964h-.032c-.87 0-2.045.24-2.798 1.376l-1.735-1.19c1.01-1.512 2.65-2.343 4.62-2.343h.036c3.294.021 5.259 2.028 5.459 5.55.114.048.227.098.34.15 1.574.734 2.727 1.846 3.334 3.215.845 1.906.923 5.011-1.646 7.44-1.877 1.778-4.153 2.581-7.379 2.605Zm1.176-11.916c-.184 0-.37.005-.556.016-1.392.08-2.26.71-2.211 1.605.05.943.976 1.38 1.866 1.334 1.427-.077 2.402-.965 2.652-2.874a8.19 8.19 0 0 0-1.751-.081Z"/></svg></a><a class="social-link" href="https://www.ortussolutions.com/community/slack" target="_blank" rel="noopener noreferrer" aria-label="Slack Community" title="Slack Community"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52ZM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313ZM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834ZM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312ZM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834ZM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312ZM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52ZM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313Z"/></svg></a><a class="social-link" href="https://www.patreon.com/ortussolutions" target="_blank" rel="noopener noreferrer" aria-label="Patreon" title="Patreon"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M0 .5v23h4.219V.5H0Zm15.211 0c-4.831 0-8.771 3.943-8.771 8.775 0 4.831 3.94 8.773 8.771 8.773 4.831 0 8.775-3.942 8.775-8.773S20.042.5 15.211.5Z"/></svg></a></div>
-
-			<div class="madeby"><span>Developed by</span> Ortus Solutions</div>
+			<nav class="bxh-navlinks">
+				<a href="/getting-started/">Getting Started</a>
+				<a href="/architecture/">Architecture</a>
+				<a href="/guides/security/">Security</a>
+				<a href="/guides/database-orm/">Database</a>
+			</nav>
+			<div class="bxh-navcta">
+				<div class="bxh-nav-utils">
+					
+					
+					<button type="button" class="bxh-theme-toggle" @click="dark = !dark" aria-label="Toggle dark mode">
+						<span x-show="!dark"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg></span>
+						<span x-show="dark" x-cloak><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></span>
+					</button>
+				</div>
+				
+					<a class="bxh-btn bxh-btn-ghost bxh-btn-sm" href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.333-1.754-1.333-1.754-1.089-.744.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.303-5.467-1.332-5.467-5.93 0-1.31.468-2.38 1.235-3.22-.123-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.301 1.23A11.5 11.5 0 0 1 12 5.803c1.02.005 2.045.138 3.003.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.873.118 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.625-5.48 5.92.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 21.795 24 17.298 24 12c0-6.63-5.37-12-12-12"/></svg> Star</a>
+				
+				<a class="bxh-btn bxh-btn-primary bxh-btn-sm" href="/getting-started/">Get Started</a>
+			</div>
 		</div>
-		<div class="footer-col">
-			<h4>Docs</h4>
-			<a href="/getting-started/">Getting Started</a>
-			<a href="/architecture/">Architecture</a>
-			<a href="/guides/security/">Security &amp; Permissions</a>
-			<a href="/guides/database-orm/">Database &amp; ORM</a>
-			<a href="/deployment/">Deployment</a>
+	</header>
+
+	
+	<main class="bxh-wrap bxh-hero">
+		<div class="bxh-hero-grid">
+			<div>
+				<div class="hero-mark"><svg viewBox="0 0 252 250" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#cbgClip)"><path d="M142.295 244.921C84.603 244.921 37.6709 198.016 37.6709 140.359C37.6709 82.701 84.603 35.7969 142.295 35.7969C199.987 35.7969 246.919 82.701 246.919 140.359C246.919 198.016 199.987 244.921 142.295 244.921Z" fill="#0D87C5"/><path opacity="0.1" d="M43.5718 174.974C57.8985 215.671 96.7416 244.92 142.295 244.92C187.848 244.92 226.696 215.665 241.023 174.968C227.549 133.332 188.445 103.215 142.295 103.215C96.1444 103.215 57.0407 133.332 43.5664 174.968L43.5718 174.974Z" fill="#33CFFF"/><path opacity="0.2" d="M60.292 205.224C79.472 229.395 109.102 244.923 142.294 244.923C175.486 244.923 205.116 229.39 224.296 205.219C223.401 160.724 187.033 124.926 142.294 124.926C97.5553 124.926 61.1877 160.724 60.292 205.219V205.224Z" fill="#33CFFF"/><path opacity="0.4" d="M142.294 140.359C105.52 140.359 75.71 170.151 75.71 206.904C75.71 212.248 76.3451 217.446 77.534 222.427C95.3623 236.506 117.859 244.921 142.294 244.921C166.729 244.921 189.226 236.506 207.055 222.427C208.244 217.446 208.879 212.248 208.879 206.904C208.879 170.151 179.069 140.359 142.294 140.359Z" fill="#33CFFF"/><path d="M142.294 40.8754C168.885 40.8754 193.879 51.222 212.684 70.0162C231.484 88.805 241.842 113.79 241.842 140.364C241.842 166.939 231.49 191.918 212.684 210.712C193.884 229.501 168.885 239.853 142.294 239.853C115.704 239.853 90.7097 229.507 71.9043 210.712C53.1043 191.924 42.7462 166.939 42.7462 140.364C42.7462 113.79 53.0989 88.8105 71.9043 70.0162C90.7043 51.2275 115.704 40.8754 142.294 40.8754ZM142.294 30.7188C81.7033 30.7188 32.5889 79.804 32.5889 140.359C32.5889 200.914 81.7033 249.999 142.294 249.999C202.885 249.999 252 200.914 252 140.359C252 79.804 202.885 30.7188 142.294 30.7188Z" fill="white"/><path d="M41.3299 8.86719C39.8641 31.2857 33.6535 37.498 11.2217 38.9575C33.6535 40.4224 39.8695 46.6292 41.3299 69.0478C42.7956 46.6292 49.0062 40.417 71.4381 38.9575C49.0062 37.4926 42.7902 31.2857 41.3299 8.86719Z" fill="white"/><path d="M77.089 77.0703C76.3778 87.9866 73.3486 91.0086 62.4258 91.7248C73.3486 92.4356 76.3724 95.463 77.089 106.379C77.8002 95.463 80.8294 92.441 91.7522 91.7248C80.8294 91.0141 77.8056 87.9866 77.089 77.0703Z" fill="#33CFFF"/><path d="M81.9211 0C80.971 14.5134 76.9537 18.5338 62.4316 19.4778C76.9537 20.4273 80.9765 24.4423 81.9211 38.9557C82.8711 24.4423 86.8884 20.4219 101.411 19.4778C86.8884 18.5284 82.8657 14.5134 81.9211 0Z" fill="#33CFFF"/><path d="M22.0953 59.2109C21.0204 75.6613 16.4602 80.2188 0 81.2931C16.4602 82.3673 21.0204 86.9248 22.0953 103.375C23.1702 86.9248 27.7304 82.3673 44.1905 81.2931C27.7304 80.2188 23.1702 75.6613 22.0953 59.2109Z" fill="#33CFFF"/><path d="M94.4773 110.461L86.4372 119.842C84.2005 122.451 83.3102 125.88 83.9996 129.244L89.1462 154.468C89.6673 157.023 91.4317 159.107 93.8638 160.045C96.2959 160.984 99.0049 160.626 101.106 159.09L110.319 152.352C102.284 140.589 96.8714 126.255 94.4773 110.461Z" fill="white"/><path d="M174.27 152.352L183.483 159.09C185.584 160.631 188.293 160.984 190.725 160.045C191.735 159.655 192.63 159.063 193.369 158.325C194.406 157.289 195.133 155.954 195.437 154.468L200.584 129.244C201.273 125.88 200.383 122.451 198.146 119.842L190.106 110.461C187.712 126.255 182.299 140.589 174.265 152.352H174.27Z" fill="white"/><path d="M165.741 149.822C166.018 149.546 166.273 149.247 166.507 148.922C169.96 144.082 172.793 138.917 175.074 133.578H109.51C111.795 138.917 114.624 144.082 118.076 148.922C119.439 150.831 121.654 151.944 123.999 151.944H160.584C162.533 151.944 164.39 151.173 165.741 149.822Z" fill="white"/><path d="M178.857 60.962C171.371 37.4476 155.28 20.7693 147.175 13.5045C144.395 11.0141 140.199 11.0141 137.419 13.5045C136.1 14.6873 134.569 16.1196 132.897 17.7907C124.303 26.3794 112.007 41.2726 105.737 60.962C100.753 76.6094 98.9778 101.876 106.437 125.288C106.605 125.266 106.774 125.255 106.947 125.255H177.641C177.815 125.255 177.983 125.271 178.152 125.288C185.611 101.876 183.836 76.6094 178.852 60.962H178.857ZM121.464 71.6993C121.464 60.2187 130.807 50.8813 142.294 50.8813C147.859 50.8813 153.087 53.0461 157.023 56.9797C160.959 60.9132 163.125 66.138 163.125 71.6993C163.125 77.4395 160.79 82.6427 157.017 86.4135C153.244 90.1842 148.038 92.5172 142.294 92.5172C136.73 92.5172 131.502 90.3524 127.566 86.4189C123.63 82.4853 121.464 77.2605 121.464 71.6993Z" fill="white"/><path d="M142.295 84.1903C149.184 84.1903 154.792 78.5857 154.792 71.7006C154.792 68.3639 153.495 65.2279 151.133 62.8678C148.772 60.5077 145.634 59.2109 142.295 59.2109C138.848 59.2109 135.726 60.6107 133.462 62.8732C131.198 65.1357 129.798 68.2554 129.798 71.7006C129.798 75.0374 131.095 78.1733 133.457 80.5335C135.818 82.8936 138.956 84.1903 142.295 84.1903Z" fill="white"/><path d="M170.607 243.472C172.121 242.712 173.663 242.018 175.232 241.394C170.878 235.431 161.616 221.563 152.36 200.051C152.36 200.051 164.021 232.919 170.607 243.472Z" fill="white"/><path d="M161.703 210.145C161.703 210.145 170.981 227.382 179.042 239.996C180.237 239.595 181.436 239.226 182.647 238.884C176.952 232.243 169.558 222.71 161.697 210.145H161.703Z" fill="white"/><path d="M108.886 243.398C108.967 243.409 109.049 243.409 109.13 243.425C110.645 243.729 112.159 244.033 113.669 244.332C120.346 231.175 129.597 205.094 129.597 205.094C121.671 223.519 113.734 236.351 108.886 243.393V243.398Z" fill="white"/><path d="M102.16 240.523C103.039 241.023 103.859 241.614 104.641 242.292C112.246 230.068 120.249 215.191 120.249 215.191C113.647 225.75 107.371 234.159 102.154 240.523H102.16Z" fill="white"/><path d="M124.667 189.907C125.818 189.907 126.861 189.44 127.615 188.686C128.37 187.932 128.837 186.89 128.837 185.74V166.517C128.837 164.216 126.969 162.355 124.673 162.355C122.371 162.355 120.509 164.222 120.509 166.517V185.74C120.509 188.04 122.376 189.901 124.673 189.901L124.667 189.907Z" fill="white"/><path d="M146.464 166.521C146.464 164.22 144.602 162.359 142.3 162.359C139.998 162.359 138.136 164.226 138.136 166.521V186.107C136.502 197.295 131.888 218.243 118.924 242.289C121.513 242.88 124.135 243.374 126.796 243.77C129.483 236.424 132.398 227.233 135.004 216.301C135.004 216.301 132.528 230.809 129.505 244.139C132.328 244.486 135.183 244.714 138.071 244.828C139.732 234.601 141.372 221.645 141.975 207.755C141.975 207.755 142.17 228.101 141.486 244.915C141.757 244.915 142.029 244.926 142.3 244.926C145.579 244.926 148.82 244.769 152.023 244.47C150.205 235.404 148.945 228.025 148.945 228.025C150.367 233.988 151.882 239.424 153.402 244.334C157.637 243.884 161.801 243.19 165.872 242.246C152.311 217.087 147.897 195.32 146.47 184.593V166.521H146.464Z" fill="white"/><path d="M159.922 189.907C161.073 189.907 162.115 189.44 162.87 188.686C163.625 187.932 164.091 186.89 164.091 185.74V166.517C164.091 164.216 162.224 162.355 159.928 162.355C157.631 162.355 155.764 164.222 155.764 166.517V185.74C155.764 188.04 157.631 189.901 159.928 189.901L159.922 189.907Z" fill="white"/></g><defs><clipPath id="cbgClip"><rect width="252" height="250" fill="white"/></clipPath></defs></svg></div>
+				<span class="eyebrow">The official ColdBox starter</span>
+				<h1>Scaffold. Build.<br><span class="grad">Accelerate.</span></h1>
+				<p class="lead">A production-ready ColdBox HMVC starter for BoxLang &mdash; authentication, Google SSO, RBAC permissions, API tokens, rate limiting, an Alpine-powered admin panel, and a real test suite, so you spend day one building features instead of scaffolding auth.</p>
+				<div class="hero-actions">
+					<a class="bxh-btn bxh-btn-primary" href="/getting-started/">Get Started &rarr;</a>
+					
+						<a class="bxh-btn bxh-btn-ghost" href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.333-1.754-1.333-1.754-1.089-.744.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.303-5.467-1.332-5.467-5.93 0-1.31.468-2.38 1.235-3.22-.123-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.301 1.23A11.5 11.5 0 0 1 12 5.803c1.02.005 2.045.138 3.003.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.873.118 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.625-5.48 5.92.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 21.795 24 17.298 24 12c0-6.63-5.37-12-12-12"/></svg> View on GitHub</a>
+					
+				</div>
+				<div class="install-chip">
+					<span>$</span><span>git clone coldbox-templates/cbGenesis &amp;&amp; box install</span>
+				</div>
+				<div class="req-row">
+					<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>BoxLang 1.16+</span>
+					<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>Java 21+</span>
+					<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>Node 18+</span>
+					<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>bx-cli</span>
+				</div>
+			</div>
+			<div class="preview">
+				<div class="float-badge badge-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg> RBAC &middot; resource:action</div>
+				<div class="preview-card">
+					<div class="preview-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">app.local/admin/permissions</span></div>
+					<div class="admin-shell">
+						<div class="admin-side">
+							<div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Dashboard</div>
+							<div class="grp">Access</div>
+							<div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c1-3.8 3.7-5.5 6.5-5.5s5.5 1.7 6.5 5.5"/><circle cx="18" cy="8.5" r="2.3"/><path d="M16 14.3c2 .2 3.6 1.7 4.3 4.4"/></svg> Users</div>
+							<div class="item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg> Permissions</div>
+							<div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Audit Log</div>
+						</div>
+						<div class="admin-main">
+							<h4>Roles &amp; Permissions</h4>
+							<div class="sub">resource:action grants, per role</div>
+							<table class="perm-table">
+								<thead><tr><th>Resource</th><th>view</th><th>edit</th><th>admin</th></tr></thead>
+								<tbody>
+									<tr><td>users</td><td class="yes">&check;</td><td class="yes">&check;</td><td class="no">&ndash;</td></tr>
+									<tr><td>roles</td><td class="yes">&check;</td><td class="no">&ndash;</td><td class="no">&ndash;</td></tr>
+									<tr><td>settings</td><td class="yes">&check;</td><td class="yes">&check;</td><td class="yes">&check;</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div class="float-badge badge-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> CSRF protected by default</div>
+			</div>
 		</div>
-		<div class="footer-col">
-			<h4>Guides</h4>
-			<a href="/guides/handlers-routing/">Handlers &amp; Routing</a>
-			<a href="/guides/frontend/">Frontend</a>
-			<a href="/guides/testing/">Testing</a>
-			<a href="/guides/extending/">Extending the App</a>
-			<a href="/guides/configuration/">Configuration</a>
+	</main>
+
+	
+	<section>
+		<div class="bxh-wrap bxh-orbit-wrap">
+			<div class="section-head" style="text-align:center;margin-inline:auto">
+				<span class="eyebrow" style="justify-content:center">Request lifecycle</span>
+				<h2>Browser to database, in six hops.</h2>
+			</div>
+			<div class="flow-row">
+				<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></div><span>Browser</span></div>
+				<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:0s"></span></div>
+				<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h16M4 12l4-4M4 12l4 4M20 12l-4-4M20 12l-4 4"/></svg></div><span>Router</span></div>
+				<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:.5s"></span></div>
+				<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div><span>Handler</span></div>
+				<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:1s"></span></div>
+				<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg></div><span>Service</span></div>
+				<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:1.5s"></span></div>
+				<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></div><span>ORM / qb</span></div>
+				<div class="flow-connector"><div class="line"></div><span class="flow-pulse" style="animation-delay:2s"></span></div>
+				<div class="flow-stage"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div><span>View / Layout</span></div>
+			</div>
+			<p class="orbit-caption">The same request path cbGenesis's own login screen runs on &mdash; convention over ceremony, every hop.</p>
 		</div>
-		<div class="footer-col">
-			<h4>Community</h4>
+	</section>
 
-			<a href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer">GitHub</a>
-			<a href="https://github.com/coldbox-templates/cbGenesis/issues" target="_blank" rel="noopener noreferrer">Bug Tracker</a>
-
-			<a href="https://www.ortussolutions.com/community/slack" target="_blank" rel="noopener noreferrer">Slack Community</a>
-			<a href="https://www.ortussolutions.com/services" target="_blank" rel="noopener noreferrer">Consulting</a>
+	
+	<section>
+		<div class="bxh-wrap">
+			<div class="section-head">
+				<span class="eyebrow">Everything included</span>
+				<h2>Day one, not sprint six.</h2>
+				<p>Every card below is already wired up and tested in the template &mdash; not a TODO in the README.</p>
+			</div>
+			<div class="bxh-grid">
+				<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 6v6c0 5 3.4 7.7 8 9 4.6-1.3 8-4 8-9V6l-8-4Z"/><path d="M9 12l2 2 4-4"/></svg></div><h3><a href="/getting-started/">Get Started in Minutes</a></h3><p>Install BoxLang, clone the template, run migrations, and be looking at the login screen in under ten minutes.</p></div>
+				<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></div><h3><a href="/architecture/">Modern Template Structure</a></h3><p>Application code lives in <code>app/</code>, fully separated from the public webroot in <code>public/</code> &mdash; enhanced security by default.</p></div>
+				<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg></div><h3><a href="/guides/security/">Auth &amp; RBAC, Batteries Included</a></h3><p>Session auth via cbauth, Google SSO via cbSSO, <code>@secured</code> handler annotations, CSRF rotation, JWT support, IP-based rate limiting, and a <code>resource:action</code> permission model.</p></div>
+				<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></div><h3><a href="/guides/database-orm/">Hibernate ORM + qb</a></h3><p><code>BaseEntity</code>/<code>BaseService</code> conventions on top of cborm, migrations via cfmigrations, and qb for anything raw SQL does better.</p></div>
+				<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21v-6m0 0 3-9 3 9m-6 0h6m5 6v-9m0 0 3-6 3 6m-6 0h6"/></svg></div><h3><a href="/guides/frontend/">Alpine.js + Bootstrap 5 UI</a></h3><p>Server-rendered BXM views, sprinkled with small Alpine components, compiled by Vite with hot module reload.</p></div>
+				<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M12 8v4M7 20l2.5-8h5L17 20"/><path d="M9 20h6"/></svg></div><h3><a href="/guides/testing/">A Real Test Suite</a></h3><p>TestBox unit specs for every entity and service, plus integration specs that exercise real HTTP requests.</p></div>
+				<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h13M21 18h-2"/><circle cx="15" cy="6" r="2"/><circle cx="7" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></div><h3><a href="/guides/configuration/">Easy Configuration</a></h3><p>Environment variables for the essentials, DB-backed admin settings for everything else &mdash; no redeploy needed to change them.</p></div>
+				<div class="bxh-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div><h3><a href="/deployment/">Production Ready</a></h3><p>A real go-live checklist, Docker support, and a choice of CommandBox or the BoxLang MiniServer.</p></div>
+			</div>
 		</div>
-	</div>
-	<div class="bxh-wrap footer-bottom footrow">
-		<span>&copy; 2026 Ortus Solutions. Apache 2.0 License.</span>
-		<div class="footlinks">
+	</section>
 
-			<a href="https://github.com/coldbox-templates/cbGenesis/blob/development/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
-
-			<a class="poweredby" href="https://coldbox.ortusbooks.com" target="_blank" rel="noopener noreferrer">Part of the <b>ColdBox</b> platform</a>
+	
+	<section>
+		<div class="bxh-wrap">
+			<div class="section-head">
+				<span class="eyebrow">Already wired up</span>
+				<h2>A stack you already know how to run.</h2>
+				<p>No separate build system to learn &mdash; one CLI, from a fresh clone to a running server.</p>
+				<div class="stack-strip">
+					<span class="label">Works with</span>
+					<span title="ColdBox"><svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="cbgColdboxMask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="500"><path d="M298.004 473.018C177.35 473.018 79.549 375.57 79.549 255.352C79.549 135.134 177.35 37.6858 298.004 37.6858C358.853 37.6858 413.859 62.4876 453.472 102.502C407.841 40.3865 334.136 0 250.931 0C112.348 0 0 111.918 0 250C0 388.082 112.348 500 250.906 500C313.422 500 370.566 477.156 414.53 439.445C380.786 460.704 340.85 473.043 298.004 473.043" fill="url(#cbgColdboxG0)"/><path d="M373.105 72.6709C425.623 103.32 460.934 160.109 460.934 225.124C460.934 322.646 381.584 401.685 283.733 401.709C192.671 401.709 117.697 333.275 107.701 245.218C107.527 248.687 107.402 252.155 107.402 255.649C107.402 363.677 195.307 451.239 303.701 451.239C412.096 451.239 500 363.652 500 255.649C500 171.977 447.257 100.619 373.105 72.6709Z" fill="url(#cbgColdboxG1)"/><path d="M278.466 86.2104C212.593 86.2104 156.966 129.868 139.087 189.729C159.055 145.328 203.79 114.407 255.787 114.407C326.409 114.407 383.652 171.443 383.652 241.81C383.652 312.177 326.409 369.214 255.787 369.214C244.249 369.214 233.059 367.653 222.416 364.803C239.648 371.989 258.597 375.953 278.466 375.978C358.785 375.978 423.862 311.087 423.862 231.082C423.862 151.052 358.761 86.2104 278.466 86.2104Z" fill="url(#cbgColdboxG2)"/></mask><g mask="url(#cbgColdboxMask)"><rect x="-14.2969" y="-14.2725" width="521.426" height="521.428" fill="url(#cbgColdboxG3)"/></g><defs><linearGradient id="cbgColdboxG0" x1="403.351" y1="50" x2="84.9543" y2="426.495" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG1" x1="456.608" y1="110.528" x2="222.861" y2="426.58" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG2" x1="392.387" y1="115.187" x2="210.873" y2="347.767" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG3" x1="399.31" y1="108.408" x2="80.3399" y2="483.458" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient></defs></svg></span>
+					<span title="BoxLang"><svg viewBox="0 0 500 500"><defs><linearGradient id="cbgBoxlangGrad" x1="15.624" y1="250" x2="484.376" y2="250" gradientUnits="userSpaceOnUse"><stop stop-color="#00DBFF"/><stop offset="1" stop-color="#00FF75"/></linearGradient></defs><path d="M177.94 75.3152L223.47 37.5453L223.516 37.4998L223.608 37.5681C225.22 37.8185 226.809 38.069 228.421 38.3649C326.228 57.6255 389.56 151.697 370.054 248.228C350.755 343.939 257.278 406.229 160.668 388.721C181.51 384.054 201.546 374.583 219.048 360.081C277.705 311.406 285.374 224.938 236.136 166.951C207.925 133.712 167.14 117.069 126.423 118.048L177.964 75.2925L177.94 75.3152Z" fill="url(#cbgBoxlangGrad)"/><path d="M21.6043 419.494C12.5262 408.044 13.9467 390.952 24.7561 381.336C35.5655 371.72 51.7019 373.224 60.7801 384.674C69.8582 396.124 68.4376 413.217 57.6282 422.833C46.8188 432.449 30.6824 430.944 21.6043 419.494Z" fill="url(#cbgBoxlangGrad)"/><path d="M276.864 495.023C194.023 511.236 112.53 486.871 53.9785 436.035C57.3953 434.608 60.6727 432.706 63.6479 430.238C69.7843 425.211 73.9217 418.735 75.9439 411.76C88.7745 418.939 102.326 425.052 116.597 429.808C238.488 470.635 371.141 407.39 412.91 288.667C454.819 169.921 389.899 40.6914 268.031 0C374.163 17.0284 458.282 96.1695 479.271 198.725C507.35 335.019 416.768 467.623 276.864 495V495.023Z" fill="url(#cbgBoxlangGrad)"/></svg></span>
+					<span title="Bootstrap 5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21v-6m0 0 3-9 3 9m-6 0h6m5 6v-9m0 0 3-6 3 6m-6 0h6"/></svg></span>
+					<span title="Vite"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 2c.3 3.6 1 6.2 2.1 7.9C15.2 11.5 17 12.5 20 13c-3 .5-4.8 1.5-5.9 3.1C13 17.8 12.3 20.4 12 24c-.3-3.6-1-6.2-2.1-7.9C8.8 14.5 7 13.5 4 13c3-.5 4.8-1.5 5.9-3.1C11 8.2 11.7 5.6 12 2Z"/></svg></span>
+					<span title="qb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span>
+				</div>
+			</div>
+			<div class="term-panel">
+				<div class="preview-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+				<div class="term-body">
+					<div class="term-line" style="animation-delay:0s"><span class="ok">&check;</span> <span class="term-cmd">box install</span></div>
+					<div class="term-line" style="animation-delay:1.2s"><span class="ok">&check;</span> <span class="term-cmd">box migrate up &amp;&amp; box migrate seed</span></div>
+					<div class="term-line" style="animation-delay:2.4s"><span class="ok">&check;</span> 7 migrations run &middot; admin user seeded</div>
+					<div class="term-line" style="animation-delay:3.6s"><span class="ok">&check;</span> <span class="term-cmd">box server start</span><span class="term-cursor"></span></div>
+				</div>
+			</div>
 		</div>
-	</div>
-</footer>
+	</section>
 
+	
+	<section>
+		<div class="bxh-wrap sec-grid">
+			<div>
+				<span class="eyebrow">Secured by convention</span>
+				<h2>The firewall, not an if-check.</h2>
+				<div class="sec-list">
+					<div class="sec-item">
+						<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg></div>
+						<div><h4>@secured, everywhere</h4><p>Every admin handler extends <code>BaseSecureHandler</code> and carries a <code>@secured( "resource:action,resource:admin" )</code> annotation &mdash; enforced before the handler ever runs.</p></div>
+					</div>
+					<div class="sec-item">
+						<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+						<div><h4>CSRF, deny by default</h4><p>Any non-GET request must carry a valid <code>rc.csrf</code> token, rotated per session &mdash; no hand-rolled checks scattered through controllers.</p></div>
+					</div>
+					<div class="sec-item">
+						<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v10M12 13l7-4M12 13l-7-4M12 13v8M5 17l7 4 7-4"/></svg></div>
+						<div><h4>JWT &amp; API tokens</h4><p>First-class token auth alongside sessions &mdash; issue, list, and revoke tokens straight from a user's profile.</p></div>
+					</div>
+					<div class="sec-item">
+						<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c1-3.8 3.7-5.5 6.5-5.5s5.5 1.7 6.5 5.5"/><circle cx="18" cy="8.5" r="2.3"/><path d="M16 14.3c2 .2 3.6 1.7 4.3 4.4"/></svg></div>
+						<div><h4>Google SSO via cbSSO</h4><p>Local password, passkeys, and SSO all share the same cbauth session authority &mdash; account linking, provisioning, and identity rules enforced by a dedicated interceptor.</p></div>
+					</div>
+					<div class="sec-item">
+						<div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg></div>
+						<div><h4>Rate limiting, by IP</h4><p>A <code>RateLimiter</code> interceptor throttles login, registration, and password-reset attempts per IP, with a configurable max attempt count and window.</p></div>
+					</div>
+				</div>
+			</div>
+			<div class="matrix-card">
+				<div class="cap">Roles &middot; live in the admin panel</div>
+				<table class="perm-table">
+					<thead><tr><th>Role</th><th>users</th><th>roles</th><th>settings</th><th>audit</th></tr></thead>
+					<tbody>
+						<tr><td>Admin</td><td class="yes">&check;</td><td class="yes">&check;</td><td class="yes">&check;</td><td class="yes">&check;</td></tr>
+						<tr><td>Manager</td><td class="yes">&check;</td><td class="no">&ndash;</td><td class="no">&ndash;</td><td class="yes">&check;</td></tr>
+						<tr><td>Support</td><td class="yes">&check;</td><td class="no">&ndash;</td><td class="no">&ndash;</td><td class="no">&ndash;</td></tr>
+						<tr><td>Member</td><td class="no">&ndash;</td><td class="no">&ndash;</td><td class="no">&ndash;</td><td class="no">&ndash;</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+
+	
+	<section>
+		<div class="bxh-wrap">
+			<div class="section-head">
+				<span class="eyebrow">How we compare</span>
+				<h2>Batteries included, on purpose.</h2>
+				<p>Most starters give you routing and a "good luck." cbGenesis gives you the parts every real app ends up building anyway.</p>
+			</div>
+			<div class="compare-wrap">
+				<table class="compare">
+					<thead><tr><th>&nbsp;</th><th class="us">cbGenesis</th><th>Vanilla ColdBox</th><th>Laravel + Breeze</th><th>Rails + Devise</th></tr></thead>
+					<tbody>
+						<tr><td>Auth &amp; sessions out of the box</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td></tr>
+						<tr><td>RBAC permission model</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
+						<tr><td>API tokens included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
+						<tr><td>Admin UI included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
+						<tr><td>ORM + migrations</td><td class="us yes">&check;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td></tr>
+						<tr><td>Real test suite included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="yes" style="color:var(--muted)">&check;</td></tr>
+						<tr><td>Docker included</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="yes" style="color:var(--muted)">&check;</td><td class="no">&cross;</td></tr>
+						<tr><td>Production go-live checklist</td><td class="us yes">&check;</td><td class="no">&cross;</td><td class="no">&cross;</td><td class="no">&cross;</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+
+	
+	<section>
+		<div class="bxh-wrap">
+			<div class="section-head" style="text-align:center;margin-inline:auto">
+				<span class="eyebrow" style="justify-content:center">Built on the ColdBox platform</span>
+				<h2>Not a one‑off template. A whole platform.</h2>
+			</div>
+
+			<div class="stack-diagram">
+				<div class="stack-aura" aria-hidden="true"></div>
+
+				<div class="stack-main">
+					<div class="layer layer-modules">
+						<div class="layer-tag">
+							<span class="tag-main"><span class="tag-icon"><svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="cbgColdboxMask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="500"><path d="M298.004 473.018C177.35 473.018 79.549 375.57 79.549 255.352C79.549 135.134 177.35 37.6858 298.004 37.6858C358.853 37.6858 413.859 62.4876 453.472 102.502C407.841 40.3865 334.136 0 250.931 0C112.348 0 0 111.918 0 250C0 388.082 112.348 500 250.906 500C313.422 500 370.566 477.156 414.53 439.445C380.786 460.704 340.85 473.043 298.004 473.043" fill="url(#cbgColdboxG0)"/><path d="M373.105 72.6709C425.623 103.32 460.934 160.109 460.934 225.124C460.934 322.646 381.584 401.685 283.733 401.709C192.671 401.709 117.697 333.275 107.701 245.218C107.527 248.687 107.402 252.155 107.402 255.649C107.402 363.677 195.307 451.239 303.701 451.239C412.096 451.239 500 363.652 500 255.649C500 171.977 447.257 100.619 373.105 72.6709Z" fill="url(#cbgColdboxG1)"/><path d="M278.466 86.2104C212.593 86.2104 156.966 129.868 139.087 189.729C159.055 145.328 203.79 114.407 255.787 114.407C326.409 114.407 383.652 171.443 383.652 241.81C383.652 312.177 326.409 369.214 255.787 369.214C244.249 369.214 233.059 367.653 222.416 364.803C239.648 371.989 258.597 375.953 278.466 375.978C358.785 375.978 423.862 311.087 423.862 231.082C423.862 151.052 358.761 86.2104 278.466 86.2104Z" fill="url(#cbgColdboxG2)"/></mask><g mask="url(#cbgColdboxMask)"><rect x="-14.2969" y="-14.2725" width="521.426" height="521.428" fill="url(#cbgColdboxG3)"/></g><defs><linearGradient id="cbgColdboxG0" x1="403.351" y1="50" x2="84.9543" y2="426.495" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG1" x1="456.608" y1="110.528" x2="222.861" y2="426.58" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG2" x1="392.387" y1="115.187" x2="210.873" y2="347.767" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG3" x1="399.31" y1="108.408" x2="80.3399" y2="483.458" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient></defs></svg></span><span class="tag-name">ColdBox Modules</span></span>
+							<span class="role">extend the platform for app design</span>
+						</div>
+						<div class="pill-row">
+							<span class="pill">cbSecurity</span>
+							<span class="pill">cbORM</span>
+							<span class="pill">qb</span>
+							<span class="pill">cbMailServices</span>
+							<span class="pill">cbSSO</span>
+							<span class="pill">cbFS</span>
+						</div>
+					</div>
+
+					<div class="connector d1"><div class="line"></div><span class="pulse"></span></div>
+
+					<div class="layer layer-platform">
+						<div class="platform-head">
+							<div class="platform-logo"><svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg"><mask id="cbgColdboxMask" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="500"><path d="M298.004 473.018C177.35 473.018 79.549 375.57 79.549 255.352C79.549 135.134 177.35 37.6858 298.004 37.6858C358.853 37.6858 413.859 62.4876 453.472 102.502C407.841 40.3865 334.136 0 250.931 0C112.348 0 0 111.918 0 250C0 388.082 112.348 500 250.906 500C313.422 500 370.566 477.156 414.53 439.445C380.786 460.704 340.85 473.043 298.004 473.043" fill="url(#cbgColdboxG0)"/><path d="M373.105 72.6709C425.623 103.32 460.934 160.109 460.934 225.124C460.934 322.646 381.584 401.685 283.733 401.709C192.671 401.709 117.697 333.275 107.701 245.218C107.527 248.687 107.402 252.155 107.402 255.649C107.402 363.677 195.307 451.239 303.701 451.239C412.096 451.239 500 363.652 500 255.649C500 171.977 447.257 100.619 373.105 72.6709Z" fill="url(#cbgColdboxG1)"/><path d="M278.466 86.2104C212.593 86.2104 156.966 129.868 139.087 189.729C159.055 145.328 203.79 114.407 255.787 114.407C326.409 114.407 383.652 171.443 383.652 241.81C383.652 312.177 326.409 369.214 255.787 369.214C244.249 369.214 233.059 367.653 222.416 364.803C239.648 371.989 258.597 375.953 278.466 375.978C358.785 375.978 423.862 311.087 423.862 231.082C423.862 151.052 358.761 86.2104 278.466 86.2104Z" fill="url(#cbgColdboxG2)"/></mask><g mask="url(#cbgColdboxMask)"><rect x="-14.2969" y="-14.2725" width="521.426" height="521.428" fill="url(#cbgColdboxG3)"/></g><defs><linearGradient id="cbgColdboxG0" x1="403.351" y1="50" x2="84.9543" y2="426.495" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG1" x1="456.608" y1="110.528" x2="222.861" y2="426.58" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG2" x1="392.387" y1="115.187" x2="210.873" y2="347.767" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#00BFF3"/><stop offset="0.735577" stop-color="#034DC7"/><stop offset="1" stop-color="#1D1E63"/></linearGradient><linearGradient id="cbgColdboxG3" x1="399.31" y1="108.408" x2="80.3399" y2="483.458" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient></defs></svg></div>
+							<div>
+								<div class="platform-name">ColdBox</div>
+								<div class="platform-sub">The MVC application platform &mdash; built from three core engines</div>
+							</div>
+						</div>
+						<div class="engine-row">
+							<div class="engine-card engine-1">
+								<div class="engine-icon"><svg width="250" height="252" viewBox="0 0 250 252" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M125.002 250.571L16.25 188.071V63.0762L125.002 0.576172L233.75 63.0762V188.076L125.002 250.576V250.571ZM18.2492 186.93L125.002 248.284L231.761 186.93V64.2224L125.002 2.86859L18.2492 64.2224V186.93Z" fill="url(#cbgWireboxG0)"/><path d="M125.659 1.60532H124.331V249.303H125.659V1.60532Z" fill="url(#cbgWireboxG1)"/><path d="M71.4452 32.0726L70.7811 33.2172L232.494 126.193L233.158 125.048L71.4452 32.0726Z" fill="url(#cbgWireboxG2)"/><path d="M178.731 32.195L16.833 124.978L17.4955 126.123L179.394 33.3405L178.731 32.195Z" fill="url(#cbgWireboxG3)"/><path d="M17.5704 63.063L16.9064 64.2077L232.378 188.042L233.042 186.897L17.5704 63.063Z" fill="url(#cbgWireboxG4)"/><path d="M17.5826 125.009L16.9188 126.154L178.554 219.01L179.217 217.866L17.5826 125.009Z" fill="url(#cbgWireboxG5)"/><path d="M232.48 125.042L70.9851 217.818L71.6488 218.963L233.144 126.187L232.48 125.042Z" fill="url(#cbgWireboxG6)"/><path d="M232.437 63.0792L17.0329 186.874L17.6969 188.019L233.101 64.2239L232.437 63.0792Z" fill="url(#cbgWireboxG7)"/><path d="M71.981 32.6602H70.6532V218.365H71.981V32.6602Z" fill="url(#cbgWireboxG8)"/><path d="M179.724 32.7578H178.396V218.239H179.724V32.7578Z" fill="url(#cbgWireboxG9)"/><path d="M121.386 63.6566C121.386 61.6617 123.008 60.0473 125.012 60.0473C127.016 60.0473 128.638 61.6666 128.638 63.6566C128.638 65.6466 127.016 67.2659 125.012 67.2659C123.008 67.2659 121.386 65.6515 121.386 63.6566Z" fill="#33CFFF"/><path d="M175.618 94.7652C175.618 92.7703 177.24 91.1558 179.244 91.1558C181.248 91.1558 182.87 92.7703 182.87 94.7652C182.87 96.7601 181.248 98.3745 179.244 98.3745C177.24 98.3745 175.618 96.7552 175.618 94.7652Z" fill="#33CFFF"/><path d="M67.8701 94.4091C67.8701 92.4142 69.4919 90.7998 71.496 90.7998C73.5 90.7998 75.1219 92.4142 75.1219 94.4091C75.1219 96.404 73.5 98.0185 71.496 98.0185C69.4919 98.0185 67.8701 96.3991 67.8701 94.4091Z" fill="#33CFFF"/><path d="M175.618 156.456C175.618 154.461 177.24 152.846 179.244 152.846C181.248 152.846 182.87 154.465 182.87 156.456C182.87 158.446 181.248 160.065 179.244 160.065C177.24 160.065 175.618 158.45 175.618 156.456Z" fill="#33CFFF"/><path d="M67.6937 156.456C67.6937 154.461 69.3155 152.846 71.3196 152.846C73.3236 152.846 74.9455 154.465 74.9455 156.456C74.9455 158.446 73.3236 160.065 71.3196 160.065C69.3155 160.065 67.6937 158.45 67.6937 156.456Z" fill="#33CFFF"/><path d="M121.475 187.301C121.475 185.306 123.096 183.691 125.1 183.691C127.104 183.691 128.726 185.311 128.726 187.301C128.726 189.291 127.104 190.91 125.1 190.91C123.096 190.91 121.475 189.296 121.475 187.301Z" fill="#33CFFF"/><path d="M127.751 190.113C127.245 190.586 126.613 190.925 125.909 191.074V247.475L176.743 218.259L127.751 190.113ZM73.3184 218.291L124.081 247.466V191.024C123.447 190.853 122.878 190.525 122.417 190.085L73.3184 218.291ZM128.864 186.382C128.937 186.676 128.977 186.984 128.977 187.301C128.977 187.752 128.897 188.184 128.754 188.587L178.146 216.961V160.156C177.467 159.957 176.866 159.579 176.397 159.075L128.864 186.382ZM74.0039 159.236C73.5173 159.702 72.9096 160.043 72.2314 160.206V216.813L121.432 188.548C121.298 188.157 121.225 187.737 121.225 187.301C121.225 186.999 121.26 186.705 121.326 186.423L74.0039 159.236ZM19.4229 187.315L70.4033 216.615V160.205C69.6647 160.027 69.0093 159.639 68.5039 159.107L19.4229 187.315ZM181.863 159.299C181.344 159.774 180.694 160.108 179.974 160.245V216.403L230.6 187.308L181.863 159.299ZM18.499 185.742L67.5957 157.526C67.4974 157.186 67.4434 156.827 67.4434 156.455C67.4434 156.137 67.4819 155.828 67.5547 155.532L18.499 127.351V185.742ZM182.946 155.312C183.059 155.674 183.12 156.057 183.12 156.455C183.12 156.921 183.036 157.368 182.884 157.782L231.511 185.729V127.414L182.946 155.312ZM75.0342 155.354C75.1385 155.703 75.1953 156.073 75.1953 156.455C75.1953 156.89 75.121 157.309 74.9873 157.699L122.152 184.794C122.651 184.213 123.319 183.782 124.081 183.576V127.167L75.0342 155.354ZM125.909 183.525C126.744 183.702 127.478 184.147 128.02 184.764L175.508 157.482C175.418 157.155 175.368 156.811 175.368 156.455C175.368 156.168 175.4 155.888 175.46 155.618L125.909 127.141V183.525ZM126.847 125.577L176.269 153.98C176.753 153.404 177.403 152.972 178.146 152.754V98.4658C177.385 98.2421 176.721 97.7928 176.233 97.1943L126.847 125.577ZM19.0107 125.542L68.4004 153.915C68.9182 153.326 69.6136 152.895 70.4033 152.705V98.1113C69.7419 97.918 69.1545 97.5541 68.6914 97.0703L19.0107 125.542ZM74.0322 97.3262C73.5286 97.7606 72.9122 98.0682 72.2314 98.1982V152.704C72.9605 152.879 73.6081 153.261 74.1113 153.781L123.188 125.577L74.0322 97.3262ZM182.018 97.46C181.475 98.0133 180.768 98.4042 179.974 98.5547V152.665C180.762 152.815 181.465 153.203 182.006 153.75L230.983 125.613L182.018 97.46ZM127.829 66.3047C127.319 66.8424 126.656 67.2337 125.909 67.4102V124.013L175.446 95.543C175.395 95.2919 175.368 95.0318 175.368 94.7656C175.368 94.4032 175.418 94.0521 175.512 93.7197L127.829 66.3047ZM75.2168 93.3311C75.3165 93.6733 75.3721 94.0347 75.3721 94.4092C75.3721 94.9137 75.273 95.3945 75.0967 95.8359L124.081 123.987V67.4023C123.378 67.2299 122.751 66.8679 122.258 66.3721L75.2168 93.3311ZM182.863 93.3838C183.028 93.8127 183.12 94.2785 183.12 94.7656C183.12 95.1583 183.059 95.5367 182.95 95.8936L231.511 123.813V65.4258L182.863 93.3838ZM18.499 123.734L67.7764 95.4941C67.6751 95.1498 67.6201 94.7858 67.6201 94.4092C67.6201 94.1604 67.6444 93.9172 67.6895 93.6816L18.499 65.4111V123.734ZM128.754 62.6494C128.841 62.9705 128.888 63.308 128.888 63.6562C128.888 64.0265 128.834 64.3845 128.736 64.7236L176.409 92.1328C176.876 91.635 177.473 91.2609 178.146 91.0635V34.3428L128.754 62.6494ZM19.4199 63.8379L68.4531 92.0176C68.9447 91.3982 69.6228 90.9327 70.4033 90.7051V34.5361L19.4199 63.8379ZM179.974 90.9746C180.674 91.1073 181.307 91.4267 181.819 91.8799L230.602 63.8447L179.974 34.748V90.9746ZM72.2314 90.6191C73.0412 90.7738 73.76 91.1801 74.3057 91.752L121.312 64.8125C121.198 64.4477 121.137 64.059 121.137 63.6562C121.137 63.2716 121.193 62.9002 121.298 62.5498L72.2314 34.3389V90.6191ZM125.909 59.9023C126.677 60.0838 127.358 60.4916 127.873 61.0527L176.877 32.9688L125.909 3.67676V59.9023ZM73.3184 32.8604L122.222 60.9775C122.72 60.4629 123.361 60.0868 124.081 59.9102V3.68555L73.3184 32.8604ZM234 188.221L233.875 188.293L125.127 250.793L124.753 251.008V250.716L16.125 188.288L16 188.216V62.9316L16.125 62.8594L124.878 0.359375L125.003 0.288086L125.127 0.359375L233.875 62.8594L234 62.9316V188.221Z" stroke="url(#cbgWireboxG10)" stroke-width="0.5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M120.615 130.282L55.3939 91.6172L55.3857 166.82L120.615 204.434V130.282Z" fill="url(#cbgWireboxG11)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M125.943 118.001L191.091 79.2877L125.943 41.7148L60.7217 79.3285L125.943 118.001Z" fill="url(#cbgWireboxG12)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M131.285 130.277V204.421L196.498 166.816V91.5234L131.285 130.277Z" fill="url(#cbgWireboxG13)"/><defs><linearGradient id="cbgWireboxG0" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG1" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG2" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG3" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG4" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG5" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG6" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG7" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG8" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG9" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG10" x1="188.776" y1="59.3956" x2="33.8747" y2="217.854" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG11" x1="107.127" y1="118.16" x2="42.1089" y2="162.363" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG12" x1="164.134" y1="59.6633" x2="126.417" y2="135.452" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgWireboxG13" x1="183.014" y1="118.086" x2="117.972" y2="162.262" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient></defs></svg></div>
+								<b>WireBox</b>
+								<small>Dependency Injection</small>
+							</div>
+							<div class="engine-card engine-2">
+								<div class="engine-icon"><svg width="250" height="250" viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#cbgCacheboxClip)"><g opacity="0.95"><path fill-rule="evenodd" clip-rule="evenodd" d="M125 70.0542C180.228 70.0542 224.999 100.011 224.999 124.997C224.999 149.984 180.228 179.941 125 179.941C194.035 179.941 250 155.34 250 124.997C250 94.6552 194.035 70.0542 125 70.0542ZM25.001 125.002C25.001 100.016 69.7717 70.059 125 70.059C55.9646 70.059 0 94.6601 0 125.002C0 155.345 55.9646 179.946 125 179.946C69.7717 179.946 25.001 149.984 25.001 125.002Z" fill="#0D87C5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M125 25.0005C149.987 25.0005 179.944 69.7703 179.944 124.998C179.944 55.9635 155.348 0 125 0C94.6524 0 70.0557 55.9635 70.0557 124.998C70.0557 69.7703 100.013 25.0005 125 25.0005ZM125 225C100.013 225 70.0557 180.23 70.0557 125.002C70.0557 194.036 94.6524 250 125 250C155.348 250 179.944 194.036 179.944 125.002C179.944 180.23 149.987 225 125 225Z" fill="#33CFFF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M63.6936 125.003C63.6936 109.815 90.9035 91.6093 124.476 91.6093C82.5153 91.6093 48.5005 106.561 48.5005 125.003C48.5005 143.444 82.5153 158.396 124.476 158.396C90.9083 158.396 63.6936 140.186 63.6936 125.003ZM124.476 91.6045C158.043 91.6045 185.253 109.815 185.253 124.998C185.253 140.181 158.043 158.391 124.476 158.391C166.436 158.391 200.451 143.439 200.451 124.998C200.451 106.557 166.436 91.6045 124.476 91.6045Z" fill="#0D87C5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M124.476 64.2215C139.659 64.2215 157.87 91.4309 157.87 124.997C157.87 83.0381 142.917 49.0239 124.476 49.0239C106.034 49.0239 91.0815 83.0381 91.0815 124.997C91.0815 91.4309 109.292 64.2215 124.476 64.2215ZM124.476 185.778C109.287 185.778 91.0815 158.569 91.0815 124.997C91.0815 166.957 106.034 200.971 124.476 200.971C142.917 200.971 157.87 166.957 157.87 124.997C157.87 158.564 139.659 185.778 124.476 185.778Z" fill="#33CFFF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M123.56 130.557C123.56 128.747 122.285 126.509 120.731 125.581L107.063 117.467C105.504 116.543 104.233 117.269 104.233 119.079V134.811C104.233 136.62 105.518 138.844 107.087 139.748L120.716 147.617C122.285 148.521 123.57 147.78 123.57 145.971V130.552L123.56 130.557Z" fill="url(#cbgCacheboxG0)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M122.309 122.842C123.868 123.766 126.414 123.766 127.973 122.842L141.622 114.724C143.176 113.8 143.166 112.298 141.598 111.394L127.993 103.54C126.424 102.635 123.859 102.635 122.29 103.54L108.661 111.408C107.092 112.313 107.082 113.81 108.641 114.734L122.309 122.847V122.842Z" fill="url(#cbgCacheboxG1)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M129.558 125.581C128.004 126.505 126.729 128.748 126.729 130.557V145.971C126.729 147.781 128.013 148.522 129.582 147.617L143.207 139.754C144.775 138.849 146.06 136.625 146.06 134.816V119.06C146.06 117.251 144.785 116.524 143.231 117.453L129.563 125.586H129.558V125.581Z" fill="url(#cbgCacheboxG2)"/></g></g><defs><linearGradient id="cbgCacheboxG0" x1="119.572" y1="124.344" x2="101.273" y2="137.793" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgCacheboxG1" x1="135.481" y1="107.725" x2="125.255" y2="128.258" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgCacheboxG2" x1="142.063" y1="124.331" x2="123.758" y2="137.773" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><clipPath id="cbgCacheboxClip"><rect width="250" height="250" fill="white"/></clipPath></defs></svg></div>
+								<b>CacheBox</b>
+								<small>Caching</small>
+							</div>
+							<div class="engine-card engine-3">
+								<div class="engine-icon"><svg width="250" height="250" viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#cbgLogboxFullClip)"><path fill-rule="evenodd" clip-rule="evenodd" d="M123.352 130.883C123.352 128.313 121.546 125.14 119.335 123.829L107.834 117.006C105.627 115.695 103.816 116.723 103.816 119.292V132.5C103.816 135.07 105.637 138.22 107.858 139.507L119.302 146.114C121.527 147.396 123.348 146.349 123.348 143.78V130.888L123.352 130.883Z" fill="url(#cbgLogboxFullG0)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M120.933 121.06C123.14 122.371 126.757 122.371 128.964 121.06L140.446 114.232C142.652 112.916 142.638 110.795 140.413 109.507L128.992 102.915C126.766 101.632 123.126 101.632 120.905 102.915L109.465 109.521C107.24 110.804 107.23 112.931 109.437 114.241L120.938 121.069V121.06H120.933Z" fill="#33CFFF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M130.563 123.823C128.356 125.139 126.55 128.312 126.55 130.882V143.769C126.55 146.339 128.37 147.391 130.596 146.103L142.035 139.502C144.261 138.219 146.081 135.065 146.081 132.495V119.263C146.081 116.693 144.275 115.67 142.068 116.981L130.567 123.823H130.563Z" fill="url(#cbgLogboxFullG1)"/><path d="M84.7426 31.6232V73.4064C84.7426 80.2154 84.4409 85.0016 83.8326 87.7742C83.229 90.5469 82.1822 92.7773 80.7063 94.4654C78.3863 97.2098 75.5335 99.1619 72.1572 100.322C68.781 101.482 64.108 102.062 58.143 102.062H54.6866V76.5704L9.88086 121.376H60.2791C71.1528 121.376 79.2303 120.466 84.5069 118.646C89.7834 116.826 94.5082 113.676 98.6767 109.187C102.529 105.174 105.245 100.638 106.83 95.5688C108.414 90.5045 109.206 83.3795 109.206 74.1939V5L84.7426 31.6232Z" fill="#33CFFF"/><path d="M240.12 121.376L195.314 76.5704V102.062H191.858C185.893 102.062 181.22 101.482 177.844 100.322C174.468 99.1619 171.615 97.2098 169.295 94.4654C167.819 92.7773 166.777 90.5469 166.169 87.7742C165.56 85.0063 165.258 80.2154 165.258 73.4064V31.6232L140.795 5V74.1986C140.795 83.3795 141.592 90.5044 143.171 95.5735C144.751 100.643 147.472 105.179 151.324 109.192C155.493 113.676 160.218 116.831 165.494 118.651C170.771 120.471 178.848 121.381 189.722 121.381H220.679L240.12 121.376Z" fill="#0D87C5"/><path d="M106.825 154.427C105.245 149.358 102.524 144.822 98.672 140.809C94.5035 136.325 89.7787 133.17 84.5022 131.35C79.2256 129.53 71.1481 128.62 60.2744 128.62L29.3178 128.615V128.625H9.88086L54.6866 173.43V147.934H58.1383C64.1033 147.934 68.7763 148.514 72.1525 149.674C75.5287 150.834 78.3816 152.786 80.7015 155.531C82.1775 157.219 83.2196 159.449 83.8279 162.222C84.4361 164.99 84.7379 169.781 84.7379 176.59V218.373L109.201 244.996V175.802C109.201 166.621 108.409 159.496 106.825 154.427Z" fill="#0D87C5"/><path d="M240.12 128.623H189.722C178.848 128.623 170.771 129.533 165.494 131.353C160.218 133.173 155.493 136.323 151.324 140.812C147.472 144.825 144.756 149.361 143.171 154.43C141.587 159.495 140.795 166.62 140.795 175.805V244.999L165.258 218.376V176.593C165.258 169.789 165.56 164.998 166.169 162.225C166.772 159.452 167.814 157.222 169.295 155.534C171.615 152.789 174.468 150.837 177.844 149.677C181.22 148.517 185.893 147.937 191.858 147.937H195.314V173.429L240.12 128.623Z" fill="#33CFFF"/></g><defs><linearGradient id="cbgLogboxFullG0" x1="119.313" y1="123.547" x2="101.264" y2="137.264" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><linearGradient id="cbgLogboxFullG1" x1="142.042" y1="123.526" x2="123.987" y2="137.236" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><clipPath id="cbgLogboxFullClip"><rect width="230.239" height="240" fill="white" transform="translate(9.88086 5)"/></clipPath></defs></svg></div>
+								<b>LogBox</b>
+								<small>Logging</small>
+							</div>
+						</div>
+					</div>
+
+					<div class="connector d2"><div class="line"></div><span class="pulse"></span></div>
+
+					<div class="layer layer-language">
+						<div class="platform-head">
+							<div class="platform-logo"><svg viewBox="0 0 500 500"><defs><linearGradient id="cbgBoxlangGrad" x1="15.624" y1="250" x2="484.376" y2="250" gradientUnits="userSpaceOnUse"><stop stop-color="#00DBFF"/><stop offset="1" stop-color="#00FF75"/></linearGradient></defs><path d="M177.94 75.3152L223.47 37.5453L223.516 37.4998L223.608 37.5681C225.22 37.8185 226.809 38.069 228.421 38.3649C326.228 57.6255 389.56 151.697 370.054 248.228C350.755 343.939 257.278 406.229 160.668 388.721C181.51 384.054 201.546 374.583 219.048 360.081C277.705 311.406 285.374 224.938 236.136 166.951C207.925 133.712 167.14 117.069 126.423 118.048L177.964 75.2925L177.94 75.3152Z" fill="url(#cbgBoxlangGrad)"/><path d="M21.6043 419.494C12.5262 408.044 13.9467 390.952 24.7561 381.336C35.5655 371.72 51.7019 373.224 60.7801 384.674C69.8582 396.124 68.4376 413.217 57.6282 422.833C46.8188 432.449 30.6824 430.944 21.6043 419.494Z" fill="url(#cbgBoxlangGrad)"/><path d="M276.864 495.023C194.023 511.236 112.53 486.871 53.9785 436.035C57.3953 434.608 60.6727 432.706 63.6479 430.238C69.7843 425.211 73.9217 418.735 75.9439 411.76C88.7745 418.939 102.326 425.052 116.597 429.808C238.488 470.635 371.141 407.39 412.91 288.667C454.819 169.921 389.899 40.6914 268.031 0C374.163 17.0284 458.282 96.1695 479.271 198.725C507.35 335.019 416.768 467.623 276.864 495V495.023Z" fill="url(#cbgBoxlangGrad)"/></svg></div>
+							<div>
+								<div class="platform-name">BoxLang</div>
+								<div class="platform-sub">The modern, dynamic JVM language it all runs on</div>
+							</div>
+						</div>
+						<div class="pill-row">
+							<span class="pill">bx-orm</span>
+							<span class="pill">bx-mail</span>
+							<span class="pill">bx-image</span>
+							<span class="pill">bx-esapi</span>
+							<span class="pill">bx-mysql</span>
+							<span class="pill">bx-postgresql</span>
+							<span class="pill">bx-mssql</span>
+							<span class="pill">bx-oracle</span>
+							<span class="pill">bx-sqlite</span>
+							<span class="pill">bx-derby</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="stack-tooling">
+					<div class="tooling-label">⚙ Productivity tooling</div>
+					<a class="tool-card" href="https://commandbox.ortusbooks.com" target="_blank" rel="noopener noreferrer">
+						<div class="icon"><svg viewBox="0 0 500 500"><defs><linearGradient id="cbgCmdboxGrad" x1="0" y1="249.999" x2="500" y2="249.999" gradientUnits="userSpaceOnUse"><stop stop-color="#00DBFF"/><stop offset="1" stop-color="#00FF75"/></linearGradient></defs><path d="M0 107.162L116.795 228.266V278.504L0 400.432V345.152L88.5586 253.385L0 162.351V107.162Z" fill="url(#cbgCmdboxGrad)"/><path d="M351.212 414.649C262.653 414.832 190.505 343.233 190.321 254.675C190.138 166.116 261.737 93.9673 350.295 93.784C393.383 93.6006 434.637 110.927 464.981 141.547C405.117 59.2223 289.881 41.0705 207.465 100.935C125.048 160.799 106.988 276.035 166.852 358.452C226.717 440.776 341.953 458.928 424.369 399.064C428.403 396.13 432.436 392.922 436.103 389.805C410.893 406.215 381.282 415.015 351.212 414.649Z" fill="url(#cbgCmdboxGrad)"/><path d="M405.849 119.451C467.822 155.663 488.816 235.329 452.787 297.302C416.575 359.275 336.909 380.269 274.937 344.24C239.366 323.613 215.806 287.309 211.222 246.33V253.848C211.222 333.697 275.853 398.237 355.611 398.237C435.369 398.237 500 333.606 500 253.848C499.175 194.075 461.863 140.628 405.849 119.451Z" fill="url(#cbgCmdboxGrad)"/><path d="M336.63 129.624C289.142 129.44 247.521 160.793 234.228 206.265C255.772 158.96 311.602 138.15 358.907 159.693C406.211 181.237 427.022 237.068 405.478 284.372C390.26 318.017 356.615 339.378 319.853 339.378C311.602 339.194 303.352 338.186 295.376 336.261C308.485 341.853 322.512 344.695 336.905 344.511C396.219 344.145 444.073 295.832 443.707 236.518C443.157 177.387 395.485 129.807 336.63 129.624Z" fill="url(#cbgCmdboxGrad)"/></svg></div>
+						<div><b>CommandBox</b><span>bx‑cli &middot; package manager</span></div>
+					</a>
+					<a class="tool-card" href="https://testbox.run" target="_blank" rel="noopener noreferrer">
+						<div class="icon"><svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#cbgTestboxClip)"><path d="M500.011 253.749L420.595 144.895V192.95H376.113L376.167 177.035L305.149 135.576V81.0649H352.211L245.601 0L144.863 81.0649H186.053V139.057L119.864 178.663V197.441H79.4156V149.386L0 258.268L79.4156 356.624V314.576H119.864V328.835L191.926 371.894V418.938H150.736L251.474 500.003L358.084 418.938H311.021V367.627L375.728 328.835V310.056H420.595V356.596L500.011 253.749ZM241.979 377.171L139.32 316.288L139.128 195.112L242.061 255.826L241.979 377.171ZM249.059 245.777L146.126 185.091L249.031 124.713L351.992 185.063L249.086 245.777H249.059ZM357.26 317.635L254.629 378.518L254.547 257.173L357.48 196.459L357.26 317.635Z" fill="url(#cbgTestboxGrad)"/></g><defs><linearGradient id="cbgTestboxGrad" x1="396.619" y1="117.64" x2="90.7572" y2="477.285" gradientUnits="userSpaceOnUse"><stop offset="0.278846" stop-color="#33CFFF"/><stop offset="1" stop-color="#0D87C5"/></linearGradient><clipPath id="cbgTestboxClip"><rect width="500" height="500" fill="white"/></clipPath></defs></svg></div>
+						<div><b>TestBox</b><span>BDD / TDD test engine</span></div>
+					</a>
+				</div>
+			</div>
+
+			<p class="foot-caption">Language, platform, and modules &mdash; three real layers, not marketing copy. Energy flows bottom‑up: BoxLang powers ColdBox's three core engines, which app‑facing modules extend.</p>
+		</div>
+	</section>
+
+	
+	<section>
+		<div class="bxh-wrap">
+			<div class="cta">
+				<span class="eyebrow">Free &amp; open source</span>
+				<h2>Ready to scaffold your next ColdBox app?</h2>
+				<p>Clone it, run three commands, and start building on top of auth that's already done.</p>
+				<div class="hero-actions">
+					<a class="bxh-btn bxh-btn-primary" href="/getting-started/">Get Started &rarr;</a>
+	
+					<a class="bxh-btn bxh-btn-ghost" href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+	
+				</div>
+			</div>
+		</div>
+	</section>
+
+	
+	<section>
+		<div class="bxh-wrap">
+			<div class="cta">
+				<span class="eyebrow">Need a hand building on cbGenesis?</span>
+				<h2>ColdBox is free &amp; open source &mdash; or let the team who builds it do the work.</h2>
+				<p><a href="https://www.ortussolutions.com" target="_blank" rel="noopener noreferrer">Ortus Solutions</a> builds and maintains ColdBox, and offers professional services for custom builds, migrations, and production hardening.</p>
+				<div class="hero-actions">
+					<a class="bxh-btn bxh-btn-primary" href="mailto:consulting@ortussolutions.com">Email consulting@ortussolutions.com</a>
+					<a class="bxh-btn bxh-btn-ghost" href="https://www.ortussolutions.com/services" target="_blank" rel="noopener noreferrer">Consulting &amp; Professional Services</a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	
+	<footer class="bxh-footer">
+		<div class="bxh-wrap footer-top">
+			<div class="footer-brand">
+				<a class="bxh-brand" href="/"><img class="brand-logo" src="/assets/cbgenesis-icon-full.svg" alt=""><span class="brand-name">CBGenesis</span></a>
+				<p>The official ColdBox project starter &mdash; auth, RBAC, and an admin panel, ready to build on.</p>
+				
+					<div class="social-row"><a class="social-link" href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer" aria-label="cbGenesis on GitHub" title="cbGenesis on GitHub"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.333-1.754-1.333-1.754-1.089-.744.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.303-5.467-1.332-5.467-5.93 0-1.31.468-2.38 1.235-3.22-.123-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.301 1.23A11.5 11.5 0 0 1 12 5.803c1.02.005 2.045.138 3.003.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.873.118 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.625-5.48 5.92.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 21.795 24 17.298 24 12c0-6.63-5.37-12-12-12"/></svg></a><a class="social-link" href="https://x.com/coldbox" target="_blank" rel="noopener noreferrer" aria-label="X &#x28;Twitter&#x29;" title="X &#x28;Twitter&#x29;"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a><a class="social-link" href="https://www.youtube.com/@OrtusSolutions" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M23.498 6.186a3.02 3.02 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.02 3.02 0 0 0 .502 6.186 31.7 31.7 0 0 0 0 12a31.7 31.7 0 0 0 .502 5.814 3.02 3.02 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.02 3.02 0 0 0 2.122-2.136A31.7 31.7 0 0 0 24 12a31.7 31.7 0 0 0-.502-5.814ZM9.545 15.568V8.432L15.818 12l-6.273 3.568Z"/></svg></a><a class="social-link" href="https://www.linkedin.com/company/ortussolutions" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286ZM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124ZM7.119 20.452H3.554V9h3.565v11.452ZM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003Z"/></svg></a><a class="social-link" href="https://www.facebook.com/ortussolutions" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073Z"/></svg></a><a class="social-link" href="https://bsky.app/profile/coldbox.bsky.social" target="_blank" rel="noopener noreferrer" aria-label="Bluesky" title="Bluesky"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.203-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"/></svg></a><a class="social-link" href="https://www.threads.com/@ortussolutions" target="_blank" rel="noopener noreferrer" aria-label="Threads" title="Threads"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.056 7.164 1.43 1.781 3.63 2.695 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.29a13.85 13.85 0 0 1 3.02.142c-.13-.808-.394-1.45-.789-1.916-.54-.635-1.362-.958-2.444-.964h-.032c-.87 0-2.045.24-2.798 1.376l-1.735-1.19c1.01-1.512 2.65-2.343 4.62-2.343h.036c3.294.021 5.259 2.028 5.459 5.55.114.048.227.098.34.15 1.574.734 2.727 1.846 3.334 3.215.845 1.906.923 5.011-1.646 7.44-1.877 1.778-4.153 2.581-7.379 2.605Zm1.176-11.916c-.184 0-.37.005-.556.016-1.392.08-2.26.71-2.211 1.605.05.943.976 1.38 1.866 1.334 1.427-.077 2.402-.965 2.652-2.874a8.19 8.19 0 0 0-1.751-.081Z"/></svg></a><a class="social-link" href="https://www.ortussolutions.com/community/slack" target="_blank" rel="noopener noreferrer" aria-label="Slack Community" title="Slack Community"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52ZM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313ZM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834ZM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312ZM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834ZM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312ZM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52ZM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313Z"/></svg></a><a class="social-link" href="https://www.patreon.com/ortussolutions" target="_blank" rel="noopener noreferrer" aria-label="Patreon" title="Patreon"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M0 .5v23h4.219V.5H0Zm15.211 0c-4.831 0-8.771 3.943-8.771 8.775 0 4.831 3.94 8.773 8.771 8.773 4.831 0 8.775-3.942 8.775-8.773S20.042.5 15.211.5Z"/></svg></a></div>
+				
+				<div class="madeby"><span>Developed by</span> Ortus Solutions</div>
+			</div>
+			<div class="footer-col">
+				<h4>Docs</h4>
+				<a href="/getting-started/">Getting Started</a>
+				<a href="/architecture/">Architecture</a>
+				<a href="/guides/security/">Security &amp; Permissions</a>
+				<a href="/guides/database-orm/">Database &amp; ORM</a>
+				<a href="/deployment/">Deployment</a>
+			</div>
+			<div class="footer-col">
+				<h4>Guides</h4>
+				<a href="/guides/handlers-routing/">Handlers &amp; Routing</a>
+				<a href="/guides/frontend/">Frontend</a>
+				<a href="/guides/testing/">Testing</a>
+				<a href="/guides/extending/">Extending the App</a>
+				<a href="/guides/configuration/">Configuration</a>
+			</div>
+			<div class="footer-col">
+				<h4>Community</h4>
+				
+					<a href="https://github.com/coldbox-templates/cbGenesis" target="_blank" rel="noopener noreferrer">GitHub</a>
+					<a href="https://github.com/coldbox-templates/cbGenesis/issues" target="_blank" rel="noopener noreferrer">Bug Tracker</a>
+				
+				<a href="https://www.ortussolutions.com/community/slack" target="_blank" rel="noopener noreferrer">Slack Community</a>
+				<a href="https://www.ortussolutions.com/services" target="_blank" rel="noopener noreferrer">Consulting</a>
+			</div>
+		</div>
+		<div class="bxh-wrap footer-bottom footrow">
+			<span>&copy; 2026 Ortus Solutions. Apache 2.0 License.</span>
+			<div class="footlinks">
+				
+					<a href="https://github.com/coldbox-templates/cbGenesis/blob/development/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
+				
+				<a class="poweredby" href="https://coldbox.ortusbooks.com" target="_blank" rel="noopener noreferrer">Part of the <b>ColdBox</b> platform</a>
+			</div>
+		</div>
+	</footer>
+
+	
 	
 </body>
 </html>
