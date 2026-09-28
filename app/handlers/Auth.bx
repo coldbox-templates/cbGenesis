@@ -92,7 +92,7 @@ class extends="coldbox.system.EventHandler"{
 			target: rc,
 			constraints: {
 				email: { required: true, type: "email" },
-				password: { required:true, min: prc.settings.cbMinPasswordLength }
+				password: { required:true, size: "#prc.settings.cbMinPasswordLength#..255" }
 			}
 		)
 		// Handle validation errors
