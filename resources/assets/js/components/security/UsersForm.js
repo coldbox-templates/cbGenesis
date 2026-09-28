@@ -247,8 +247,8 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			this.error = "";
 			window.$progress?.start( { message: isActive ? "Enabling user..." : "Disabling user..." } );
 			try {
-				const response = await fetch( `/users/${ encodeURIComponent( user.userId ) }`, {
-					method  : "PUT",
+				const response = await fetch( `/users/${ encodeURIComponent( user.userId ) }/status`, {
+					method  : "POST",
 					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
 					body    : new URLSearchParams( { isActive: String( isActive ), csrf: this.csrfToken } ),
 				} );
