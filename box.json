@@ -15,7 +15,11 @@
     "documentation":"https://coldbox.ortusbooks.com",
     "shortDescription":"This starter template will give you all the basics you need to get started with ColdBox.",
     "contributors":[],
-    "ignore":[],
+    "ignore":[
+        "docs/**",
+        "/bxsites.yaml",
+        "/changelog.md"
+    ],
     "installPathConventions":{
         "modules":"lib/modules"
     },
