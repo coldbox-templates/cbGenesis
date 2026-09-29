@@ -418,12 +418,17 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 			const isCreating = !this.selectedRole;
 
 			// Prepare the submissions
+			// Permissions always go as one comma-delimited field, even when empty. Repeated
+			// `permissions[]` keys vanish entirely for an empty selection, and the server's
+			// populate() leaves relationships it receives no key for untouched, so clearing
+			// every permission used to "save" while keeping the old ones (issue #68).
+			// populate() turns the list into Permission entities, and "" into none.
 			const body = new URLSearchParams( {
 				csrf        : this.csrfToken,
 				role        : this.form.role,
 				description : this.form.description,
+				permissions : this.form.permissionIds.join( "," ),
 			} );
-			this.form.permissionIds.forEach( ( permissionId ) => body.append( "permissions[]", permissionId ) );
 
 			try {
 				// POST => /roles = Create
