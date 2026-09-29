@@ -365,7 +365,10 @@ class extends="BaseSecureHandler" {
 	}
 
 	/**
-	 * Remove a role from a managed user while preventing self-lockout actions.
+	 * Remove a role from a managed user, including the authenticated user's own account.
+	 * Self-removal is allowed on purpose so this endpoint matches Roles.removeUser() and
+	 * removePermission(), which already permit it; blocking it only here left a user able
+	 * to add a role to themselves from Manage Account but not remove it again.
 	 */
 	@remote( "Remove a role from a managed user" )
 	@secured( "users:admin" )
@@ -373,7 +376,6 @@ class extends="BaseSecureHandler" {
 		try {
 			prc.user = getManagedUser( rc )
 			prc.role = roleService.getOrFail( rc.roleId ?: "" )
-			ensureNotSelf( prc.user, prc )
 			prc.user.removeRole( prc.role ).save()
 			auditLogService.warn(
 				action     : "user.role.revoked",
