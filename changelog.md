@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Unchecking every permission on a role and saving reported success but kept the old permissions. The roles form sent one repeated `permissions[]` field per selected permission, so an empty selection sent no field at all, and `populate()` leaves a relationship alone when its key is missing. The form now always sends a single comma-delimited `permissions` field, empty when nothing is selected. ([#68](https://github.com/coldbox-templates/cbGenesis/issues/68))
 - Saving Global Settings crashed with "Cannot invoke method [setValue()] on a null object" and saved nothing, whenever the settings cache still recognized a key whose database row was missing (a stale cache, or a key added to `DEFAULTS` since the app's last boot). `bulkSave()` now creates the row instead of assuming it already exists. ([#63](https://github.com/coldbox-templates/cbGenesis/pull/63))
 - Self-service registration and admin invitations were both broken: `doRegister` called a non-existent `.validate()` on the user entity, and the `email` field was silently dropped by the entity's population exclude list. ([#31](https://github.com/coldbox-templates/cbGenesis/pull/31))
 - Every validation error path in the handlers returned a 500 instead of the validation messages, calling the singular `getValidationResult()` where cborm defines `getValidationResults()`. ([#30](https://github.com/coldbox-templates/cbGenesis/pull/30))
