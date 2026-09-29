@@ -1,4 +1,5 @@
 import { createRemoteListing } from "../../utils/listing.js";
+import { fetchWithCsrf } from "../../utils/csrf.js";
 
 /**
  * Alpine component for managing database-backed application settings.
@@ -73,11 +74,10 @@ export function settingsRegistryForm( payload = {}, csrfToken = "" ) {
 			this.submitting = true;
 			try {
 				const endpoint = this.editing ? `/settings/registry/${ encodeURIComponent( this.editing.settingId ) }` : "/settings/registry";
-				const response = await fetch( endpoint, {
-					method  : this.editing ? "PUT" : "POST",
+				const response = await fetchWithCsrf( this, endpoint, this.editing ? "PUT" : "POST", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body    : new URLSearchParams( { ...this.form, isActive: String( this.form.isActive ), csrf: this.csrfToken } ),
-				} );
+					body    : new URLSearchParams( { ...this.form, isActive: String( this.form.isActive ), csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Setting could not be saved." );
 				this.closeDrawer( true );
@@ -101,11 +101,10 @@ export function settingsRegistryForm( payload = {}, csrfToken = "" ) {
 			if ( !this.statusTarget ) return;
 			const target = this.statusTarget;
 			try {
-				const response = await fetch( `/settings/registry/${ encodeURIComponent( target.setting.settingId ) }/status`, {
-					method  : "POST",
+				const response = await fetchWithCsrf( this, `/settings/registry/${ encodeURIComponent( target.setting.settingId ) }/status`, "POST", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body    : new URLSearchParams( { isActive: String( target.isActive ), csrf: this.csrfToken } ),
-				} );
+					body    : new URLSearchParams( { isActive: String( target.isActive ), csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Setting status could not be changed." );
 				this.statusOpen = false;
@@ -127,11 +126,10 @@ export function settingsRegistryForm( payload = {}, csrfToken = "" ) {
 			if ( !this.deleteTarget || this.deleting ) return;
 			this.deleting = true;
 			try {
-				const response = await fetch( `/settings/registry/${ encodeURIComponent( this.deleteTarget.settingId ) }`, {
-					method  : "DELETE",
+				const response = await fetchWithCsrf( this, `/settings/registry/${ encodeURIComponent( this.deleteTarget.settingId ) }`, "DELETE", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body    : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body    : new URLSearchParams( { csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Setting could not be deleted." );
 				this.deleteOpen = false;

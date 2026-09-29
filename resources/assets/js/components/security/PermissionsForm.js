@@ -1,3 +1,5 @@
+import { fetchWithCsrf } from "../../utils/csrf.js";
+
 /**
  * Alpine component for filtering and grouping the permission catalog.
  *
@@ -120,58 +122,6 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 		},
 
 		/**
-		 * Sends a mutation request carrying the page's CSRF token, recovering once from a stale token.
-		 *
-		 * The token is embedded when the page renders, but the server can invalidate it while the
-		 * page sits open: tokens expire a fixed time after they were created (not after this page
-		 * loaded), and any page that renders csrfField() force-rotates the session's token. When
-		 * the server rejects the request with a 403, this fetches the session's current token from
-		 * the cbcsrf endpoint and replays the request once, so the user's input is never lost to
-		 * an expired token. A second 403 (e.g. a genuine authorization failure) is returned as-is.
-		 *
-		 * @param {string} url Endpoint to send the request to.
-		 * @param {string} method HTTP method to use.
-		 * @param {Object} [fields={}] Form fields to send urlencoded; `csrf` is added automatically.
-		 * @returns {Promise<Response>} The final fetch response.
-		 */
-		async fetchWithCsrf( url, method, fields = {} ) {
-			const send = () => fetch( url, {
-				method,
-				headers : { "Content-Type": "application/x-www-form-urlencoded" },
-				body    : new URLSearchParams( { ...fields, csrf: this.csrfToken } ),
-			} );
-
-			const response = await send();
-			if ( response.status !== 403 || !( await this.refreshCsrfToken() ) ) {
-				return response;
-			}
-			return send();
-		},
-
-		/**
-		 * Replaces the component's CSRF token with the session's current one.
-		 *
-		 * Side effect: updates `csrfToken`, which also refreshes the form's hidden `csrf` field.
-		 *
-		 * @returns {Promise<boolean>} True when a new token was obtained; false if the endpoint was
-		 * unavailable (e.g. the session itself expired and the request was redirected to login).
-		 */
-		async refreshCsrfToken() {
-			try {
-				const response = await fetch( "/cbcsrf/generate", { headers: { Accept: "text/plain" } } );
-				const token = ( await response.text() ).trim();
-				// A redirect to the login page yields HTML, never a bare alphanumeric token.
-				if ( !response.ok || response.redirected || !/^[A-Za-z0-9]+$/.test( token ) || token === this.csrfToken ) {
-					return false;
-				}
-				this.csrfToken = token;
-				return true;
-			} catch ( error ) {
-				return false;
-			}
-		},
-
-		/**
 		 * Creates a permission through the remote handler action.
 		 *
 		 * Submitting via fetch (rather than a native form post) keeps the modal and its values in
@@ -190,10 +140,14 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 			this.formError = "";
 
 			try {
-				const response = await this.fetchWithCsrf( "/permissions", "POST", {
-					permission  : this.form.permission,
-					description : this.form.description,
-				} );
+				const response = await fetchWithCsrf( this, "/permissions", "POST", ( csrf ) => ( {
+					headers : { "Content-Type": "application/x-www-form-urlencoded" },
+					body    : new URLSearchParams( {
+						permission  : this.form.permission,
+						description : this.form.description,
+						csrf,
+					} ),
+				} ) );
 				const result = await response.json().catch( () => ( {} ) );
 
 				if ( !response.ok || result.error ) {
@@ -231,10 +185,14 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 
 			try {
 				// PUT => /permissions/{permissionId} = Update (the resources() route only maps PUT/PATCH to update)
-				const response = await this.fetchWithCsrf( `/permissions/${ encodeURIComponent( this.editingPermission.permissionId ) }`, "PUT", {
-					permission  : this.form.permission,
-					description : this.form.description,
-				} );
+				const response = await fetchWithCsrf( this, `/permissions/${ encodeURIComponent( this.editingPermission.permissionId ) }`, "PUT", ( csrf ) => ( {
+					headers : { "Content-Type": "application/x-www-form-urlencoded" },
+					body    : new URLSearchParams( {
+						permission  : this.form.permission,
+						description : this.form.description,
+						csrf,
+					} ),
+				} ) );
 				const result = await response.json().catch( () => ( {} ) );
 
 				if ( !response.ok || result.error ) {
@@ -297,7 +255,10 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 
 			try {
 				// Submit to DELETE resource
-				const response = await this.fetchWithCsrf( `/permissions/${ encodeURIComponent( this.selectedPermission.permissionId ) }`, "DELETE" );
+				const response = await fetchWithCsrf( this, `/permissions/${ encodeURIComponent( this.selectedPermission.permissionId ) }`, "DELETE", ( csrf ) => ( {
+					headers : { "Content-Type": "application/x-www-form-urlencoded" },
+					body    : new URLSearchParams( { csrf } ),
+				} ) );
 
 				// Handle non-OK responses by attempting to parse the error message from the server.
 				if ( !response.ok ) {

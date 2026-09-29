@@ -1,3 +1,5 @@
+import { fetchWithCsrf } from "../../utils/csrf.js";
+
 /**
  * Alpine component for mandatory passkey enrollment.
  *
@@ -35,12 +37,11 @@ export function passkeyOnboarding( csrfToken = "" ) {
 					body        : JSON.stringify( { publicKeyCredentialJson: JSON.stringify( credential ) } ),
 				} );
 				if ( !response.ok ) throw new Error( "Passkey could not be registered." );
-				const metadataResponse = await fetch( "/profile/passkeys", {
-					method      : "POST",
+				const metadataResponse = await fetchWithCsrf( this, "/profile/passkeys", "POST", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/json", Accept: "application/json" },
-					body        : JSON.stringify( { credentialId: credential.id, label: this.label.trim(), csrf: this.csrfToken } ),
-				} );
+					body        : JSON.stringify( { credentialId: credential.id, label: this.label.trim(), csrf } ),
+				} ) );
 				if ( !metadataResponse.ok ) throw new Error( "Passkey label could not be saved." );
 				window.location = "/dashboard";
 			} catch ( error ) {

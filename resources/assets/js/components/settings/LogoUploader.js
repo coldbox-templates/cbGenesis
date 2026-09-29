@@ -1,3 +1,5 @@
+import { fetchWithCsrf } from "../../utils/csrf.js";
+
 /**
  * Alpine.js component for the branding logo field on the Settings page.
  *
@@ -58,12 +60,11 @@ export function logoUploader( { initialLogoPath = "", csrfToken = "" } = {} ) {
 			this.loading = true;
 			try {
 				const dataUri = await this.readFileAsDataUrl( file );
-				const response = await fetch( "/settings/logo", {
-					method      : "POST",
+				const response = await fetchWithCsrf( this, "/settings/logo", "POST", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/json", Accept: "application/json" },
-					body        : JSON.stringify( { logo: dataUri, csrf: this.csrfToken } ),
-				} );
+					body        : JSON.stringify( { logo: dataUri, csrf } ),
+				} ) );
 				const payload = await response.json();
 				if ( !response.ok || payload.error ) {
 					throw new Error( payload.data?.logo || payload.messages || "Logo could not be saved." );
@@ -86,12 +87,11 @@ export function logoUploader( { initialLogoPath = "", csrfToken = "" } = {} ) {
 			if ( !this.hasCustomLogo || this.loading ) return;
 			this.loading = true;
 			try {
-				const response = await fetch( "/settings/logo", {
-					method      : "DELETE",
+				const response = await fetchWithCsrf( this, "/settings/logo", "DELETE", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body        : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body        : new URLSearchParams( { csrf } ),
+				} ) );
 				const payload = await response.json();
 				if ( !response.ok || payload.error ) throw new Error( payload.messages || "Logo could not be removed." );
 				this.logoPath = payload.data?.cbAppLogo || "";
