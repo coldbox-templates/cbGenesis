@@ -16,6 +16,7 @@
     "shortDescription":"This starter template will give you all the basics you need to get started with ColdBox.",
     "contributors":[],
     "ignore":[
+		".github/**",
         "docs/**",
         "/bxsites.yaml",
         "/changelog.md"

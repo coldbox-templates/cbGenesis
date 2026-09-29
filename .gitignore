@@ -41,6 +41,7 @@ lib/**
 !lib/modules/.gitkeep
 
 ## AI
+.pi/**
 .opencode/**
 .agents/skills/**
 .agents/guidelines/**

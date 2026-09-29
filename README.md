@@ -81,7 +81,21 @@ box migrate up
 box migrate seed
 ```
 
-### 5. Start the Server
+### 5. AI Skills
+
+CBGenesis comes pre-configured with AI skills to enhance your application's capabilities. These skills are located in the `.agents/skills/` directory and can be customized or extended as needed.  This will be done via the `coldbox-cli` and the `coldbox ai` namespace commands:
+
+```bash
+# Discover AI Integrations
+coldbox ai --help
+
+# Update AI Integrations
+coldbox ai refresh
+```
+
+You can update/remove your AI Agents via the `coldbox ai agents` commands.
+
+### 6. Start the Server
 
 ```bash
 box server start
