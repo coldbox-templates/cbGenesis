@@ -1,3 +1,5 @@
+import { fetchWithCsrf } from "../../utils/csrf.js";
+
 /**
  * Alpine component for filtering and grouping the permission catalog.
  *
@@ -120,6 +122,53 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 		},
 
 		/**
+		 * Creates a permission through the remote handler action.
+		 *
+		 * Submitting via fetch (rather than a native form post) keeps the modal and its values in
+		 * place when the request fails, so the user can correct or retry without retyping.
+		 *
+		 * @param {SubmitEvent} event Form submit event.
+		 * @returns {Promise<void>}
+		 */
+		async createPermission( event ) {
+			event.preventDefault();
+			if ( this.editingPermission || this.submitting ) {
+				return;
+			}
+
+			this.submitting = true;
+			this.formError = "";
+
+			try {
+				const response = await fetchWithCsrf( this, "/permissions", "POST", ( csrf ) => ( {
+					headers : { "Content-Type": "application/x-www-form-urlencoded" },
+					body    : new URLSearchParams( {
+						permission  : this.form.permission,
+						description : this.form.description,
+						csrf,
+					} ),
+				} ) );
+				const result = await response.json().catch( () => ( {} ) );
+
+				if ( !response.ok || result.error ) {
+					throw new Error( [].concat( result.messages || "Permission could not be saved." ).join( " " ) );
+				}
+
+				this.permissions = [
+					...this.permissions,
+					result.data,
+				];
+				window.$toast?.( "Permission created successfully.", "success", { title: "Permission created" } );
+				this.closeModal( true );
+			} catch ( error ) {
+				// Leave the modal open with the user's input intact so they can retry.
+				this.formError = error.message || "Permission could not be saved.";
+			} finally {
+				this.submitting = false;
+			}
+		},
+
+		/**
 		 * Updates the selected permission through the remote handler action.
 		 *
 		 * @param {SubmitEvent} event Form submit event.
@@ -136,19 +185,18 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 
 			try {
 				// PUT => /permissions/{permissionId} = Update (the resources() route only maps PUT/PATCH to update)
-				const response = await fetch( `/permissions/${ encodeURIComponent( this.editingPermission.permissionId ) }`, {
-					method  : "PUT",
+				const response = await fetchWithCsrf( this, `/permissions/${ encodeURIComponent( this.editingPermission.permissionId ) }`, "PUT", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded" },
 					body    : new URLSearchParams( {
-						csrf        : this.csrfToken,
 						permission  : this.form.permission,
 						description : this.form.description,
+						csrf,
 					} ),
-				} );
-				const result = await response.json();
+				} ) );
+				const result = await response.json().catch( () => ( {} ) );
 
 				if ( !response.ok || result.error ) {
-					throw new Error( result.messages || "Permission could not be saved." );
+					throw new Error( [].concat( result.messages || "Permission could not be saved." ).join( " " ) );
 				}
 
 				this.permissions = this.permissions.map( ( permission ) =>
@@ -207,12 +255,10 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 
 			try {
 				// Submit to DELETE resource
-				const csrf = this.csrfToken;
-				const response = await fetch( `/permissions/${ encodeURIComponent( this.selectedPermission.permissionId ) }`, {
-					method  : "DELETE",
+				const response = await fetchWithCsrf( this, `/permissions/${ encodeURIComponent( this.selectedPermission.permissionId ) }`, "DELETE", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded" },
 					body    : new URLSearchParams( { csrf } ),
-				} );
+				} ) );
 
 				// Handle non-OK responses by attempting to parse the error message from the server.
 				if ( !response.ok ) {

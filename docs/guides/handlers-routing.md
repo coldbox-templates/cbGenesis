@@ -176,7 +176,7 @@ What this means when you extend a secured handler:
 
 - **You do not opt in.** Any action reached over `POST`, `PUT`, `PATCH`, or `DELETE` must carry a valid `rc.csrf`, from the day you add it. There is no per-handler list to remember to update.
 - **Safe methods are exempt.** `GET`, `HEAD`, and `OPTIONS` must not change state, so they carry no CSRF risk, and `OPTIONS` (CORS preflight) cannot carry a token at all. If a safe method in your code does change state, that is the bug to fix.
-- **`onInvalidCSRF()` is overridable.** The base implementation aborts with an authorization failure, which is what the JSON/AJAX endpoints want. `Permissions` and `Settings` override it to flash a message and redirect, so a browser form gets a page instead of a bare 403. Override it in your own handler when it renders HTML.
+- **`onInvalidCSRF()` is overridable.** The base implementation aborts with an authorization failure, which is what the JSON/AJAX endpoints want - every mutation in `Permissions` is now one of those, submitted through `fetchWithCsrf()` (see [Frontend](frontend.md#csrf-on-mutating-requests)), which recovers from a stale token instead of needing a redirect. `Settings` still overrides it to flash a message and redirect its native form posts, so a browser form gets a page instead of a bare 403. Override it in your own handler when it renders HTML instead of JSON.
 
 !!! note "`Auth` is not a secured handler"
     `Auth` extends `coldbox.system.EventHandler`, not `BaseSecureHandler`, because its actions run for unauthenticated visitors and so cannot inherit the check above. Each state-changing action verifies its own token: `doLogin`, `doRegister`, `doActivateInvitation`, `doForgotPassword`, `doResetPassword`, and `logout`.

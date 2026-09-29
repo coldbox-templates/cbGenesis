@@ -1,4 +1,5 @@
 import { createRemoteListing } from "../../utils/listing.js";
+import { fetchWithCsrf } from "../../utils/csrf.js";
 
 /**
  * Alpine component for filtering the user management listing.
@@ -162,15 +163,10 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			if ( this.submitting || !this.inviteReady ) return;
 			this.submitting = true;
 			try {
-				const body = new URLSearchParams( {
-					...this.form,
-					csrf : this.csrfToken,
-				} );
-				const response = await fetch( "/users", {
-					method  : "POST",
+				const response = await fetchWithCsrf( this, "/users", "POST", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body,
-				} );
+					body    : new URLSearchParams( { ...this.form, csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( response.status === 422 ? validationMessage( result.data ) : result.messages || "User could not be invited." );
 				this.closeInvite( true );
@@ -194,11 +190,10 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			this.resendingUserId = user.userId;
 			window.$progress?.start( { message: "Resending invitation..." } );
 			try {
-				const response = await fetch( `/users/${ encodeURIComponent( user.userId ) }/invitation`, {
-					method  : "POST",
+				const response = await fetchWithCsrf( this, `/users/${ encodeURIComponent( user.userId ) }/invitation`, "POST", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body    : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body    : new URLSearchParams( { csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Invitation could not be sent." );
 				window.$toast?.( "Invitation sent successfully.", "success", { title: "Invitation sent" } );
@@ -247,11 +242,10 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			this.error = "";
 			window.$progress?.start( { message: isActive ? "Enabling user..." : "Disabling user..." } );
 			try {
-				const response = await fetch( `/users/${ encodeURIComponent( user.userId ) }/status`, {
-					method  : "POST",
+				const response = await fetchWithCsrf( this, `/users/${ encodeURIComponent( user.userId ) }/status`, "POST", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body    : new URLSearchParams( { isActive: String( isActive ), csrf: this.csrfToken } ),
-				} );
+					body    : new URLSearchParams( { isActive: String( isActive ), csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "User status could not be changed." );
 				const successMessage = isActive ? "User enabled successfully." : "User disabled successfully.";
@@ -303,11 +297,10 @@ export function usersForm( payload = {}, csrfToken = "" ) {
 			this.deleting = true;
 			this.error = "";
 			try {
-				const response = await fetch( `/users/${ encodeURIComponent( this.deleteTarget.userId ) }`, {
-					method  : "DELETE",
+				const response = await fetchWithCsrf( this, `/users/${ encodeURIComponent( this.deleteTarget.userId ) }`, "DELETE", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body    : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body    : new URLSearchParams( { csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "User could not be deleted." );
 				this.cancelDelete( true );

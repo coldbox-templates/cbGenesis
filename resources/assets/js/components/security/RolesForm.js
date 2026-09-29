@@ -1,3 +1,5 @@
+import { fetchWithCsrf } from "../../utils/csrf.js";
+
 /**
  * Alpine component for filtering, editing, and deleting roles.
  *
@@ -240,11 +242,10 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 			this.assignError = "";
 			const selectedUsers = [ ...this.selectedUsers ];
 			const results = await Promise.allSettled( selectedUsers.map( async( user ) => {
-				const response = await fetch( `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }/users/${ encodeURIComponent( user.userId ) }`, {
-					method  : "POST",
+				const response = await fetchWithCsrf( this, `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }/users/${ encodeURIComponent( user.userId ) }`, "POST", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded" },
-					body    : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body    : new URLSearchParams( { csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || `Could not assign ${ this.userName( user ) }.` );
 				return user;
@@ -310,11 +311,10 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 			this.removingUserId = user.userId;
 			this.usersError = "";
 			try {
-				const response = await fetch( `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }/users/${ encodeURIComponent( user.userId ) }`, {
-					method  : "DELETE",
+				const response = await fetchWithCsrf( this, `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }/users/${ encodeURIComponent( user.userId ) }`, "DELETE", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded" },
-					body    : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body    : new URLSearchParams( { csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "User could not be removed from the role." );
 				this.assignedUsers = this.assignedUsers.filter( ( assignedUser ) => assignedUser.userId !== user.userId );
@@ -417,28 +417,24 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 			this.error = "";
 			const isCreating = !this.selectedRole;
 
-			// Prepare the submissions
-			// Permissions always go as one comma-delimited field, even when empty. Repeated
-			// `permissions[]` keys vanish entirely for an empty selection, and the server's
-			// populate() leaves relationships it receives no key for untouched, so clearing
-			// every permission used to "save" while keeping the old ones (issue #68).
-			// populate() turns the list into Permission entities, and "" into none.
-			const body = new URLSearchParams( {
-				csrf        : this.csrfToken,
-				role        : this.form.role,
-				description : this.form.description,
-				permissions : this.form.permissionIds.join( "," ),
-			} );
-
 			try {
 				// POST => /roles = Create
 				// PUT => /roles/{roleId} = Update
 				const endpoint = this.selectedRole ? `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }` : "/roles";
-				const response = await fetch( endpoint, {
-					method  : this.selectedRole ? "PUT" : "POST",
+				const response = await fetchWithCsrf( this, endpoint, this.selectedRole ? "PUT" : "POST", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded" },
-					body,
-				} );
+					// Permissions always go as one comma-delimited field, even when empty. Repeated
+					// `permissions[]` keys vanish entirely for an empty selection, and the server's
+					// populate() leaves relationships it receives no key for untouched, so clearing
+					// every permission used to "save" while keeping the old ones (issue #68).
+					// populate() turns the list into Permission entities, and "" into none.
+					body    : new URLSearchParams( {
+						csrf,
+						role        : this.form.role,
+						description : this.form.description,
+						permissions : this.form.permissionIds.join( "," ),
+					} ),
+				} ) );
 				const result = await response.json();
 				// Test response
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Role could not be saved." );
@@ -501,11 +497,10 @@ export function rolesForm( roles = [], permissions = [], csrfToken = "" ) {
 			if ( !this.selectedRole || this.deleting ) return;
 			this.deleting = true;
 			try {
-				const response = await fetch( `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }`, {
-					method  : "DELETE",
+				const response = await fetchWithCsrf( this, `/roles/${ encodeURIComponent( this.selectedRole.roleId ) }`, "DELETE", ( csrf ) => ( {
 					headers : { "Content-Type": "application/x-www-form-urlencoded" },
-					body    : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body    : new URLSearchParams( { csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Role could not be deleted." );
 				this.roles = this.roles.filter( ( role ) => role.roleId !== this.selectedRole.roleId );

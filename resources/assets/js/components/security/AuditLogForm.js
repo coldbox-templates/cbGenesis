@@ -1,4 +1,5 @@
 import { createRemoteListing } from "../../utils/listing.js";
+import { fetchWithCsrf } from "../../utils/csrf.js";
 
 /**
  * Maps an audit log severity to its badge/chip CSS class.
@@ -198,11 +199,10 @@ export function auditLogForm( payload = {}, csrfToken = "" ) {
 			this.clearing = true;
 			this.error = "";
 			try {
-				const response = await fetch( "/auditlog/clear", {
-					method : "DELETE",
+				const response = await fetchWithCsrf( this, "/auditlog/clear", "DELETE", ( csrf ) => ( {
 					headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body   : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body   : new URLSearchParams( { csrf } ),
+				} ) );
 				const result = await response.json();
 				if ( !response.ok || result.error ) throw new Error( result.messages || "Audit log could not be cleared." );
 				this.cancelClear( true );

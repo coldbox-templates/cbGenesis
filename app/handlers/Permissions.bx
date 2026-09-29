@@ -11,20 +11,6 @@ class extends="BaseSecureHandler" {
 	property name="auditLogService";
 
 	/**
-	 * This handler renders HTML and reports through flash, so a failed CSRF check
-	 * redirects with a message rather than aborting with a bare 403. The decision of
-	 * WHEN to check now lives in BaseSecureHandler, which denies any non-GET request
-	 * without a valid token.
-	 */
-	private function onInvalidCSRF( event, rc, prc ) {
-		flash.put( "messages", {
-			type   : "error",
-			message: "Invalid security token detected."
-		} )
-		return relocate( "permissions" )
-	}
-
-	/**
 	 * Render the permissions management view with the active permission catalog.
 	 */
 	function index( event, rc, prc ) {
@@ -40,10 +26,19 @@ class extends="BaseSecureHandler" {
 	}
 
 	/**
-	 * Validate and create a permission, then redirect back to the permissions view.
+	 * Validate and create a permission through AJAX and return validation or persistence results.
+	 *
+	 * This is submitted by PermissionsForm.js rather than as a native form post, so a
+	 * failure (including an expired CSRF token, which BaseSecureHandler rejects with a
+	 * JSON 403) is reported back to the still-open modal instead of reloading the page
+	 * and discarding what the user typed.
+	 *
+	 * @return struct API results with the new permission memento, or its validation errors.
 	 */
+	@remote( "This action is submitted remotely via JavaScript" )
 	@secured( "permissions:admin,permissions:write" )
 	function create( event, rc, prc ) {
+		var results = getApiResults()
 		try {
 			// Assign before validating so prc.permission is available to the catch below.
 			prc.permission = permissionService
@@ -58,26 +53,24 @@ class extends="BaseSecureHandler" {
 				targetId   : prc.permission.getPermissionId(),
 				targetLabel: prc.permission.getPermission()
 			)
-			flash.put( "messages", {
-				type   : "success",
-				message: "Permission saved successfully."
-			} )
+			results.messages = "Permission saved successfully."
+			results.data = prc.permission.getMemento()
 		}
 		catch( ValidationException error ){
-			flash.put( "messages", {
-				type   : "error",
-				message: "Permission validation errors" &
-					prc.permission.getValidationResults().getAllErrors().toList( "<br>" )
-			} )
+			results.error = true
+			results.messages = "Permission validation errors: " &
+				prc.permission.getValidationResults().getAllErrors().toList( " " )
+			results.data = prc.permission.getValidationResults().getAllErrorsAsStruct()
+			event.setHTTPHeader( statusCode: 422 )
 		}
 		catch ( any error ) {
-			log.error( "Error saving permission with ID [#permission.permissionId#]: #error.message#", error )
-			flash.put( "messages", {
-				type   : "error",
-				message: "Permission could not be saved: #error.detail#"
-			} )
+			log.error( "Error creating permission: #error.message#", error )
+			results.error = true
+			results.messages = "Permission could not be saved: #error.message & error.detail#"
+			event.setHTTPHeader( statusCode: 500 )
 		}
-		relocate( "permissions" )
+
+		return results
 	}
 
 	/**
