@@ -1,6 +1,6 @@
 ---
 title: Architecture
-order: 3
+order: 4
 icon: phosphor-duotone:tree-structure
 summary: The modern app/public split, the full project tree, and how a request flows from browser to database and back.
 tags: [architecture]

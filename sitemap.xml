@@ -7,10 +7,11 @@
 	<url><loc>https://cbgenesis.coldbox.org/reference/settings/index.html</loc></url>
 	<url><loc>https://cbgenesis.coldbox.org/getting-started/index.html</loc></url>
 	<url><loc>https://cbgenesis.coldbox.org/guides/security/index.html</loc></url>
-	<url><loc>https://cbgenesis.coldbox.org/architecture/index.html</loc></url>
+	<url><loc>https://cbgenesis.coldbox.org/ai-native/index.html</loc></url>
 	<url><loc>https://cbgenesis.coldbox.org/guides/database-orm/index.html</loc></url>
-	<url><loc>https://cbgenesis.coldbox.org/deployment/index.html</loc></url>
+	<url><loc>https://cbgenesis.coldbox.org/architecture/index.html</loc></url>
 	<url><loc>https://cbgenesis.coldbox.org/guides/frontend/index.html</loc></url>
+	<url><loc>https://cbgenesis.coldbox.org/deployment/index.html</loc></url>
 	<url><loc>https://cbgenesis.coldbox.org/guides/email/index.html</loc></url>
 	<url><loc>https://cbgenesis.coldbox.org/guides/testing/index.html</loc></url>
 	<url><loc>https://cbgenesis.coldbox.org/guides/configuration/index.html</loc></url>

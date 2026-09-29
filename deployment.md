@@ -1,6 +1,6 @@
 ---
 title: Deployment
-order: 4
+order: 5
 icon: phosphor-duotone:cloud-arrow-up
 summary: Production build, Docker, BoxLang MiniServer, and a go-live checklist.
 tags: [deployment]
