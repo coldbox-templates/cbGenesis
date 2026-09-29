@@ -38,7 +38,10 @@ class {
 				// If you do not want expiring tokens, then set this value to 0
 				rotationTimeout       : 30,
 				// Enable the /cbcsrf/generate endpoint to generate cbcsrf tokens for secured users.
-				enableEndpoint        : false,
+				// Long-lived admin pages (e.g. PermissionsForm.js) call it to recover when the token
+				// they rendered with has expired or been rotated by another page, instead of failing
+				// the submission and losing the user's input.
+				enableEndpoint        : true,
 				// The WireBox mapping to use for the CacheStorage
 				cacheStorage          : "CacheStorage@cbstorages",
 				// Enable/Disable the cbAuth login/logout listener in order to rotate keys

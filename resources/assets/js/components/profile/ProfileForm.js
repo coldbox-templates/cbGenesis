@@ -1,3 +1,5 @@
+import { fetchWithCsrf } from "../../utils/csrf.js";
+
 /**
  * Alpine.js component for the authenticated profile page.
  *
@@ -304,16 +306,15 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 				} );
 				const payload = await response.json();
 				if ( !response.ok ) throw new Error( payload.message || "Passkey could not be registered." );
-				const metadataResponse = await fetch( "/profile/passkeys", {
-					method      : "POST",
+				const metadataResponse = await fetchWithCsrf( this, "/profile/passkeys", "POST", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/json", Accept: "application/json" },
 					body        : JSON.stringify( {
 						credentialId : credential.id,
 						label        : this.passkeyLabel.trim(),
-						csrf         : this.csrfToken,
+						csrf,
 					} ),
-				} );
+				} ) );
 				const metadataPayload = await metadataResponse.json();
 				if ( !metadataResponse.ok || metadataPayload.error ) {
 					throw new Error( metadataPayload.messages || "Passkey label could not be saved." );
@@ -346,12 +347,11 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			if ( !this.selectedPasskey || this.deletePasskeyLoading ) return;
 			this.deletePasskeyLoading = true;
 			try {
-				const response = await fetch( `/profile/passkeys/${ encodeURIComponent( this.selectedPasskey.passkeyId ) }`, {
-					method      : "DELETE",
+				const response = await fetchWithCsrf( this, `/profile/passkeys/${ encodeURIComponent( this.selectedPasskey.passkeyId ) }`, "DELETE", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body        : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body        : new URLSearchParams( { csrf } ),
+				} ) );
 				const payload = await response.json();
 				if ( !response.ok || payload.error ) throw new Error( payload.messages || "Passkey could not be removed." );
 				this.passkeys = this.passkeys.filter( item => item.passkeyId !== this.selectedPasskey.passkeyId );
@@ -431,11 +431,11 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 				const endpoint = this.tokenModalMode === "edit"
 					? `/profile/api-tokens/${ encodeURIComponent( this.editingToken.tokenId ) }`
 					: "/profile/api-tokens";
-				const response = await fetch( endpoint, {
-					method      : "POST",
-					body        : new FormData( event.currentTarget ),
-					credentials : "same-origin",
-					headers     : { Accept: "application/json" },
+				const form = event.currentTarget;
+				const response = await fetchWithCsrf( this, endpoint, "POST", ( csrf ) => {
+					const formData = new FormData( form );
+					formData.set( "csrf", csrf );
+					return { body: formData, credentials: "same-origin", headers: { Accept: "application/json" } };
 				} );
 				const payload = await response.json();
 				if ( !response.ok || payload.error ) {
@@ -495,12 +495,11 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			if ( !this.selectedToken || this.deleteTokenLoading ) return;
 			this.deleteTokenLoading = true;
 			try {
-				const response = await fetch( `/profile/api-tokens/${ encodeURIComponent( this.selectedToken.tokenId ) }`, {
-					method      : "DELETE",
+				const response = await fetchWithCsrf( this, `/profile/api-tokens/${ encodeURIComponent( this.selectedToken.tokenId ) }`, "DELETE", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body        : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body        : new URLSearchParams( { csrf } ),
+				} ) );
 				const payload = await response.json();
 				if ( !response.ok || payload.error ) throw new Error( payload.messages || "API token could not be deleted." );
 				this.apiTokens = this.apiTokens.filter( token => token.tokenId !== this.selectedToken.tokenId );
@@ -678,11 +677,10 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			owner === "profile" ? this.profile.errors = {} : this.password.errors = {};
 
 			try {
-				const response = await fetch( form.action || endpoint, {
-					method      : "POST",
-					body        : new FormData( form ),
-					credentials : "same-origin",
-					headers     : { Accept: "application/json" },
+				const response = await fetchWithCsrf( this, form.action || endpoint, "POST", ( csrf ) => {
+					const formData = new FormData( form );
+					formData.set( "csrf", csrf );
+					return { body: formData, credentials: "same-origin", headers: { Accept: "application/json" } };
 				} );
 				const payload = await response.json();
 
@@ -740,13 +738,11 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			this.loading = "preferences";
 
 			try {
-				const formData = new FormData( form );
-				formData.set( "preferences", detail.preferences ?? "{}" );
-				const response = await fetch( form.action || "/profile", {
-					method      : "POST",
-					body        : formData,
-					credentials : "same-origin",
-					headers     : { Accept: "application/json" },
+				const response = await fetchWithCsrf( this, form.action || "/profile", "POST", ( csrf ) => {
+					const formData = new FormData( form );
+					formData.set( "preferences", detail.preferences ?? "{}" );
+					formData.set( "csrf", csrf );
+					return { body: formData, credentials: "same-origin", headers: { Accept: "application/json" } };
 				} );
 				const payload = await response.json();
 
@@ -812,12 +808,11 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			this.clearNotice();
 
 			try {
-				const response = await fetch( "/profile/email-change", {
-					method      : "POST",
+				const response = await fetchWithCsrf( this, "/profile/email-change", "POST", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body        : new URLSearchParams( { email: newEmail, csrf: this.csrfToken } ),
-				} );
+					body        : new URLSearchParams( { email: newEmail, csrf } ),
+				} ) );
 				const payload = await response.json();
 				if ( !response.ok || payload.error ) {
 					this.applyErrors( this.emailChangeForm.errors, payload.data || {} );
@@ -844,12 +839,11 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			this.clearNotice();
 
 			try {
-				const response = await fetch( "/profile/email-change", {
-					method      : "DELETE",
+				const response = await fetchWithCsrf( this, "/profile/email-change", "DELETE", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body        : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body        : new URLSearchParams( { csrf } ),
+				} ) );
 				const payload = await response.json();
 				if ( !response.ok || payload.error ) throw new Error( payload.messages || "Email change could not be cancelled." );
 				this.profile.pendingEmail = "";
@@ -926,12 +920,11 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			window.$progress?.start( { message: "Uploading avatar..." } );
 			try {
 				const dataUri = await this.readFileAsDataUrl( file );
-				const response = await fetch( "/profile/avatar", {
-					method      : "POST",
+				const response = await fetchWithCsrf( this, "/profile/avatar", "POST", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/json", Accept: "application/json" },
-					body        : JSON.stringify( { avatar: dataUri, csrf: this.csrfToken } ),
-				} );
+					body        : JSON.stringify( { avatar: dataUri, csrf } ),
+				} ) );
 				const payload = await response.json();
 				if ( !response.ok || payload.error ) {
 					throw new Error( payload.data?.avatar || payload.messages || "Avatar could not be saved." );
@@ -979,12 +972,11 @@ export function profileForm( initialProfile = {}, csrfToken = "", apiTokenMaxVal
 			this.clearNotice();
 			this.avatar.loading = true;
 			try {
-				const response = await fetch( "/profile/avatar", {
-					method      : "DELETE",
+				const response = await fetchWithCsrf( this, "/profile/avatar", "DELETE", ( csrf ) => ( {
 					credentials : "same-origin",
 					headers     : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-					body        : new URLSearchParams( { csrf: this.csrfToken } ),
-				} );
+					body        : new URLSearchParams( { csrf } ),
+				} ) );
 				const payload = await response.json();
 				if ( !response.ok || payload.error ) throw new Error( payload.messages || "Avatar could not be removed." );
 				this.avatar.hasAvatar = false;

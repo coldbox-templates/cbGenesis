@@ -2,7 +2,7 @@
 <form
 	method="post"
 	:action="editingPermission ? '/permissions/' + encodeURIComponent( editingPermission.permissionId ) : '/permissions'"
-	@submit="editingPermission ? updatePermission( $event ) : submitting = true">
+	@submit="editingPermission ? updatePermission( $event ) : createPermission( $event )">
 
 	<!--- CSRF --->
 	<input type="hidden" name="csrf" id="csrf" x-model="csrfToken">

@@ -1,3 +1,5 @@
+import { fetchWithCsrf } from "../../utils/csrf.js";
+
 /**
  * Reactive administration component for a single user's profile, access, preferences,
  * and security controls.
@@ -78,7 +80,12 @@ export function userDetailForm( payload = {} ) {
 			this.loading = path;
 			this.error = "";
 			try {
-				const response = await fetch( path, { method, headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" }, body: method === "GET" ? undefined : new URLSearchParams( { ...data, csrf: this.csrfToken } ) } );
+				const response = method === "GET"
+					? await fetch( path, { headers: { Accept: "application/json" } } )
+					: await fetchWithCsrf( this, path, method, ( csrf ) => ( {
+						headers : { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+						body    : new URLSearchParams( { ...data, csrf } ),
+					} ) );
 				const body = await response.text();
 				let result;
 				try {
