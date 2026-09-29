@@ -251,6 +251,29 @@
 		</div>
 	</main>
 
+	<!--- Video Section --->
+	<section>
+		<div class="bxh-wrap">
+			<div class="section-head" style="text-align:center;margin-inline:auto">
+				<span class="eyebrow" style="justify-content:center">See it in action</span>
+				<h2>Watch the walkthrough.</h2>
+				<p>A guided tour of the login flow, the admin panel, and the developer experience &mdash; all in a couple of minutes.</p>
+			</div>
+			<div class="video-frame">
+				<div class="preview-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">youtube.com/watch?v=XjnZauPflq4</span></div>
+				<div class="video-aspect">
+					<iframe
+						src="https://www.youtube-nocookie.com/embed/XjnZauPflq4"
+						title="cbGenesis walkthrough video"
+						loading="lazy"
+						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+						referrerpolicy="strict-origin-when-cross-origin"
+						allowfullscreen></iframe>
+				</div>
+			</div>
+		</div>
+	</section>
+
 	<!--- Request lifecycle section --->
 	<section>
 		<div class="bxh-wrap bxh-orbit-wrap">

@@ -172,6 +172,17 @@
 .bxsites-home .battery-mark svg { width: .88em; height: .88em; }
 .section-head p { color: var(--muted); margin-top: 12px; line-height: 1.6; font-size: 1rem; }
 
+/* ---------- video section ---------- */
+.video-frame {
+	max-width: 900px; margin-inline: auto;
+	background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px;
+	box-shadow: 0 30px 70px var(--shadow-color), 0 0 0 1px var(--glow);
+	overflow: hidden;
+}
+@media (prefers-reduced-motion: no-preference) { .video-frame { animation: bxh-breathe 5s ease-in-out infinite; } }
+.video-aspect { position: relative; aspect-ratio: 16 / 9; background: #000; }
+.video-aspect iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
 /* ---------- request-lifecycle flow diagram ---------- */
 .bxh-orbit-wrap { max-width: 780px; margin-inline: auto; }
 .flow-row { display: flex; align-items: flex-start; justify-content: center; margin-top: 52px; flex-wrap: wrap; row-gap: 28px; }
