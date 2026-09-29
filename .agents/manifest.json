@@ -5,7 +5,14 @@
         "pi"
     ],
     "coldboxCliVersion":"8.15.0",
-    "customSkills":[],
+    "customSkills":[
+        "cbgenesis-rbac-permissions",
+        "cbgenesis-csrf-frontend",
+        "cbgenesis-crud-resource",
+        "cbgenesis-alpine-components",
+        "cbgenesis-testing-conventions",
+        "cbgenesis-settings-config"
+    ],
     "excludes":[],
     "guidelines":[
         {

@@ -392,6 +392,56 @@
 		</div>
 	</section>
 
+	<!--- AI-Native Section --->
+	<section class="ai-native-section">
+		<div class="bxh-wrap ai-native-grid">
+			<div>
+				<span class="eyebrow"><span class="eyebrow-icon">#homeIcon( "robot" )#</span> Built for the age of AI</span>
+				<h2>Don't make your AI agent guess your conventions.</h2>
+				<p>Every serious app today gets built with an AI coding agent somewhere in the loop. Starting from a blank repo means it re-derives your auth, RBAC, and CSRF handling from scratch, every session &mdash; and sometimes gets the subtle parts wrong. cbGenesis ships those conventions as machine-readable skills an agent loads instead of guessing.</p>
+				<div class="sec-list">
+					<div class="sec-item">
+						<div class="icon">#homeIcon( "folders" )#</div>
+						<div><h4>AGENTS.md, loaded automatically</h4><p>Claude Code, Copilot, Cursor, and others read it before writing a line of code &mdash; structure, handlers, and conventions, up front.</p></div>
+					</div>
+					<div class="sec-item">
+						<div class="icon">#homeIcon( "test-tube" )#</div>
+						<div><h4>6 cbGenesis-specific skills</h4><p>The <code>resource:action</code> permission model, the CSRF frontend contract, and the exact CRUD vertical slice this app uses &mdash; not generic framework advice.</p></div>
+					</div>
+					<div class="sec-item">
+						<div class="icon">#homeIcon( "database" )#</div>
+						<div><h4>90+ framework skills, live MCP docs</h4><p>BoxLang, ColdBox, TestBox, and every bundled module, plus documentation servers so an agent checks current docs instead of a training cutoff.</p></div>
+					</div>
+				</div>
+				<div class="hero-actions" style="margin-top:28px">
+					<a class="bxh-btn bxh-btn-primary" href="#variables.basePath#ai-native/">See the measured comparison &rarr;</a>
+				</div>
+			</div>
+			<div class="stat-stack">
+				<div class="stat-card">
+					<span class="stat-eyebrow">Same task, two agents</span>
+					<div class="stat-row">
+						<div class="stat">
+							<span class="stat-number">129,672<small>tokens</small></span>
+							<span class="stat-label">Exploration only</span>
+						</div>
+						<span class="stat-vs">vs</span>
+						<div class="stat">
+							<span class="stat-number stat-number--win">113,995<small>tokens</small></span>
+							<span class="stat-label">Skill-assisted</span>
+						</div>
+					</div>
+					<div class="stat-foot">
+						<span><b>12%</b> fewer tokens</span>
+						<span><b>42%</b> fewer tool calls</span>
+						<span><b>34%</b> less time</span>
+					</div>
+					<p class="stat-caption">Real, measured run adding an identical CRUD resource to this codebase &mdash; not a projection. <a href="#variables.basePath#ai-native/">Full methodology &rarr;</a></p>
+				</div>
+			</div>
+		</div>
+	</section>
+
 	<!--- Stack Section --->
 	<section>
 		<div class="bxh-wrap">

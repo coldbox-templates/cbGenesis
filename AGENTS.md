@@ -376,6 +376,19 @@ _WireBox (2):_
 
 **To load a skill:** Use `read_file` on `.agents/skills/{skill-name}/SKILL.md` (e.g., `.agents/skills/coldbox-handler-development/SKILL.md`) for core skills, or `.agents/skills-custom/{skill-name}/SKILL.md` for custom project skills.
 
+### Custom Skills (cbGenesis-specific)
+
+These capture conventions specific to *this* application that the generic ColdBox/BoxLang skills above can't know - the permission model, the CSRF frontend contract, the exact CRUD vertical slice this codebase uses, and so on. Load one whenever a task matches its description, the same way you would a core skill:
+
+- **cbgenesis-rbac-permissions** - Use this skill when adding or changing access control - securing a new handler or action, adding a permission, checking a permission in a view or handler, or reasoning about the CSRF gate on state-changing requests.
+- **cbgenesis-csrf-frontend** - Use this skill when writing or editing an Alpine.js component that sends a non-GET request (create, update, delete, status toggle, file upload).
+- **cbgenesis-crud-resource** - Use this skill when adding a new admin-managed CRUD resource end to end - entity, service, handler, routes, permissions, view, and Alpine form component.
+- **cbgenesis-alpine-components** - Use this skill when adding or editing any Alpine.js component - module shape, registration in App.js, the shared utils/magic-property library, and the JSDoc requirement.
+- **cbgenesis-testing-conventions** - Use this skill when writing or running tests - BaseIntegrationSpec, the real transaction-rollback isolation mechanism, fixture helpers, and exercising CSRF-protected actions.
+- **cbgenesis-settings-config** - Use this skill when adding a new configuration value - deciding between an environment variable and the DB-backed settings registry.
+
+**To load a custom skill:** `read_file` on `.agents/skills-custom/{skill-name}/SKILL.md`.
+
 ## MCP Documentation Servers
 
 This project has access to the following Model Context Protocol (MCP) documentation servers for live, up-to-date information:
