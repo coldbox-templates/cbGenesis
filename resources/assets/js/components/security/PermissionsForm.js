@@ -135,8 +135,9 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 			this.formError = "";
 
 			try {
+				// PUT => /permissions/{permissionId} = Update (the resources() route only maps PUT/PATCH to update)
 				const response = await fetch( `/permissions/${ encodeURIComponent( this.editingPermission.permissionId ) }`, {
-					method  : "POST",
+					method  : "PUT",
 					headers : { "Content-Type": "application/x-www-form-urlencoded" },
 					body    : new URLSearchParams( {
 						csrf        : this.csrfToken,
