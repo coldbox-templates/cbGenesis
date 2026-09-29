@@ -230,7 +230,8 @@ export function permissionsForm( permissions = [], csrfToken = "" ) {
 			this.formError = "";
 
 			try {
-				const response = await this.fetchWithCsrf( `/permissions/${ encodeURIComponent( this.editingPermission.permissionId ) }`, "POST", {
+				// PUT => /permissions/{permissionId} = Update (the resources() route only maps PUT/PATCH to update)
+				const response = await this.fetchWithCsrf( `/permissions/${ encodeURIComponent( this.editingPermission.permissionId ) }`, "PUT", {
 					permission  : this.form.permission,
 					description : this.form.description,
 				} );
