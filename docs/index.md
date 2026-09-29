@@ -30,6 +30,9 @@ A production-ready **ColdBox HMVC** starter template for [BoxLang](https://boxla
 ::: card title="Get Started in Minutes" icon="phosphor-duotone:rocket-launch" href="getting-started.md"
 Install BoxLang, clone the template, run migrations, and be looking at the login screen in under ten minutes.
 :::
+::: card title="Built for AI-Assisted Development" icon="phosphor-duotone:robot" href="ai-native.md"
+AGENTS.md, MCP doc servers, and custom skills that cut real, measured tokens off building on this codebase with an AI agent versus starting from scratch.
+:::
 ::: card title="Modern Template Structure" icon="phosphor-duotone:folders" href="architecture.md"
 Application code lives in `app/`, fully separated from the public webroot in `public/` - enhanced security by default.
 :::
@@ -153,6 +156,9 @@ sequenceDiagram
 ::: cards
 ::: card title="Getting Started" icon="phosphor-duotone:rocket-launch" href="getting-started.md"
 Install, configure, migrate, and run the app locally.
+:::
+::: card title="Built for AI-Assisted Development" icon="phosphor-duotone:robot" href="ai-native.md"
+Why starting here beats building auth, RBAC, and CSRF from scratch with an agent - with a measured comparison.
 :::
 ::: card title="Architecture" icon="phosphor-duotone:tree-structure" href="architecture.md"
 The modern app/public split, the full project tree, and the request lifecycle.

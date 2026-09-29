@@ -53,12 +53,13 @@ class extends="app.models.BaseService" {
 
 ## 3. Handler - `app/handlers/<Names>.bx` (plural name)
 
-Extend `BaseSecureHandler`, class-level `@secured("<resource>:admin")` (add `<resource>:read` too if you need a view-only tier - see the RBAC skill). Every mutation is a `@remote` JSON action shaped like this (copy from `Permissions.bx`'s `create`/`update`/`delete` almost verbatim):
+Extend `BaseSecureHandler`, class-level `@secured("<resource>:admin")` (add `<resource>:read` too if you need a view-only tier - see the RBAC skill). Every mutation is a `@remote` JSON action returning `event.getResponse()` - `.setData( data:, message: )` on success, `.failure( message:, statusCode:, data: )` on error. This is the pattern used by **5 of the 6** existing CRUD handlers (`Roles`, `Users`, `Settings`, `Profile`, `AuditLog`) - copy `Roles.bx`'s `create`/`update`/`delete` almost verbatim. (`Permissions.bx` alone uses an older `getApiResults()` struct helper - it still works, since it's just a differently-shaped success/error struct, but it's the outlier here, not the model to copy.)
 
 ```boxlang
 @secured( "tags:admin" )
 class extends="BaseSecureHandler" {
 	@inject property name="tagService";
+	@inject property name="auditLogService";
 
 	function index( event, rc, prc ) {
 		prc.title = "Tags"
@@ -66,27 +67,39 @@ class extends="BaseSecureHandler" {
 		event.setView( "tags/index" )
 	}
 
-	@remote @secured( "tags:admin" )
+	@remote( "Create a tag remotely via AJAX" )
+	@secured( "tags:admin" )
 	function create( event, rc, prc ) {
-		var results = getApiResults()
+		var response = event.getResponse()
 		try {
+			// Assign before validating so prc.tag is available to the catch below.
 			prc.tag = tagService.new().populate( rc )
 			prc.tag.validateOrFail().save()
-			results.messages = "Tag saved successfully."
-			results.data = prc.tag.getMemento()
-		} catch ( ValidationException error ) {
-			results.error = true
-			results.data = prc.tag.getValidationResults().getAllErrorsAsStruct()
-			event.setHTTPHeader( statusCode: 422 )
-		} catch ( any error ) {
-			results.error = true
-			results.messages = "Tag could not be saved: #error.message#"
-			event.setHTTPHeader( statusCode: 500 )
+			auditLogService.info(
+				action     : "tag.created",
+				message    : "Tag [#prc.tag.getName()#] was created.",
+				category   : "data",
+				targetType : "Tag",
+				targetId   : prc.tag.getTagId(),
+				targetLabel: prc.tag.getName()
+			)
+			response.setData( data: prc.tag.getMemento(), message: "Tag created successfully." )
 		}
-		return results
+		catch ( ValidationException error ) {
+			response.failure(
+				message: "Tag validation errors",
+				statusCode: 422,
+				data: prc.tag.getValidationResults().getAllErrorsAsStruct()
+			)
+		}
+		catch ( any error ) {
+			log.error( "Error saving tag: #error.message#", error )
+			response.failure( message: "Tag could not be saved: #error.message & error.detail#", statusCode: 500 )
+		}
+		return response
 	}
-	// update() and delete() mirror Permissions.bx exactly - getOrFail(rc.tagId), populate/validateOrFail/save
-	// or .delete(), same try/catch shape, statusCode 422 on ValidationException, 500 otherwise.
+	// update() and delete() mirror this exactly - getOrFail(rc.tagId) instead of new(), .delete() instead of
+	// .save() for delete - same response.setData()/response.failure() shape, same statusCode convention.
 }
 ```
 
@@ -116,6 +129,6 @@ Add `tests/specs/unit/<domain>/TagServiceTest.bx` (extends `tests.resources.Base
 
 ## What NOT to do
 
-- Don't invent a different response shape for API results - use `getApiResults()` (from `BaseSecureHandler`) and the `{error, messages, data}` contract every existing handler uses; the frontend's error handling assumes it.
+- Don't invent a different response shape for API results - use `event.getResponse()` (`.setData()`/`.failure()`, ColdBox's own `Response` object) so the wire format stays the `{error, messages, data}` contract every existing handler produces; the frontend's error handling assumes it.
 - Don't skip `this.population.exclude` on the id field - population from `rc` should never let a client overwrite the primary key.
 - Don't write a raw SQL migration for a routine table - use the project's cfmigrations workflow (see `docs/guides/database-orm.md`).

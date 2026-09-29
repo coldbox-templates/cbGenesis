@@ -10,6 +10,21 @@ tags: [guides, extending]
 
 CBGenesis is a launchpad, not a finished product. These are the same steps its own Users/Roles/Permissions/Settings modules follow - use them as the template for anything new.
 
+## Building with an AI agent
+
+If you're extending cbGenesis with an AI coding agent (Claude Code, Copilot, Cursor, or similar), point it at `.agents/skills-custom/` before it writes any code - these skills encode the exact steps below as machine-readable instructions, with real code excerpts from this codebase, so the agent doesn't have to reverse-engineer them by exploring every handler:
+
+| Skill | Covers |
+|---|---|
+| `cbgenesis-crud-resource` | The full vertical slice below - entity, service, handler, route, view, component - end to end. |
+| `cbgenesis-rbac-permissions` | The `resource:action` permission model, `@secured`, and self-action guards. |
+| `cbgenesis-csrf-frontend` | The mandatory `fetchWithCsrf()` pattern for any mutating frontend request. |
+| `cbgenesis-alpine-components` | Alpine.js component shape, registration, and the shared `utils/` library. |
+| `cbgenesis-testing-conventions` | `BaseIntegrationSpec`, the real transaction-rollback isolation mechanism, and fixture helpers. |
+| `cbgenesis-settings-config` | When to use an environment variable versus the DB-backed settings registry. |
+
+New convention worth an agent (or a human) not having to rediscover it by trial and error? Add it as a new skill here rather than leaving it as tribal knowledge in a PR description. See [Built for AI-Assisted Development](../ai-native.md) for why this matters and a measured before/after comparison.
+
 ## Adding a new CRUD module
 
 ::: stepper
@@ -92,6 +107,9 @@ task( "My Task" )
 Module configs in `app/config/modules/` extend the module's own defaults. Override any key there — changes take effect on the next `?fwreinit`.
 
 ::: cards
+::: card title="Built for AI-Assisted Development" icon="phosphor-duotone:robot" href="../ai-native.md"
+Why the custom skills exist, and a measured token/tool-call comparison.
+:::
 ::: card title="Handlers & Routing" icon="phosphor-duotone:signpost" href="handlers-routing.md"
 The full handler/route conventions this section builds on.
 :::
