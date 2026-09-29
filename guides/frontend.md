@@ -138,7 +138,7 @@ These BXM partials live under `app/views/_components/` and are rendered with Col
 
 ## Alpine components and stores
 
-`resources/assets/js/App.js` registers the following names globally with Alpine. Use them as `x-data="name"` or `x-data="name(...)"` in BXM views. Form components make remote requests to the matching handler routes and expect the CSRF token supplied by their view.
+`resources/assets/js/App.js` registers the following names globally with Alpine. Use them as `x-data="name"` or `x-data="name(...)"` in BXM views. Form components make remote requests to the matching handler routes and expect the CSRF token supplied by their view, sent through `fetchWithCsrf()` (see [CSRF on mutating requests](#csrf-on-mutating-requests)).
 
 ### Application shell and authentication
 
@@ -196,8 +196,43 @@ The source also contains `Header.js`, `Sidebar.js`, `TopBarNotifications.js`, an
 | `$toast` / `$progress` | `components/ui/GlobalToast.js`, `GlobalProgress.js` | Global notification and progress APIs. |
 | `$focus` / `$copy` | `App.js` | Focus a descendant after Alpine updates; copy text through the browser clipboard API. |
 | `createRemoteListing()` | `utils/listing.js` | Shared remote listing state, loading, pagination, and error handling. |
+| `fetchWithCsrf()`, `refreshCsrfToken()` | `utils/csrf.js` | Sends a mutating request with the component's CSRF token, recovering once from a stale one. |
 
 `AlpinePlugins.js` installs Collapse, Focus, Mask, and Persist. `passkeys.js` provides the browser-side WebAuthn integration. Keep new reusable browser APIs documented here and add their registration/import to `App.js` when they are global.
+
+### CSRF on mutating requests
+
+Every component action that sends a non-`GET` request goes through `fetchWithCsrf()` (`utils/csrf.js`) instead of calling `fetch()` directly. This is the one encapsulated place mutating requests are built, so the token-recovery behavior - and anything added to it later (request/response hooks, global headers, telemetry) - only has to change here rather than in every component that happens to mutate state.
+
+**Why it has to recover at all.** A component's `csrfToken` is embedded once, when its view renders. The server can invalidate it while the page is still open, in two ways cbcsrf's own docs call out: `csrfField()` (the mixin behind every hidden `csrf` input) force-rotates the session's token on its first use per request, so any page that renders it - Settings, the passkey-required page, the auth pages - silently invalidates the token sitting in every other open tab; and a token expires a fixed time after it was *created*, not after the page loaded, so a page rendered late in a token's life can be served one with only seconds left. Either way, a component's embedded token can go stale before the user finishes typing.
+
+**The contract:**
+
+```js title="resources/assets/js/utils/csrf.js" linenums="1"
+export async function fetchWithCsrf( component, url, method, buildRequest ) { /* ... */ }
+export async function refreshCsrfToken( component ) { /* ... */ }
+```
+
+- `component` is the Alpine component instance (pass `this`). It must expose a mutable `csrfToken` property - `fetchWithCsrf()` reads it to build the request and, on a stale-token retry, overwrites it with the session's current token via `refreshCsrfToken()`.
+- `buildRequest( csrfToken )` returns the method-specific `RequestInit` fields (`headers`, `body`, `credentials`, etc.) for the given token. It is called again on retry, so it must build the body fresh each time rather than closing over a value computed once - this is what lets the same helper cover `URLSearchParams`, `JSON.stringify()`, and `FormData` bodies alike.
+- On a 403, `fetchWithCsrf()` calls `refreshCsrfToken()` and, if it obtained a genuinely new token, replays the request once with `buildRequest()` called again. A second 403 (e.g. a real authorization failure, or a session that has expired entirely) is returned as-is - callers still need their normal error handling for that case.
+
+```js title="A urlencoded mutation" linenums="1"
+const response = await fetchWithCsrf( this, "/permissions", "POST", ( csrf ) => ( {
+	headers : { "Content-Type": "application/x-www-form-urlencoded" },
+	body    : new URLSearchParams( { permission: this.form.permission, csrf } ),
+} ) );
+```
+
+```js title="A FormData mutation built from a rendered <form>" linenums="1"
+const response = await fetchWithCsrf( this, form.action, "POST", ( csrf ) => {
+	const formData = new FormData( form );
+	formData.set( "csrf", csrf );
+	return { body: formData, credentials: "same-origin", headers: { Accept: "application/json" } };
+} );
+```
+
+Only `GET`/`HEAD` reads skip `fetchWithCsrf()` and call `fetch()` directly - they carry no CSRF token and cannot 403 for one. A handful of cbSecurity module endpoints (the WebAuthn passkey ceremony routes) are also called with plain `fetch()`: they authenticate through the WebAuthn ceremony itself, not this app's CSRF token, so they are out of scope for this helper. Every other mutation in `resources/assets/js/components/` goes through `fetchWithCsrf()`; keep new form components consistent with that when they add a request that changes server state.
 
 ## Avatars & branding logo
 
