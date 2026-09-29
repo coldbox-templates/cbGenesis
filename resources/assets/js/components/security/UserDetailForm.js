@@ -141,11 +141,25 @@ export function userDetailForm( payload = {} ) {
 		askRevokeToken( token ) { this.openConfirm( { message: `Revoke ${ token.label || "this token" }?`, action: () => this.revokeToken( token ) } ); },
 		/** @returns {void} */
 		askRevokeAllTokens() { this.openConfirm( { message: "Revoke every API token for this user?", action: () => this.revokeAllTokens() } ); },
-		/** @returns {Promise<void>} */
+		/**
+		 * Run the pending confirmation action and close the dialog whether it succeeds or fails.
+		 * The shared confirm component disables all of its buttons while submitting and only
+		 * clears that state once `confirmTarget` becomes null, so the dialog must close on
+		 * failure too; otherwise it stays open with every button disabled and blocks the page.
+		 * Failures are already reported by request() through the toast and inline error.
+		 *
+		 * @returns {Promise<void>}
+		 */
 		async confirmAction() {
 			if ( !this.confirmTarget ) return;
 			const action = this.confirmTarget.action;
-			try { await action(); this.confirmTarget = null; } catch ( error ) { /* request() has already displayed the error. */ }
+			try {
+				await action();
+			} catch ( error ) {
+				/* request() has already displayed the error. */
+			} finally {
+				this.confirmTarget = null;
+			}
 		},
 
 		/** @param {Object} user User whose status will change. @param {boolean} isActive Desired active state. @returns {void} */
