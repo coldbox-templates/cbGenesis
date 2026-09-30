@@ -22,10 +22,13 @@ A `Dockerfile` and database-specific Compose files live in `resources/docker/`. 
 
 ### Local development with Docker Compose
 
-`resources/docker/docker-compose.yml` runs the app (`ortussolutions/commandbox:boxlang`) alongside a MySQL 8 container, with the whole repo bind-mounted into the app container so host edits apply without a rebuild - no local BoxLang/MySQL install required. Run `docker compose` directly (rather than through the `docker:stack` package script) so multi-word commands like `up -d` pass through correctly:
+`resources/docker/docker-compose.yml` runs the app (`ortussolutions/commandbox:boxlang`) alongside a MySQL 8 container, with the whole repo bind-mounted into the app container so host edits apply without a rebuild - no local BoxLang/MySQL install required. Run `docker compose` directly (rather than through the `docker:stack` package script) so multi-word commands like `up -d` pass through correctly. Build the frontend on the host first (Node.js 22+) so the compiled assets are in the bind-mounted `public/includes/`, and run `box install` inside the app container before migrating, since the image does not install `box.json` dependencies on its own:
 
 ```bash frame="terminal" title="Terminal"
+npm install
+npm run build
 docker compose -f resources/docker/docker-compose.yml up -d
+docker compose -f resources/docker/docker-compose.yml exec coldbox_app box install
 docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate up
 docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed
 ```
@@ -42,7 +45,10 @@ npm run dev
 An MSSQL-specific Compose file is also available for testing against SQL Server 2022. It installs the `bx-mssql` driver in the app container, creates the `cbgenesis` database, and keeps its data under `resources/docker/.db/mssql/`:
 
 ```bash frame="terminal" title="Terminal"
+npm install
+npm run build
 docker compose -f resources/docker/docker-compose.mssql.yml up -d
+docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box install
 docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate up
 docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed
 ```
@@ -56,7 +62,10 @@ docker compose -f resources/docker/docker-compose.mssql.yml down
 The PostgreSQL alternative uses PostgreSQL 16, publishes host port `5433`, and installs `bx-postgresql` automatically:
 
 ```bash frame="terminal" title="Terminal"
+npm install
+npm run build
 docker compose -f resources/docker/docker-compose.postgresql.yml up -d
+docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box install
 docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate up
 docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate seed
 ```
