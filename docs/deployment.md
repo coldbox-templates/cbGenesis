@@ -25,9 +25,12 @@ A `Dockerfile` and database-specific Compose files live in `resources/docker/`. 
 `resources/docker/docker-compose.yml` runs the app (built from `resources/docker/Dockerfile.dev`, which installs CommandBox natively on top of the official `ortussolutions/boxlang:cli` image so the engine version matches `.bvmrc`) alongside a MySQL 8 container, with the whole repo bind-mounted into the app container so host edits apply without a rebuild - no local BoxLang/MySQL install required. Run `docker compose` directly (rather than through the `docker:stack` package script) so multi-word commands like `up -d` pass through correctly:
 
 ```bash frame="terminal" title="Terminal"
+npm install
+npm run build
 docker compose -f resources/docker/docker-compose.yml up -d
+docker compose -f resources/docker/docker-compose.yml exec coldbox_app box install
 docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate up
-docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed
+docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed run
 ```
 
 Visit `http://127.0.0.1:8080`. MySQL is reachable from the host at `127.0.0.1:3406` (chosen to avoid colliding with a MySQL/MariaDB already running on `3306`); the app container talks to it over the internal Docker network on MySQL's real port, `3306`.
@@ -42,9 +45,12 @@ npm run dev
 An MSSQL-specific Compose file is also available for testing against SQL Server 2022. It installs the `bx-mssql` driver in the app container, creates the `cbgenesis` database, and keeps its data under `resources/docker/.db/mssql/`:
 
 ```bash frame="terminal" title="Terminal"
+npm install
+npm run build
 docker compose -f resources/docker/docker-compose.mssql.yml up -d
+docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box install
 docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate up
-docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed
+docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed run
 ```
 
 The application remains available at `http://127.0.0.1:8080`; SQL Server is reachable from the host at `127.0.0.1:1434`. The default `sa` password is intended for local testing only. Set `MSSQL_SA_PASSWORD` before starting the stack to override it. Stop this stack with:
@@ -56,9 +62,12 @@ docker compose -f resources/docker/docker-compose.mssql.yml down
 The PostgreSQL alternative uses PostgreSQL 16, publishes host port `5433`, and installs `bx-postgresql` automatically:
 
 ```bash frame="terminal" title="Terminal"
+npm install
+npm run build
 docker compose -f resources/docker/docker-compose.postgresql.yml up -d
+docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box install
 docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate up
-docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate seed
+docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate seed run
 ```
 
 The default MySQL Compose file remains unchanged. Stop either alternative with its matching Compose file and `down`.

@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The README, guides, deployment docs, and Docker Compose usage comments told you to seed with `box migrate seed`, which is a command namespace, not a command: CommandBox 6 rejects it and `bx-cli` 7 just prints its help, so no seeders ran and the `Admin` role and admin user were never created. They now say `box migrate seed run`. ([#82](https://github.com/coldbox-templates/cbGenesis/issues/82))
 - Unchecking every permission on a role and saving reported success but kept the old permissions. The roles form sent one repeated `permissions[]` field per selected permission, so an empty selection sent no field at all, and `populate()` leaves a relationship alone when its key is missing. The form now always sends a single comma-delimited `permissions` field, empty when nothing is selected. ([#68](https://github.com/coldbox-templates/cbGenesis/issues/68))
 - Saving Global Settings crashed with "Cannot invoke method [setValue()] on a null object" and saved nothing, whenever the settings cache still recognized a key whose database row was missing (a stale cache, or a key added to `DEFAULTS` since the app's last boot). `bulkSave()` now creates the row instead of assuming it already exists. ([#63](https://github.com/coldbox-templates/cbGenesis/pull/63))
 - Self-service registration and admin invitations were both broken: `doRegister` called a non-existent `.validate()` on the user entity, and the `email` field was silently dropped by the entity's population exclude list. ([#31](https://github.com/coldbox-templates/cbGenesis/pull/31))
@@ -30,5 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The LogBox rolling file appender was declared outside the `appenders` key, so it was never registered and nothing was written to `app/logs`. ([#27](https://github.com/coldbox-templates/cbGenesis/pull/27))
 - Mementifier's date mask setting was misspelled, so entity mementos ignored the configured format. ([#26](https://github.com/coldbox-templates/cbGenesis/pull/26))
 - `ormReload()` ran on every request in development rather than only on an authenticated framework reinit. ([#28](https://github.com/coldbox-templates/cbGenesis/pull/28))
+- The Docker Compose walkthrough in `docs/deployment.md` (and the usage comments in the Compose files) skipped two required steps: building the frontend on the host and running `box install` in the app container. The image does not install `box.json` dependencies on its own, so following the walkthrough left `lib/` empty and the first request failed with "The requested class [cborm.models.BXEventHandler] has not been located". Both steps are now listed before the migrations. ([#81](https://github.com/coldbox-templates/cbGenesis/issues/81))
 
 [Unreleased]: https://github.com/coldbox-templates/cbGenesis/compare/v1.0.0...HEAD
