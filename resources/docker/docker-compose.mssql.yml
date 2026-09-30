@@ -4,7 +4,7 @@
 # Usage (from the repo root):
 #   docker compose -f resources/docker/docker-compose.mssql.yml up -d
 #   docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate up
-#   docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed
+#   docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed run
 ################################################################################
 services:
 

@@ -78,7 +78,7 @@ Configure your database connection in the `.env` file and run the necessary migr
 
 ```bash
 box migrate up
-box migrate seed
+box migrate seed run
 ```
 
 ### 5. AI Skills

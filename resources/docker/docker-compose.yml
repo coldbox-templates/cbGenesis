@@ -7,7 +7,7 @@
 # Usage (from the repo root):
 #   docker compose -f resources/docker/docker-compose.yml up -d
 #   docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate up
-#   docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed
+#   docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed run
 #   docker compose -f resources/docker/docker-compose.yml down
 #
 # See docs/deployment.md#docker for the full walkthrough, including running
