@@ -215,7 +215,7 @@
 		
 		
 		
-			<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#templates-shipped">Templates shipped</a></li><li class="toc-level-2"><a href="#protocol-by-environment">Protocol by environment</a></li></ul></details>
+			<details class="bxsites-toc-mobile toc-mobile d-xl-none"><summary class="toc-mobile__summary">On this page</summary><ul class="list-unstyled"><li class="toc-level-2"><a href="#templates-shipped">Templates shipped</a></li><li class="toc-level-2"><a href="#protocol-by-environment">Protocol by environment</a></li><li class="toc-level-2"><a href="#mail-log-viewer-development">Mail log viewer &#x28;development&#x29;</a></li><li class="toc-level-3"><a href="#how-it-finds-your-mail">How it finds your mail</a></li><li class="toc-level-3"><a href="#managing-messages">Managing messages</a></li></ul></details>
 		
 
 		
@@ -266,12 +266,46 @@
 <p>In development, <code>app/config/modules/cbmailservices.bx</code> writes outgoing mail to disk instead of sending it - nothing leaves your machine while you're building. Configure a real SMTP provider (Postmark, SendGrid, or plain SMTP) for production - see <a href="/deployment/index.html#production-checklist">Deployment</a>.</p>
 </div>
 </div>
+<h2 id="mail-log-viewer-development"><a href="#mail-log-viewer-development" id="mail-log-viewer-development" name="mail-log-viewer-development" class="anchor"></a>Mail log viewer (development)</h2>
+<p>Every email written to disk by the files protocol can be browsed at <strong><code>/cbmailservices/log</code></strong> while the app is running in development. It's a page from cbmailservices itself (not a cbGenesis handler), listing every sent message with a rendered preview and a raw-source view of the HTML that was actually generated:</p>
+<figure>
+    <picture><source type="image/webp" srcset="/assets/screenshots/mail-log-720w.8dee30f0.webp 720w, /assets/screenshots/mail-log-1440w.8dee30f0.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/mail-log.png" srcset="/assets/screenshots/mail-log-720w.8dee30f0.png 720w" sizes="(min-width: 800px) 800px, 100vw"  alt="The cbMailServices Log viewer, showing a rendered preview of a verification email"></picture>
+    <figcaption>Preview - the rendered email, exactly as a recipient would see it.</figcaption>
+</figure>
+<figure>
+    <picture><source type="image/webp" srcset="/assets/screenshots/mail-log-source-720w.0cc05ac9.webp 720w, /assets/screenshots/mail-log-source-1440w.0cc05ac9.webp 1440w" sizes="(min-width: 800px) 800px, 100vw"><img src="/assets/screenshots/mail-log-source.png" srcset="/assets/screenshots/mail-log-source-720w.0cc05ac9.png 720w" sizes="(min-width: 800px) 800px, 100vw"  alt="The cbMailServices Log viewer's Source tab, showing the raw HTML of a sent email"></picture>
+    <figcaption>Source - the raw HTML/metadata cbmailservices wrote to disk.</figcaption>
+</figure>
+<p>The viewer only shows up in development: <code>Log.cfc</code> checks <code>controller.getSetting( &quot;environment&quot; ) == &quot;development&quot;</code> on every action and returns a 404 otherwise, so there's nothing to disable before deploying.</p>
+<h3 id="how-it-finds-your-mail"><a href="#how-it-finds-your-mail" id="how-it-finds-your-mail" name="how-it-finds-your-mail" class="anchor"></a>How it finds your mail</h3>
+<p>The log service doesn't read a fixed folder - it inspects every mailer registered in <code>app/config/modules/cbmailservices.bx</code>'s <code>mailers</code> setting, and lists messages from any mailer using the <code>File</code> protocol:</p>
+<pre data-bxsites-start-line="1" data-bxsites-title="app&#x2f;config&#x2f;modules&#x2f;cbmailservices.bx"><code class="language-boxlang">mailers : {
+    &quot;default&quot; : { class : &quot;BXMail&quot; },
+    &quot;files&quot; : { class : &quot;File&quot;, properties : { filePath : &quot;/app/logs&quot; } }
+},
+</code></pre>
+<p>cbGenesis ships that <code>files</code> mailer out of the box, and <code>development()</code> in the same file switches <code>defaultProtocol</code> to <code>&quot;files&quot;</code> - so every email the app sends while <code>environment</code> is <code>development</code> lands there automatically, with nothing extra to configure.</p>
+<p>To point it at a different folder, or add a second file-based mailer to test another configuration in isolation, add or edit an entry under <code>mailers</code> with <code>class: &quot;File&quot;</code> and a <code>filePath</code>; the viewer picks up any mailer that matches, not just <code>files</code>.</p>
+<h3 id="managing-messages"><a href="#managing-messages" id="managing-messages" name="managing-messages" class="anchor"></a>Managing messages</h3>
+<p>Both the UI and its underlying JSON routes support cleanup, useful when a test run leaves a pile of messages behind:</p>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Action</th><th>Route</th></tr>
+</thead>
+<tbody>
+<tr><td>List messages (JSON)</td><td><code>GET /cbmailservices/log/messages</code></td></tr>
+<tr><td>View one message (JSON)</td><td><code>GET /cbmailservices/log/message/:id</code></td></tr>
+<tr><td>Delete one message</td><td><code>DELETE /cbmailservices/log/message/:id</code></td></tr>
+<tr><td>Delete a specific set</td><td><code>DELETE /cbmailservices/log/messages</code> with <code>{ &quot;ids&quot;: [...] }</code></td></tr>
+<tr><td>Delete everything</td><td><code>DELETE /cbmailservices/log/messages</code> with <code>{ &quot;all&quot;: true }</code></td></tr>
+</tbody>
+</table></div>
 
 	
 
 	
 	
-		<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/email.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/guides/email.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 30, 2026, 12&#x3a;25&#x3a;21 PM</span></div>
+		<div class="page-meta"><a href="https://github.com/coldbox-templates/cbGenesis/edit/development/docs/guides/email.md" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Edit this page</a><a href="/guides/email.md" download><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 15v-3l1.5 2 1.5-2v3"/><path d="M14.5 12v4M13 15.5l1.5 1.5 1.5-1.5"/></svg> Download Markdown</a><span class="page-meta__item"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Last updated Sep 30, 2026, 7&#x3a;26&#x3a;20 PM</span></div>
 	
 </article>
 
@@ -303,7 +337,7 @@
 			
 			
 				<aside class="col-xl-2 toc-sidebar d-none d-xl-block">
-					<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#templates-shipped">Templates shipped</a></li><li class="toc-level-2"><a href="#protocol-by-environment">Protocol by environment</a></li></ul></nav>
+					<nav class="toc mb-4" aria-label="On this page"><div class="toc-title">On this page</div><ul class="list-unstyled"><li class="toc-level-2"><a href="#templates-shipped">Templates shipped</a></li><li class="toc-level-2"><a href="#protocol-by-environment">Protocol by environment</a></li><li class="toc-level-2"><a href="#mail-log-viewer-development">Mail log viewer &#x28;development&#x29;</a></li><li class="toc-level-3"><a href="#how-it-finds-your-mail">How it finds your mail</a></li><li class="toc-level-3"><a href="#managing-messages">Managing messages</a></li></ul></nav>
 				</aside>
 			
 		</div>
