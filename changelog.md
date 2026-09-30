@@ -30,5 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The LogBox rolling file appender was declared outside the `appenders` key, so it was never registered and nothing was written to `app/logs`. ([#27](https://github.com/coldbox-templates/cbGenesis/pull/27))
 - Mementifier's date mask setting was misspelled, so entity mementos ignored the configured format. ([#26](https://github.com/coldbox-templates/cbGenesis/pull/26))
 - `ormReload()` ran on every request in development rather than only on an authenticated framework reinit. ([#28](https://github.com/coldbox-templates/cbGenesis/pull/28))
+- The Docker Compose walkthrough in `docs/deployment.md` (and the usage comments in the Compose files) skipped two required steps: building the frontend on the host and running `box install` in the app container. The image does not install `box.json` dependencies on its own, so following the walkthrough left `lib/` empty and the first request failed with "The requested class [cborm.models.BXEventHandler] has not been located". Both steps are now listed before the migrations. ([#81](https://github.com/coldbox-templates/cbGenesis/issues/81))
 
 [Unreleased]: https://github.com/coldbox-templates/cbGenesis/compare/v1.0.0...HEAD

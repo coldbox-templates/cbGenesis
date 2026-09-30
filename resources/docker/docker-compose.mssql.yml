@@ -2,7 +2,9 @@
 # CB Genesis Docker Compose Stack - Microsoft SQL Server
 #
 # Usage (from the repo root):
+#   npm install && npm run build
 #   docker compose -f resources/docker/docker-compose.mssql.yml up -d
+#   docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box install
 #   docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate up
 #   docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed
 ################################################################################

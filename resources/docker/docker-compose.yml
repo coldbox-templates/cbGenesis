@@ -5,7 +5,9 @@
 # code changes on the host are picked up without rebuilding the image.
 #
 # Usage (from the repo root):
+#   npm install && npm run build
 #   docker compose -f resources/docker/docker-compose.yml up -d
+#   docker compose -f resources/docker/docker-compose.yml exec coldbox_app box install
 #   docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate up
 #   docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed
 #   docker compose -f resources/docker/docker-compose.yml down
