@@ -1,0 +1,153 @@
+---
+title: Deployment
+order: 5
+icon: phosphor-duotone:cloud-arrow-up
+summary: Production build, Docker, BoxLang MiniServer, and a go-live checklist.
+tags: [deployment]
+---
+
+# Deployment
+
+## Production build
+
+```bash frame="terminal" title="Terminal"
+npm run build
+```
+
+Compiles and fingerprints the frontend into `public/includes/` - see [Frontend](guides/frontend.md#vite-configuration).
+
+## Docker
+
+A `Dockerfile` and database-specific Compose files live in `resources/docker/`. MySQL is the default; PostgreSQL and MSSQL alternatives are provided for the other CI-tested targets. MariaDB can use the MySQL configuration and `mysql` JDBC driver. `box.json` also defines `docker:build`, `docker:run`, `docker:bash`, and `docker:stack` scripts (run them with `box run-script <name>`) as shortcuts for the single-argument commands below - they do not replace the required BoxLang CLI installation for local `box` commands, and are unrelated to `npm run` (there is no `npm run docker:*`).
+
+### Local development with Docker Compose
+
+`resources/docker/docker-compose.yml` runs the app (built from `resources/docker/Dockerfile.dev`, which installs CommandBox natively on top of the official `ortussolutions/boxlang:cli` image so the engine version matches `.bvmrc`) alongside a MySQL 8 container, with the whole repo bind-mounted into the app container so host edits apply without a rebuild - no local BoxLang/MySQL install required. Run `docker compose` directly (rather than through the `docker:stack` package script) so multi-word commands like `up -d` pass through correctly:
+
+```bash frame="terminal" title="Terminal"
+npm install
+npm run build
+docker compose -f resources/docker/docker-compose.yml up -d
+docker compose -f resources/docker/docker-compose.yml exec coldbox_app box install
+docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate up
+docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed run
+```
+
+Visit `http://127.0.0.1:8080`. MySQL is reachable from the host at `127.0.0.1:3406` (chosen to avoid colliding with a MySQL/MariaDB already running on `3306`); the app container talks to it over the internal Docker network on MySQL's real port, `3306`.
+
+The compose file does not run Vite - start that separately on the host for HMR:
+
+```bash frame="terminal" title="Terminal"
+npm install
+npm run dev
+```
+
+An MSSQL-specific Compose file is also available for testing against SQL Server 2022. It installs the `bx-mssql` driver in the app container, creates the `cbgenesis` database, and keeps its data under `resources/docker/.db/mssql/`:
+
+```bash frame="terminal" title="Terminal"
+npm install
+npm run build
+docker compose -f resources/docker/docker-compose.mssql.yml up -d
+docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box install
+docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate up
+docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed run
+```
+
+The application remains available at `http://127.0.0.1:8080`; SQL Server is reachable from the host at `127.0.0.1:1434`. The default `sa` password is intended for local testing only. Set `MSSQL_SA_PASSWORD` before starting the stack to override it. Stop this stack with:
+
+```bash frame="terminal" title="Terminal"
+docker compose -f resources/docker/docker-compose.mssql.yml down
+```
+
+The PostgreSQL alternative uses PostgreSQL 16, publishes host port `5433`, and installs `bx-postgresql` automatically:
+
+```bash frame="terminal" title="Terminal"
+npm install
+npm run build
+docker compose -f resources/docker/docker-compose.postgresql.yml up -d
+docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box install
+docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate up
+docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate seed run
+```
+
+The default MySQL Compose file remains unchanged. Stop either alternative with its matching Compose file and `down`.
+
+```bash frame="terminal" title="Terminal"
+docker compose -f resources/docker/docker-compose.yml down
+```
+
+### Production image
+
+```bash frame="terminal" title="Terminal"
+box run-script docker:build
+box run-script docker:run
+```
+
+Build the frontend before creating a production image:
+
+```bash linenums="1"
+npm run build
+```
+
+## BoxLang MiniServer
+
+An alternative to the `bx-cli` development server for running the compiled app directly:
+
+```bash frame="terminal" title="Terminal"
+cd my-app
+boxlang-miniserver --port 8080 --webroot ./public --dev
+```
+
+The MiniServer does not provide `box install`, migrations, or TestBox commands. Use the required [BoxLang CLI](guides/command-line.md) for those tasks.
+
+## Production checklist
+
+::: stepper
+::: step "Set the environment"
+`ENVIRONMENT=production` and `BOXLANG_DEBUG=false` in `.env`.
+:::
+::: step "Configure real email"
+Point `app/config/modules/cbmailservices.bx` at a real SMTP/Postmark/SendGrid driver - see [Email](guides/email.md#protocol-by-environment).
+:::
+::: step "Rotate the seeded admin password" color="warning"
+The seeder creates `admin@cbgenesis.com` / `test`, flagged as reset-pending. Signing in with it does not grant a session: you are sent straight to the reset-password form and must set a new password first. The bootstrap hash is public (it ships in the repo), so never clear that flag to keep using `test`. See [Getting Started](getting-started.md#scaffold-your-app).
+:::
+::: step "Decide who may reinit the framework"
+`reinitPassword` reads `COLDBOX_REINIT_PASSWORD` from the environment. Leave it **unset** in production and each boot falls back to a fresh random UUID nobody knows, which closes `?fwreinit` entirely. Set it only if you need to reinit a running instance, and treat it as a credential. Setting it to an empty string leaves reinit open to anyone, which is why `development()` does exactly that and production must not.
+:::
+::: step "Enable HTTPS"
+Via SSL configuration in `server.json`, or your reverse proxy / load balancer of choice.
+:::
+::: step "Decide whether to trust proxy headers" color="warning"
+`cbTrustProxyHeaders` defaults **on**, matching a typical deployment behind a reverse proxy or load balancer. If the app is directly internet-facing instead, turn it off - see [Deploying behind a reverse proxy](#deploying-behind-a-reverse-proxy). Getting this backwards either defeats rate limiting or breaks it for everyone behind the proxy.
+:::
+::: step "Update the passkey relying-party config" color="warning"
+`app/config/modules/cbsecurity-passkeys.bx` ships with dev-only placeholders (`relyingPartyId: "localhost"`, `allowedOrigins: ["http://localhost:8080"]`). Set these to your real production domain before go-live, or passkey registration will fail - see [Security & Permissions](guides/security.md#known-issues).
+:::
+::: step "Build the frontend"
+`npm run build` for minified, fingerprinted assets.
+:::
+::: step "Lock down /healthcheck" color="danger"
+Remove or restrict the public `/healthcheck` endpoint if it shouldn't be reachable from outside your infrastructure.
+:::
+:::
+
+## Deploying behind a reverse proxy
+
+`RateLimiter`, the audit trail, and the "reset requested from IP" security emails all read the caller's IP through `cbsecurity`'s `getRealIP()`. That function has two possible sources for the IP, and only you - the person deploying this app - know which one is correct for your setup:
+
+- **The raw socket address** (`cgi.remote_addr`) - correct when the app is directly internet-facing. If a reverse proxy sits in front, this is always the proxy's own address, not the visitor's.
+- **The `X-Forwarded-For` / `X-Cluster-Client-IP` request headers** - correct only when something in front of the app (nginx, a load balancer, a CDN) strips whatever value a client sent and sets the header itself. If nothing does that, any caller can set this header to anything, including a different value on every request.
+
+The `cbTrustProxyHeaders` setting (default `true`, editable at `/settings`) picks between them. Leaving it on when you're not actually behind a proxy that sanitizes the header re-opens the exact rate-limit bypass it exists to close - a caller can forge a new `X-Forwarded-For` value on every login attempt and never get blocked. Turning it off when you *are* behind such a proxy means every visitor shares the proxy's IP instead - one blocked caller blocks everyone behind it, and the audit trail records the proxy's address for every action.
+
+If you deploy directly internet-facing, with nothing in front of the app, turn this off. If you deploy behind a reverse proxy, confirm it actually overwrites `X-Forwarded-For` (rather than appending to or passing through a client-supplied value) before leaving this on.
+
+::: cards
+::: card title="Configuration" icon="phosphor-duotone:gear-six" href="guides/configuration.md"
+Every environment variable and module setting referenced above.
+:::
+::: card title="Security & Permissions" icon="phosphor-duotone:shield-check" href="guides/security.md"
+Double-check the firewall and CSRF configuration before you go live.
+:::
+:::
