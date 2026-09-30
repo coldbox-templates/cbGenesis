@@ -30,7 +30,7 @@ npm run build
 docker compose -f resources/docker/docker-compose.yml up -d
 docker compose -f resources/docker/docker-compose.yml exec coldbox_app box install
 docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate up
-docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed
+docker compose -f resources/docker/docker-compose.yml exec coldbox_app box migrate seed run
 ```
 
 Visit `http://127.0.0.1:8080`. MySQL is reachable from the host at `127.0.0.1:3406` (chosen to avoid colliding with a MySQL/MariaDB already running on `3306`); the app container talks to it over the internal Docker network on MySQL's real port, `3306`.
@@ -50,7 +50,7 @@ npm run build
 docker compose -f resources/docker/docker-compose.mssql.yml up -d
 docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box install
 docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate up
-docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed
+docker compose -f resources/docker/docker-compose.mssql.yml exec coldbox_app box migrate seed run
 ```
 
 The application remains available at `http://127.0.0.1:8080`; SQL Server is reachable from the host at `127.0.0.1:1434`. The default `sa` password is intended for local testing only. Set `MSSQL_SA_PASSWORD` before starting the stack to override it. Stop this stack with:
@@ -67,7 +67,7 @@ npm run build
 docker compose -f resources/docker/docker-compose.postgresql.yml up -d
 docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box install
 docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate up
-docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate seed
+docker compose -f resources/docker/docker-compose.postgresql.yml exec coldbox_app box migrate seed run
 ```
 
 The default MySQL Compose file remains unchanged. Stop either alternative with its matching Compose file and `down`.
