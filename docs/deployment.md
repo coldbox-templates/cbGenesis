@@ -22,7 +22,7 @@ A `Dockerfile` and database-specific Compose files live in `resources/docker/`. 
 
 ### Local development with Docker Compose
 
-`resources/docker/docker-compose.yml` runs the app (`ortussolutions/commandbox:boxlang`) alongside a MySQL 8 container, with the whole repo bind-mounted into the app container so host edits apply without a rebuild - no local BoxLang/MySQL install required. Run `docker compose` directly (rather than through the `docker:stack` package script) so multi-word commands like `up -d` pass through correctly:
+`resources/docker/docker-compose.yml` runs the app (built from `resources/docker/Dockerfile.dev`, which installs CommandBox natively on top of the official `ortussolutions/boxlang:cli` image so the engine version matches `.bvmrc`) alongside a MySQL 8 container, with the whole repo bind-mounted into the app container so host edits apply without a rebuild - no local BoxLang/MySQL install required. Run `docker compose` directly (rather than through the `docker:stack` package script) so multi-word commands like `up -d` pass through correctly:
 
 ```bash frame="terminal" title="Terminal"
 docker compose -f resources/docker/docker-compose.yml up -d

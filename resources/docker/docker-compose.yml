@@ -56,7 +56,9 @@ services:
     depends_on:
       coldbox_db:
         condition: service_healthy
-    image: ortussolutions/commandbox:boxlang
+    build:
+      context: ../../
+      dockerfile: resources/docker/Dockerfile.dev
     environment:
       APPNAME: cbGenesis
       ENVIRONMENT: development

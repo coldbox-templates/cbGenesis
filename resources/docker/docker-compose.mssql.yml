@@ -45,7 +45,9 @@ services:
     depends_on:
       mssql_init:
         condition: service_completed_successfully
-    image: ortussolutions/commandbox:boxlang
+    build:
+      context: ../../
+      dockerfile: resources/docker/Dockerfile.dev
     environment:
       APPNAME: cbGenesis
       ENVIRONMENT: development
@@ -65,7 +67,7 @@ services:
       - -c
       - >-
         box install bx-mssql --noSave
-        && $$BUILD_DIR/run.sh
+        && box server start --console
     ports:
       - "8080:8080"
       - "8443:8443"
