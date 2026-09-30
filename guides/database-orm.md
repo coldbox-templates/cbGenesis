@@ -109,7 +109,7 @@ Powered by [cfmigrations](https://cfmigrations.ortusbooks.com) via the `commandb
 box migrate up           # Run pending migrations
 box migrate down         # Rollback the last batch
 box migrate reset        # Rollback everything, then re-migrate
-box migrate seed         # Run database seeders
+box migrate seed run     # Run database seeders
 ```
 
 Migrations run in filename/timestamp order:
@@ -123,7 +123,7 @@ Migrations run in filename/timestamp order:
 
 ## Seed data
 
-`resources/database/seeds/AdminData.bx`, run via `box migrate seed`, creates:
+`resources/database/seeds/AdminData.bx`, run via `box migrate seed run`, creates:
 
 - An **Admin** role
 - **20 permissions** across five resources (`users`, `roles`, `permissions`, `settings`, `auditlog`), each with `read`/`write`/`delete`/`admin` (`auditlog` uses `read`/`export`/`delete`/`admin`) — all assigned to the Admin role

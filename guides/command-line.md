@@ -53,7 +53,7 @@ Run these from the project root. They are all executed by `bx-cli`:
 | `box migrate up` | Apply pending database migrations |
 | `box migrate down` | Roll back the most recent migration batch |
 | `box migrate reset` | Roll back all migrations and apply them again |
-| `box migrate seed` | Run seed data: the `Admin` role, its 20 permissions, and the reset-pending admin user |
+| `box migrate seed run` | Run seed data: the `Admin` role, its 20 permissions, and the reset-pending admin user |
 | `box testbox run` | Run the TestBox suite - see [Testing](testing.md#running-tests) for filtering |
 | `box task run path/to/task.cfc` | Run a CommandBox task through `bx-cli` |
 | `box coldbox ai refresh` | Sync AI guidelines and skills in `.agents/` with your installed modules |
@@ -78,7 +78,7 @@ box install
 npm install
 cp .env.example .env
 box migrate up
-box migrate seed
+box migrate seed run
 box server start
 npm run dev
 ```

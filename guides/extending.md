@@ -70,7 +70,7 @@ Add the `resource:action` slug to `resources/database/seeds/AdminData.bx` and as
 so the UI never offers something the handler would reject.
 :::
 ::: step "Re-seed" color="success"
-`box migrate seed` against an existing database - or grant the permission to a role directly from the Roles admin page.
+`box migrate seed run` against an existing database - or grant the permission to a role directly from the Roles admin page.
 :::
 :::
 
