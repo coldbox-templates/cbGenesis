@@ -1,0 +1,27 @@
+################################################################################
+# CB Genesis Docker Compose Dev Image
+#
+# ortussolutions/commandbox:boxlang (the classic Java CommandBox image) defaults
+# to an older BoxLang engine than this template requires and ships a
+# commandbox-migrations version that can't load .bx migrations (see issue #80).
+# This image instead starts from the official, version-pinned BoxLang CLI
+# image and installs CommandBox natively on BoxLang ("bx-cli"), so the engine
+# version actually matches .bvmrc/server.json.
+#
+# Used only by docker-compose.yml for local dev, where the whole repo is
+# bind-mounted over /app at runtime - this image just provides the tooling
+# (box, coldbox, testbox, migrations), not the app code or its dependencies.
+################################################################################
+FROM ortussolutions/boxlang:cli-1.17.6
+
+# Installs CommandBox running natively on BoxLang (the `box` command).
+RUN install-bx-module bx-cli
+
+# CLI tooling the app needs at dev time.
+RUN install-bx-module commandbox-migrations coldbox-cli testbox-cli commandbox-boxlang
+
+WORKDIR /app
+
+EXPOSE 8080 8443
+
+CMD ["box", "server", "start", "--console"]
