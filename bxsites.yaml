@@ -13,6 +13,80 @@ nav: []
 # https://ortus-boxlang.github.io/bx-sites/guides/versioning
 versions:
   default: "1.0.0"
+# Translated content lives in docs/i18n/<code>/ (and docs/versions/1.0.0/i18n/<code>/
+# for the released version), mirroring docs/ page-for-page. de/es/it get fully
+# translated theme chrome (search box, nav labels, etc.) built into bx-sites;
+# fr/pt/ja override the same keys here since they have no built-in chrome yet.
+# See https://ortus-boxlang.github.io/bx-sites/guides/i18n
+i18n:
+  defaultLocale: { code: en, label: English }
+  locales:
+    - { code: es, label: Español }
+    - { code: de, label: Deutsch }
+    - { code: it, label: Italiano }
+    - code: fr
+      label: Français
+      strings:
+        searchPlaceholder: "Rechercher dans la documentation..."
+        searchAriaLabel: "Rechercher"
+        searchNoResults: "Aucun résultat trouvé"
+        toggleDarkMode: "Basculer le mode sombre"
+        toggleNavigation: "Basculer la navigation"
+        toggleSection: "Basculer la section {title}"
+        repository: "Dépôt"
+        version: "Version"
+        language: "Langue : {label}"
+        onThisPage: "Sur cette page"
+        editThisPage: "Modifier cette page"
+        downloadMarkdown: "Télécharger le Markdown"
+        lastUpdated: "Dernière mise à jour"
+        notTranslatedNotice: "Cette page n'a pas encore été traduite en {locale}."
+        notFoundTitle: "Page introuvable"
+        notFoundBody: "La page que vous recherchez n'existe pas ou a été déplacée."
+        tagsTitle: "Étiquettes"
+        pageNavigation: "Navigation de page"
+    - code: pt
+      label: Português
+      strings:
+        searchPlaceholder: "Pesquisar na documentação..."
+        searchAriaLabel: "Pesquisar"
+        searchNoResults: "Nenhum resultado encontrado"
+        toggleDarkMode: "Alternar modo escuro"
+        toggleNavigation: "Alternar navegação"
+        toggleSection: "Alternar seção {title}"
+        repository: "Repositório"
+        version: "Versão"
+        language: "Idioma: {label}"
+        onThisPage: "Nesta página"
+        editThisPage: "Editar esta página"
+        downloadMarkdown: "Baixar Markdown"
+        lastUpdated: "Última atualização"
+        notTranslatedNotice: "Esta página ainda não foi traduzida para {locale}."
+        notFoundTitle: "Página não encontrada"
+        notFoundBody: "A página que você procura não existe ou foi movida."
+        tagsTitle: "Etiquetas"
+        pageNavigation: "Navegação de página"
+    - code: ja
+      label: 日本語
+      strings:
+        searchPlaceholder: "ドキュメントを検索..."
+        searchAriaLabel: "検索"
+        searchNoResults: "検索結果が見つかりません"
+        toggleDarkMode: "ダークモードを切り替え"
+        toggleNavigation: "ナビゲーションを切り替え"
+        toggleSection: "{title} セクションを切り替え"
+        repository: "リポジトリ"
+        version: "バージョン"
+        language: "言語: {label}"
+        onThisPage: "このページ内"
+        editThisPage: "このページを編集"
+        downloadMarkdown: "Markdown をダウンロード"
+        lastUpdated: "最終更新日"
+        notTranslatedNotice: "このページはまだ {locale} に翻訳されていません。"
+        notFoundTitle: "ページが見つかりません"
+        notFoundBody: "お探しのページは存在しないか、移動された可能性があります。"
+        tagsTitle: "タグ"
+        pageNavigation: "ページナビゲーション"
 markdown:
   enableFootnotes: true
   enableDefinitionLists: true
