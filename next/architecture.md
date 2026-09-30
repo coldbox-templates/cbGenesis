@@ -1,0 +1,191 @@
+---
+title: Architecture
+order: 4
+icon: phosphor-duotone:tree-structure
+summary: The modern app/public split, the full project tree, and how a request flows from browser to database and back.
+tags: [architecture]
+---
+
+# Architecture
+
+CBGenesis follows ColdBox's **modern template** layout: application code is fully separated from the public webroot, so nothing under `app/` is ever directly web-accessible.
+
+## Layered overview
+
+```mermaid
+flowchart TD
+    A["Browser Request"] --> B
+
+    subgraph B["public/ — Webroot"]
+        B1["Application.bx — entry point, bootstraps ColdBox + ORM"]
+        B2["index.bxm — front controller"]
+        B3["includes/ — Vite compiled assets"]
+    end
+
+    B --> C
+
+    subgraph C["app/ — Application code (not web-accessible)"]
+        C1["config/ — ColdBox, Router, CacheBox, WireBox, Scheduler"]
+        C2["handlers/ — Controllers, auth, admin, audit log"]
+        C3["models/ — Entities, Services"]
+        C4["views/ + layouts/ — BXM templates"]
+        C5["email_templates/ — Token-based email bodies"]
+        C6["interceptors/ — Audit logging hook"]
+    end
+
+    C --> D
+
+    subgraph D["resources/ — Source assets"]
+        D1["assets/js/ — Alpine components + stores"]
+        D2["assets/scss/ — Bootstrap + custom SCSS"]
+        D3["database/ — Migrations + seeders"]
+    end
+
+    D --> E
+
+    subgraph E["lib/ — Dependencies (not source-controlled)"]
+        E1["coldbox/, testbox/, modules/ — qb, cbsecurity, cborm, ..."]
+    end
+```
+
+!!! note "Why the split?"
+    Anything an attacker could otherwise browse to directly - handler source, config, view templates - simply doesn't live under the webroot. `app/Application.bx` is a one-line `abort;` guard, kept only so the framework convention holds even if a web server is ever misconfigured to serve `app/` directly.
+
+## Request lifecycle
+
+Every request enters through `public/Application.bx`, which bootstraps ColdBox before handing off to the router and, eventually, your handler:
+
+```mermaid
+sequenceDiagram
+    Browser->>+public/Application.bx: HTTP Request
+    public/Application.bx->>+ColdBox Bootstrap: loadColdbox()
+    ColdBox Bootstrap->>+Main Handler: onRequestStart
+    Main Handler->>+Router: Match route
+    Router->>+Target Handler: Dispatch event
+    Target Handler->>+Service Layer: Business logic
+    Service Layer->>+ORM / qb: Data access
+    Target Handler->>+View / Layout: Render response
+    View / Layout-->>-Browser: HTML + Vite assets
+```
+
+`Main.bx` (`app/handlers/Main.bx`) is the implicit-event handler wired up in `app/config/Coldbox.bx`:
+
+- `onAppInit` - runs `settingService.preFlightCheck()`, seeding any missing app settings into the database
+- `onRequestStart` - loads `prc.settings` and `prc.authUser` for every request
+- `onException` - the app-wide exception handler
+
+## Interceptors
+
+`app/config/Coldbox.bx` registers three application interceptors, in this order:
+
+**`app/interceptors/AuditLogger.bx`** writes to the audit trail on four interception points:
+
+| Point | Recorded |
+|---|---|
+| `postAuthentication` | A successful sign-in |
+| `preLogout` | A sign-out |
+| `cbSecurity_onInvalidAuthentication` | A request that required a session and had none |
+| `cbSecurity_onInvalidAuthorization` | An authenticated user missing the required permission |
+
+**`app/interceptors/RateLimiter.bx`** fires on `preProcess` - before routing, before any handler - and throttles five unauthenticated `Auth` actions (login, register, forgot/reset password, invitation activation) by client IP. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
+
+**`app/interceptors/SSOAuthorization.bx`** handles cbSSO's
+`CBSSOAuthorization` interception point. It connects a verified provider
+identity to the local user model, enforces login-versus-linking policy,
+provisions users when allowed, and creates the cbauth session. See
+[Single sign-on](guides/security.md#single-sign-on) for the callback flow and
+the reason cbGenesis uses a custom handler instead of cbSSO's generic cbAuth
+integration.
+
+Add your own to the `variables.interceptors` array in `Coldbox.bx`; they fire in declaration order.
+
+## Scheduled tasks
+
+`app/config/Scheduler.bx` registers three daily background tasks, each `onOneServer()` and `withNoOverlaps()` so a multi-instance deployment runs each one exactly once:
+
+| Task | Runs | Deletes | Governed by |
+|---|---|---|---|
+| Purge Expired API Tokens | `03:00` | `user_api_tokens` rows past their `expiration` | Token lifetime set at issue time from `cbApiTokenMaxValidityMonths` (default `12` months) - see [App Settings](reference/settings.md#password--token-policy) |
+| Purge Expired Remember Tokens | `03:15` | `user_remember_tokens` rows past their `expiration` | Fixed expiration set when the token is issued (`SecurityService`/`RememberTokenService`) |
+| Purge Old Audit Logs | `03:30` | `audit_logs` rows older than the retention window | `cbAuditLogRetentionDays` (default `90`; `0` disables the purge) - see [App Settings](reference/settings.md#password--token-policy) |
+
+All three call a `purgeExpiredTokens()`/`purgeOlderThan()` method on the owning service rather than querying the table directly, so the same purge logic is reachable (and testable) outside the scheduler. Add a new task the same way - see [Extending the App](guides/extending.md#adding-a-scheduled-task).
+
+## Full project tree
+
+```text title="Project structure" linenums="1"
+cbgenesis/
+├── app/                      Application code
+│   ├── Application.bx        Abort-only gate (prevents direct /app access)
+│   ├── config/
+│   │   ├── Coldbox.bx        Framework settings, environments, logging
+│   │   ├── Router.bx         All application routes
+│   │   ├── CacheBox.bx       Cache regions (default, template, sessions, rateLimit)
+│   │   ├── WireBox.bx        DI container configuration
+│   │   ├── Scheduler.bx      Scheduled tasks
+│   │   └── modules/          Per-module settings (cbsecurity, cbauth, cborm, ...)
+│   ├── handlers/              Controllers (Auth, Dashboard, Users, Roles, ...)
+│   ├── layouts/                Admin, AuthCenter, AuthSplit, Main
+│   ├── models/
+│   │   ├── BaseEntity.bx      ORM base: timestamps, soft delete, memento
+│   │   ├── BaseService.bx     Service base: cborm + qb + cache + validation
+│   │   ├── security/            Role, Permission, APIToken, RememberToken,
+│   │   │                        Passkey, UserActionToken, SecurityService, ...
+│   │   └── system/              User, Setting, AuditLog + their services
+│   ├── views/                  BXM templates, one folder per handler
+│   │   └── _components/        Reusable UI partials (app, auth, ui)
+│   ├── email_templates/       Token-based email body templates
+│   ├── helpers/               ApplicationHelper.bxm — global view helpers
+│   └── interceptors/           AuditLogger, RateLimiter, SSOAuthorization
+├── public/
+│   ├── Application.bx         Entry point — ColdBox + ORM bootstrap
+│   ├── index.bxm               Front controller placeholder
+│   └── includes/               Vite production build output
+├── resources/
+│   ├── assets/js/              Alpine entry, stores, components
+│   ├── assets/scss/            Bootstrap + custom SCSS
+│   └── database/
+│       ├── migrations/         Schema migrations (cfmigrations)
+│       └── seeds/              AdminData seeder
+├── tests/
+│   ├── specs/integration/      Full HTTP-level specs
+│   └── specs/unit/             Entity + service specs
+├── lib/                        Dependencies (gitignored, installed by `box install`)
+├── runtime/                    BoxLang engine config (boxlang.json)
+├── server.json                 CommandBox server config (engine, webroot, aliases)
+├── box.json                    Package manifest — deps, scripts
+├── package.json                 NPM — Alpine, Bootstrap, Vite, ESLint
+├── vite.config.mjs              Vite + coldbox-vite-plugin
+└── .env.example                  Environment template
+```
+
+## The stack
+
+| Layer | Technology |
+|---|---|
+| Runtime | BoxLang 1.0+ (JVM) |
+| Framework | ColdBox HMVC (bleeding edge) |
+| CLI / Server | CommandBox + BoxLang MiniServer |
+| Dependency Injection | WireBox |
+| Security | cbsecurity + cbauth (session-based + JWT) |
+| Database | MySQL, MariaDB, PostgreSQL, and MSSQL via Hibernate ORM (cborm); all four database targets are supported and covered by the project's database testing workflow |
+| Query Builder | qb (fluent SQL) |
+| Migrations | cfmigrations |
+| Validation | cbvalidation |
+| Email | cbmailservices |
+| Serialization | mementifier |
+| Frontend | Bootstrap 5.3 · Alpine.js 3.x · Vite 6 |
+| Icons | Phosphor Duotone |
+| Tooltips | Tippy.js |
+
+::: cards
+::: card title="Handlers & Routing" icon="phosphor-duotone:signpost" href="guides/handlers-routing.md"
+Every controller and route, and the conventions tying them together.
+:::
+::: card title="Database & ORM" icon="phosphor-duotone:database" href="guides/database-orm.md"
+The entity hierarchy, migrations, and the `BaseService` pattern.
+:::
+::: card title="Security & Permissions" icon="phosphor-duotone:shield-check" href="guides/security.md"
+How `@secured` handlers, CSRF, and the permission model fit together.
+:::
+:::
