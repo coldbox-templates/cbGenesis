@@ -8,6 +8,11 @@ theme:
   favicon: "assets/favicon.ico"
 search: true
 nav: []
+# main is the released version (served at the site root); development is
+# where the next release's docs are written, served at /next/. See
+# https://ortus-boxlang.github.io/bx-sites/guides/versioning
+versions:
+  default: "1.0.0"
 markdown:
   enableFootnotes: true
   enableDefinitionLists: true

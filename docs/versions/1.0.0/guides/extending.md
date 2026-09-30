@@ -1,0 +1,122 @@
+---
+title: Extending the App
+order: 8
+icon: phosphor-duotone:puzzle-piece
+summary: Add a new CRUD module, permission, setting, or scheduled task, following the app's own conventions.
+tags: [guides, extending]
+---
+
+# Extending the App
+
+CBGenesis is a launchpad, not a finished product. These are the same steps its own Users/Roles/Permissions/Settings modules follow - use them as the template for anything new.
+
+## Building with an AI agent
+
+If you're extending cbGenesis with an AI coding agent (Claude Code, Copilot, Cursor, or similar), point it at `.agents/skills-custom/` before it writes any code - these skills encode the exact steps below as machine-readable instructions, with real code excerpts from this codebase, so the agent doesn't have to reverse-engineer them by exploring every handler:
+
+| Skill | Covers |
+|---|---|
+| `cbgenesis-crud-resource` | The full vertical slice below - entity, service, handler, route, view, component - end to end. |
+| `cbgenesis-rbac-permissions` | The `resource:action` permission model, `@secured`, and self-action guards. |
+| `cbgenesis-csrf-frontend` | The mandatory `fetchWithCsrf()` pattern for any mutating frontend request. |
+| `cbgenesis-alpine-components` | Alpine.js component shape, registration, and the shared `utils/` library. |
+| `cbgenesis-testing-conventions` | `BaseIntegrationSpec`, the real transaction-rollback isolation mechanism, and fixture helpers. |
+| `cbgenesis-settings-config` | When to use an environment variable versus the DB-backed settings registry. |
+
+New convention worth an agent (or a human) not having to rediscover it by trial and error? Add it as a new skill here rather than leaving it as tribal knowledge in a PR description. See [Built for AI-Assisted Development](../ai-native.md) for why this matters and a measured before/after comparison.
+
+## Adding a new CRUD module
+
+::: stepper
+::: step "Create the entity"
+In `app/models/<domain>/`, extending `BaseEntity` — see [Database & ORM](database-orm.md#entity-hierarchy).
+:::
+::: step "Create the service"
+Extending `BaseService`, marked `singleton threadSafe` — see [the service pattern](database-orm.md#service-layer-pattern).
+:::
+::: step "Create the handler"
+Extending `BaseSecureHandler`, with an `@secured` annotation — see [Handlers & Routing](handlers-routing.md#basesecurehandler). Inheriting that base means every `POST`/`PUT`/`DELETE` action you add is [CSRF-verified automatically](handlers-routing.md#csrf-verification); there is nothing to opt into, but your forms and Alpine components must send `rc.csrf`.
+:::
+::: step "Add routes"
+In `app/config/Router.bx`, near the `// @app_routes@` marker.
+:::
+::: step "Create views"
+In `app/views/<domain>/`, reusing existing `_components/ui/` partials.
+:::
+::: step "Create an Alpine component"
+In `resources/assets/js/components/<domain>/`, then register it in `App.js` — see [Frontend](frontend.md#alpinejs-architecture).
+:::
+::: step "Add SCSS"
+In `resources/assets/scss/views/`, imported from `app.scss`.
+:::
+::: step "Write tests" color="success"
+Unit specs in `tests/specs/unit/<domain>/`, plus an integration spec in `tests/specs/integration/` for the routes you added — see [Testing](testing.md#test-structure).
+:::
+:::
+
+## Adding a new permission
+
+::: stepper
+::: step "Seed the slug"
+Add the `resource:action` slug to `resources/database/seeds/AdminData.bx` and assign it to the appropriate role(s).
+:::
+::: step "Guard the handler"
+`@secured( "resource:action,resource:admin" )` — comma means OR. See [Security & Permissions](security.md#permission-model).
+:::
+::: step "Gate the view"
+```html linenums="1"
+<bx:if prc.authUser.hasPermission( "resource:action,resource:admin" )>
+```
+so the UI never offers something the handler would reject.
+:::
+::: step "Re-seed" color="success"
+`box migrate seed run` against an existing database - or grant the permission to a role directly from the Roles admin page.
+:::
+:::
+
+## Adding a setting
+
+Add a new key to the `DEFAULTS` struct in `SettingService.bx`. `preFlightCheck()` seeds it automatically on next boot, and it appears in the `/settings` admin page with no further wiring — see [Configuration](configuration.md#app-settings-vs-framework-config).
+
+## Customizing layouts
+
+Layouts live in `app/layouts/`. Selection happens per-handler, typically in `preHandler`:
+
+```boxlang title="app/handlers/BaseSecureHandler.bx" linenums="1"
+function preHandler( event, rc, prc ){
+    event.setLayout( "Admin" );
+}
+```
+
+## Adding a scheduled task
+
+Register tasks in `app/config/Scheduler.bx`, next to the three that already run there - see [Architecture](../architecture.md#scheduled-tasks) for what they do:
+
+```boxlang title="app/config/Scheduler.bx" linenums="1"
+task( "My Task" )
+    .call( () => getInstance( "MyService" ).doWork() )
+    .everyDayAt( "03:45" )
+    .onOneServer()
+    .withNoOverlaps();
+```
+
+`onOneServer()` and `withNoOverlaps()` matter the moment you deploy more than one instance: without them, every instance runs the task on its own schedule. Put the actual purge/cleanup logic on the service (`doWork()` above), not inline in the closure, so it stays unit-testable.
+
+## Overriding module configuration
+
+Module configs in `app/config/modules/` extend the module's own defaults. Override any key there — changes take effect on the next `?fwreinit`.
+
+::: cards
+::: card title="Built for AI-Assisted Development" icon="phosphor-duotone:robot" href="../ai-native.md"
+Why the custom skills exist, and a measured token/tool-call comparison.
+:::
+::: card title="Handlers & Routing" icon="phosphor-duotone:signpost" href="handlers-routing.md"
+The full handler/route conventions this section builds on.
+:::
+::: card title="Database & ORM" icon="phosphor-duotone:database" href="database-orm.md"
+Entity and service patterns in depth.
+:::
+::: card title="Deployment" icon="phosphor-duotone:cloud-arrow-up" href="../deployment.md"
+Ship what you've built.
+:::
+:::
