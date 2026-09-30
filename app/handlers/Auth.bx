@@ -92,7 +92,11 @@ class extends="coldbox.system.EventHandler"{
 			target: rc,
 			constraints: {
 				email: { required: true, type: "email" },
-				password: { required:true, size: "#prc.settings.cbMinPasswordLength#..255" }
+				// Minimum-length policy belongs where a password is set (doResetPassword
+				// enforces cbMinPasswordLength there), not on checking an existing one -
+				// otherwise a seeded/legacy short password can never reach the
+				// isPasswordReset check below and get redirected to reset it.
+				password: { required:true, size: "1..255" }
 			}
 		)
 		// Handle validation errors
