@@ -9,19 +9,29 @@
 # version actually matches .bvmrc/server.json.
 #
 # Used only by docker-compose.yml for local dev, where the whole repo is
-# bind-mounted over /app at runtime - this image just provides the tooling
-# (box, coldbox, testbox, migrations), not the app code or its dependencies.
+# bind-mounted over /srv/cbgenesis at runtime - this image just provides the
+# tooling (box, coldbox, testbox, migrations), not the app code or its
+# dependencies.
 ################################################################################
 FROM ortussolutions/boxlang:cli-1.17.6
 
-# Installs CommandBox running natively on BoxLang (the `box` command).
+# The base image doesn't set BOXLANG_INSTALL_HOME, which install-bx-module needs
+# to find its helper scripts, and bx-cli puts the `box` launcher in
+# ~/.boxlang/bin, which isn't on the PATH.
+ENV BOXLANG_INSTALL_HOME=/usr/local/boxlang
+ENV PATH=/root/.boxlang/bin:$PATH
+
+# Installs CommandBox running natively on BoxLang (the `box` command). bx-cli
+# bundles coldbox-cli, which brings the `migrate` commands with it.
 RUN install-bx-module bx-cli
 
-# CLI tooling the app needs at dev time.
-RUN install-bx-module commandbox-migrations coldbox-cli testbox-cli commandbox-boxlang
-
-WORKDIR /app
+# Not /app: the application's own code lives in <project>/app, and
+# public/Application.bx resolves it through an /app mapping, so mounting the
+# project at /app makes ColdBox look for /app/app/app/config/Coldbox.bx.
+WORKDIR /srv/cbgenesis
 
 EXPOSE 8080 8443
 
-CMD ["box", "server", "start", "--console"]
+# Bind to all interfaces so the published port reaches the server (CommandBox
+# defaults to 127.0.0.1), and don't try to open a browser in a headless container.
+CMD ["box", "server", "start", "host=0.0.0.0", "openbrowser=false", "--console"]

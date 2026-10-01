@@ -5,6 +5,17 @@ name: Publish Docs
 # default "bootstrap" theme, and publishes the result to GitHub Pages
 # at the site root.
 #
+# Semantic versioning (see bxsites.yaml's `versions.default` and
+# https://ortus-boxlang.github.io/bx-sites/guides/versioning): a single
+# `bxSites build` produces the whole site in one pass - the site root from
+# the cut docs/versions/<default>/ snapshot (the released version, cut from
+# main at release time via `bxSites version:new`), and /next/ from the
+# live docs/ tree (main's is the same frozen content until the next
+# release is merged in; development's evolves as the next release's docs
+# are written). Both branches triggering the same build+deploy is
+# intentional - it's what keeps /next/ current as development is pushed to,
+# without needing separate build logic per branch.
+#
 # One-time setup required before this workflow can publish anything:
 #   1. Let this workflow run once (it creates the gh-pages branch for you)
 #   2. Settings -> Pages -> Build and deployment -> Source: "Deploy from a branch"

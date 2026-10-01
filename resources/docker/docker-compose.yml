@@ -62,6 +62,10 @@ services:
       context: ../../
       dockerfile: resources/docker/Dockerfile.dev
     environment:
+      # Keep the server home inside the container: server.json points it at
+      # ./.engine, which is bind-mounted and shared across containers, and a new
+      # container can't start from an engine folder another container created.
+      BOX_SERVER_APP_SERVERHOMEDIRECTORY: /root/cbgenesis-server
       APPNAME: cbGenesis
       ENVIRONMENT: development
       BOXLANG_DEBUG: "true"
@@ -82,4 +86,4 @@ services:
       - "8080:8080"
       - "8443:8443"
     volumes:
-      - ../../:/app
+      - ../../:/srv/cbgenesis
