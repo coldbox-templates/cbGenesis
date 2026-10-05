@@ -839,9 +839,7 @@
 		<div class="bxh-wrap footer-bottom footrow">
 			<span>&copy; #year( now() )# Ortus Solutions. Apache 2.0 License.</span>
 			<div class="footlinks">
-				<bx:if len( variables.repoUrl )>
-					<a href="#bxsitesUrlAttr( variables.repoUrl )#/blob/development/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
-				</bx:if>
+				<a class="footverse" href="https://www.bible.com/bible/59/JHN.14.6.ESV" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">&#10084;&#65039;</span> He is the truth and the life</a>
 				<a class="poweredby" href="https://coldbox.ortusbooks.com" target="_blank" rel="noopener noreferrer">Part of the <b>ColdBox</b> platform</a>
 			</div>
 		</div>
