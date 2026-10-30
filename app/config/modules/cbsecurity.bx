@@ -157,6 +157,22 @@ class {
 			},
 			/**
 			 * --------------------------------------------------------------------------
+			 * Route Middleware
+			 * --------------------------------------------------------------------------
+			 * Defaults for the cbsecurity route middleware attached in app/config/Router.bx
+			 * (csrf, throttle, honeypot). Throttle limits are NOT set here: AppThrottle reads
+			 * them from the settings registry (cbRateLimitMaxAttempts, cbRateLimitWindowSeconds).
+			 */
+			middleware: {
+				// Trusted proxy IPs or CIDR ranges. Forwarded headers are only honored from these.
+				// AppThrottle resolves the client IP through the cbTrustProxyHeaders setting instead.
+				"trustedProxies": [],
+				// Hidden field bots fill in on the register form. Silent: bots get a 200 "OK"
+				// and the handler never runs, so they get no signal to adapt to.
+				"honeypot"      : { "field": "website_url", "silent": true }
+			},
+			/**
+			 * --------------------------------------------------------------------------
 			 * Json Web Tokens Settings
 			 * --------------------------------------------------------------------------
 			 * Here you can configure the JWT services for operation and storage.  In order for your firewall

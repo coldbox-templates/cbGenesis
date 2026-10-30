@@ -15,8 +15,8 @@ class extends="tests.resources.BaseIntegrationSpec" {
 	@inject
 	property name="userActionTokenService";
 
-	@inject
-	property name="rateLimitService";
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
 
 	/*********************************** LIFE CYCLE Methods ***********************************/
 
@@ -32,10 +32,10 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				// Setup as a new ColdBox request, VERY IMPORTANT. ELSE EVERYTHING LOOKS LIKE THE SAME REQUEST.
 				setup();
 				securityService.logout( quiet: true );
-				// RateLimiter's counters live in an app-scoped cache, not the per-request
+				// The throttle middleware's counters live in an app-scoped cache, not the per-request
 				// transaction this suite otherwise rolls back, so every doLogin/doRegister/etc.
 				// call in this file would otherwise share one running count across tests.
-				rateLimitService.clearAll();
+				rateLimitCache.clearAll();
 			} );
 
 			story( "Self-service registration creates an account", () => {
@@ -232,7 +232,9 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				} );
 			} );
 
-			story( "RateLimiter throttles repeated login attempts", () => {
+			story( "The throttle route middleware limits repeated login attempts", () => {
+				// These go through post() rather than execute( "auth.doLogin" ): route middleware
+				// only runs for requests dispatched by route (ColdBox 8.3+), never for a bare event.
 				it( "blocks a login attempt once the configured limit is exceeded, even with the correct password", () => {
 					var user = createVerifiedUser();
 					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
@@ -240,21 +242,27 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					// Exhaust the allowance with wrong-password attempts, each legitimately
 					// rejected by doLogin() itself for a normal reason (bad credentials).
 					for ( var i = 1; i <= maxAttempts; i++ ) {
-						form.email = user.getEmail();
-						form.password = "wrong-password";
-						form.csrf = cbcsrf.generate();
-						execute( "auth.doLogin" );
+						setup();
+						post( route = "/login", params = { email: user.getEmail(), password: "wrong-password", csrf: cbcsrf.generate() } );
 					}
 
-					// This next attempt uses the CORRECT password. If RateLimiter is doing its
-					// job, preProcess blocks it before doLogin() ever checks credentials, so a
+					// This next attempt uses the CORRECT password. If the throttle is doing its
+					// job it stops the request before doLogin() ever checks credentials, so a
 					// password that would otherwise succeed still leaves the user logged out.
-					form.email = user.getEmail();
-					form.password = "correct-password";
-					form.csrf = cbcsrf.generate();
-					execute( "auth.doLogin" );
+					setup();
+					post( route = "/login", params = { email: user.getEmail(), password: "correct-password", csrf: cbcsrf.generate() } );
 
 					expect( securityService.isLoggedIn() ).toBeFalse();
+				} );
+
+				it( "does not count loading the login page as an attempt", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+
+					for ( var i = 1; i <= maxAttempts + 1; i++ ) {
+						setup();
+						var event = get( route = "/login" );
+						expect( event.getValue( "relocate_event", "" ) ).notToBe( "login" );
+					}
 				} );
 			} );
 		} );

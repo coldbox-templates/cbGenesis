@@ -507,7 +507,7 @@
 					</div>
 					<div class="sec-item">
 						<div class="icon">#homeIcon( "shield-check" )#</div>
-						<div><h4>Rate limiting, by IP</h4><p>A <code>RateLimiter</code> interceptor throttles login, registration, and password-reset attempts per IP, with a configurable max attempt count and window.</p></div>
+						<div><h4>Rate limiting, by IP</h4><p>A <code>throttle</code> route middleware throttles login, registration, and password-reset attempts per IP, with a configurable max attempt count and window.</p></div>
 					</div>
 				</div>
 			</div>

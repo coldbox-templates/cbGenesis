@@ -1,6 +1,6 @@
 ---
 name: cbgenesis-rbac-permissions
-description: Use this skill when adding or changing access control in cbGenesis - securing a new handler or action, adding a permission, checking a permission in a view or handler, or reasoning about the CSRF gate on state-changing requests. Covers the resource:action permission model, @secured annotations, BaseSecureHandler's preHandler, and how permissions/roles/users relate.
+description: Use this skill when adding or changing access control in cbGenesis - securing a new handler or action, adding a permission, checking a permission in a view or handler, or reasoning about the CSRF gate on state-changing requests. Covers the resource:action permission model, @secured annotations, BaseSecureHandler's preHandler, the csrf route middleware, and how permissions/roles/users relate.
 ---
 
 # cbGenesis RBAC & Permissions
@@ -25,7 +25,11 @@ class extends="BaseSecureHandler" {
 `BaseSecureHandler.preHandler()` (inherited by every handler here) also:
 - Sets the `Admin` layout on every view.
 - Redirects to `profile/passkey-required` if `cbRequirePasskey` is on and the user has no passkey (except `logout` and `passkeyRequired` itself).
-- **Verifies CSRF deny-by-default**: any request that is not `GET`/`HEAD`/`OPTIONS` must carry a valid `rc.csrf`, or the request is rejected via `onInvalidCSRF()`. This is automatic - you do not add per-action CSRF checks. The base `onInvalidCSRF()` aborts with a 403, which is correct for an `@remote` JSON handler. Override it only if the handler renders HTML and needs to flash+redirect instead (see `Settings.bx`'s override) - most handlers here are pure JSON now and should NOT override it (see `cbgenesis-csrf-frontend` skill for the matching frontend side).
+
+CSRF is not checked in the handler. The `csrf` route middleware (`AppVerifyCsrf`, extending cbsecurity's `VerifyCsrf`) verifies it **deny-by-default**: any request that is not `GET`/`HEAD`/`OPTIONS` must carry a valid `rc.csrf` (or `x-csrf-token` header). `app/config/Router.bx` attaches it to one `group( { middleware: [ "csrf" ] } )` wrapping every secured route, plus the `:handler/:action?` catch-all. So:
+
+- Put every new secured route **inside that group**. A route outside it is not verified, and `RouteMiddlewareTest` will fail.
+- A failure is a JSON 403, which is right for an `@remote` JSON handler and is what `fetchWithCsrf()` recovers from (see the `cbgenesis-csrf-frontend` skill). Only a route serving a native HTML form post adds `.meta( { csrfRedirect: "<event>" } )` to flash and redirect instead (see the `settings` routes).
 
 `Auth.bx` is the one exception: it extends `coldbox.system.EventHandler` directly (unauthenticated visitors can't pass a secured preHandler) and verifies `csrfVerify()` manually inside each state-changing action.
 

@@ -96,14 +96,25 @@ Current event handlers and their public actions (auto-updated on `coldbox ai ref
 - **Settings**: index, registry, registrySearch, createRegistry, updateRegistry, toggleRegistryStatus, deleteRegistry, save, clearTemplateCache, clearSessionsCache, revokeRememberTokens, flushSettingsCache, uploadLogo, deleteLogo
 - **Users**: index, search, create, show, update, delete, resendInvitation, updateProfile, setStatus, resetPassword, forcePasswordReset, verify, revokeRememberTokens, addRole, removeRole, addPermission, removePermission, savePreferences, revokeToken, revokeAllTokens
 
-All handlers except `Auth` and `Main` extend `BaseSecureHandler`, whose `preHandler` verifies CSRF deny-by-default: any request that is not `GET`/`HEAD`/`OPTIONS` must carry a valid `rc.csrf`. Override `onInvalidCSRF()` in a handler that renders HTML instead of JSON.
+All handlers except `Auth` and `Main` extend `BaseSecureHandler`. CSRF is verified deny-by-default by the `csrf` route middleware (`AppVerifyCsrf`): any request that is not `GET`/`HEAD`/`OPTIONS` must carry a valid `rc.csrf`, so every secured route must sit inside the `csrf` group in `app/config/Router.bx`. A route serving a native HTML form post adds `.meta( { csrfRedirect: "<event>" } )` to flash and redirect instead of returning a JSON 403.
 
 ## Interceptors Snapshot
 
 Registered interceptors and their interception points (auto-updated on `coldbox ai refresh`):
 
 - **AuditLogger** (`app/interceptors/AuditLogger.bx`, registered in `Coldbox.bx`): `postAuthentication`, `preLogout`, `cbSecurity_onInvalidAuthentication`, `cbSecurity_onInvalidAuthorization` — writes each to the audit trail via `AuditLogService`.
-- **RateLimiter** (`app/interceptors/RateLimiter.bx`, registered in `Coldbox.bx`): `preProcess` — throttles `Auth.doLogin`, `Auth.doRegister`, `Auth.doForgotPassword`, `Auth.doResetPassword`, `Auth.doActivateInvitation` by client IP via `RateLimitService`, governed by `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds`.
+- **SSORateLimiter** (`app/interceptors/SSORateLimiter.bx`, registered in `Coldbox.bx`): `preProcess` - throttles the cbSSO authorization callback (a module route, so route middleware cannot reach it) by client IP via cbsecurity's `RateLimiter`.
+- **SSOAuthorization** (`app/interceptors/SSOAuthorization.bx`, registered in `Coldbox.bx`): completes cbSSO login and account-linking flows.
+
+## Route Middleware
+
+Registered by name in `app/config/Router.bx` with `registerMiddleware()` (ColdBox 8.3+, cbsecurity 3.9+). App classes live in `app/models/middleware/` and extend the cbsecurity middleware, overriding only what differs:
+
+- **csrf** (`AppVerifyCsrf`, extends `VerifyCsrf@cbsecurity`): CSRF on unsafe methods. JSON 403 by default, flash and redirect when the route sets the `csrfRedirect` meta. Attached to the secured route group and the `:handler/:action?` catch-all.
+- **throttle** (`AppThrottle`, extends `Throttle@cbsecurity`): per-IP limits from the `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds` settings, fixed window, counted in the `rateLimit` CacheBox region. Attached to the POST routes for `Auth.doLogin`, `doRegister`, `doForgotPassword`, `doResetPassword`, `doActivateInvitation` and the Profile SSO routes. Route meta: `throttleRedirect`, `throttleTokenParam`.
+- **honeypot** (`Honeypot@cbsecurity`): hidden `website_url` field on the register form, silent.
+
+`execute( "handler.action" )` in tests bypasses route middleware. Use `post( route = "..." )` to run it.
 
 ## Layouts
 

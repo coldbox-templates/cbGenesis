@@ -134,7 +134,7 @@ Remove or restrict the public `/healthcheck` endpoint if it shouldn't be reachab
 
 ## Deploying behind a reverse proxy
 
-`RateLimiter`, the audit trail, and the "reset requested from IP" security emails all read the caller's IP through `cbsecurity`'s `getRealIP()`. That function has two possible sources for the IP, and only you - the person deploying this app - know which one is correct for your setup:
+The `throttle` middleware, the audit trail, and the "reset requested from IP" security emails all read the caller's IP through `cbsecurity`'s `getRealIP()`. That function has two possible sources for the IP, and only you - the person deploying this app - know which one is correct for your setup:
 
 - **The raw socket address** (`cgi.remote_addr`) - correct when the app is directly internet-facing. If a reverse proxy sits in front, this is always the proxy's own address, not the visitor's.
 - **The `X-Forwarded-For` / `X-Cluster-Client-IP` request headers** - correct only when something in front of the app (nginx, a load balancer, a CDN) strips whatever value a client sent and sets the header itself. If nothing does that, any caller can set this header to anything, including a different value on every request.

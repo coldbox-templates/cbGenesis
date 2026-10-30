@@ -1,15 +1,9 @@
 /**
  * Integration tests for the Profile handler's email-change endpoints, exercised via
  * execute() the same way AuthTest.bx does. CSRF is generated for real through the
- * injected cbcsrf service since csrfVerify() is a manual preHandler check here too.
- *
- * Only the valid-CSRF paths are exercised here: an invalid token routes through
- * onAuthorizationFailure(abort: true), which - unlike Auth.bx's doLogin(), which just
- * flashes a message and returns - performs a real engine abort. Inside TestBox's
- * in-process execute() that abort terminates the whole test-runner request, not just
- * the simulated sub-request, so it can only be exercised via a real HTTP call (verified
- * manually: POST/DELETE to /profile/email-change with a bad csrf returns 403 and leaves
- * pendingEmail untouched).
+ * injected cbcsrf service. CSRF is enforced by the csrf route middleware, which execute()
+ * does not run (it dispatches a bare event), so the tokens here are exercised only for
+ * realism; the middleware itself is covered in RouteMiddlewareTest.bx.
  */
 class extends="tests.resources.BaseIntegrationSpec" {
 

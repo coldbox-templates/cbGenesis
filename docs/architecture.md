@@ -87,7 +87,7 @@ sequenceDiagram
 | `cbSecurity_onInvalidAuthentication` | A request that required a session and had none |
 | `cbSecurity_onInvalidAuthorization` | An authenticated user missing the required permission |
 
-**`app/interceptors/RateLimiter.bx`** fires on `preProcess` - before routing, before any handler - and throttles five unauthenticated `Auth` actions (login, register, forgot/reset password, invitation activation) by client IP. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
+**`app/models/middleware/AppThrottle.bx`** is route middleware (attached in `app/config/Router.bx`) that throttles five unauthenticated `Auth` actions (login, register, forgot/reset password, invitation activation) by client IP. `app/interceptors/SSORateLimiter.bx` covers the cbSSO callback, which is a module route. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
 
 **`app/interceptors/SSOAuthorization.bx`** handles cbSSO's
 `CBSSOAuthorization` interception point. It connects a verified provider
@@ -136,7 +136,7 @@ cbgenesis/
 │   │   └── _components/        Reusable UI partials (app, auth, ui)
 │   ├── email_templates/       Token-based email body templates
 │   ├── helpers/               ApplicationHelper.bxm — global view helpers
-│   └── interceptors/           AuditLogger, RateLimiter, SSOAuthorization
+│   └── interceptors/           AuditLogger, SSORateLimiter, SSOAuthorization
 ├── public/
 │   ├── Application.bx         Entry point — ColdBox + ORM bootstrap
 │   ├── index.bxm               Front controller placeholder

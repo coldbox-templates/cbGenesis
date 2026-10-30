@@ -36,10 +36,11 @@ tests/
 │   │   ├── MainSpec.bx         Lifecycle events and exception handling
 │   │   ├── AuthTest.bx         Login, registration, and password reset
 │   │   ├── ProfileTest.bx      Password change and profile validation
+│   │   ├── RouteMiddlewareTest.bx  csrf/throttle middleware and csrf route coverage
 │   │   └── SettingsTest.bx     Settings handler CRUD and registry
 │   └── unit/
 │       ├── security/           APIToken, APITokenService, Permission,
-│       │                       PermissionService, RateLimitService,
+│       │                       PermissionService,
 │       │                       RememberTokenService, Role, RoleService,
 │       │                       SecurityService
 │       └── system/             AuditLog, AuditLogService, Setting,

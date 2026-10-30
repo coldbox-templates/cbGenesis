@@ -42,7 +42,7 @@ Check for a helper here before writing your own ad-hoc fixture builder.
 
 ## Exercising CSRF-protected handler actions
 
-Handler integration specs call actions via `execute( "handler.action" )` and must generate a real CSRF token for any non-GET action, since `BaseSecureHandler.preHandler()` verifies it the same as a live request:
+Handler integration specs call actions via `execute( "handler.action" )` and must generate a real CSRF token for any non-GET action, since the action's own check (Auth) or the `csrf` route middleware (everything else) verifies it the same as a live request:
 
 ```boxlang
 @inject( "@cbcsrf" ) property name="cbcsrf";
@@ -51,7 +51,9 @@ form.csrf = cbcsrf.generate();
 execute( "permissions.create" );
 ```
 
-A handler whose `onInvalidCSRF()` performs a real engine `abort` (rather than just flashing+redirecting) cannot have its invalid-token path exercised through in-process `execute()` - the abort terminates the whole test-runner request, not just the simulated sub-request. See `tests/specs/integration/ProfileTest.bx`'s file header comment for the precedent: test the valid-CSRF paths here, and note in a comment that the invalid-token path needs a real HTTP call instead (verify manually with curl, don't skip the check silently).
+`execute( "handler.action" )` dispatches a bare event, so **route middleware does not run**. That includes the `csrf` and `throttle` middleware. To exercise them end to end use the HTTP helpers, which dispatch by route and run middleware in order (ColdBox 8.3+): `post( route = "/login", params = { ... } )`. To test a middleware class on its own, mock the request context as `tests/specs/integration/RouteMiddlewareTest.bx` does (`prepareMock( getRequestContext() ).$( "getHTTPMethod", "POST" )`). Middleware denies with `renderData().noExecution()`, not an engine abort, so a failed check is assertable in-process.
+
+The throttle counters live in the app-scoped `rateLimit` CacheBox region, not the per-test transaction. Inject `cachebox:rateLimit` and call `clearAll()` in `beforeEach()` for any spec that posts to a throttled route.
 
 ## BDD structure
 

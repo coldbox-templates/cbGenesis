@@ -1,0 +1,130 @@
+/**
+ * Tests for the application's route middleware: the AppVerifyCsrf and AppThrottle
+ * subclasses of cbsecurity's VerifyCsrf and Throttle, and a guard that every
+ * state-changing route in the router is covered by the csrf middleware.
+ *
+ * The two middleware are exercised directly with a partially mocked request context
+ * rather than through a secured route, since a real route would first have to pass the
+ * firewall and the permission checks this spec has no interest in.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	function run() {
+		describe( "Route middleware", () => {
+			beforeEach( () => {
+				setup()
+				securityService.logout( quiet: true )
+				rateLimitCache.clearAll()
+			} )
+
+			story( "Every state-changing route is protected by the csrf middleware", () => {
+				it( "attaches AppVerifyCsrf to every route that can change state, except the handlers that verify their own token", () => {
+					var routes = getWireBox().getInstance( "router@coldbox" ).getRoutes()
+					var unsafeVerbs = "POST,PUT,PATCH,DELETE"
+
+					var uncovered = routes
+						.filter( ( route ) => {
+							// Closure routes (the healthcheck) have no handler to protect.
+							if ( !isSimpleValue( route.response ) || len( route.response ) ) {
+								return false
+							}
+							// Auth actions call csrfVerify() themselves; SSO.complete only consumes a session value.
+							var owner = lCase( len( route.event ) ? route.event : route.handler )
+							if ( owner.startsWith( "auth" ) || owner.startsWith( "sso" ) ) {
+								return false
+							}
+							var allowsUnsafe = !len( route.verbs ) || listToArray( route.verbs ).some( ( verb ) => listFindNoCase( unsafeVerbs, verb ) )
+							var covered = route.middleware.some( ( entry ) => entry.target == "AppVerifyCsrf" )
+							return allowsUnsafe && !covered
+						} )
+						.map( ( route ) => route.pattern )
+
+					expect( uncovered ).toBeEmpty( "Routes missing the csrf middleware: #uncovered.toList()#" )
+				} )
+			} )
+
+			story( "AppVerifyCsrf verifies the token on unsafe requests", () => {
+				it( "lets a GET through without a token", () => {
+					var event = prepareMock( getRequestContext() ).$( "getHTTPMethod", "GET" )
+
+					expect( getInstance( "AppVerifyCsrf" ).preProcess( event ) ).toBeFalse()
+				} )
+
+				it( "lets a POST with a valid token through", () => {
+					var event = prepareMock( getRequestContext() ).$( "getHTTPMethod", "POST" )
+					event.setValue( "csrf", cbcsrf.generate() )
+
+					expect( getInstance( "AppVerifyCsrf" ).preProcess( event ) ).toBeFalse()
+				} )
+
+				it( "answers a POST with a bad token with a JSON 403 by default", () => {
+					var event = prepareMock( getRequestContext() ).$( "getHTTPMethod", "POST" )
+					event.setValue( "csrf", "not-a-real-token" )
+
+					expect( getInstance( "AppVerifyCsrf" ).preProcess( event ) ).toBeTrue()
+					expect( event.getRenderData().statusCode ).toBe( 403 )
+				} )
+
+				it( "flashes and redirects instead when the route sets csrfRedirect", () => {
+					var event = prepareMock( getRequestContext() ).$( "getHTTPMethod", "POST" ).$( "relocate" )
+					event.setValue( "csrf", "not-a-real-token" )
+					event.setPrivateValue( "currentRouteMeta", { csrfRedirect: "settings" } )
+
+					expect( getInstance( "AppVerifyCsrf" ).preProcess( event ) ).toBeTrue()
+					expect( event.$once( "relocate" ) ).toBeTrue()
+					expect( event.$callLog().relocate[ 1 ][ 1 ] ).toBe( "settings" )
+				} )
+			} )
+
+			story( "AppThrottle limits requests using the settings registry", () => {
+				it( "blocks with a JSON 429 once cbRateLimitMaxAttempts is exceeded", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					var throttle = getInstance( "AppThrottle" )
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						var event = prepareMock( getRequestContext() ).$( "getCurrentEvent", "Auth.doLogin" )
+						expect( throttle.preProcess( event ) ).toBeFalse()
+					}
+
+					var blocked = prepareMock( getRequestContext() ).$( "getCurrentEvent", "Auth.doLogin" )
+					expect( throttle.preProcess( blocked ) ).toBeTrue()
+					expect( blocked.getRenderData().statusCode ).toBe( 429 )
+				} )
+
+				it( "keeps a separate count per endpoint", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					var throttle = getInstance( "AppThrottle" )
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						throttle.preProcess( prepareMock( getRequestContext() ).$( "getCurrentEvent", "Auth.doLogin" ) )
+					}
+
+					var other = prepareMock( getRequestContext() ).$( "getCurrentEvent", "Auth.doRegister" )
+					expect( throttle.preProcess( other ) ).toBeFalse()
+				} )
+
+				it( "redirects with a flash message when the route sets throttleRedirect", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					var throttle = getInstance( "AppThrottle" )
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						throttle.preProcess( prepareMock( getRequestContext() ).$( "getCurrentEvent", "Auth.doLogin" ) )
+					}
+
+					var blocked = prepareMock( getRequestContext() ).$( "getCurrentEvent", "Auth.doLogin" ).$( "relocate" )
+					blocked.setPrivateValue( "currentRouteMeta", { throttleRedirect: "login" } )
+
+					expect( throttle.preProcess( blocked ) ).toBeTrue()
+					expect( blocked.$callLog().relocate[ 1 ][ 1 ] ).toBe( "login" )
+				} )
+			} )
+		} )
+	}
+
+}

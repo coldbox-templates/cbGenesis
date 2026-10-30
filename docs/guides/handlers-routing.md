@@ -26,13 +26,12 @@ tags: [guides, handlers, routing]
 
 ### `BaseSecureHandler`
 
-Every protected handler extends `BaseSecureHandler`, whose `preHandler` [verifies CSRF on every state-changing request](#csrf-verification), forces the `Admin` layout, and redirects to `profile/passkey-required` when `cbRequirePasskey` is on and the user has none. It also provides shared helpers (`getApiResults()`, `ensureSortDirection()`, `getPagination()`):
+Every protected handler extends `BaseSecureHandler`, whose `preHandler` forces the `Admin` layout, and redirects to `profile/passkey-required` when `cbRequirePasskey` is on and the user has none. It also provides shared helpers (`getApiResults()`, `ensureSortDirection()`, `getPagination()`):
 
 ```boxlang title="app/handlers/BaseSecureHandler.bx" linenums="1"
 component extends="coldbox.system.RestHandler" {
 
     function preHandler( event, rc, prc ){
-        // ...CSRF verification, deny-by-default...
         event.setLayout( "Admin" );
         // ...passkey enforcement...
     }
@@ -113,7 +112,7 @@ No `@secured` annotation - these actions must stay reachable by guests:
 - `listPasskeys` / `updatePasskey` / `deletePasskey`
 - `uploadAvatar` / `deleteAvatar` - accepts the image as a base64 data URI in `rc.avatar` (BoxLang has no multipart/form-data parser, so uploads travel as JSON), decoded via `BaseSecureHandler.decodeDataUri()`; streamed back by `Assets.avatar`
 
-Every one of these is CSRF-verified by `BaseSecureHandler` unless it is reached over a safe HTTP method - see [CSRF verification](#csrf-verification).
+Every one of these is CSRF-verified by the `csrf` route middleware unless it is reached over a safe HTTP method - see [CSRF verification](#csrf-verification).
 
 ### `Roles`
 
@@ -153,33 +152,31 @@ Every one of these is CSRF-verified by `BaseSecureHandler` unless it is reached 
 
 ## CSRF verification
 
-`app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false`, so there is no global interceptor. Instead, `BaseSecureHandler.preHandler()` verifies CSRF **deny-by-default** for every handler that extends it:
+`app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false`, so there is no global interceptor. Instead, state-changing requests are verified **deny-by-default by route middleware**. `app/models/middleware/AppVerifyCsrf.bx` extends cbsecurity's `VerifyCsrf`, and `app/config/Router.bx` attaches it by name to the whole secured route group and to the conventions-based catch-all:
 
-```boxlang title="app/handlers/BaseSecureHandler.bx (excerpt)" linenums="1"
-static {
-    // The safe methods of RFC 9110, exempt from CSRF verification below.
-    SAFE_HTTP_METHODS = "GET,HEAD,OPTIONS"
-}
+```boxlang title="app/config/Router.bx (excerpt)" linenums="1"
+registerMiddleware( {
+    csrf    : "AppVerifyCsrf",
+    throttle: "AppThrottle",
+    honeypot: "Honeypot@cbsecurity"
+} )
 
-function preHandler( event, rc, prc ) {
-    if (
-        !static.SAFE_HTTP_METHODS.listFindNoCase( event.getHTTPMethod() )
-        && !csrfVerify( rc.csrf ?: "" )
-    ) {
-        return onInvalidCSRF( argumentCollection = arguments )
-    }
-    // ...
-}
+group( { middleware: [ "csrf" ] }, () => {
+    // dashboard, permissions, roles, users, auditlog, profile, settings, assets
+} )
+
+route( ":handler/:action?" ).middleware( "csrf" ).end()
 ```
 
-What this means when you extend a secured handler:
+What this means when you add a route:
 
-- **You do not opt in.** Any action reached over `POST`, `PUT`, `PATCH`, or `DELETE` must carry a valid `rc.csrf`, from the day you add it. There is no per-handler list to remember to update.
+- **Put it in the `csrf` group.** Any request over `POST`, `PUT`, `PATCH`, or `DELETE` must carry a valid `rc.csrf` (or an `x-csrf-token` header). A route declared outside the group is not verified. `RouteMiddlewareTest` fails if a state-changing route lacks the middleware.
 - **Safe methods are exempt.** `GET`, `HEAD`, and `OPTIONS` must not change state, so they carry no CSRF risk, and `OPTIONS` (CORS preflight) cannot carry a token at all. If a safe method in your code does change state, that is the bug to fix.
-- **`onInvalidCSRF()` is overridable.** The base implementation aborts with an authorization failure, which is what the JSON/AJAX endpoints want - every mutation in `Permissions` is now one of those, submitted through `fetchWithCsrf()` (see [Frontend](frontend.md#csrf-on-mutating-requests)), which recovers from a stale token instead of needing a redirect. `Settings` still overrides it to flash a message and redirect its native form posts, so a browser form gets a page instead of a bare 403. Override it in your own handler when it renders HTML instead of JSON.
+- **A failure is a JSON 403 by default.** That is what the JSON/AJAX endpoints want: they submit through `fetchWithCsrf()` (see [Frontend](frontend.md#csrf-on-mutating-requests)), which recovers from a stale token instead of needing a redirect. A route that serves a native HTML form post opts into a flash message and redirect with `.meta( { csrfRedirect: "settings" } )`, as the `Settings` form routes do.
+- **Middleware only runs for routed requests.** `execute( "handler.action" )` bypasses it. To test a CSRF failure, use `post( route = "/path" )` (ColdBox 8.3+) or call the middleware directly, as `RouteMiddlewareTest` does.
 
-!!! note "`Auth` is not a secured handler"
-    `Auth` extends `coldbox.system.EventHandler`, not `BaseSecureHandler`, because its actions run for unauthenticated visitors and so cannot inherit the check above. Each state-changing action verifies its own token: `doLogin`, `doRegister`, `doActivateInvitation`, `doForgotPassword`, `doResetPassword`, and `logout`.
+!!! note "`Auth` verifies its own token"
+    `Auth` extends `coldbox.system.EventHandler`, not `BaseSecureHandler`, because its actions run for unauthenticated visitors. Its routes sit outside the `csrf` group and each state-changing action verifies its own token: `doLogin`, `doRegister`, `doActivateInvitation`, `doForgotPassword`, `doResetPassword`, and `logout`.
 
 ## Route map (`app/config/Router.bx`)
 
