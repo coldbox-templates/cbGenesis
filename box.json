@@ -42,8 +42,8 @@
         "cbsso":"^3.0.0+17"
     },
     "installPaths":{
-        "coldbox":"lib/",
-        "testbox":"lib/"
+        "coldbox":"lib/coldbox/",
+        "testbox":"lib/testbox/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",
