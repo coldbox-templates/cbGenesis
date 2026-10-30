@@ -40,6 +40,11 @@ class extends="tests.resources.BaseIntegrationSpec" {
 		describe( "Register honeypot", () => {
 			beforeEach( () => {
 				setup();
+				// Other specs assign form.csrf, form.email and so on, and the form scope lives for
+				// the whole test run. execute() merges it into the request collection after the
+				// params, so a stale form.csrf from an earlier bundle would override the token
+				// generated here and Auth.doRegister would reject the registration.
+				structClear( form );
 				securityService.logout( quiet: true );
 				rateLimitService.clearAll();
 			} );
