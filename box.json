@@ -30,10 +30,10 @@
         "commandbox-migrations":"*"
     },
     "dependencies":{
-        "coldbox":"^8.2.0",
+        "coldbox":"^8.3.0",
         "qb":"^13",
         "cbmailservices":"^2",
-        "cbsecurity":"^3",
+        "cbsecurity":"^3.9.0",
         "vite-helpers":"^2",
         "cborm":"^5.0.0",
         "route-visualizer":"^2.2.0+2",
