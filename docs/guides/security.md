@@ -235,6 +235,7 @@ documentation.
 | JWT support | Configured for API access (HS512, 60 min, cache token storage) |
 | Security headers | XSS protection, `frameOptions: SAMEORIGIN`, `referrerPolicy: same-origin` |
 | API tokens | SHA/BCrypt-hashed per-user tokens with expiration and a daily purge scheduler |
+| Bot trap | `honeypot` route middleware on the register form: a hidden `website_url` field only bots fill in. A filled field is answered with a silent `200 OK` and the handler never runs. It is attached to the single `register` route in `app/config/Router.bx` |
 | Rate limiting | `RateLimiter` interceptor throttles login, registration, and password reset by IP - see [Rate limiting](#rate-limiting) below |
 
 ## Rate limiting
