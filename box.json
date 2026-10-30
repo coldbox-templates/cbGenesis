@@ -30,7 +30,7 @@
         "commandbox-migrations":"*"
     },
     "dependencies":{
-        "coldbox":"^8.3.0",
+        "coldbox":"8.2.0",
         "qb":"^13",
         "cbmailservices":"^2",
         "cbsecurity":"^3.9.0",
