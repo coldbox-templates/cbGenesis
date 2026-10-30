@@ -17,6 +17,9 @@ jobs:
   tests:
     uses: ./.github/workflows/tests.yml
     secrets: inherit
+    permissions:
+      contents: read
+      checks: write
 
   ##########################################################################################
   # Format Source Code
