@@ -10,6 +10,9 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
     services:
       mysql:
         image: mysql:8
@@ -113,12 +116,51 @@ jobs:
           mkdir -p tests/results
           box testbox run --verbose outputFile=tests/results/test-results outputFormats=json,antjunit
 
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+      - name: List Test Result Files
         if: always()
+        run: ls -lR tests/results 2>/dev/null || echo "No test result files were written"
+
+      # Publishes a "Test Report (MySQL)" check run with every spec, its error and stack
+      # trace, annotations on the PR diff, and a summary on the workflow run page
+      - name: Publish Test Report
+        if: always()
+        uses: dorny/test-reporter@v2
         with:
-          junit_files: tests/results/**/*.xml
-          check_name: "${{ matrix.cfengine }} Test Results"
+          name: Test Report (MySQL)
+          path: tests/results/**/*.xml
+          reporter: java-junit
+          list-suites: all
+          list-tests: failed
+          fail-on-error: false
+          fail-on-empty: false
+
+      # Also print the failed specs at the end of the log, so they are not buried in server output
+      - name: Print Failed Specs
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import glob
+          import xml.etree.ElementTree as ET
+
+          failed = []
+          total = 0
+          for path in glob.glob("tests/results/**/*.xml", recursive=True):
+              for case in ET.parse(path).getroot().iter("testcase"):
+                  total += 1
+                  problem = case.find("failure")
+                  if problem is None:
+                      problem = case.find("error")
+                  if problem is not None:
+                      failed.append((case.get("classname"), case.get("name"), problem.get("message") or (problem.text or "").strip()[:500]))
+
+          def escape(value):
+              # Workflow commands are single-line: newlines and percent signs must be encoded
+              return (value or "").replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+          print(f"{total} specs, {len(failed)} failed")
+          for suite, name, message in failed:
+              print(f"::error title={escape(suite)} > {escape(name)}::{escape(message)}")
+          EOF
 
       - name: Upload Test Results to Artifacts
         if: always()
@@ -144,6 +186,9 @@ jobs:
   tests-mssql:
     name: Tests (MSSQL)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
     services:
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
@@ -249,12 +294,51 @@ jobs:
           mkdir -p tests/results
           box testbox run --verbose outputFile=tests/results/test-results outputFormats=json,antjunit
 
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+      - name: List Test Result Files
         if: always()
+        run: ls -lR tests/results 2>/dev/null || echo "No test result files were written"
+
+      # Publishes a "Test Report (MSSQL)" check run with every spec, its error and stack
+      # trace, annotations on the PR diff, and a summary on the workflow run page
+      - name: Publish Test Report
+        if: always()
+        uses: dorny/test-reporter@v2
         with:
-          junit_files: tests/results/**/*.xml
-          check_name: "MSSQL Test Results"
+          name: Test Report (MSSQL)
+          path: tests/results/**/*.xml
+          reporter: java-junit
+          list-suites: all
+          list-tests: failed
+          fail-on-error: false
+          fail-on-empty: false
+
+      # Also print the failed specs at the end of the log, so they are not buried in server output
+      - name: Print Failed Specs
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import glob
+          import xml.etree.ElementTree as ET
+
+          failed = []
+          total = 0
+          for path in glob.glob("tests/results/**/*.xml", recursive=True):
+              for case in ET.parse(path).getroot().iter("testcase"):
+                  total += 1
+                  problem = case.find("failure")
+                  if problem is None:
+                      problem = case.find("error")
+                  if problem is not None:
+                      failed.append((case.get("classname"), case.get("name"), problem.get("message") or (problem.text or "").strip()[:500]))
+
+          def escape(value):
+              # Workflow commands are single-line: newlines and percent signs must be encoded
+              return (value or "").replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+          print(f"{total} specs, {len(failed)} failed")
+          for suite, name, message in failed:
+              print(f"::error title={escape(suite)} > {escape(name)}::{escape(message)}")
+          EOF
 
       - name: Upload Test Results to Artifacts
         if: always()
@@ -280,6 +364,9 @@ jobs:
   tests-postgresql:
     name: Tests (PostgreSQL)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
     services:
       postgresql:
         image: postgres:16
@@ -379,12 +466,51 @@ jobs:
           mkdir -p tests/results
           box testbox run --verbose outputFile=tests/results/test-results outputFormats=json,antjunit
 
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+      - name: List Test Result Files
         if: always()
+        run: ls -lR tests/results 2>/dev/null || echo "No test result files were written"
+
+      # Publishes a "Test Report (PostgreSQL)" check run with every spec, its error and stack
+      # trace, annotations on the PR diff, and a summary on the workflow run page
+      - name: Publish Test Report
+        if: always()
+        uses: dorny/test-reporter@v2
         with:
-          junit_files: tests/results/**/*.xml
-          check_name: "PostgreSQL Test Results"
+          name: Test Report (PostgreSQL)
+          path: tests/results/**/*.xml
+          reporter: java-junit
+          list-suites: all
+          list-tests: failed
+          fail-on-error: false
+          fail-on-empty: false
+
+      # Also print the failed specs at the end of the log, so they are not buried in server output
+      - name: Print Failed Specs
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import glob
+          import xml.etree.ElementTree as ET
+
+          failed = []
+          total = 0
+          for path in glob.glob("tests/results/**/*.xml", recursive=True):
+              for case in ET.parse(path).getroot().iter("testcase"):
+                  total += 1
+                  problem = case.find("failure")
+                  if problem is None:
+                      problem = case.find("error")
+                  if problem is not None:
+                      failed.append((case.get("classname"), case.get("name"), problem.get("message") or (problem.text or "").strip()[:500]))
+
+          def escape(value):
+              # Workflow commands are single-line: newlines and percent signs must be encoded
+              return (value or "").replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+          print(f"{total} specs, {len(failed)} failed")
+          for suite, name, message in failed:
+              print(f"::error title={escape(suite)} > {escape(name)}::{escape(message)}")
+          EOF
 
       - name: Upload Test Results to Artifacts
         if: always()
