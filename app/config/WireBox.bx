@@ -22,8 +22,10 @@ class extends="coldbox.system.ioc.config.Binder" {
 			customDSL     : {},
 			// Custom Storage Scopes
 			customScopes  : {},
-			// Package scan locations
-			scanLocations : [],
+			// Package scan locations. The route middleware live outside app/models on purpose:
+			// the ORM scans every class under /app/models at startup (entityPaths), and these
+			// extend cbsecurity classes that are not mapped yet at that point.
+			scanLocations : [ "app.middleware" ],
 			// Stop Recursions
 			stopRecursions: [],
 			// Parent Injector to assign to the configured injector, this must be an object reference

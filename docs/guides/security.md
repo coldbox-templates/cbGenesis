@@ -240,7 +240,7 @@ documentation.
 
 ## Rate limiting
 
-`app/models/middleware/AppThrottle.bx` extends cbsecurity's `Throttle` route middleware. `app/config/Router.bx` attaches it by name (`throttle`) to the POST routes for five unauthenticated `Auth` endpoints, and to the two `Profile` SSO routes, limiting by client IP:
+`app/middleware/AppThrottle.bx` extends cbsecurity's `Throttle` route middleware. `app/config/Router.bx` attaches it by name (`throttle`) to the POST routes for five unauthenticated `Auth` endpoints, and to the two `Profile` SSO routes, limiting by client IP:
 
 - `doLogin`, `doRegister`, `doForgotPassword`, `doResetPassword`, `doActivateInvitation`
 

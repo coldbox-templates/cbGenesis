@@ -87,7 +87,7 @@ sequenceDiagram
 | `cbSecurity_onInvalidAuthentication` | A request that required a session and had none |
 | `cbSecurity_onInvalidAuthorization` | An authenticated user missing the required permission |
 
-**`app/models/middleware/AppThrottle.bx`** is route middleware (attached in `app/config/Router.bx`) that throttles five unauthenticated `Auth` actions (login, register, forgot/reset password, invitation activation) by client IP. `app/interceptors/SSORateLimiter.bx` covers the cbSSO callback, which is a module route. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
+**`app/middleware/AppThrottle.bx`** is route middleware (attached in `app/config/Router.bx`) that throttles five unauthenticated `Auth` actions (login, register, forgot/reset password, invitation activation) by client IP. `app/interceptors/SSORateLimiter.bx` covers the cbSSO callback, which is a module route. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
 
 **`app/interceptors/SSOAuthorization.bx`** handles cbSSO's
 `CBSSOAuthorization` interception point. It connects a verified provider

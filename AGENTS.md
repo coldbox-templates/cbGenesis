@@ -108,7 +108,7 @@ Registered interceptors and their interception points (auto-updated on `coldbox 
 
 ## Route Middleware
 
-Registered by name in `app/config/Router.bx` with `registerMiddleware()` (ColdBox 8.3+, cbsecurity 3.9+). App classes live in `app/models/middleware/` and extend the cbsecurity middleware, overriding only what differs:
+Registered by name in `app/config/Router.bx` with `registerMiddleware()` (ColdBox 8.3+, cbsecurity 3.9+). App classes live in `app/middleware/` and extend the cbsecurity middleware, overriding only what differs:
 
 - **csrf** (`AppVerifyCsrf`, extends `VerifyCsrf@cbsecurity`): CSRF on unsafe methods. JSON 403 by default, flash and redirect when the route sets the `csrfRedirect` meta. Attached to the secured route group and the `:handler/:action?` catch-all.
 - **throttle** (`AppThrottle`, extends `Throttle@cbsecurity`): per-IP limits from the `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds` settings, fixed window, counted in the `rateLimit` CacheBox region. Attached to the POST routes for `Auth.doLogin`, `doRegister`, `doForgotPassword`, `doResetPassword`, `doActivateInvitation` and the Profile SSO routes. Route meta: `throttleRedirect`, `throttleTokenParam`.

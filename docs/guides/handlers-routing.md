@@ -152,7 +152,7 @@ Every one of these is CSRF-verified by the `csrf` route middleware unless it is 
 
 ## CSRF verification
 
-`app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false`, so there is no global interceptor. Instead, state-changing requests are verified **deny-by-default by route middleware**. `app/models/middleware/AppVerifyCsrf.bx` extends cbsecurity's `VerifyCsrf`, and `app/config/Router.bx` attaches it by name to the whole secured route group and to the conventions-based catch-all:
+`app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false`, so there is no global interceptor. Instead, state-changing requests are verified **deny-by-default by route middleware**. `app/middleware/AppVerifyCsrf.bx` extends cbsecurity's `VerifyCsrf`, and `app/config/Router.bx` attaches it by name to the whole secured route group and to the conventions-based catch-all:
 
 ```boxlang title="app/config/Router.bx (excerpt)" linenums="1"
 registerMiddleware( {
