@@ -20,153 +20,159 @@ class {
 			( event, rc, prc ) -> "Ok!"
 		)
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * Dashboard Routing
-		 * --------------------------------------------------------------------------
-		 */
-		route( "dashboard", "Dashboard.index" )
+		// Every route in this group verifies the CSRF token on state-changing requests.
+		// Native HTML form posts name a csrfRedirect meta so a failure flashes a message; AJAX
+		// routes leave it off so fetchWithCsrf() sees the JSON 403 it recovers from.
+		group( { middleware: [ "AppVerifyCsrf" ] }, () => {
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * Permissions Routing
-		 * --------------------------------------------------------------------------
-		 */
-		resources(
-			resource:"permissions",
-			parameterName: "permissionId"
-		)
+			/**
+			 * --------------------------------------------------------------------------
+			 * Dashboard Routing
+			 * --------------------------------------------------------------------------
+			 */
+			route( "dashboard", "Dashboard.index" )
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * Roles Routing
-		 * --------------------------------------------------------------------------
-		 */
-		route( "/roles/:roleId/available-users", "Roles.availableUsers" )
-		// Add and remove users from a role
-		route( "/roles/:roleId/users/:userId" ).withHandler( "Roles" ).toAction({
-			POST   : "addUser",
-			DELETE : "removeUser"
-		})
-		// Get a user's roles
-		route( "/roles/:roleId/users", "Roles.users" )
-		// Role Resources
-		resources(
-			resource:"roles",
-			parameterName: "roleId"
-		)
+			/**
+			 * --------------------------------------------------------------------------
+			 * Permissions Routing
+			 * --------------------------------------------------------------------------
+			 */
+			resources(
+				resource:"permissions",
+				parameterName: "permissionId"
+			)
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * Users Routing
-		 * --------------------------------------------------------------------------
-		 */
-		route( "users/search", "Users.search" )
-		route( "users/:userId/invitation" ).withHandler( "Users" ).toAction({ POST: "resendInvitation" })
-		route( "users/:userId/profile" ).withHandler( "Users" ).toAction({ PUT: "updateProfile" })
-		route( "users/:userId/status" ).withHandler( "Users" ).toAction({ POST: "setStatus" })
-		route( "users/:userId/reset-password" ).withHandler( "Users" ).toAction({ POST: "resetPassword" })
-		route( "users/:userId/force-password-reset" ).withHandler( "Users" ).toAction({ POST: "forcePasswordReset" })
-		route( "users/:userId/verify" ).withHandler( "Users" ).toAction({ POST: "verify" })
-		route( "users/:userId/revoke-remember-tokens" ).withHandler( "Users" ).toAction({ POST: "revokeRememberTokens" })
-		route( "users/:userId/roles/:roleId" ).withHandler( "Users" ).toAction({ POST: "addRole", DELETE: "removeRole" })
-		route( "users/:userId/permissions/:permissionId" ).withHandler( "Users" ).toAction({ POST: "addPermission", DELETE: "removePermission" })
-		route( "users/:userId/preferences" ).withHandler( "Users" ).toAction({ POST: "savePreferences" })
-		route( "users/:userId/tokens/revoke-all" ).withHandler( "Users" ).toAction({ POST: "revokeAllTokens" })
-		route( "users/:userId/tokens/:tokenId" ).withHandler( "Users" ).toAction({ DELETE: "revokeToken" })
-		resources(
-			resource:"users",
-			parameterName: "userId"
-		)
+			/**
+			 * --------------------------------------------------------------------------
+			 * Roles Routing
+			 * --------------------------------------------------------------------------
+			 */
+			route( "/roles/:roleId/available-users", "Roles.availableUsers" )
+			// Add and remove users from a role
+			route( "/roles/:roleId/users/:userId" ).withHandler( "Roles" ).toAction({
+				POST   : "addUser",
+				DELETE : "removeUser"
+			})
+			// Get a user's roles
+			route( "/roles/:roleId/users", "Roles.users" )
+			// Role Resources
+			resources(
+				resource:"roles",
+				parameterName: "roleId"
+			)
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * Audit Log Routing
-		 * --------------------------------------------------------------------------
-		 */
-		route( "auditlog/search", "AuditLog.search" )
-		route( "auditlog/export", "AuditLog.export" )
-		route( "auditlog/purge" ).withHandler( "AuditLog" ).toAction({ POST: "purge" })
-		route( "auditlog/clear" ).withHandler( "AuditLog" ).toAction({ DELETE: "clear" })
-		route( "auditlog/:auditLogId", "AuditLog.show" )
-		route( "auditlog", "AuditLog.index" )
+			/**
+			 * --------------------------------------------------------------------------
+			 * Users Routing
+			 * --------------------------------------------------------------------------
+			 */
+			route( "users/search", "Users.search" )
+			route( "users/:userId/invitation" ).withHandler( "Users" ).toAction({ POST: "resendInvitation" })
+			route( "users/:userId/profile" ).withHandler( "Users" ).toAction({ PUT: "updateProfile" })
+			route( "users/:userId/status" ).withHandler( "Users" ).toAction({ POST: "setStatus" })
+			route( "users/:userId/reset-password" ).withHandler( "Users" ).toAction({ POST: "resetPassword" })
+			route( "users/:userId/force-password-reset" ).withHandler( "Users" ).toAction({ POST: "forcePasswordReset" })
+			route( "users/:userId/verify" ).withHandler( "Users" ).toAction({ POST: "verify" })
+			route( "users/:userId/revoke-remember-tokens" ).withHandler( "Users" ).toAction({ POST: "revokeRememberTokens" })
+			route( "users/:userId/roles/:roleId" ).withHandler( "Users" ).toAction({ POST: "addRole", DELETE: "removeRole" })
+			route( "users/:userId/permissions/:permissionId" ).withHandler( "Users" ).toAction({ POST: "addPermission", DELETE: "removePermission" })
+			route( "users/:userId/preferences" ).withHandler( "Users" ).toAction({ POST: "savePreferences" })
+			route( "users/:userId/tokens/revoke-all" ).withHandler( "Users" ).toAction({ POST: "revokeAllTokens" })
+			route( "users/:userId/tokens/:tokenId" ).withHandler( "Users" ).toAction({ DELETE: "revokeToken" })
+			resources(
+				resource:"users",
+				parameterName: "userId"
+			)
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * Profile Routing
-		 * --------------------------------------------------------------------------
-		 */
-		route( "profile/sso/:provider/start" ).middleware( "AppThrottle" ).meta( { throttleMethods: "GET", throttleRedirect: "profile" } ).to( "Profile.startSSO" )
-		route( "profile/sso/:provider" ).withHandler( "Profile" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "profile" } ).toAction({ DELETE: "unlinkSSO" })
-		route( "profile/sso", "Profile.listSSO" )
-		post( "profile/password", "Profile.doPasswordChange" )
-		route( "profile/api-tokens/:tokenId" ).withHandler( "Profile" ).toAction({
-			POST  : "updateToken",
-			DELETE: "deleteToken"
-		})
-		route( "profile/api-tokens" ).withHandler( "Profile" ).toAction({
-			GET : "listTokens",
-			POST: "createToken"
-		})
-		route( "profile/passkeys/:passkeyId" ).withHandler( "Profile" ).toAction({
-			DELETE: "deletePasskey"
-		})
-		route( "profile/passkeys" ).withHandler( "Profile" ).toAction({
-			GET : "listPasskeys",
-			POST: "updatePasskey"
-		})
-		route( "profile/avatar" ).withHandler( "Profile" ).toAction({
-			POST  : "uploadAvatar",
-			DELETE: "deleteAvatar"
-		})
-		route( "profile/passkey-required", "Profile.passkeyRequired" )
-		route( "profile/email-change" ).withHandler( "Profile" ).toAction({
-			POST  : "requestEmailChange",
-			DELETE: "cancelEmailChange"
-		})
-		route( "profile" ).withHandler( "Profile" ).toAction({
-			GET: "index",
-			POST: "save"
-		})
+			/**
+			 * --------------------------------------------------------------------------
+			 * Audit Log Routing
+			 * --------------------------------------------------------------------------
+			 */
+			route( "auditlog/search", "AuditLog.search" )
+			route( "auditlog/export", "AuditLog.export" )
+			route( "auditlog/purge" ).withHandler( "AuditLog" ).toAction({ POST: "purge" })
+			route( "auditlog/clear" ).withHandler( "AuditLog" ).toAction({ DELETE: "clear" })
+			route( "auditlog/:auditLogId", "AuditLog.show" )
+			route( "auditlog", "AuditLog.index" )
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * Admin Settings Routing
-		 * --------------------------------------------------------------------------
-		 */
-		// Setting Actions
-		post( "settings/clear-template-cache", "Settings.clearTemplateCache" )
-		post( "settings/clear-sessions-cache", "Settings.clearSessionsCache" )
-		post( "settings/revoke-remember-tokens", "Settings.revokeRememberTokens" )
-		post( "settings/flush-settings-cache", "Settings.flushSettingsCache" )
-		// Setting Registry
-		route( "settings/registry/search", "Settings.registrySearch" )
-		route( "settings/registry/:settingId/status" ).withHandler( "Settings" ).toAction({ POST: "toggleRegistryStatus" })
-		route( "settings/registry/:settingId" ).withHandler( "Settings" ).toAction({
-			PUT   : "updateRegistry",
-			DELETE: "deleteRegistry"
-		})
-		route( "settings/registry" ).withHandler( "Settings" ).toAction({
-			GET : "registry",
-			POST: "createRegistry"
-		})
-		route( "settings/logo" ).withHandler( "Settings" ).toAction({
-			POST  : "uploadLogo",
-			DELETE: "deleteLogo"
-		})
-		// Settings Manager
-		route( "settings" ).withHandler( "Settings" ).toAction({
-			GET: "index",
-			POST: "save"
-		})
+			/**
+			 * --------------------------------------------------------------------------
+			 * Profile Routing
+			 * --------------------------------------------------------------------------
+			 */
+			route( "profile/sso/:provider/start" ).middleware( "AppThrottle" ).meta( { throttleMethods: "GET", throttleRedirect: "profile" } ).to( "Profile.startSSO" )
+			route( "profile/sso/:provider" ).withHandler( "Profile" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "profile" } ).toAction({ DELETE: "unlinkSSO" })
+			route( "profile/sso", "Profile.listSSO" )
+			post( "profile/password", "Profile.doPasswordChange" )
+			route( "profile/api-tokens/:tokenId" ).withHandler( "Profile" ).toAction({
+				POST  : "updateToken",
+				DELETE: "deleteToken"
+			})
+			route( "profile/api-tokens" ).withHandler( "Profile" ).toAction({
+				GET : "listTokens",
+				POST: "createToken"
+			})
+			route( "profile/passkeys/:passkeyId" ).withHandler( "Profile" ).toAction({
+				DELETE: "deletePasskey"
+			})
+			route( "profile/passkeys" ).withHandler( "Profile" ).toAction({
+				GET : "listPasskeys",
+				POST: "updatePasskey"
+			})
+			route( "profile/avatar" ).withHandler( "Profile" ).toAction({
+				POST  : "uploadAvatar",
+				DELETE: "deleteAvatar"
+			})
+			route( "profile/passkey-required", "Profile.passkeyRequired" )
+			route( "profile/email-change" ).withHandler( "Profile" ).toAction({
+				POST  : "requestEmailChange",
+				DELETE: "cancelEmailChange"
+			})
+			route( "profile" ).withHandler( "Profile" ).toAction({
+				GET: "index",
+				POST: "save"
+			})
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * Assets Routing (avatars + branding logo)
-		 * --------------------------------------------------------------------------
-		 */
-		route( "avatars/:userId/:size", "Assets.avatar" )
-		route( "branding/logo/:size", "Assets.logo" )
+			/**
+			 * --------------------------------------------------------------------------
+			 * Admin Settings Routing
+			 * --------------------------------------------------------------------------
+			 */
+			// Setting Actions
+			post( "settings/clear-template-cache" ).meta( { csrfRedirect: "settings" } ).to( "Settings.clearTemplateCache" )
+			post( "settings/clear-sessions-cache" ).meta( { csrfRedirect: "settings" } ).to( "Settings.clearSessionsCache" )
+			post( "settings/revoke-remember-tokens" ).meta( { csrfRedirect: "settings" } ).to( "Settings.revokeRememberTokens" )
+			post( "settings/flush-settings-cache" ).meta( { csrfRedirect: "settings" } ).to( "Settings.flushSettingsCache" )
+			// Setting Registry
+			route( "settings/registry/search", "Settings.registrySearch" )
+			route( "settings/registry/:settingId/status" ).withHandler( "Settings" ).toAction({ POST: "toggleRegistryStatus" })
+			route( "settings/registry/:settingId" ).withHandler( "Settings" ).toAction({
+				PUT   : "updateRegistry",
+				DELETE: "deleteRegistry"
+			})
+			route( "settings/registry" ).withHandler( "Settings" ).toAction({
+				GET : "registry",
+				POST: "createRegistry"
+			})
+			route( "settings/logo" ).withHandler( "Settings" ).toAction({
+				POST  : "uploadLogo",
+				DELETE: "deleteLogo"
+			})
+			// Settings Manager
+			route( "settings" ).withHandler( "Settings" ).meta( { csrfRedirect: "settings" } ).toAction({
+				GET: "index",
+				POST: "save"
+			})
+
+			/**
+			 * --------------------------------------------------------------------------
+			 * Assets Routing (avatars + branding logo)
+			 * --------------------------------------------------------------------------
+			 */
+			route( "avatars/:userId/:size", "Assets.avatar" )
+			route( "branding/logo/:size", "Assets.logo" )
+		} )
 
 		/**
 		 * --------------------------------------------------------------------------
@@ -204,7 +210,9 @@ class {
 
 		// @app_routes@
 
-		// Conventions-Based Routing
-		route( ":handler/:action?" ).end()
+		// Conventions-Based Routing. This catch-all can reach any handler action, so it carries
+		// the csrf middleware too: otherwise a state-changing action missing a dedicated route
+		// above would be reachable here without a token check.
+		route( ":handler/:action?" ).middleware( "AppVerifyCsrf" ).end()
 	}
 }

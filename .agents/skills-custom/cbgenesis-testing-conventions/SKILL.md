@@ -51,7 +51,7 @@ form.csrf = cbcsrf.generate();
 execute( "permissions.create" );
 ```
 
-A handler whose `onInvalidCSRF()` performs a real engine `abort` (rather than just flashing+redirecting) cannot have its invalid-token path exercised through in-process `execute()` - the abort terminates the whole test-runner request, not just the simulated sub-request. See `tests/specs/integration/ProfileTest.bx`'s file header comment for the precedent: test the valid-CSRF paths here, and note in a comment that the invalid-token path needs a real HTTP call instead (verify manually with curl, don't skip the check silently).
+CSRF is verified by the `AppVerifyCsrf` route middleware, which `execute( "handler.action" )` bypasses. To test the invalid-token path, dispatch by route with `post( route = "...", renderResults = false )` and no token; `RouteMiddlewareTest` is the precedent. Pass `renderResults = false` so cbcsrf's script does not leak into the TestBox JSON.
 
 ## BDD structure
 

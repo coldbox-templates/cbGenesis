@@ -153,33 +153,27 @@ Every one of these is CSRF-verified by `BaseSecureHandler` unless it is reached 
 
 ## CSRF verification
 
-`app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false`, so there is no global interceptor. Instead, `BaseSecureHandler.preHandler()` verifies CSRF **deny-by-default** for every handler that extends it:
+`app/config/modules/cbsecurity.bx` sets `csrf.enableAutoVerifier: false`, so there is no global interceptor. CSRF is verified by **route middleware**: `app/middleware/AppVerifyCsrf.bx` extends cbsecurity's `VerifyCsrf`, and `app/config/Router.bx` attaches it by its WireBox ID to a route group that holds every secured route, plus the conventions-based `:handler/:action?` catch-all:
 
-```boxlang title="app/handlers/BaseSecureHandler.bx (excerpt)" linenums="1"
-static {
-    // The safe methods of RFC 9110, exempt from CSRF verification below.
-    SAFE_HTTP_METHODS = "GET,HEAD,OPTIONS"
-}
+```boxlang title="app/config/Router.bx (excerpt)" linenums="1"
+group( { middleware: [ "AppVerifyCsrf" ] }, () => {
+    route( "dashboard", "Dashboard.index" )
+    // ... every secured route ...
+} )
 
-function preHandler( event, rc, prc ) {
-    if (
-        !static.SAFE_HTTP_METHODS.listFindNoCase( event.getHTTPMethod() )
-        && !csrfVerify( rc.csrf ?: "" )
-    ) {
-        return onInvalidCSRF( argumentCollection = arguments )
-    }
-    // ...
-}
+route( ":handler/:action?" ).middleware( "AppVerifyCsrf" ).end()
 ```
 
-What this means when you extend a secured handler:
+What this means when you add a route:
 
-- **You do not opt in.** Any action reached over `POST`, `PUT`, `PATCH`, or `DELETE` must carry a valid `rc.csrf`, from the day you add it. There is no per-handler list to remember to update.
+- **Put it inside the group.** Any request over `POST`, `PUT`, `PATCH`, or `DELETE` must carry a valid token in `rc.csrf` or the `x-csrf-token` header. A test (`RouteMiddlewareTest`) fails if a state-changing route is not covered, so a missed route is caught before it ships.
 - **Safe methods are exempt.** `GET`, `HEAD`, and `OPTIONS` must not change state, so they carry no CSRF risk, and `OPTIONS` (CORS preflight) cannot carry a token at all. If a safe method in your code does change state, that is the bug to fix.
-- **`onInvalidCSRF()` is overridable.** The base implementation aborts with an authorization failure, which is what the JSON/AJAX endpoints want - every mutation in `Permissions` is now one of those, submitted through `fetchWithCsrf()` (see [Frontend](frontend.md#csrf-on-mutating-requests)), which recovers from a stale token instead of needing a redirect. `Settings` still overrides it to flash a message and redirect its native form posts, so a browser form gets a page instead of a bare 403. Override it in your own handler when it renders HTML instead of JSON.
+- **The default failure is a JSON 403.** That is what the JSON/AJAX endpoints want: they submit through `fetchWithCsrf()` (see [Frontend](frontend.md#csrf-on-mutating-requests)), which recovers from a stale token instead of needing a redirect. Do not add a redirect to an AJAX route.
+- **Native HTML form posts set the `csrfRedirect` meta.** `Settings` does: `route( "settings" ).meta( { csrfRedirect: "settings" } )` makes a failed token flash a message and redirect, so a browser form gets a page instead of a bare 403.
+- **Route middleware only runs for requests dispatched by route.** `execute( "handler.action" )` in a test bypasses it; use `post( route = "..." )` to exercise it.
 
-!!! note "`Auth` is not a secured handler"
-    `Auth` extends `coldbox.system.EventHandler`, not `BaseSecureHandler`, because its actions run for unauthenticated visitors and so cannot inherit the check above. Each state-changing action verifies its own token: `doLogin`, `doRegister`, `doActivateInvitation`, `doForgotPassword`, `doResetPassword`, and `logout`.
+!!! note "`Auth` is not covered by the group"
+    `Auth` extends `coldbox.system.EventHandler`, not `BaseSecureHandler`, because its actions run for unauthenticated visitors. Each state-changing action verifies its own token: `doLogin`, `doRegister`, `doActivateInvitation`, `doForgotPassword`, `doResetPassword`, and `logout`. Its routes are outside the csrf group and carry only the throttle and honeypot middleware.
 
 ## Route map (`app/config/Router.bx`)
 

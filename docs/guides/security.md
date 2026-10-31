@@ -230,7 +230,7 @@ documentation.
 | Session auth | cbauth with `CacheStorage@cbStorages` — server-side session cache |
 | Password hashing | bcrypt via `bx-password-encrypt` |
 | Password policy | `SettingService.isValidPassword()` — `cbMinPasswordLength` plus an uppercase letter, a lowercase letter, a digit, and a special character. Enforced server-side on registration, invitation activation, password reset, and profile password change; the Alpine `$passwordMeetsPolicy` helper mirrors it in the browser |
-| CSRF protection | cbsecurity rotating token (30 min); the auto-verifier is off, and `BaseSecureHandler` verifies deny-by-default on every unsafe HTTP method instead — see [Handlers & Routing](handlers-routing.md#csrf-verification) |
+| CSRF protection | cbsecurity rotating token (30 min); the auto-verifier is off, and the `AppVerifyCsrf` route middleware verifies every unsafe HTTP method on the secured routes instead - see [Handlers & Routing](handlers-routing.md#csrf-verification) |
 | Handler security | `@secured` annotation → firewall redirects unauthenticated visitors to `login`, authorized-but-unpermitted users to `dashboard.notAuthorized` |
 | JWT support | Configured for API access (HS512, 60 min, cache token storage) |
 | Security headers | XSS protection, `frameOptions: SAMEORIGIN`, `referrerPolicy: same-origin` |

@@ -103,7 +103,7 @@ class extends="BaseSecureHandler" {
 }
 ```
 
-Do **not** override `onInvalidCSRF()` on a new handler - see the `cbgenesis-csrf-frontend` skill for why (this is what lets the frontend recover from a stale token instead of losing the user's input).
+CSRF is verified by the `AppVerifyCsrf` route middleware, so put the new routes inside the `csrf` group in `Router.bx` (step 4). Do not add a redirect for a JSON/AJAX route - see the `cbgenesis-csrf-frontend` skill for why (the JSON 403 is what lets the frontend recover from a stale token instead of losing the user's input).
 
 ## 4. Routes - `app/config/Router.bx`
 

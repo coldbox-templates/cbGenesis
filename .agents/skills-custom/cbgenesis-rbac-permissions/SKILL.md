@@ -25,7 +25,8 @@ class extends="BaseSecureHandler" {
 `BaseSecureHandler.preHandler()` (inherited by every handler here) also:
 - Sets the `Admin` layout on every view.
 - Redirects to `profile/passkey-required` if `cbRequirePasskey` is on and the user has no passkey (except `logout` and `passkeyRequired` itself).
-- **Verifies CSRF deny-by-default**: any request that is not `GET`/`HEAD`/`OPTIONS` must carry a valid `rc.csrf`, or the request is rejected via `onInvalidCSRF()`. This is automatic - you do not add per-action CSRF checks. The base `onInvalidCSRF()` aborts with a 403, which is correct for an `@remote` JSON handler. Override it only if the handler renders HTML and needs to flash+redirect instead (see `Settings.bx`'s override) - most handlers here are pure JSON now and should NOT override it (see `cbgenesis-csrf-frontend` skill for the matching frontend side).
+
+**CSRF is not checked in the handler.** The `AppVerifyCsrf` route middleware verifies every `POST`/`PUT`/`PATCH`/`DELETE` on the routes in the `csrf` group in `app/config/Router.bx`, and on the `:handler/:action?` catch-all. A new route goes inside that group; `RouteMiddlewareTest` fails if a state-changing route is left out. A failed check returns a JSON 403, or flashes and redirects when the route sets the `csrfRedirect` meta (native HTML forms only; see the `cbgenesis-csrf-frontend` skill).
 
 `Auth.bx` is the one exception: it extends `coldbox.system.EventHandler` directly (unauthenticated visitors can't pass a secured preHandler) and verifies `csrfVerify()` manually inside each state-changing action.
 

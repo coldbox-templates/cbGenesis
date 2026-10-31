@@ -11,20 +11,6 @@ class extends="BaseSecureHandler" {
 	property name="auditLogService";
 
 	/**
-	 * This handler renders HTML and reports through flash, so a failed CSRF check
-	 * redirects with a message rather than aborting with a bare 403. The non-GET rule
-	 * this handler already used is now the application-wide default in
-	 * BaseSecureHandler, so only the reporting behaviour is overridden here.
-	 */
-	private function onInvalidCSRF( event, rc, prc ) {
-		flash.put( "messages", {
-			type   : "error",
-			message: "Invalid security token detected."
-		} )
-		return relocate( "settings" )
-	}
-
-	/**
 	 * Render the main application settings page.
 	 */
 	function index( event, rc, prc ) {
