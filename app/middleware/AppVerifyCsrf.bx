@@ -1,0 +1,70 @@
+/**
+ * Route middleware that verifies the CSRF token on every state-changing request.
+ *
+ * Extends cbsecurity's VerifyCsrf, which skips GET, HEAD and OPTIONS (RFC 9110 safe
+ * methods) and reads the token from rc.csrf or the x-csrf-token header. This class only
+ * changes how a failure is reported:
+ *
+ * - Default: the module's JSON 403. That is what fetchWithCsrf() in the frontend keys
+ *   off to recover a stale token, so AJAX routes must NOT opt into the redirect below.
+ * - Routes that set the "csrfRedirect" meta key (native HTML form posts) get a flash
+ *   message and a redirect to that event instead of a bare 403 page.
+ *
+ * Route meta keys:
+ * - csrfRedirect: event or URL to send a failed HTML form post back to.
+ *
+ * See docs/guides/security.md and the cbgenesis-rbac-permissions skill.
+ */
+@singleton
+class extends="cbsecurity.models.middleware.VerifyCsrf" {
+
+	@inject( "coldbox:flash" )
+	property name="flash";
+
+	@inject( "coldbox" )
+	property name="controller";
+
+	/**
+	 * Answers a failed CSRF check: a flash message and a redirect when the route opted in
+	 * through "csrfRedirect", otherwise the module's JSON 403.
+	 *
+	 * @event      The request context.
+	 * @statusCode The HTTP status code.
+	 * @message    The error message.
+	 * @headers    Extra response headers as name-value pairs.
+	 *
+	 * @return Always true, so callers can return it to stop the remaining middleware.
+	 */
+	boolean function deny(
+		required event,
+		numeric statusCode = 403,
+		string message     = "Forbidden",
+		struct headers     = {}
+	) {
+		var location = getMetaValue( arguments.event, "csrfRedirect", "" )
+		if ( !len( location ) ) {
+			return super.deny( argumentCollection = arguments )
+		}
+
+		variables.flash.put( "messages", {
+			type   : "error",
+			message: "Invalid security token detected."
+		} )
+		redirectTo( location )
+		return true
+	}
+
+	/**
+	 * Sends the client to another event, route or URL.
+	 *
+	 * Middleware is a plain component, not a framework supertype object, so it has no
+	 * relocate() of its own, and the request context has none either: go through the
+	 * ColdBox controller, which is what the supertype's relocate() does.
+	 *
+	 * @location The event, route or URL to relocate to.
+	 */
+	function redirectTo( required string location ) {
+		variables.controller.relocate( arguments.location )
+	}
+
+}

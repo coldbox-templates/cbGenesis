@@ -1,0 +1,186 @@
+/**
+ * Tests for CSRF verification by route middleware: the AppVerifyCsrf subclass of
+ * cbsecurity's VerifyCsrf, and a guard that every state-changing route in the router is
+ * covered by it.
+ *
+ * Requests go through post()/get() with a route, not execute() with an event: route
+ * middleware only runs for requests dispatched by route (ColdBox 8.3+). renderResults is
+ * off so the rendered page, including cbcsrf's script, is not written into the TestBox
+ * runner's JSON output.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	/**
+	 * Prepares the current request context as a request with the given method and token.
+	 *
+	 * @method The HTTP method of the request.
+	 * @token  The CSRF token to put in rc.csrf, or empty for none.
+	 * @meta   The route meta the middleware should see.
+	 *
+	 * @return The mocked request context.
+	 */
+	private function mockRequest( string method = "POST", string token = "", struct meta = {} ) {
+		var event = prepareMock( getRequestContext() ).$( "getHTTPMethod", arguments.method );
+		if ( len( arguments.token ) ) {
+			event.setValue( "csrf", arguments.token );
+		}
+		event.setPrivateValue( "currentRouteMeta", arguments.meta );
+		return event;
+	}
+
+	/**
+	 * A fresh AppVerifyCsrf whose redirect is stubbed.
+	 *
+	 * A new, autowired instance, not the application's singleton, so the stub cannot leak
+	 * into the middleware real requests use.
+	 *
+	 * @return The AppVerifyCsrf with redirectTo() mocked.
+	 */
+	private function csrfWithStubbedRedirect() {
+		var middleware = prepareMock( new app.middleware.AppVerifyCsrf() );
+		getWireBox().autowire( middleware );
+		return middleware.$( "redirectTo" );
+	}
+
+	/**
+	 * The flash messages of the request that just ran, as text.
+	 *
+	 * @return The flash scope serialized to JSON.
+	 */
+	private string function flashText() {
+		return jsonSerialize( getFlashScope().getAll() );
+	}
+
+	function run() {
+		describe( "CSRF route middleware", () => {
+			beforeEach( () => {
+				setup();
+				// The form scope lives for the whole test run and execute() merges it into the
+				// request after the params, so a stale form.csrf from another bundle would
+				// override the token generated here.
+				structClear( form );
+				getFlashScope().clear().removeFlash();
+				securityService.logout( quiet: true );
+			} );
+
+			story( "Every state-changing route is protected by the csrf middleware", () => {
+				it( "attaches AppVerifyCsrf to every route that can change state, except the handlers that verify their own token", () => {
+					var routes = getWireBox().getInstance( "router@coldbox" ).getRoutes();
+					var unsafeVerbs = "POST,PUT,PATCH,DELETE";
+
+					var uncovered = routes
+						.filter( ( route ) => {
+							// Closure routes (the healthcheck) have no handler to protect.
+							if ( !isSimpleValue( route.response ) || len( route.response ) ) {
+								return false;
+							}
+							// A module's mount point (cbsso/, cbsecurity/passkeys/ ...) is a placeholder for
+							// that module's own router, whose routes the module is responsible for.
+							if ( len( route.moduleRouting ) ) {
+								return false;
+							}
+							// Auth actions call csrfVerify() themselves; SSO.complete only consumes a
+							// session value rather than a request body.
+							var owner = lCase( len( route.event ) ? route.event : route.handler );
+							if ( owner.startsWith( "auth" ) || owner.startsWith( "sso" ) ) {
+								return false;
+							}
+							var allowsUnsafe = !len( route.verbs ) || listToArray( route.verbs ).some( ( verb ) => listFindNoCase( unsafeVerbs, verb ) );
+							var covered = route.middleware.some( ( entry ) => entry.target == "AppVerifyCsrf" );
+							return allowsUnsafe && !covered;
+						} )
+						.map( ( route ) => route.pattern );
+
+					expect( uncovered ).toBeEmpty( "Routes missing the csrf middleware: #uncovered.toList()#" );
+				} );
+
+				it( "covers the conventions-based catch-all, which can reach any handler action", () => {
+					// ":handler/:action?" registers as two routes (with and without the action).
+					var routes = getWireBox().getInstance( "router@coldbox" ).getRoutes();
+					var catchAll = routes.filter( ( route ) => route.pattern.startsWith( ":handler" ) );
+
+					expect( catchAll ).notToBeEmpty();
+					catchAll.each( ( route ) => {
+						expect( route.middleware.some( ( entry ) => entry.target == "AppVerifyCsrf" ) ).toBeTrue( "#route.pattern# has no AppVerifyCsrf" );
+					} );
+				} );
+
+				it( "gives the native settings form routes a csrfRedirect and leaves AJAX routes without one", () => {
+					var routes = getWireBox().getInstance( "router@coldbox" ).getRoutes();
+					var byPattern = ( pattern ) => routes.filter( ( route ) => reReplace( route.pattern, "/+$", "" ) == pattern )[ 1 ];
+
+					expect( byPattern( "settings" ).meta ).toHaveKey( "csrfRedirect" );
+					expect( byPattern( "settings/flush-settings-cache" ).meta ).toHaveKey( "csrfRedirect" );
+					// fetchWithCsrf() recovers from the JSON 403; a redirect would hide it.
+					expect( byPattern( "permissions" ).meta ).notToHaveKey( "csrfRedirect" );
+				} );
+			} );
+
+			story( "AppVerifyCsrf verifies the token on unsafe requests", () => {
+				it( "lets a GET through without a token", () => {
+					expect( getInstance( "AppVerifyCsrf" ).preProcess( mockRequest( "GET" ) ) ).toBeFalse();
+				} );
+
+				it( "lets a POST with a valid token through", () => {
+					expect( getInstance( "AppVerifyCsrf" ).preProcess( mockRequest( "POST", cbcsrf.generate() ) ) ).toBeFalse();
+				} );
+
+				it( "answers a POST with a bad token with a JSON 403 by default", () => {
+					var event = mockRequest( "POST", "not-a-real-token" );
+
+					expect( getInstance( "AppVerifyCsrf" ).preProcess( event ) ).toBeTrue();
+					expect( event.getRenderData().statusCode ).toBe( 403 );
+				} );
+
+				it( "answers a DELETE with no token with a JSON 403", () => {
+					var event = mockRequest( "DELETE" );
+
+					expect( getInstance( "AppVerifyCsrf" ).preProcess( event ) ).toBeTrue();
+					expect( event.getRenderData().statusCode ).toBe( 403 );
+				} );
+
+				it( "flashes and redirects instead when the route sets csrfRedirect", () => {
+					var middleware = csrfWithStubbedRedirect();
+					var event = mockRequest( "POST", "not-a-real-token", { csrfRedirect: "settings" } );
+
+					expect( middleware.preProcess( event ) ).toBeTrue();
+					expect( middleware.$callLog().redirectTo[ 1 ][ 1 ] ).toBe( "settings" );
+					expect( flashText() ).toInclude( "Invalid security token" );
+				} );
+			} );
+
+			story( "CSRF is enforced through the router", () => {
+				it( "rejects a state-changing request with no token and changes nothing", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+
+					var event = post(
+						route         = "/profile",
+						params        = { firstName: "Hijacked", lastName: "Name", biography: "", preferences: "{}" },
+						renderResults = false
+					);
+
+					expect( event.getRenderData().statusCode ).toBe( 403 );
+					expect( userService.getOrFail( user.getUserId() ).getFirstName() ).notToBe( "Hijacked" );
+				} );
+
+				it( "accepts the same request once it carries a valid token", () => {
+					var user = createVerifiedUser();
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" );
+
+					post(
+						route         = "/profile",
+						params        = { firstName: "Updated", lastName: "Name", biography: "", preferences: "{}", csrf: cbcsrf.generate() },
+						renderResults = false
+					);
+
+					expect( userService.getOrFail( user.getUserId() ).getFirstName() ).toBe( "Updated" );
+				} );
+			} );
+		} );
+	}
+
+}

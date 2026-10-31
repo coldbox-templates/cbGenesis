@@ -96,7 +96,7 @@ Current event handlers and their public actions (auto-updated on `coldbox ai ref
 - **Settings**: index, registry, registrySearch, createRegistry, updateRegistry, toggleRegistryStatus, deleteRegistry, save, clearTemplateCache, clearSessionsCache, revokeRememberTokens, flushSettingsCache, uploadLogo, deleteLogo
 - **Users**: index, search, create, show, update, delete, resendInvitation, updateProfile, setStatus, resetPassword, forcePasswordReset, verify, revokeRememberTokens, addRole, removeRole, addPermission, removePermission, savePreferences, revokeToken, revokeAllTokens
 
-All handlers except `Auth` and `Main` extend `BaseSecureHandler`, whose `preHandler` verifies CSRF deny-by-default: any request that is not `GET`/`HEAD`/`OPTIONS` must carry a valid `rc.csrf`. Override `onInvalidCSRF()` in a handler that renders HTML instead of JSON.
+All handlers except `Auth` and `Main` extend `BaseSecureHandler`. CSRF is verified by the `AppVerifyCsrf` route middleware (see Route Middleware below), not in the handler: any request that is not `GET`/`HEAD`/`OPTIONS` on a route in the `csrf` group must carry a valid `rc.csrf` or `x-csrf-token`.
 
 ## Interceptors Snapshot
 
@@ -110,6 +110,7 @@ Registered interceptors and their interception points (auto-updated on `coldbox 
 Route middleware is attached in `app/config/Router.bx` by WireBox ID. App classes live in `app/middleware/` and extend the cbsecurity middleware, overriding only what differs. `execute( "handler.action" )` in tests bypasses route middleware; use `post( route = "..." )` to run it.
 
 - **`Honeypot@cbsecurity`**: hidden `website_url` field on the register form, silent.
+- **`AppVerifyCsrf`** (extends `VerifyCsrf@cbsecurity`): attached to a route `group` that holds every secured route in `Router.bx` and to the `:handler/:action?` catch-all, so a new route goes inside the group. A failure is a JSON 403 (what `fetchWithCsrf()` recovers from); native HTML form routes set the `csrfRedirect` meta to flash and redirect instead. `Auth` verifies its own token and sits outside the group. `RouteMiddlewareTest` fails if a state-changing route is not covered.
 - **`AppThrottle`** (extends `Throttle@cbsecurity`): per-IP limits from the `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds` settings, fixed window, counted in the `rateLimit` CacheBox region. Attached to the Auth form routes and the Profile SSO routes. Each form page and its submit are ONE route (ColdBox merges same-pattern routes and keeps only the first one's middleware); `AppThrottle` counts only the methods in the route's `throttleMethods` meta (default `POST,PUT,PATCH,DELETE`). Other meta: `throttleRedirect`, `throttleTokenParam`.
 
 ## Layouts

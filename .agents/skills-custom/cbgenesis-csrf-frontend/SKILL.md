@@ -51,6 +51,6 @@ Every other mutation in `resources/assets/js/components/` goes through `fetchWit
 
 ## The matching handler-side contract
 
-A JSON/AJAX handler should NOT override `onInvalidCSRF()` - let `BaseSecureHandler`'s default 403 through, since that's what triggers `fetchWithCsrf()`'s recovery. Overriding it to flash+redirect (as `Settings.bx` does, for its native `<form>` posts) breaks the recovery: `fetch()` follows the redirect to a 200 HTML page, and a caller checking only `response.ok` will wrongly report success while nothing was saved. When you add a new mutation, make it a `@remote` JSON action (see any `Permissions.bx` action) and let the frontend recover via `fetchWithCsrf()`, rather than adding a redirect override.
+A JSON/AJAX route must NOT set the `csrfRedirect` meta key on its route in `Router.bx`: let `AppVerifyCsrf` return its default JSON 403, since that's what triggers `fetchWithCsrf()`'s recovery. Redirecting (as the `Settings` routes do, for their native `<form>` posts) breaks the recovery: `fetch()` follows the redirect to a 200 HTML page, and a caller checking only `response.ok` will wrongly report success while nothing was saved. When you add a new mutation, make it a `@remote` JSON action (see any `Permissions.bx` action), put its route in the csrf group, and let the frontend recover via `fetchWithCsrf()`.
 
 Full write-up, plus the reference table of every component using this pattern, lives in `docs/guides/frontend.md` under "CSRF on mutating requests".
