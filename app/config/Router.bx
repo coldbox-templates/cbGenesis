@@ -14,19 +14,6 @@ class {
 		 * Go get Funky!
 		 */
 
-		/**
-		 * --------------------------------------------------------------------------
-		 * Route Middleware
-		 * --------------------------------------------------------------------------
-		 * Names are registered once here and referenced by name below. Register a name
-		 * before using it: an unknown name is silently treated as a literal WireBox ID.
-		 *
-		 * - honeypot : cbsecurity Honeypot, a hidden form field that catches bots
-		 */
-		registerMiddleware( {
-			honeypot: "Honeypot@cbsecurity"
-		} )
-
 		// A nice healthcheck
 		route(
 			"/healthcheck",
@@ -191,7 +178,7 @@ class {
 			POST: "doLogin"
 		})
 		route( "register/check-email", "Auth.checkEmailAvailability" )
-		route( "register" ).withHandler( "Auth" ).middleware( "honeypot" ).toAction({
+		route( "register" ).withHandler( "Auth" ).middleware( "Honeypot@cbsecurity" ).toAction({
 			GET: "register",
 			POST: "doRegister"
 		})
