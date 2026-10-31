@@ -58,18 +58,23 @@ class extends="coldbox.system.Interceptor" {
 		// trustUpstream mirrors cbTrustProxyHeaders: see AppThrottle.getClientIP().
 		var key = "#static.LIMIT_KEY#:#variables.cbsecurity.getRealIP( trustUpstream = variables.settingService.getSetting( 'cbTrustProxyHeaders', true ) )#"
 
-		if ( !variables.rateLimiter.tooManyAttempts( key, maxAttempts, static.CACHE_NAME ) ) {
-			variables.rateLimiter.hit( key, windowSeconds, static.CACHE_NAME )
+		// Hit first and decide from the returned count: reading the count and then recording
+		// lets a burst of simultaneous requests all pass the read. See AppThrottle.
+		var attempts = variables.rateLimiter.hit( key, windowSeconds, static.CACHE_NAME )
+		if ( attempts <= maxAttempts ) {
 			return
 		}
 
-		variables.auditLogService.warn(
-			action     : "security.ratelimit.blocked",
-			message    : "Rate limit exceeded for [#static.LIMIT_KEY#].",
-			category   : "security",
-			targetType : "Event",
-			targetLabel: static.LIMIT_KEY
-		)
+		// One audit row per IP per window, not one per blocked request.
+		if ( attempts == maxAttempts + 1 ) {
+			variables.auditLogService.warn(
+				action     : "security.ratelimit.blocked",
+				message    : "Rate limit exceeded for [#static.LIMIT_KEY#].",
+				category   : "security",
+				targetType : "Event",
+				targetLabel: static.LIMIT_KEY
+			)
+		}
 
 		flash.put( "messages", {
 			type   : "error",

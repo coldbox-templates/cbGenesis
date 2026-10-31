@@ -152,6 +152,19 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					expect( limiter.$count( "tooManyAttempts" ) ).toBe( 0 );
 				} );
 
+				it( "audits only the first block of a window, not every blocked request", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var audit = createStub().$( "warn" );
+					var throttle = throttleWithStubbedRedirect().$property( propertyName = "auditLogService", mock = audit );
+
+					for ( var i = 1; i <= maxAttempts + 10; i++ ) {
+						throttle.preProcess( mockRequest( "Auth.doLogin" ) );
+					}
+
+					expect( audit.$count( "warn" ) ).toBe( 1 );
+					expect( audit.$callLog().warn[ 1 ].action ).toBe( "security.ratelimit.blocked" );
+				} );
+
 				it( "stores a self-expiring counter per endpoint and IP", () => {
 					var window = settingService.getSetting( "cbRateLimitWindowSeconds", 300 );
 					var throttle = getInstance( "AppThrottle" );

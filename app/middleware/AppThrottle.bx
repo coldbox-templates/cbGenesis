@@ -88,6 +88,20 @@ class extends="cbsecurity.models.middleware.Throttle" {
 		arguments.event.setHTTPHeader( name = "X-RateLimit-Limit", value = arguments.limit.maxAttempts )
 
 		if ( attempts > arguments.limit.maxAttempts ) {
+			// One audit row per endpoint and IP per window, not one per blocked request: an
+			// attacker could otherwise grow the audit table as fast as they can send requests.
+			// hit() returns each count exactly once, so exactly one request sees this value.
+			// Later blocked requests are left to the web server's own access log.
+			if ( attempts == arguments.limit.maxAttempts + 1 ) {
+				var currentEvent = arguments.event.getCurrentEvent()
+				variables.auditLogService.warn(
+					action     : "security.ratelimit.blocked",
+					message    : "Rate limit exceeded for [#currentEvent#].",
+					category   : "security",
+					targetType : "Event",
+					targetLabel: currentEvent
+				)
+			}
 			return deny(
 				arguments.event,
 				429,
@@ -146,8 +160,9 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	}
 
 	/**
-	 * Audits the block, then answers it: a redirect with a flash message when the route
-	 * opted in through "throttleRedirect", otherwise the module's JSON 429.
+	 * Answers a blocked request: a redirect with a flash message when the route opted in
+	 * through "throttleRedirect", otherwise the module's JSON 429. Auditing is not done
+	 * here: see countAndEnforce(), which audits only the first block of each window.
 	 *
 	 * @event      The request context.
 	 * @statusCode The HTTP status code.
@@ -162,16 +177,6 @@ class extends="cbsecurity.models.middleware.Throttle" {
 		string message     = "Forbidden",
 		struct headers     = {}
 	) {
-		var currentEvent = arguments.event.getCurrentEvent()
-
-		variables.auditLogService.warn(
-			action     : "security.ratelimit.blocked",
-			message    : "Rate limit exceeded for [#currentEvent#].",
-			category   : "security",
-			targetType : "Event",
-			targetLabel: currentEvent
-		)
-
 		var location = getMetaValue( arguments.event, "throttleRedirect", "" )
 		if ( !len( location ) ) {
 			return super.deny( argumentCollection = arguments )
