@@ -31,6 +31,19 @@ class extends="tests.resources.BaseIntegrationSpec" {
 	];
 
 	/**
+	 * The convention URLs (auth/<action>) the catch-all route exposes for each throttled Auth
+	 * form, with the named route that form normally posts to. The login form itself used to post
+	 * to auth/doLogin, and anyone can post to these directly, so each must be throttled too.
+	 */
+	variables.conventionRoutes = [
+		{ pattern: "auth/doLogin",              named: "login" },
+		{ pattern: "auth/doRegister",           named: "register" },
+		{ pattern: "auth/doActivateInvitation", named: "activate-invitation" },
+		{ pattern: "auth/doForgotPassword",     named: "forgot-password" },
+		{ pattern: "auth/doResetPassword",      named: "reset-password" }
+	];
+
+	/**
 	 * Prepares the current request context as a request for an event.
 	 *
 	 * @eventName The event the request resolves to, for example "Auth.doLogin".
@@ -109,6 +122,72 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					var register = routes.filter( ( route ) => reReplace( route.pattern, "/+$", "" ) == "register" )[ 1 ];
 
 					expect( register.middleware.map( ( entry ) => entry.target ) ).toBe( [ "Honeypot@cbsecurity", "AppThrottle" ] );
+				} );
+			} );
+
+			story( "The Auth convention URLs are throttled like the named routes", () => {
+				it( "attaches AppThrottle to every auth/do* convention route", () => {
+					var routes = getWireBox().getInstance( "router@coldbox" ).getRoutes();
+					var problems = [];
+
+					variables.conventionRoutes.each( ( entry ) => {
+						var matching = routes.filter( ( route ) => reReplace( route.pattern, "/+$", "" ) == entry.pattern );
+						if ( matching.len() != 1 ) {
+							problems.append( "#entry.pattern# has #matching.len()# routes" );
+						} else if ( !matching[ 1 ].middleware.some( ( mw ) => mw.target == "AppThrottle" ) ) {
+							problems.append( "#entry.pattern# has no AppThrottle" );
+						}
+					} );
+
+					expect( problems ).toBeEmpty( problems.toList( "; " ) );
+				} );
+
+				it( "keeps the honeypot ahead of the throttle on auth/doRegister", () => {
+					var routes = getWireBox().getInstance( "router@coldbox" ).getRoutes();
+					var register = routes.filter( ( route ) => reReplace( route.pattern, "/+$", "" ) == "auth/doRegister" )[ 1 ];
+
+					expect( register.middleware.map( ( mw ) => mw.target ) ).toBe( [ "Honeypot@cbsecurity", "AppThrottle" ] );
+				} );
+
+				it( "throttles a direct post to each convention URL", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+
+					variables.conventionRoutes.each( ( entry ) => {
+						rateLimitCache.clearAll();
+						getFlashScope().clear().removeFlash();
+
+						for ( var i = 1; i <= maxAttempts + 1; i++ ) {
+							post(
+								route         = "/#entry.pattern#",
+								params        = { email: "nobody@example.com", password: "wrong-password", csrf: cbcsrf.generate() },
+								renderResults = false
+							);
+						}
+
+						expect( flashText() ).toInclude( "Too many attempts", "#entry.pattern# was not throttled" );
+					} );
+				} );
+
+				it( "shares one budget between the named route and its convention URL", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+
+					// Alternate between the two URLs: if each kept its own counter, nothing would be
+					// blocked until each had been used maxAttempts times.
+					for ( var i = 1; i <= maxAttempts + 1; i++ ) {
+						post(
+							route         = ( i mod 2 ) ? "/login" : "/auth/doLogin",
+							params        = { email: "nobody@example.com", password: "wrong-password", csrf: cbcsrf.generate() },
+							renderResults = false
+						);
+					}
+
+					expect( flashText() ).toInclude( "Too many attempts" );
+				} );
+
+				it( "posts the login form to the throttled named route, not the convention URL", () => {
+					var source = fileRead( expandPath( "/app/views/auth/login.bxm" ) );
+
+					expect( source ).notToInclude( "auth/doLogin" );
 				} );
 			} );
 
