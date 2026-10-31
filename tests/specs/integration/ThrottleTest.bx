@@ -135,6 +135,39 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					expect( blocked.getRenderData().statusCode ).toBe( 429 );
 				} );
 
+				it( "records the hit before deciding, so concurrent requests cannot overshoot", () => {
+					// Reading the count first and recording afterwards lets a burst all pass the
+					// read. The decision must come from the count hit() returns, which the
+					// limiter increments under a lock.
+					var limiter = createStub()
+						.$( "hit", 6 )
+						.$( "availableIn", 10 )
+						.$( "tooManyAttempts", false );
+					var throttle = throttleWithStubbedRedirect().$property( propertyName = "rateLimiter", mock = limiter );
+					var blocked = mockRequest( "Auth.doLogin" );
+
+					expect( throttle.preProcess( blocked ) ).toBeTrue();
+					expect( blocked.getRenderData().statusCode ).toBe( 429 );
+					expect( limiter.$count( "hit" ) ).toBe( 1 );
+					expect( limiter.$count( "tooManyAttempts" ) ).toBe( 0 );
+				} );
+
+				it( "stores a self-expiring counter per endpoint and IP", () => {
+					var window = settingService.getSetting( "cbRateLimitWindowSeconds", 300 );
+					var throttle = getInstance( "AppThrottle" );
+					var event = mockRequest( "Auth.doLogin" );
+					throttle.preProcess( event );
+
+					var key = "cbsecurity-ratelimit-Auth.doLogin:ip-" & throttle.getClientIP( event );
+					var metadata = rateLimitCache.getCachedObjectMetadata( key );
+
+					// A fixed lifetime (minutes) just past the window, never "eternal" (0) and
+					// never refreshed by reads, so idle counters are reaped on their own.
+					expect( metadata.timeout ).toBeGT( 0 );
+					expect( metadata.timeout ).toBeLTE( ceiling( window / 60 ) + 1 );
+					expect( rateLimitCache.getSize() ).toBe( 1 );
+				} );
+
 				it( "counts a method listed in the route's throttleMethods", () => {
 					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
 					var throttle = getInstance( "AppThrottle" );

@@ -63,7 +63,48 @@ class extends="cbsecurity.models.middleware.Throttle" {
 			return false
 		}
 
-		return super.preProcess( argumentCollection = arguments )
+		return countAndEnforce( arguments.event, limit )
+	}
+
+	/**
+	 * Records the attempt and blocks the request when it is over the limit.
+	 *
+	 * The module's Throttle reads the count and then records the hit as two separate
+	 * steps, so a burst of concurrent requests can all pass the read before any of them
+	 * records, and overshoot the limit. RateLimiter.hit() increments under a lock and
+	 * returns the new count, so hitting first and comparing that count is atomic: of N
+	 * simultaneous requests exactly maxAttempts are allowed. A blocked request still
+	 * increments the counter but never moves the window, which is fixed by the first hit.
+	 *
+	 * @event The request context.
+	 * @limit The limit struct from resolveLimit().
+	 *
+	 * @return True when the request was blocked.
+	 */
+	private boolean function countAndEnforce( required event, required struct limit ) {
+		var key      = arguments.limit.name & ":" & identify( arguments.event, arguments.limit.by )
+		var attempts = variables.rateLimiter.hit( key, arguments.limit.decaySeconds, arguments.limit.cacheProvider )
+
+		arguments.event.setHTTPHeader( name = "X-RateLimit-Limit", value = arguments.limit.maxAttempts )
+
+		if ( attempts > arguments.limit.maxAttempts ) {
+			return deny(
+				arguments.event,
+				429,
+				"Too many requests",
+				{
+					"Retry-After"           : variables.rateLimiter.availableIn( key, arguments.limit.cacheProvider ),
+					"X-RateLimit-Limit"     : arguments.limit.maxAttempts,
+					"X-RateLimit-Remaining" : 0
+				}
+			)
+		}
+
+		arguments.event.setHTTPHeader(
+			name  = "X-RateLimit-Remaining",
+			value = arguments.limit.maxAttempts - attempts
+		)
+		return false
 	}
 
 	/**
