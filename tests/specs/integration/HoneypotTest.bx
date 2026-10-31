@@ -11,8 +11,8 @@ class extends="tests.resources.BaseIntegrationSpec" {
 	@inject( "@cbcsrf" )
 	property name="cbcsrf";
 
-	@inject
-	property name="rateLimitService";
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
 
 	/**
 	 * Builds a valid registration submission for a fresh email address.
@@ -46,7 +46,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				// generated here and Auth.doRegister would reject the registration.
 				structClear( form );
 				securityService.logout( quiet: true );
-				rateLimitService.clearAll();
+				rateLimitCache.clearAll();
 			} );
 
 			story( "The honeypot middleware is attached to the register route", () => {

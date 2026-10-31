@@ -1,0 +1,308 @@
+/**
+ * Tests for rate limiting: the AppThrottle route middleware on the Auth forms and the
+ * SSO routes, and the SSORateLimiter interceptor that covers the cbSSO callback.
+ *
+ * Requests go through post()/get() with a route, not execute() with an event: route
+ * middleware only runs for requests dispatched by route (ColdBox 8.3+). renderResults is
+ * off so the rendered page, including cbcsrf's script, is not written into the TestBox
+ * runner's JSON output.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
+
+	/**
+	 * The routes AppThrottle must be attached to, with the HTTP methods each one counts.
+	 * A route listed here that loses its middleware stops being throttled without any
+	 * other symptom, which is exactly what these specs exist to catch.
+	 */
+	variables.throttledRoutes = [
+		"login",
+		"register",
+		"activate-invitation",
+		"forgot-password",
+		"reset-password",
+		"profile/sso/:provider/start",
+		"profile/sso/:provider"
+	];
+
+	/**
+	 * Prepares the current request context as a request for an event.
+	 *
+	 * @eventName The event the request resolves to, for example "Auth.doLogin".
+	 * @method    The HTTP method of the request.
+	 * @meta      The route meta the middleware should see.
+	 *
+	 * @return The mocked request context.
+	 */
+	private function mockRequest( required string eventName, string method = "POST", struct meta = {} ) {
+		var event = prepareMock( getRequestContext() )
+			.$( "getCurrentEvent", arguments.eventName )
+			.$( "getHTTPMethod", arguments.method );
+		event.setPrivateValue( "currentRouteMeta", arguments.meta );
+		return event;
+	}
+
+	/**
+	 * A fresh AppThrottle whose redirect is stubbed.
+	 *
+	 * A new, autowired instance, not the application's singleton, so the stub cannot leak
+	 * into the middleware real requests use.
+	 *
+	 * @return The AppThrottle with redirectTo() mocked.
+	 */
+	private function throttleWithStubbedRedirect() {
+		var throttle = prepareMock( new app.middleware.AppThrottle() );
+		getWireBox().autowire( throttle );
+		return throttle.$( "redirectTo" );
+	}
+
+	/**
+	 * The flash messages of the request that just ran, as text.
+	 *
+	 * @return The flash scope serialized to JSON.
+	 */
+	private string function flashText() {
+		return jsonSerialize( getFlashScope().getAll() );
+	}
+
+	function run() {
+		describe( "Rate limiting", () => {
+			beforeEach( () => {
+				setup();
+				// The form scope lives for the whole test run and execute() merges it into the
+				// request after the params, so a stale form.csrf from another bundle would
+				// override the token generated here.
+				structClear( form );
+				// Flash outlives a spec: a message from the previous one would otherwise show
+				// up in the next spec's assertions. clear() empties the in-memory scope that
+				// getAll() reads and removeFlash() drops the persisted copy; clearFlash()
+				// alone only purges entries already marked for auto-purge.
+				getFlashScope().clear().removeFlash();
+				securityService.logout( quiet: true );
+				rateLimitCache.clearAll();
+			} );
+
+			story( "AppThrottle is attached to every throttled route", () => {
+				it( "attaches AppThrottle to exactly one route per throttled pattern", () => {
+					var routes = getWireBox().getInstance( "router@coldbox" ).getRoutes();
+					var problems = [];
+
+					variables.throttledRoutes.each( ( pattern ) => {
+						var matching = routes.filter( ( route ) => reReplace( route.pattern, "/+$", "" ) == pattern );
+						if ( matching.len() != 1 ) {
+							problems.append( "#pattern# has #matching.len()# routes" );
+						} else if ( !matching[ 1 ].middleware.some( ( entry ) => entry.target == "AppThrottle" ) ) {
+							problems.append( "#pattern# has no AppThrottle" );
+						}
+					} );
+
+					expect( problems ).toBeEmpty( problems.toList( "; " ) );
+				} );
+
+				it( "runs the honeypot before the throttle on the register route", () => {
+					var routes = getWireBox().getInstance( "router@coldbox" ).getRoutes();
+					var register = routes.filter( ( route ) => reReplace( route.pattern, "/+$", "" ) == "register" )[ 1 ];
+
+					expect( register.middleware.map( ( entry ) => entry.target ) ).toBe( [ "Honeypot@cbsecurity", "AppThrottle" ] );
+				} );
+			} );
+
+			story( "AppThrottle counts only the methods a route asks for", () => {
+				it( "does not count GET requests on a form route", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var throttle = getInstance( "AppThrottle" );
+
+					for ( var i = 1; i <= maxAttempts + 2; i++ ) {
+						expect( throttle.preProcess( mockRequest( "Auth.login", "GET" ) ) ).toBeFalse();
+					}
+				} );
+
+				it( "blocks a POST with a JSON 429 once cbRateLimitMaxAttempts is exceeded", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var throttle = getInstance( "AppThrottle" );
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						expect( throttle.preProcess( mockRequest( "Auth.doLogin" ) ) ).toBeFalse();
+					}
+
+					var blocked = mockRequest( "Auth.doLogin" );
+					expect( throttle.preProcess( blocked ) ).toBeTrue();
+					expect( blocked.getRenderData().statusCode ).toBe( 429 );
+				} );
+
+				it( "records the hit before deciding, so concurrent requests cannot overshoot", () => {
+					// Reading the count first and recording afterwards lets a burst all pass the
+					// read. The decision must come from the count hit() returns, which the
+					// limiter increments under a lock.
+					var limiter = createStub()
+						.$( "hit", 6 )
+						.$( "availableIn", 10 )
+						.$( "tooManyAttempts", false );
+					var throttle = throttleWithStubbedRedirect().$property( propertyName = "rateLimiter", mock = limiter );
+					var blocked = mockRequest( "Auth.doLogin" );
+
+					expect( throttle.preProcess( blocked ) ).toBeTrue();
+					expect( blocked.getRenderData().statusCode ).toBe( 429 );
+					expect( limiter.$count( "hit" ) ).toBe( 1 );
+					expect( limiter.$count( "tooManyAttempts" ) ).toBe( 0 );
+				} );
+
+				it( "audits only the first block of a window, not every blocked request", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var audit = createStub().$( "warn" );
+					var throttle = throttleWithStubbedRedirect().$property( propertyName = "auditLogService", mock = audit );
+
+					for ( var i = 1; i <= maxAttempts + 10; i++ ) {
+						throttle.preProcess( mockRequest( "Auth.doLogin" ) );
+					}
+
+					expect( audit.$count( "warn" ) ).toBe( 1 );
+					expect( audit.$callLog().warn[ 1 ].action ).toBe( "security.ratelimit.blocked" );
+				} );
+
+				it( "stores a self-expiring counter per endpoint and IP", () => {
+					var window = settingService.getSetting( "cbRateLimitWindowSeconds", 300 );
+					var throttle = getInstance( "AppThrottle" );
+					var event = mockRequest( "Auth.doLogin" );
+					throttle.preProcess( event );
+
+					var key = "cbsecurity-ratelimit-Auth.doLogin:ip-" & throttle.getClientIP( event );
+					var metadata = rateLimitCache.getCachedObjectMetadata( key );
+
+					// A fixed lifetime (minutes) just past the window, never "eternal" (0) and
+					// never refreshed by reads, so idle counters are reaped on their own.
+					expect( metadata.timeout ).toBeGT( 0 );
+					expect( metadata.timeout ).toBeLTE( ceiling( window / 60 ) + 1 );
+					expect( rateLimitCache.getSize() ).toBe( 1 );
+				} );
+
+				it( "counts a method listed in the route's throttleMethods", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var throttle = getInstance( "AppThrottle" );
+					var meta = { throttleMethods: "GET" };
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						throttle.preProcess( mockRequest( "Profile.startSSO", "GET", meta ) );
+					}
+
+					expect( throttle.preProcess( mockRequest( "Profile.startSSO", "GET", meta ) ) ).toBeTrue();
+				} );
+
+				it( "keeps a separate count per endpoint", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var throttle = getInstance( "AppThrottle" );
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						throttle.preProcess( mockRequest( "Auth.doLogin" ) );
+					}
+
+					expect( throttle.preProcess( mockRequest( "Auth.doRegister" ) ) ).toBeFalse();
+				} );
+
+				it( "redirects with a flash message when the route sets throttleRedirect", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var throttle = throttleWithStubbedRedirect();
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						throttle.preProcess( mockRequest( "Auth.doLogin" ) );
+					}
+
+					var blocked = mockRequest( "Auth.doLogin", "POST", { throttleRedirect: "login" } );
+					expect( throttle.preProcess( blocked ) ).toBeTrue();
+					expect( throttle.$callLog().redirectTo[ 1 ][ 1 ] ).toBe( "login" );
+					expect( flashText() ).toInclude( "Too many attempts" );
+				} );
+
+				it( "echoes the throttleTokenParam value onto the redirect", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var throttle = throttleWithStubbedRedirect();
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						throttle.preProcess( mockRequest( "Auth.doResetPassword" ) );
+					}
+
+					var blocked = mockRequest(
+						"Auth.doResetPassword",
+						"POST",
+						{ throttleRedirect: "reset-password", throttleTokenParam: "token" }
+					);
+					blocked.setValue( "token", "abc123" );
+
+					throttle.preProcess( blocked );
+					expect( throttle.$callLog().redirectTo[ 1 ][ 1 ] ).toBe( "reset-password?token=abc123" );
+				} );
+			} );
+
+			story( "Throttling works through the router", () => {
+				it( "throttles repeated login submissions, even with the correct password", () => {
+					var user = createVerifiedUser();
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+
+					// Exhaust the allowance with wrong-password attempts, each legitimately
+					// rejected by doLogin() itself for bad credentials.
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						post(
+							route         = "/login",
+							params        = { email: user.getEmail(), password: "wrong-password", csrf: cbcsrf.generate() },
+							renderResults = false
+						);
+						// Control: these are not throttled, so the message is the login failure.
+						expect( flashText() ).notToInclude( "Too many attempts" );
+					}
+
+					// This attempt uses the CORRECT password. If the throttle is working it
+					// stops the request before doLogin() checks credentials.
+					post(
+						route         = "/login",
+						params        = { email: user.getEmail(), password: "correct-password", csrf: cbcsrf.generate() },
+						renderResults = false
+					);
+
+					expect( flashText() ).toInclude( "Too many attempts" );
+					expect( securityService.isLoggedIn() ).toBeFalse();
+				} );
+
+				it( "does not count loading the login page", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+
+					for ( var i = 1; i <= maxAttempts + 2; i++ ) {
+						get( route = "/login", renderResults = false );
+						expect( flashText() ).notToInclude( "Too many attempts" );
+					}
+				} );
+			} );
+
+			story( "The cbSSO callback is throttled by SSORateLimiter", () => {
+				it( "redirects to login once the limit is exceeded and ignores other events", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					// A fresh, autowired instance so mocking relocate() cannot leak into the
+					// interceptor the running application uses.
+					var interceptor = prepareMock( new app.interceptors.SSORateLimiter( getController() ) );
+					getWireBox().autowire( interceptor );
+					interceptor.$( "relocate" );
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						interceptor.preProcess( mockRequest( "cbsso:authorize.callback", "GET" ), {}, "", {}, {} );
+					}
+					expect( interceptor.$count( "relocate" ) ).toBe( 0 );
+
+					interceptor.preProcess( mockRequest( "cbsso:authorize.callback", "GET" ), {}, "", {}, {} );
+					expect( interceptor.$count( "relocate" ) ).toBe( 1 );
+					expect( interceptor.$callLog().relocate[ 1 ][ 1 ] ).toBe( "login" );
+
+					// Any other event is left alone, however many times it is requested.
+					for ( var i = 1; i <= maxAttempts + 2; i++ ) {
+						interceptor.preProcess( mockRequest( "main.index", "GET" ), {}, "", {}, {} );
+					}
+					expect( interceptor.$count( "relocate" ) ).toBe( 1 );
+				} );
+			} );
+		} );
+	}
+
+}
