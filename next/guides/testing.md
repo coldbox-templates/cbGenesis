@@ -39,7 +39,7 @@ tests/
 │   │   └── SettingsTest.bx     Settings handler CRUD and registry
 │   └── unit/
 │       ├── security/           APIToken, APITokenService, Permission,
-│       │                       PermissionService, RateLimitService,
+│       │                       PermissionService,
 │       │                       RememberTokenService, Role, RoleService,
 │       │                       SecurityService
 │       └── system/             AuditLog, AuditLogService, Setting,

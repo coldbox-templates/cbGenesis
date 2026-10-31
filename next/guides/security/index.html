@@ -437,15 +437,18 @@ documentation.</p>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Security headers</td><td>XSS protection, <code>frameOptions: SAMEORIGIN</code>, <code>referrerPolicy: same-origin</code></td></tr>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>API tokens</td><td>SHA/BCrypt-hashed per-user tokens with expiration and a daily purge scheduler</td></tr>
 <tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Bot trap</td><td><code>Honeypot@cbsecurity</code> route middleware on the register form: a hidden <code>website_url</code> field only bots fill in. A filled field is answered with a silent <code>200 OK</code> and the handler never runs. It is attached to the single <code>register</code> route in <code>app/config/Router.bx</code></td></tr>
-<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Rate limiting</td><td><code>RateLimiter</code> interceptor throttles login, registration, and password reset by IP - see <a href="#rate-limiting">Rate limiting</a> below</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Rate limiting</td><td><code>AppThrottle</code> route middleware limits login, registration, and password reset by IP - see <a href="#rate-limiting">Rate limiting</a> below</td></tr>
 </tbody>
 </table></div>
 <h2 id="rate-limiting"><a href="#rate-limiting" id="rate-limiting" name="rate-limiting" class="anchor"></a>Rate limiting</h2>
-<p><code>app/interceptors/RateLimiter.bx</code> fires on <code>preProcess</code> - before routing, before any handler runs - and throttles five unauthenticated <code>Auth</code> endpoints by client IP:</p>
+<p><code>app/middleware/AppThrottle.bx</code> extends cbsecurity's <code>Throttle</code> route middleware. <code>app/config/Router.bx</code> attaches it by its WireBox ID (<code>AppThrottle</code>) to five unauthenticated <code>Auth</code> routes and two <code>Profile</code> SSO routes, limiting by client IP:</p>
 <ul>
-<li><code>doLogin</code>, <code>doRegister</code>, <code>doForgotPassword</code>, <code>doResetPassword</code>, <code>doActivateInvitation</code></li>
+<li><code>login</code>, <code>register</code>, <code>activate-invitation</code>, <code>forgot-password</code>, <code>reset-password</code> (their <code>doLogin</code>, <code>doRegister</code>, <code>doActivateInvitation</code>, <code>doForgotPassword</code> and <code>doResetPassword</code> submits)</li>
+<li><code>profile/sso/:provider/start</code> (a <code>GET</code>) and <code>profile/sso/:provider</code> (the <code>DELETE</code> that unlinks)</li>
 </ul>
-<p>A caller that exceeds the limit is redirected back to the form with a flash error; the request never reaches the handler, so a correct password submitted while blocked still does not log the user in.</p>
+<p>Each form page and its submit are <strong>one route</strong>. ColdBox merges routes that share a pattern and keeps only the first one's middleware, so splitting them into a <code>get</code> and a <code>post</code> route silently drops the throttle. Instead <code>AppThrottle</code> counts only the methods the route names in its <code>throttleMethods</code> meta, by default <code>POST</code>, <code>PUT</code>, <code>PATCH</code> and <code>DELETE</code>, so loading a form never counts as an attempt. The SSO start route sets <code>throttleMethods: &quot;GET&quot;</code>.</p>
+<p>A blocked HTML form post is redirected back to the form with a flash error (the route's <code>throttleRedirect</code> meta, plus <code>throttleTokenParam</code> where the form needs its token back). Any other caller gets cbsecurity's JSON <code>429</code> with a <code>Retry-After</code> header. Either way the request never reaches the handler, so a correct password submitted while blocked still does not log the user in.</p>
+<p>The cbSSO callback is a route owned by the cbsso module, so application middleware cannot be attached to it. <code>app/interceptors/SSORateLimiter.bx</code> throttles that one endpoint with the same limits.</p>
 <div class="bxsites-table-wrap"><table class="table">
 <thead>
 <tr><th>Setting</th><th>Purpose</th></tr>
@@ -470,13 +473,14 @@ documentation.</p>
 </div>
 </div>
 <h3 id="how-counting-works"><a href="#how-counting-works" id="how-counting-works" name="how-counting-works" class="anchor"></a>How counting works</h3>
-<p><code>RateLimitService.attempt()</code> is a <strong>sliding window</strong>: every attempt, allowed or blocked, resets the key's expiration to the full window from that moment. A key only cools down once it goes quiet for an entire window - which keeps blocking for as long as an attack continues, rather than reopening partway through. Each endpoint has its own counter (keyed by <code>event:ip</code>), so exhausting the login limit does not affect registration or password reset.</p>
+<p>cbsecurity's <code>RateLimiter</code> counts in a <strong>fixed window</strong>: a key's window starts with its first attempt and ends <code>cbRateLimitWindowSeconds</code> later, whatever happens in between. Blocked requests do not extend it, so <code>Retry-After</code> is accurate. <code>AppThrottle</code> records each attempt before deciding (using the count <code>RateLimiter.hit()</code> returns under its lock), so a burst of simultaneous requests cannot overshoot the limit.</p>
+<p>Only the first blocked request of each window is written to the audit trail (<code>security.ratelimit.blocked</code>), once per endpoint and IP. Further blocked requests are not audited, so an attacker cannot grow the audit table at the rate they can send requests; use the web server's access log to see them all. (The previous in-house limiter was a sliding window that restarted on every attempt.) Each endpoint has its own counter (keyed by event and IP), so exhausting the login limit does not affect registration or password reset.</p>
 <div class="adm-block adm-note">
 <div class="adm-heading">
 <svg class="adm-icon"><use xlink:href="#adm-note" /></svg><span>In-memory by default</span>
 </div>
 <div class="adm-body">
-<p>Counters live in the <code>rateLimit</code> CacheBox region (<code>app/config/CacheBox.bx</code>), which is in-memory and therefore <strong>per application instance</strong>. Behind a load balancer with more than one instance, each instance enforces its own limit independently - a caller could get <code>cbRateLimitMaxAttempts</code> free attempts per instance rather than in total. To share counts across instances, swap the <code>rateLimit</code> region's <code>provider</code>/<code>properties</code> for a distributed CacheBox provider (Redis, Couchbase, or any provider CacheBox supports) - no code change needed in <code>RateLimitService</code> or <code>RateLimiter</code>, since both go through the injected <code>cachebox:rateLimit</code> region.</p>
+<p>Counters live in the <code>rateLimit</code> CacheBox region (<code>app/config/CacheBox.bx</code>), which is in-memory and therefore <strong>per application instance</strong>. Behind a load balancer with more than one instance, each instance enforces its own limit independently - a caller could get <code>cbRateLimitMaxAttempts</code> free attempts per instance rather than in total. To share counts across instances, swap the <code>rateLimit</code> region's <code>provider</code>/<code>properties</code> for a distributed CacheBox provider (Redis, Couchbase, or any provider CacheBox supports) - no code change needed, since <code>AppThrottle</code> and <code>SSORateLimiter</code> both count in the <code>rateLimit</code> region.</p>
 </div>
 </div>
 <h2 id="cbsecurity-configuration"><a href="#cbsecurity-configuration" id="cbsecurity-configuration" name="cbsecurity-configuration" class="anchor"></a><code>cbsecurity</code> configuration</h2>

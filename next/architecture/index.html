@@ -321,7 +321,7 @@
 <tr><td><code>cbSecurity_onInvalidAuthorization</code></td><td>An authenticated user missing the required permission</td></tr>
 </tbody>
 </table></div>
-<p><strong><code>app/interceptors/RateLimiter.bx</code></strong> fires on <code>preProcess</code> - before routing, before any handler - and throttles five unauthenticated <code>Auth</code> actions (login, register, forgot/reset password, invitation activation) by client IP. See <a href="/next/guides/security/index.html#rate-limiting">Rate limiting</a> for the settings and how it works.</p>
+<p><strong><code>app/middleware/AppThrottle.bx</code></strong> is route middleware (attached in <code>app/config/Router.bx</code>) that throttles five unauthenticated <code>Auth</code> routes (login, register, forgot/reset password, invitation activation) and the SSO routes by client IP. <code>app/interceptors/SSORateLimiter.bx</code> covers the cbSSO callback, which is a module route. See <a href="/next/guides/security/index.html#rate-limiting">Rate limiting</a> for the settings and how it works.</p>
 <p><strong><code>app/interceptors/SSOAuthorization.bx</code></strong> handles cbSSO's
 <code>CBSSOAuthorization</code> interception point. It connects a verified provider
 identity to the local user model, enforces login-versus-linking policy,
@@ -366,7 +366,7 @@ integration.</p>
 │   │   └── _components/        Reusable UI partials (app, auth, ui)
 │   ├── email_templates/       Token-based email body templates
 │   ├── helpers/               ApplicationHelper.bxm — global view helpers
-│   └── interceptors/           AuditLogger, RateLimiter, SSOAuthorization
+│   └── interceptors/           AuditLogger, SSORateLimiter, SSOAuthorization
 ├── public/
 │   ├── Application.bx         Entry point — ColdBox + ORM bootstrap
 │   ├── index.bxm               Front controller placeholder
