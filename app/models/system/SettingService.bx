@@ -59,7 +59,7 @@ class extends="app.models.BaseService" {
 			cbAuditLogRetentionDays  : 90,
 			// Rate limiting: max attempts allowed per IP within the window below, on
 			// sensitive Auth endpoints (login, register, forgot/reset password, invitation
-			// activation). See RateLimiter interceptor and RateLimitService.
+			// activation). See the AppThrottle route middleware (app/middleware/AppThrottle.bx) and SSORateLimiter.
 			cbRateLimitMaxAttempts   : 5,
 			// Rate limiting window, in seconds. 0 disables rate limiting entirely.
 			cbRateLimitWindowSeconds: 300,

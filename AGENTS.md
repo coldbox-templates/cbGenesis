@@ -103,7 +103,14 @@ All handlers except `Auth` and `Main` extend `BaseSecureHandler`, whose `preHand
 Registered interceptors and their interception points (auto-updated on `coldbox ai refresh`):
 
 - **AuditLogger** (`app/interceptors/AuditLogger.bx`, registered in `Coldbox.bx`): `postAuthentication`, `preLogout`, `cbSecurity_onInvalidAuthentication`, `cbSecurity_onInvalidAuthorization` — writes each to the audit trail via `AuditLogService`.
-- **RateLimiter** (`app/interceptors/RateLimiter.bx`, registered in `Coldbox.bx`): `preProcess` — throttles `Auth.doLogin`, `Auth.doRegister`, `Auth.doForgotPassword`, `Auth.doResetPassword`, `Auth.doActivateInvitation` by client IP via `RateLimitService`, governed by `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds`.
+- **SSORateLimiter** (`app/interceptors/SSORateLimiter.bx`, registered in `Coldbox.bx`): `preProcess` - throttles the cbSSO authorization callback (a module route, so route middleware cannot reach it) by client IP via cbsecurity's `RateLimiter`.
+
+## Route Middleware
+
+Route middleware is attached in `app/config/Router.bx` by WireBox ID. App classes live in `app/middleware/` and extend the cbsecurity middleware, overriding only what differs. `execute( "handler.action" )` in tests bypasses route middleware; use `post( route = "..." )` to run it.
+
+- **`Honeypot@cbsecurity`**: hidden `website_url` field on the register form, silent.
+- **`AppThrottle`** (extends `Throttle@cbsecurity`): per-IP limits from the `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds` settings, fixed window, counted in the `rateLimit` CacheBox region. Attached to the Auth form routes and the Profile SSO routes. Each form page and its submit are ONE route (ColdBox merges same-pattern routes and keeps only the first one's middleware); `AppThrottle` counts only the methods in the route's `throttleMethods` meta (default `POST,PUT,PATCH,DELETE`). Other meta: `throttleRedirect`, `throttleTokenParam`.
 
 ## Layouts
 

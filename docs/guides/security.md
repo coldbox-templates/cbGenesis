@@ -236,15 +236,20 @@ documentation.
 | Security headers | XSS protection, `frameOptions: SAMEORIGIN`, `referrerPolicy: same-origin` |
 | API tokens | SHA/BCrypt-hashed per-user tokens with expiration and a daily purge scheduler |
 | Bot trap | `Honeypot@cbsecurity` route middleware on the register form: a hidden `website_url` field only bots fill in. A filled field is answered with a silent `200 OK` and the handler never runs. It is attached to the single `register` route in `app/config/Router.bx` |
-| Rate limiting | `RateLimiter` interceptor throttles login, registration, and password reset by IP - see [Rate limiting](#rate-limiting) below |
+| Rate limiting | `AppThrottle` route middleware limits login, registration, and password reset by IP - see [Rate limiting](#rate-limiting) below |
 
 ## Rate limiting
 
-`app/interceptors/RateLimiter.bx` fires on `preProcess` - before routing, before any handler runs - and throttles five unauthenticated `Auth` endpoints by client IP:
+`app/middleware/AppThrottle.bx` extends cbsecurity's `Throttle` route middleware. `app/config/Router.bx` attaches it by its WireBox ID (`AppThrottle`) to five unauthenticated `Auth` routes and two `Profile` SSO routes, limiting by client IP:
 
-- `doLogin`, `doRegister`, `doForgotPassword`, `doResetPassword`, `doActivateInvitation`
+- `login`, `register`, `activate-invitation`, `forgot-password`, `reset-password` (their `doLogin`, `doRegister`, `doActivateInvitation`, `doForgotPassword` and `doResetPassword` submits)
+- `profile/sso/:provider/start` (a `GET`) and `profile/sso/:provider` (the `DELETE` that unlinks)
 
-A caller that exceeds the limit is redirected back to the form with a flash error; the request never reaches the handler, so a correct password submitted while blocked still does not log the user in.
+Each form page and its submit are **one route**. ColdBox merges routes that share a pattern and keeps only the first one's middleware, so splitting them into a `get` and a `post` route silently drops the throttle. Instead `AppThrottle` counts only the methods the route names in its `throttleMethods` meta, by default `POST`, `PUT`, `PATCH` and `DELETE`, so loading a form never counts as an attempt. The SSO start route sets `throttleMethods: "GET"`.
+
+A blocked HTML form post is redirected back to the form with a flash error (the route's `throttleRedirect` meta, plus `throttleTokenParam` where the form needs its token back). Any other caller gets cbsecurity's JSON `429` with a `Retry-After` header. Either way the request never reaches the handler, so a correct password submitted while blocked still does not log the user in.
+
+The cbSSO callback is a route owned by the cbsso module, so application middleware cannot be attached to it. `app/interceptors/SSORateLimiter.bx` throttles that one endpoint with the same limits.
 
 | Setting | Purpose |
 |---|---|
@@ -262,10 +267,10 @@ All three are editable at `/settings` like any other app setting - see [App Sett
 
 ### How counting works
 
-`RateLimitService.attempt()` is a **sliding window**: every attempt, allowed or blocked, resets the key's expiration to the full window from that moment. A key only cools down once it goes quiet for an entire window - which keeps blocking for as long as an attack continues, rather than reopening partway through. Each endpoint has its own counter (keyed by `event:ip`), so exhausting the login limit does not affect registration or password reset.
+cbsecurity's `RateLimiter` counts in a **fixed window**: a key's window starts with its first attempt and ends `cbRateLimitWindowSeconds` later, whatever happens in between. Blocked requests do not extend it, so `Retry-After` is accurate. (The previous in-house limiter was a sliding window that restarted on every attempt.) Each endpoint has its own counter (keyed by event and IP), so exhausting the login limit does not affect registration or password reset.
 
 !!! note "In-memory by default"
-    Counters live in the `rateLimit` CacheBox region (`app/config/CacheBox.bx`), which is in-memory and therefore **per application instance**. Behind a load balancer with more than one instance, each instance enforces its own limit independently - a caller could get `cbRateLimitMaxAttempts` free attempts per instance rather than in total. To share counts across instances, swap the `rateLimit` region's `provider`/`properties` for a distributed CacheBox provider (Redis, Couchbase, or any provider CacheBox supports) - no code change needed in `RateLimitService` or `RateLimiter`, since both go through the injected `cachebox:rateLimit` region.
+    Counters live in the `rateLimit` CacheBox region (`app/config/CacheBox.bx`), which is in-memory and therefore **per application instance**. Behind a load balancer with more than one instance, each instance enforces its own limit independently - a caller could get `cbRateLimitMaxAttempts` free attempts per instance rather than in total. To share counts across instances, swap the `rateLimit` region's `provider`/`properties` for a distributed CacheBox provider (Redis, Couchbase, or any provider CacheBox supports) - no code change needed, since `AppThrottle` and `SSORateLimiter` both count in the `rateLimit` region.
 
 ## `cbsecurity` configuration
 

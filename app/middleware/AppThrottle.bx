@@ -1,0 +1,165 @@
+/**
+ * Route middleware that throttles sensitive endpoints by client IP.
+ *
+ * Extends cbsecurity's Throttle so the 429 handling, the X-RateLimit headers and the
+ * fixed-window counting come from the module, and overrides only what this application
+ * does differently:
+ *
+ * - Limits are the admin-editable settings cbRateLimitMaxAttempts and
+ *   cbRateLimitWindowSeconds rather than static route meta.
+ * - Counters live in the "rateLimit" CacheBox region (app/config/CacheBox.bx).
+ * - The client IP honors the cbTrustProxyHeaders setting.
+ * - Only the HTTP methods named by the route's "throttleMethods" meta are counted
+ *   (default: the unsafe ones). A form page and its submit share one route, because
+ *   ColdBox merges routes with the same pattern and keeps only the first one's
+ *   middleware, so this is what keeps loading a form from counting as an attempt.
+ * - A route that sets the "throttleRedirect" meta key answers a blocked request with a
+ *   flash message and a redirect, so HTML forms get a page instead of bare JSON. Routes
+ *   without it get the module's JSON 429 with a Retry-After header.
+ *
+ * Route meta keys:
+ * - throttleMethods: comma list of HTTP methods to count (default POST,PUT,PATCH,DELETE).
+ * - throttleRedirect: event or URL to send a blocked HTML request back to.
+ * - throttleTokenParam: request key echoed onto that redirect so the form can re-render.
+ *
+ * See docs/guides/security.md#rate-limiting.
+ */
+@singleton
+class extends="cbsecurity.models.middleware.Throttle" {
+
+	@inject( "provider:SettingService" )
+	property name="settingService";
+
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
+
+	@inject( "coldbox:flash" )
+	property name="flash";
+
+	@inject( "coldbox" )
+	property name="controller";
+
+	/**
+	 * Skips requests that should not count, then defers to the module.
+	 *
+	 * A request is skipped when the window or the attempt limit is set to 0 or less (how
+	 * an admin switches rate limiting off), or when its HTTP method is not one the route
+	 * asked to count.
+	 *
+	 * @event The request context.
+	 * @rc    The request collection.
+	 * @prc   The private request collection.
+	 *
+	 * @return True when the request was blocked and the remaining middleware must be skipped.
+	 */
+	boolean function preProcess( required event, rc, prc ) {
+		var limit = resolveLimit( arguments.event )
+		if ( limit.decaySeconds <= 0 || limit.maxAttempts <= 0 ) {
+			return false
+		}
+
+		var countedMethods = getMetaValue( arguments.event, "throttleMethods", "POST,PUT,PATCH,DELETE" )
+		if ( !listFindNoCase( countedMethods, arguments.event.getHTTPMethod() ) ) {
+			return false
+		}
+
+		return super.preProcess( argumentCollection = arguments )
+	}
+
+	/**
+	 * Builds the limit from the settings registry instead of route meta.
+	 *
+	 * The counter is named after the current event, so each endpoint keeps its own
+	 * count and exhausting the login limit does not affect registration.
+	 *
+	 * @event The request context.
+	 *
+	 * @return The limit struct the module's Throttle expects.
+	 */
+	private struct function resolveLimit( required event ) {
+		return {
+			maxAttempts  : variables.settingService.getSetting( "cbRateLimitMaxAttempts", 5 ),
+			decaySeconds : variables.settingService.getSetting( "cbRateLimitWindowSeconds", 300 ),
+			cacheProvider: "rateLimit",
+			by           : "ip",
+			name         : arguments.event.getCurrentEvent()
+		}
+	}
+
+	/**
+	 * Resolves the client IP.
+	 *
+	 * trustUpstream mirrors cbTrustProxyHeaders: a caller can set X-Forwarded-For to
+	 * anything, so trusting it without knowing the app sits behind a proxy that sets it
+	 * itself would let an attacker get a fresh bucket on every request just by changing
+	 * the header. See SettingService's cbTrustProxyHeaders doc comment for the tradeoff.
+	 *
+	 * @event The request context.
+	 *
+	 * @return The client IP address.
+	 */
+	string function getClientIP( required event ) {
+		return variables.cbSecurity.getRealIP(
+			trustUpstream = variables.settingService.getSetting( "cbTrustProxyHeaders", true )
+		)
+	}
+
+	/**
+	 * Audits the block, then answers it: a redirect with a flash message when the route
+	 * opted in through "throttleRedirect", otherwise the module's JSON 429.
+	 *
+	 * @event      The request context.
+	 * @statusCode The HTTP status code.
+	 * @message    The error message.
+	 * @headers    Extra response headers as name-value pairs.
+	 *
+	 * @return Always true, so callers can return it to stop the remaining middleware.
+	 */
+	boolean function deny(
+		required event,
+		numeric statusCode = 403,
+		string message     = "Forbidden",
+		struct headers     = {}
+	) {
+		var currentEvent = arguments.event.getCurrentEvent()
+
+		variables.auditLogService.warn(
+			action     : "security.ratelimit.blocked",
+			message    : "Rate limit exceeded for [#currentEvent#].",
+			category   : "security",
+			targetType : "Event",
+			targetLabel: currentEvent
+		)
+
+		var location = getMetaValue( arguments.event, "throttleRedirect", "" )
+		if ( !len( location ) ) {
+			return super.deny( argumentCollection = arguments )
+		}
+
+		variables.flash.put( "messages", {
+			type   : "error",
+			message: "Too many attempts. Please wait a few minutes and try again."
+		} )
+
+		var tokenParam = getMetaValue( arguments.event, "throttleTokenParam", "" )
+		var tokenValue = len( tokenParam ) ? arguments.event.getValue( tokenParam, "" ) : ""
+		if ( len( tokenValue ) ) {
+			location &= "?#tokenParam#=#encodeForURL( tokenValue )#"
+		}
+
+		redirectTo( location )
+		return true
+	}
+
+	/**
+	 * Sends the client to another event, route or URL.
+	 *
+	 * The request context has no relocate(); the ColdBox controller does.
+	 *
+	 * @location The event, route or URL to relocate to.
+	 */
+	function redirectTo( required string location ) {
+		variables.controller.relocate( arguments.location )
+	}
+
+}

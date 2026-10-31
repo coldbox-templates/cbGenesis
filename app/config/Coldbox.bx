@@ -149,8 +149,8 @@ class {
 				properties : {}
 			},
 			{
-				class      : "app.interceptors.RateLimiter",
-				name       : "RateLimiter",
+				class      : "app.interceptors.SSORateLimiter",
+				name       : "SSORateLimiter",
 				properties : {}
 			},
 			{
