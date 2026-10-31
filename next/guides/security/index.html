@@ -423,20 +423,21 @@ is</em>; cbGenesis decides <em>what that identity is allowed to do in this appli
 and <a href="https://cbsso.ortusbooks.com/cbauth-integration/enabling-integration.md">cbAuth integration</a>
 documentation.</p>
 <h2 id="security-layers"><a href="#security-layers" id="security-layers" name="security-layers" class="anchor"></a>Security layers</h2>
-<div class="bxsites-table-wrap"><table class="table">
+<div class="bxsites-table-wrap" x-data="{ q: '' }"><input type="search" class="bxsites-table-filter" x-model="q" placeholder="Filter table..." aria-label="Filter table"><table class="table">
 <thead>
 <tr><th>Layer</th><th>Implementation</th></tr>
 </thead>
 <tbody>
-<tr><td>Session auth</td><td>cbauth with <code>CacheStorage@cbStorages</code> — server-side session cache</td></tr>
-<tr><td>Password hashing</td><td>bcrypt via <code>bx-password-encrypt</code></td></tr>
-<tr><td>Password policy</td><td><code>SettingService.isValidPassword()</code> — <code>cbMinPasswordLength</code> plus an uppercase letter, a lowercase letter, a digit, and a special character. Enforced server-side on registration, invitation activation, password reset, and profile password change; the Alpine <code>$passwordMeetsPolicy</code> helper mirrors it in the browser</td></tr>
-<tr><td>CSRF protection</td><td>cbsecurity rotating token (30 min); the auto-verifier is off, and <code>BaseSecureHandler</code> verifies deny-by-default on every unsafe HTTP method instead — see <a href="/next/guides/handlers-routing/index.html#csrf-verification">Handlers &amp; Routing</a></td></tr>
-<tr><td>Handler security</td><td><code>@secured</code> annotation → firewall redirects unauthenticated visitors to <code>login</code>, authorized-but-unpermitted users to <code>dashboard.notAuthorized</code></td></tr>
-<tr><td>JWT support</td><td>Configured for API access (HS512, 60 min, cache token storage)</td></tr>
-<tr><td>Security headers</td><td>XSS protection, <code>frameOptions: SAMEORIGIN</code>, <code>referrerPolicy: same-origin</code></td></tr>
-<tr><td>API tokens</td><td>SHA/BCrypt-hashed per-user tokens with expiration and a daily purge scheduler</td></tr>
-<tr><td>Rate limiting</td><td><code>RateLimiter</code> interceptor throttles login, registration, and password reset by IP - see <a href="#rate-limiting">Rate limiting</a> below</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Session auth</td><td>cbauth with <code>CacheStorage@cbStorages</code> — server-side session cache</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Password hashing</td><td>bcrypt via <code>bx-password-encrypt</code></td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Password policy</td><td><code>SettingService.isValidPassword()</code> — <code>cbMinPasswordLength</code> plus an uppercase letter, a lowercase letter, a digit, and a special character. Enforced server-side on registration, invitation activation, password reset, and profile password change; the Alpine <code>$passwordMeetsPolicy</code> helper mirrors it in the browser</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>CSRF protection</td><td>cbsecurity rotating token (30 min); the auto-verifier is off, and <code>BaseSecureHandler</code> verifies deny-by-default on every unsafe HTTP method instead — see <a href="/next/guides/handlers-routing/index.html#csrf-verification">Handlers &amp; Routing</a></td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Handler security</td><td><code>@secured</code> annotation → firewall redirects unauthenticated visitors to <code>login</code>, authorized-but-unpermitted users to <code>dashboard.notAuthorized</code></td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>JWT support</td><td>Configured for API access (HS512, 60 min, cache token storage)</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Security headers</td><td>XSS protection, <code>frameOptions: SAMEORIGIN</code>, <code>referrerPolicy: same-origin</code></td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>API tokens</td><td>SHA/BCrypt-hashed per-user tokens with expiration and a daily purge scheduler</td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Bot trap</td><td><code>Honeypot@cbsecurity</code> route middleware on the register form: a hidden <code>website_url</code> field only bots fill in. A filled field is answered with a silent <code>200 OK</code> and the handler never runs. It is attached to the single <code>register</code> route in <code>app/config/Router.bx</code></td></tr>
+<tr x-show="!q || $el.textContent.toLowerCase().includes( q.toLowerCase() )"><td>Rate limiting</td><td><code>RateLimiter</code> interceptor throttles login, registration, and password reset by IP - see <a href="#rate-limiting">Rate limiting</a> below</td></tr>
 </tbody>
 </table></div>
 <h2 id="rate-limiting"><a href="#rate-limiting" id="rate-limiting" name="rate-limiting" class="anchor"></a>Rate limiting</h2>
@@ -650,7 +651,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 	<script src="/next/assets/highlight-boxlang.c59b5de4.js"></script>
 	<script>hljs.highlightAll();</script>
 	<script src="/next/assets/code-lines.66ad0c90.js"></script>
-	<script src="/next/assets/copy-code.5bd76adc.js" defer></script>
+	<script src="/next/assets/copy-code.a5acc8cc.js" defer></script>
 	<script src="/next/assets/admonition-collapse.df9b134e.js" defer></script>
 	<script src="/next/assets/nav-toggle.6bc5dbe8.js" defer></script>
 	<script src="/next/assets/toc-collapse.cb73e778.js" defer></script>
@@ -662,7 +663,7 @@ class extends=&quot;BaseSecureHandler&quot; {
 
 	
 	
-		<script src="/next/assets/page-actions-init.e7dd88d0.js" defer></script>
+		<script src="/next/assets/page-actions-init.9092e0f1.js" defer></script>
 	
 
 	
