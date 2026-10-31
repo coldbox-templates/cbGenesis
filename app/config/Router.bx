@@ -178,7 +178,7 @@ class {
 			POST: "doLogin"
 		})
 		route( "register/check-email", "Auth.checkEmailAvailability" )
-		route( "register" ).withHandler( "Auth" ).toAction({
+		route( "register" ).withHandler( "Auth" ).middleware( "Honeypot@cbsecurity" ).toAction({
 			GET: "register",
 			POST: "doRegister"
 		})

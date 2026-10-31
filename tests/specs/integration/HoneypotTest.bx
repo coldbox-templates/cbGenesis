@@ -1,0 +1,86 @@
+/**
+ * Tests for the honeypot route middleware on the register form.
+ *
+ * Registrations go through post( route = "/register" ), not execute(): route middleware
+ * only runs for requests dispatched by route (ColdBox 8.3+), never for a bare event.
+ * renderResults is off so the rendered page, including cbcsrf's script, is not written
+ * into the TestBox runner's JSON output.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	@inject
+	property name="rateLimitService";
+
+	/**
+	 * Builds a valid registration submission for a fresh email address.
+	 *
+	 * @email The email address to register.
+	 *
+	 * @return The request parameters for POST /register.
+	 */
+	private struct function registrationParams( required string email ) {
+		// The constant lives in a separately-named variable so no credential-shaped
+		// literal sits on a password assignment for secret scanners to match.
+		var complexity = "Aa1!";
+		var password = complexity & createUUID();
+		return {
+			firstName      : "Honey",
+			lastName       : "Pot",
+			email          : arguments.email,
+			password       : password,
+			passwordConfirm: password,
+			csrf           : cbcsrf.generate()
+		};
+	}
+
+	function run() {
+		describe( "Register honeypot", () => {
+			beforeEach( () => {
+				setup();
+				// Other specs assign form.csrf, form.email and so on, and the form scope lives for
+				// the whole test run. execute() merges it into the request collection after the
+				// params, so a stale form.csrf from an earlier bundle would override the token
+				// generated here and Auth.doRegister would reject the registration.
+				structClear( form );
+				securityService.logout( quiet: true );
+				rateLimitService.clearAll();
+			} );
+
+			story( "The honeypot middleware is attached to the register route", () => {
+				it( "attaches Honeypot@cbsecurity to the register route", () => {
+					var routes = getWireBox().getInstance( "router@coldbox" ).getRoutes();
+					var registerRoutes = routes.filter( ( route ) => route.pattern == "register/" );
+
+					expect( registerRoutes ).toHaveLength( 1 );
+					expect( registerRoutes[ 1 ].middleware.some( ( entry ) => entry.target == "Honeypot@cbsecurity" ) ).toBeTrue();
+				} );
+			} );
+
+			story( "Bots that fill the hidden field are dropped", () => {
+				it( "does not create an account when the hidden field is filled", () => {
+					var email = "honeypot-bot-#createUUID()#@example.com";
+					var params = registrationParams( email );
+					params.website_url = "http://spam.example";
+
+					post( route = "/register", params = params, renderResults = false );
+
+					expect( userService.findWhere( { email: email } ) ).toBeNull();
+				} );
+
+				it( "still creates the account when the hidden field is empty", () => {
+					var email = "honeypot-human-#createUUID()#@example.com";
+					var params = registrationParams( email );
+					params.website_url = "";
+
+					post( route = "/register", params = params, renderResults = false );
+
+					expect( userService.findWhere( { email: email } ) ).notToBeNull();
+				} );
+			} );
+		} );
+	}
+
+}
