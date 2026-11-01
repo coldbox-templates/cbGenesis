@@ -244,6 +244,7 @@ documentation.
 
 - `login`, `register`, `activate-invitation`, `forgot-password`, `reset-password` (their `doLogin`, `doRegister`, `doActivateInvitation`, `doForgotPassword` and `doResetPassword` submits)
 - `profile/sso/:provider/start` (a `GET`) and `profile/sso/:provider` (the `DELETE` that unlinks)
+- `auth/doLogin`, `auth/doRegister`, `auth/doActivateInvitation`, `auth/doForgotPassword` and `auth/doResetPassword`: the conventions-based catch-all route exposes every `Auth` action at `auth/<action>`, so a direct post to those URLs would skip the middleware above. They have their own routes with the same middleware and meta, and because the counter is named after the event, they share one budget with the named route.
 
 Each form page and its submit are **one route**. ColdBox merges routes that share a pattern and keeps only the first one's middleware, so splitting them into a `get` and a `post` route silently drops the throttle. Instead `AppThrottle` counts only the methods the route names in its `throttleMethods` meta, by default `POST`, `PUT`, `PATCH` and `DELETE`, so loading a form never counts as an attempt. The SSO start route sets `throttleMethods: "GET"`.
 

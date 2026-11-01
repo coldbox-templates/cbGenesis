@@ -21,7 +21,7 @@
 	</bx:if>
 
     <form method="post"
-          action="#event.buildLink( "auth/doLogin" )#"
+          action="#event.buildLink( "login" )#"
           @submit="onSubmit"
           novalidate>
 

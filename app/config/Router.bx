@@ -200,6 +200,17 @@ class {
 			GET: "resetPassword",
 			POST: "doResetPassword"
 		})
+
+		// The conventions-based catch-all below also exposes every Auth action at auth/<action>
+		// (the login form itself posts to auth/doLogin). A request to those URLs never matches the
+		// routes above, so without these entries it would skip the honeypot and the throttle. They
+		// reuse the same middleware and meta; AppThrottle names its counter after the event
+		// (Auth.doLogin), so a form post and a direct post to either URL share one budget.
+		post( "auth/doLogin" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "login" } ).to( "Auth.doLogin" )
+		post( "auth/doRegister" ).middleware( [ "Honeypot@cbsecurity", "AppThrottle" ] ).meta( { throttleRedirect: "register" } ).to( "Auth.doRegister" )
+		post( "auth/doActivateInvitation" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "activate-invitation", throttleTokenParam: "token" } ).to( "Auth.doActivateInvitation" )
+		post( "auth/doForgotPassword" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "forgot-password" } ).to( "Auth.doForgotPassword" )
+		post( "auth/doResetPassword" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "reset-password", throttleTokenParam: "token" } ).to( "Auth.doResetPassword" )
 		route( "sso/complete", "SSO.complete" )
 
 		// @app_routes@
