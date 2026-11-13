@@ -61,7 +61,8 @@ class extends="app.models.BaseService" {
 			// sensitive Auth endpoints (login, register, forgot/reset password, invitation
 			// activation). See the AppThrottle route middleware (app/middleware/AppThrottle.bx) and SSORateLimiter.
 			cbRateLimitMaxAttempts   : 5,
-			// Rate limiting window, in seconds. 0 disables rate limiting entirely.
+			// Rate limiting window, in seconds, 1 to 86400. To switch limiting off use the emergency stop
+			// (a pause or the RATE_LIMITING_ENABLED variable), not a window of 0.
 			cbRateLimitWindowSeconds: 300,
 			// Rate limiting pause (see RateLimitControlService). Empty = not paused, "indefinite" =
 			// until resumed, otherwise the epoch second the pause ends. cbRateLimitPausedBy and
@@ -426,12 +427,12 @@ class extends="app.models.BaseService" {
 			)
 		}
 
-		// Validate the cbRateLimitWindowSeconds setting to be a whole number between 0 and 86400 (one day). 0 disables rate limiting.
+		// Validate the cbRateLimitWindowSeconds setting to be a whole number between 1 and 86400 (one day). 0 no longer disables rate limiting: use the emergency stop.
 		var windowSeconds = arguments.memento?.cbRateLimitWindowSeconds ?: this.DEFAULTS.cbRateLimitWindowSeconds
-		if ( !isNumeric( windowSeconds ) || int( windowSeconds ) != windowSeconds || int( windowSeconds ) < 0 || int( windowSeconds ) > 86400 ) {
+		if ( !isNumeric( windowSeconds ) || int( windowSeconds ) != windowSeconds || int( windowSeconds ) < 1 || int( windowSeconds ) > 86400 ) {
 			throw(
 				type   = "Setting.Invalid",
-				message = "Rate limit window must be a whole number of seconds between 0 and 86400."
+				message = "Rate limit window must be a whole number of seconds between 1 and 86400. To switch rate limiting off, use the emergency stop."
 			)
 		}
 	}

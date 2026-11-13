@@ -48,7 +48,7 @@ Wähle **Auth Center** oder **Auth Split** unter `/settings`, speichere die Eins
 | `cbApiTokenMaxValidityMonths` | Maximale Lebensdauer, für die ein API-Token ausgestellt werden kann (Standard: `12`) |
 | `cbAuditLogRetentionDays` | Alter in Tagen, ab dem die tägliche geplante Aufgabe Audit-Log-Einträge endgültig löscht (Standard: `90`). `0` deaktiviert die Bereinigung - siehe [Geplante Aufgaben](../architecture.md#scheduled-tasks) |
 | `cbRateLimitMaxAttempts` | Erlaubte Versuche pro IP, pro Endpunkt, bevor `RateLimiter` Login/Registrierung/Passwort-Zurücksetzung blockiert (Standard: `5`) - siehe [Rate Limiting](../guides/security.md#rate-limiting) |
-| `cbRateLimitWindowSeconds` | Rate-Limit-Fenster in Sekunden (Standard: `300`). `0` deaktiviert Rate Limiting vollständig |
+| `cbRateLimitWindowSeconds` | Rate-Limit-Fenster in Sekunden (Standard: `300`). Bereich 1 bis 86400. Zum Ausschalten den Notfallstopp verwenden. |
 | `cbTrustProxyHeaders` | Ob `RateLimiter`, der Audit-Trail und Sicherheits-E-Mails den Headern `X-Forwarded-For`/`X-Cluster-Client-IP` für die IP des Aufrufers vertrauen (Standard: `true`, da diese App typischerweise hinter einem Reverse-Proxy oder Load-Balancer deployt wird). Schalte dies nur aus, wenn die App direkt am Internet hängt, ohne etwas davor - siehe [Deployment hinter einem Proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 | `cbEncryptionKey` / `cbSaltingKey` | Verschlüsselungs-/Salting-Schlüssel, verwendet von der Sicherheitsschicht |
 

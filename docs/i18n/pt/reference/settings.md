@@ -48,7 +48,7 @@ Selecione **Auth Center** ou **Auth Split** em `/settings`, guarde as definiçõ
 | `cbApiTokenMaxValidityMonths` | Duração máxima com que um token de API pode ser emitido (predefinição: `12`) |
 | `cbAuditLogRetentionDays` | Idade, em dias, a partir da qual a tarefa diária agendada elimina definitivamente as entradas do registo de auditoria (predefinição: `90`). `0` desativa a purga - veja [Tarefas Agendadas](../architecture.md#scheduled-tasks) |
 | `cbRateLimitMaxAttempts` | Tentativas permitidas por IP, por endpoint, antes de o `RateLimiter` bloquear o início de sessão/registo/reposição de palavra-passe (predefinição: `5`) - veja [Limitação de taxa](../guides/security.md#rate-limiting) |
-| `cbRateLimitWindowSeconds` | Janela de limitação de taxa, em segundos (predefinição: `300`). `0` desativa completamente a limitação de taxa |
+| `cbRateLimitWindowSeconds` | Janela de limitação de taxa, em segundos (predefinição: `300`). Intervalo de 1 a 86400. Para a desativar, use a paragem de emergência. |
 | `cbTrustProxyHeaders` | Se o `RateLimiter`, o registo de auditoria, e os e-mails de segurança confiam nos cabeçalhos `X-Forwarded-For`/`X-Cluster-Client-IP` para o IP de quem chama (predefinição: `true`, já que esta aplicação é tipicamente implantada atrás de um proxy reverso ou load balancer). Desative isto apenas se a aplicação estiver diretamente exposta à internet, sem nada à frente dela - veja [Implantação atrás de um proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 | `cbEncryptionKey` / `cbSaltingKey` | Chaves de encriptação/salting utilizadas pela camada de segurança |
 

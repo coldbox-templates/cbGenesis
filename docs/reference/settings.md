@@ -48,7 +48,7 @@ Select **Auth Center** or **Auth Split** at `/settings`, save the settings, and 
 | `cbApiTokenMaxValidityMonths` | Maximum lifetime an API token can be issued for (default: `12`) |
 | `cbAuditLogRetentionDays` | Age, in days, at which the daily scheduled task hard-deletes audit log entries (default: `90`). `0` disables the purge - see [Scheduled Tasks](../architecture.md#scheduled-tasks) |
 | `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, before the `AppThrottle` middleware blocks login/registration/password-reset (default: `5`) - see [Rate limiting](../guides/security.md#rate-limiting) |
-| `cbRateLimitWindowSeconds` | Rate limit window, in seconds (default: `300`). `0` also stops enforcement, but use the emergency stop instead: it is audited and ends on a timer |
+| `cbRateLimitWindowSeconds` | Rate limit window, in seconds (default: `300`). Range 1 to 86400. To switch limiting off, use the emergency stop. |
 | `cbRateLimitAutoBlock` | Whether an IP that keeps getting throttled is blocked automatically (default: `true`) - see [Blocked IPs](../guides/security.md#blocked-ips) |
 | `cbRateLimitAutoBlockWindows` / `cbRateLimitAutoBlockPeriodMinutes` / `cbRateLimitAutoBlockHours` | The automatic rule: block an IP after this many throttled windows (1 to 100, default `3`) within this many minutes (1 to 1440, default `60`), for this many hours (1 to 8760, default `24`) |
 | `cbRateLimitHistoryRetentionDays` | Days the rate limit history (hourly blocked-request totals) is kept before the daily purge deletes it (default: `30`, 1 to 365) - see [History](../guides/security.md#history) |
