@@ -72,8 +72,11 @@ class extends="coldbox.system.Interceptor" {
 
 		var maxAttempts = variables.settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
 		var windowSeconds = variables.settingService.getSetting( "cbRateLimitWindowSeconds", 300 )
-		// A window or limit of 0 is how an admin switches rate limiting off.
-		if ( windowSeconds <= 0 || maxAttempts <= 0 ) {
+		// A stored window of 0 (from before the minimum was 1) must not switch limiting off.
+		if ( !isNumeric( windowSeconds ) || windowSeconds < 1 ) {
+			windowSeconds = 300
+		}
+		if ( maxAttempts <= 0 ) {
 			return
 		}
 

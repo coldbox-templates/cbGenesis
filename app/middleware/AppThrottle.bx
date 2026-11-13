@@ -58,8 +58,8 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	 * Skips requests that should not count, then defers to the module.
 	 *
 	 * A request is skipped when rate limiting is switched off (RateLimitControlService:
-	 * the RATE_LIMITING_ENABLED environment variable or an admin's pause), when the window
-	 * or the attempt limit is set to 0 or less, or when its HTTP method is not one the
+	 * the RATE_LIMITING_ENABLED environment variable or an admin's pause), when the attempt
+	 * limit is set to 0 or less, or when its HTTP method is not one the
 	 * route asked to count.
 	 *
 	 * @event The request context.
@@ -203,9 +203,14 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	 * @return The limit struct the module's Throttle expects.
 	 */
 	private struct function resolveLimit( required event ) {
+		var windowSeconds = variables.settingService.getSetting( "cbRateLimitWindowSeconds", 300 )
+		// A stored 0 (from before the minimum was 1) must not switch limiting off: use the default.
+		if ( !isNumeric( windowSeconds ) || windowSeconds < 1 ) {
+			windowSeconds = 300
+		}
 		return {
 			maxAttempts  : variables.settingService.getSetting( "cbRateLimitMaxAttempts", 5 ),
-			decaySeconds : variables.settingService.getSetting( "cbRateLimitWindowSeconds", 300 ),
+			decaySeconds : windowSeconds,
 			cacheProvider: "rateLimit",
 			by           : "ip",
 			name         : arguments.event.getCurrentEvent()

@@ -261,7 +261,7 @@ Quem chama e excede o limite é redirecionado de volta ao formulário com um err
 | Definição | Propósito |
 |---|---|
 | `cbRateLimitMaxAttempts` | Tentativas permitidas por IP, por endpoint, dentro da janela (predefinição: `5`) |
-| `cbRateLimitWindowSeconds` | Duração da janela, em segundos (predefinição: `300`). `0` desativa completamente a limitação de taxa |
+| `cbRateLimitWindowSeconds` | Duração da janela, em segundos (predefinição: `300`). Intervalo de 1 a 86400. Para a desativar, use a paragem de emergência. |
 | `cbTrustProxyHeaders` | Se o "por IP" em "por IP, por endpoint" vem de `X-Forwarded-For` ou do endereço de socket em bruto (predefinição: `true`) - veja [Implantar atrás de um proxy reverso](../deployment.md#deploying-behind-a-reverse-proxy) |
 
 As três são editáveis em `/settings`, como qualquer outra definição da aplicação - veja [Definições da Aplicação](../reference/settings.md#password--token-policy).

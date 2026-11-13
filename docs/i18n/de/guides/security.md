@@ -256,7 +256,7 @@ Ein Aufrufer, der das Limit überschreitet, wird mit einer Flash-Fehlermeldung z
 | Einstellung | Zweck |
 |---|---|
 | `cbRateLimitMaxAttempts` | Erlaubte Versuche pro IP, pro Endpunkt, innerhalb des Fensters (Standard: `5`) |
-| `cbRateLimitWindowSeconds` | Fensterlänge in Sekunden (Standard: `300`). `0` deaktiviert Rate Limiting vollständig |
+| `cbRateLimitWindowSeconds` | Fensterlänge in Sekunden (Standard: `300`). Bereich 1 bis 86400. Zum Ausschalten den Notfallstopp verwenden. |
 | `cbTrustProxyHeaders` | Ob das "pro IP" in "pro IP, pro Endpunkt" aus `X-Forwarded-For` oder der rohen Socket-Adresse stammt (Standard: `true`) - siehe [Deployment hinter einem Reverse-Proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 
 Alle drei sind unter `/settings` wie jede andere App-Einstellung editierbar - siehe [App-Einstellungen](../reference/settings.md#password--token-policy).

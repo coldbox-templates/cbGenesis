@@ -255,7 +255,7 @@ The cbSSO callback is a route owned by the cbsso module, so application middlewa
 | Setting | Purpose |
 |---|---|
 | `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, within the window (default: `5`) |
-| `cbRateLimitWindowSeconds` | Window length, in seconds (default: `300`). `0` disables rate limiting entirely |
+| `cbRateLimitWindowSeconds` | Window length, in seconds (default: `300`). Range 1 to 86400. To switch limiting off, use the emergency stop. |
 | `cbTrustProxyHeaders` | Whether the "per IP" in "per IP, per endpoint" comes from `X-Forwarded-For` or the raw socket address (default: `true`) - see [Deploying behind a reverse proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 
 All three are editable at `/settings` like any other app setting - see [App Settings](../reference/settings.md#password--token-policy).

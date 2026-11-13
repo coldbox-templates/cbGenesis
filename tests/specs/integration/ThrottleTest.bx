@@ -214,6 +214,25 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					expect( blocked.getRenderData().statusCode ).toBe( 429 );
 				} );
 
+				it( "still throttles when a stored window of 0 (from before the minimum was 1) is found", () => {
+					var qb = getInstance( "QueryBuilder@qb" );
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var throttle = getInstance( "AppThrottle" );
+
+					// Written straight to the table: bulkSave() now refuses a window of 0.
+					qb.newQuery().from( "settings" ).where( "name", "cbRateLimitWindowSeconds" ).update( { value: "0" } );
+					settingService.flushSettingsCache();
+					try {
+						for ( var i = 1; i <= maxAttempts; i++ ) {
+							expect( throttle.preProcess( mockRequest( "Auth.doLogin" ) ) ).toBeFalse();
+						}
+						expect( throttle.preProcess( mockRequest( "Auth.doLogin" ) ) ).toBeTrue();
+					} finally {
+						qb.newQuery().from( "settings" ).where( "name", "cbRateLimitWindowSeconds" ).update( { value: "300" } );
+						settingService.flushSettingsCache();
+					}
+				} );
+
 				it( "records the hit before deciding, so concurrent requests cannot overshoot", () => {
 					// Reading the count first and recording afterwards lets a burst all pass the
 					// read. The decision must come from the count hit() returns, which the
@@ -357,6 +376,26 @@ class extends="tests.resources.BaseIntegrationSpec" {
 			} );
 
 			story( "The cbSSO callback is throttled by SSORateLimiter", () => {
+				it( "still throttles when a stored window of 0 is found", () => {
+					var qb = getInstance( "QueryBuilder@qb" );
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
+					var interceptor = prepareMock( new app.interceptors.SSORateLimiter( getController() ) );
+					getWireBox().autowire( interceptor );
+					interceptor.$( "relocate" );
+
+					qb.newQuery().from( "settings" ).where( "name", "cbRateLimitWindowSeconds" ).update( { value: "0" } );
+					settingService.flushSettingsCache();
+					try {
+						for ( var i = 1; i <= maxAttempts + 1; i++ ) {
+							interceptor.preProcess( mockRequest( "cbsso:authorize.callback", "GET" ), {}, "", {}, {} );
+						}
+						expect( interceptor.$count( "relocate" ) ).toBe( 1 );
+					} finally {
+						qb.newQuery().from( "settings" ).where( "name", "cbRateLimitWindowSeconds" ).update( { value: "300" } );
+						settingService.flushSettingsCache();
+					}
+				} );
+
 				it( "redirects to login once the limit is exceeded and ignores other events", () => {
 					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 );
 					// A fresh, autowired instance so mocking relocate() cannot leak into the

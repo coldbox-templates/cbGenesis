@@ -221,8 +221,8 @@
 					<small>Attempts allowed per IP on login, registration, and password reset before blocking.</small>
 				</label>
 				<label>Rate Limit Window (seconds)
-					<input type="number" name="cbRateLimitWindowSeconds" min="0" max="86400" step="1" value="#encodeForHTMLAttribute( prc.settings.cbRateLimitWindowSeconds )#">
-					<small>How long a block lasts. Set to 0 to disable rate limiting.</small>
+					<input type="number" name="cbRateLimitWindowSeconds" min="1" max="86400" step="1" value="#encodeForHTMLAttribute( prc.settings.cbRateLimitWindowSeconds )#">
+					<small>How long a block lasts, 1 to 86400 seconds. To switch rate limiting off, pause it from the Rate Limiting page.</small>
 				</label>
 				<div class="cb-setting-row cb-span-2">
 					<div>

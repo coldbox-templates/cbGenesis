@@ -257,7 +257,7 @@ cbSSO は汎用の `cbAuth` 連携リスナーも提供します。cbGenesis は
 | 設定 | 目的 |
 |---|---|
 | `cbRateLimitMaxAttempts` | 期間内に IP ごと、エンドポイントごとに許可される試行回数(デフォルト: `5`) |
-| `cbRateLimitWindowSeconds` | 期間の長さ(秒単位、デフォルト: `300`)。`0` でレート制限を完全に無効化します |
+| `cbRateLimitWindowSeconds` | 期間の長さ(秒単位、デフォルト: `300`)。範囲は 1〜86400。無効にするには緊急停止を使用します。 |
 | `cbTrustProxyHeaders` | 「IP ごと、エンドポイントごと」の「IP ごと」が `X-Forwarded-For` から来るか、生のソケットアドレスから来るか(デフォルト: `true`) - 詳細は [リバースプロキシの背後でのデプロイ](../deployment.md#deploying-behind-a-reverse-proxy) を参照 |
 
 3 つとも、他のアプリ設定と同様に `/settings` で編集できます - 詳細は [アプリ設定](../reference/settings.md#password--token-policy) を参照してください。

@@ -247,7 +247,7 @@ Un chiamante che supera il limite viene reindirizzato al form con un errore flas
 | Impostazione | Scopo |
 |---|---|
 | `cbRateLimitMaxAttempts` | Tentativi consentiti per IP, per endpoint, entro la finestra (default: `5`) |
-| `cbRateLimitWindowSeconds` | Durata della finestra, in secondi (default: `300`). `0` disabilita completamente il rate limiting |
+| `cbRateLimitWindowSeconds` | Durata della finestra, in secondi (default: `300`). Intervallo da 1 a 86400. Per disattivarlo, usa l'arresto di emergenza. |
 | `cbTrustProxyHeaders` | Se il "per IP" in "per IP, per endpoint" proviene da `X-Forwarded-For` o dall'indirizzo socket grezzo (default: `true`) - vedi [Distribuire dietro un reverse proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 
 Tutte e tre sono modificabili in `/settings` come qualsiasi altra impostazione dell'app - vedi [Impostazioni dell'app](../reference/settings.md#password--token-policy).
