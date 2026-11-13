@@ -296,9 +296,9 @@ The check is cheap because it never queries the database. It reads an in-memory 
 
 A pause from the admin page does **not** switch the block list off: pausing only skips the attempt limits. The `RATE_LIMITING_ENABLED` environment variable is the full break-glass and does switch it off, so a wrong block can never keep an admin out. Each refused request is tallied in the history under the endpoint `Blocked IP`, never written to the audit log; adding, removing and automatically adding a block are audited (`security.ratelimit.ip_blocked`, `ip_unblocked`, `ip_autoblocked`). Expired blocks are ignored at once and deleted daily.
 
-### Admin endpoints
+### Admin page and endpoints
 
-The rate limiting admin page is built on these endpoints, all under `/ratelimiting`:
+The admin page is at **System > Rate Limiting** (`/ratelimiting`, needs `settings:read`). It has four tabs: Overview (top offenders, hourly history, live counters you can clear, latest blocks), Blocked IPs, Exclusions and Settings, plus the pause control. While rate limiting is paused, every other admin page shows a red strip so a pause is not forgotten. The page is built on these endpoints, all under `/ratelimiting`:
 
 | Request | Permission | What it does |
 |---|---|---|

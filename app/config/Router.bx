@@ -157,6 +157,8 @@ class {
 			GET : "exclusions",
 			POST: "exclude"
 		})
+		// The page itself goes last: a pattern matches as a prefix, so it would swallow the routes above.
+		route( "ratelimiting", "RateLimiting.index" )
 
 		/**
 		 * --------------------------------------------------------------------------

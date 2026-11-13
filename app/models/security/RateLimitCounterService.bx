@@ -156,10 +156,16 @@ class {
 				var key   = cacheKey.mid( len( prefix ) + 1, len( cacheKey ) )
 				// Event names contain no colon but IPv6 addresses do: split at the first one.
 				var split = key.find( ":" )
+				var client = split > 0 ? key.mid( split + 1, len( key ) ) : ""
+				// AppThrottle's keys name the client "ip-<address>" (cbsecurity's Throttle convention);
+				// SSORateLimiter's carry the bare address.
+				if ( client.startsWith( "ip-" ) ) {
+					client = client.mid( 4, len( client ) )
+				}
 				counters.append( {
 					key      : key,
 					endpoint : split > 0 ? key.left( split - 1 ) : key,
-					ipAddress: split > 0 ? key.mid( split + 1, len( key ) ) : "",
+					ipAddress: client,
 					record   : record
 				} )
 			} catch ( any error ) {
