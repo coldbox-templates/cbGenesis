@@ -275,6 +275,17 @@ Only the first blocked request of each window is written to the audit trail (`se
 !!! note "In-memory by default"
     Counters live in the `rateLimit` CacheBox region (`app/config/CacheBox.bx`), which is in-memory and therefore **per application instance**. Behind a load balancer with more than one instance, each instance enforces its own limit independently - a caller could get `cbRateLimitMaxAttempts` free attempts per instance rather than in total. To share counts across instances, swap the `rateLimit` region's `provider`/`properties` for a distributed CacheBox provider (Redis, Couchbase, or any provider CacheBox supports) - no code change needed, since `AppThrottle` and `SSORateLimiter` both count in the `rateLimit` region.
 
+### Emergency stop
+
+If rate limiting is blocking real people, for example a proxy misconfiguration makes everyone share one IP, you can switch it off without touching the limits. `RateLimitControlService` is the master switch that `AppThrottle` and `SSORateLimiter` check first. Rate limiting is off when either of these is true:
+
+- **An admin pauses it.** `POST /ratelimiting/pause` with `minutes` (1 to 1440, or `0` for until resumed) and `POST /ratelimiting/resume`; `GET /ratelimiting/status` reports the state. All three need the `settings:admin` permission, and the two writes need a CSRF token like any other state-changing request. A timed pause ends by itself at the right second: `isEnabled()` compares the stored end time on every request and does not wait for the scheduled task that tidies it up. The pause is stored in the settings registry (`cbRateLimitPausedUntil`, `cbRateLimitPausedBy`, `cbRateLimitPausedAt`), so every server sees it.
+- **The `RATE_LIMITING_ENABLED` environment variable (or JVM system property) is `false`, `0`, `no`, `off` or `disabled`.** This is the break-glass for when the limiter has locked the admins out: it needs no login, takes effect after a restart, and overrides pause and resume until it is removed.
+
+Pausing only skips the attempt limits. Counters keep counting, so the numbers are right when it resumes.
+
+Every pause, resume and automatic end is written to the audit trail (`security.ratelimit.paused`, `security.ratelimit.resumed`). A pause with no end time also writes `security.ratelimit.paused.reminder` once a day at 09:00, so it cannot be forgotten.
+
 ## `cbsecurity` configuration
 
 `app/config/modules/cbsecurity.bx` is the single source of truth for the firewall:

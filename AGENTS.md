@@ -91,6 +91,7 @@ Current event handlers and their public actions (auto-updated on `coldbox ai ref
 - **Dashboard**: index, notAuthorized
 - **Main**: onAppInit, onRequestStart, onRequestEnd, onSessionStart, onSessionEnd, onException
 - **Permissions**: index, create, update, delete
+- **RateLimiting**: status, pause, resume
 - **Profile**: index, passkeyRequired, save, requestEmailChange, cancelEmailChange, doPasswordChange, listTokens, createToken, updateToken, deleteToken, listPasskeys, updatePasskey, deletePasskey, uploadAvatar, deleteAvatar
 - **Roles**: index, create, update, delete, users, availableUsers, addUser, removeUser
 - **Settings**: index, registry, registrySearch, createRegistry, updateRegistry, toggleRegistryStatus, deleteRegistry, save, clearTemplateCache, clearSessionsCache, revokeRememberTokens, flushSettingsCache, uploadLogo, deleteLogo
@@ -110,6 +111,7 @@ Registered interceptors and their interception points (auto-updated on `coldbox 
 Route middleware is attached in `app/config/Router.bx` by WireBox ID. App classes live in `app/middleware/` and extend the cbsecurity middleware, overriding only what differs. `execute( "handler.action" )` in tests bypasses route middleware; use `post( route = "..." )` to run it.
 
 - **`Honeypot@cbsecurity`**: hidden `website_url` field on the register form, silent.
+- **Emergency stop** (`RateLimitControlService`): `AppThrottle` and `SSORateLimiter` check `isEnabled()` first. Off when the `RATE_LIMITING_ENABLED` environment variable is false-like (break-glass, no login needed) or an admin paused it (`POST ratelimiting/pause` with `minutes` 1-1440 or 0 for until resumed, `ratelimiting/resume`, `settings:admin`). A timed pause ends on its own; counters keep counting; every change is audited.
 - **`AppThrottle`** (extends `Throttle@cbsecurity`): per-IP limits from the `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds` settings, fixed window, counted in the `rateLimit` CacheBox region. Attached to the Auth form routes and the Profile SSO routes. Each form page and its submit are ONE route (ColdBox merges same-pattern routes and keeps only the first one's middleware); `AppThrottle` counts only the methods in the route's `throttleMethods` meta (default `POST,PUT,PATCH,DELETE`). Other meta: `throttleRedirect`, `throttleTokenParam`. The catch-all route also exposes every Auth action at `auth/<action>`, so `auth/doLogin`, `auth/doRegister`, `auth/doActivateInvitation`, `auth/doForgotPassword` and `auth/doResetPassword` have their own throttled routes in `Router.bx` (same middleware and meta, shared counter). Add one whenever you add a throttled Auth form.
 
 ## Layouts

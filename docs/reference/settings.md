@@ -48,7 +48,8 @@ Select **Auth Center** or **Auth Split** at `/settings`, save the settings, and 
 | `cbApiTokenMaxValidityMonths` | Maximum lifetime an API token can be issued for (default: `12`) |
 | `cbAuditLogRetentionDays` | Age, in days, at which the daily scheduled task hard-deletes audit log entries (default: `90`). `0` disables the purge - see [Scheduled Tasks](../architecture.md#scheduled-tasks) |
 | `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, before the `AppThrottle` middleware blocks login/registration/password-reset (default: `5`) - see [Rate limiting](../guides/security.md#rate-limiting) |
-| `cbRateLimitWindowSeconds` | Rate limit window, in seconds (default: `300`). `0` disables rate limiting entirely |
+| `cbRateLimitWindowSeconds` | Rate limit window, in seconds (default: `300`). `0` also stops enforcement, but use the emergency stop instead: it is audited and ends on a timer |
+| `cbRateLimitPausedUntil` / `cbRateLimitPausedBy` / `cbRateLimitPausedAt` | The emergency-stop state: empty when rate limiting is on, `indefinite` or the epoch second the pause ends, who paused it, and when. Managed by `RateLimitControlService`, not meant to be edited by hand - see [Emergency stop](../guides/security.md#emergency-stop) |
 | `cbTrustProxyHeaders` | Whether `AppThrottle`, the audit trail, and security emails trust the `X-Forwarded-For`/`X-Cluster-Client-IP` headers for the caller's IP (default: `true`, since this app is typically deployed behind a reverse proxy or load balancer). Turn this off only if the app is directly internet-facing with nothing in front of it - see [Deployment behind a proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 | `cbEncryptionKey` / `cbSaltingKey` | Encryption/salting keys used by the security layer |
 

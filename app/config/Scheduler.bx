@@ -40,6 +40,21 @@ class {
 			.everyDayAt( "03:30" )
 			.onOneServer()
 			.withNoOverlaps()
+
+		// A timed pause switches off by itself on time (RateLimitControlService.isEnabled()
+		// does not wait for this); this only clears the stored values and audits it.
+		task( "Expire Rate Limiting Pause" )
+			.call( () => getInstance( "RateLimitControlService" ).expireIfDue() )
+			.everyMinute()
+			.onOneServer()
+			.withNoOverlaps()
+
+		// One audit entry a day while a pause has no end time, so it cannot be forgotten.
+		task( "Remind Rate Limiting Is Paused" )
+			.call( () => getInstance( "RateLimitControlService" ).remindIfPausedIndefinitely() )
+			.everyDayAt( "09:00" )
+			.onOneServer()
+			.withNoOverlaps()
 	}
 
 	/**

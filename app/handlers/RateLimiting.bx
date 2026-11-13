@@ -1,0 +1,73 @@
+/**
+ * Rate limiting administration: the emergency stop.
+ *
+ * Pausing and resuming change what the whole application enforces, so they need the
+ * settings write permission. Like every BaseSecureHandler, state-changing actions also
+ * need a valid CSRF token. The status action is read-only.
+ */
+@secured( "settings:admin,settings:read" )
+class extends="BaseSecureHandler" {
+
+	@inject
+	property name="rateLimitControlService";
+
+	/**
+	 * Reports whether rate limiting is being enforced and, if paused, until when and by whom.
+	 *
+	 * @return The API response whose data is the status: enabled, disabledByEnvironment,
+	 *         paused, indefinite, pausedUntil, pausedAt, pausedBy, resumesInSeconds.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function status( event, rc, prc ) {
+		return event.getResponse().setData( data: rateLimitControlService.getStatus() )
+	}
+
+	/**
+	 * Pauses rate limiting.
+	 *
+	 * rc.minutes is a whole number from 1 to 1440, or 0 for "until I resume". Anything else
+	 * is a 422. The pause is audited with who did it.
+	 *
+	 * @return The API response whose data is the new status.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function pause( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			if ( !isNumeric( rc.minutes ?: "" ) ) {
+				throw( type = "RateLimit.InvalidPause", message = "Choose how many minutes to pause for, or 0 for until resumed." )
+			}
+			var status = rateLimitControlService.pause( minutes: val( rc.minutes ) )
+			return response.setData(
+				data   : status,
+				message: status.indefinite
+					? "Rate limiting is paused until you resume it."
+					: "Rate limiting is paused for #int( status.resumesInSeconds / 60 )# minutes."
+			)
+		} catch ( "RateLimit.InvalidPause" error ) {
+			return response.failure( message: error.message, statusCode: 422 )
+		} catch ( any error ) {
+			log.error( "Error pausing rate limiting: #error.message#", error )
+			return response.failure( message: "Rate limiting could not be paused: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Resumes rate limiting. Safe to call when it is not paused.
+	 *
+	 * @return The API response whose data is the new status.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function resume( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			return response.setData( data: rateLimitControlService.resume(), message: "Rate limiting is on." )
+		} catch ( any error ) {
+			log.error( "Error resuming rate limiting: #error.message#", error )
+			return response.failure( message: "Rate limiting could not be resumed: #error.message#", statusCode: 500 )
+		}
+	}
+
+}

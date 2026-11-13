@@ -33,6 +33,9 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	@inject( "provider:AuditLogService" )
 	property name="auditLogService";
 
+	@inject( "provider:RateLimitControlService" )
+	property name="rateLimitControl";
+
 	@inject( "coldbox:flash" )
 	property name="flash";
 
@@ -42,9 +45,10 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	/**
 	 * Skips requests that should not count, then defers to the module.
 	 *
-	 * A request is skipped when the window or the attempt limit is set to 0 or less (how
-	 * an admin switches rate limiting off), or when its HTTP method is not one the route
-	 * asked to count.
+	 * A request is skipped when rate limiting is switched off (RateLimitControlService:
+	 * the RATE_LIMITING_ENABLED environment variable or an admin's pause), when the window
+	 * or the attempt limit is set to 0 or less, or when its HTTP method is not one the
+	 * route asked to count.
 	 *
 	 * @event The request context.
 	 * @rc    The request collection.
@@ -53,6 +57,11 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	 * @return True when the request was blocked and the remaining middleware must be skipped.
 	 */
 	boolean function preProcess( required event, rc, prc ) {
+		// The master switch: off through the environment or an admin's pause.
+		if ( !variables.rateLimitControl.isEnabled() ) {
+			return false
+		}
+
 		var limit = resolveLimit( arguments.event )
 		if ( limit.decaySeconds <= 0 || limit.maxAttempts <= 0 ) {
 			return false

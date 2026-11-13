@@ -1,0 +1,293 @@
+/**
+ * Tests for the rate limiting master switch: the pause and resume of
+ * RateLimitControlService, the RATE_LIMITING_ENABLED environment override, the
+ * enforcement in AppThrottle while paused, and the RateLimiting handler's endpoints.
+ *
+ * Every spec ends by resuming: a pause lives in the settings registry and its cache, and
+ * the surrounding test transaction rolls the database back but not that cache.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
+
+	@inject
+	property name="rateLimitControlService";
+
+	@inject
+	property name="auditLogService";
+
+	@inject
+	property name="roleService";
+
+	/**
+	 * Counts the audit entries recorded for an action.
+	 *
+	 * @action The audit action, for example "security.ratelimit.paused".
+	 *
+	 * @return The number of entries.
+	 */
+	private numeric function auditCount( required string action ) {
+		// Audit rows are saved without an immediate flush, and the count is a query.
+		ormFlush()
+		return auditLogService.countWhere( action: arguments.action )
+	}
+
+	/**
+	 * The flash messages of the request that just ran, as text.
+	 *
+	 * @return The flash scope serialized to JSON.
+	 */
+	private string function flashText() {
+		return jsonSerialize( getFlashScope().getAll() )
+	}
+
+	/**
+	 * A user holding the seeded Admin role, which carries the settings permissions.
+	 *
+	 * @return The saved user.
+	 */
+	private User function createSettingsAdmin() {
+		var user = createVerifiedUser()
+		user.setRoles( [ roleService.findWhere( { role: "Admin" } ) ] )
+		return userService.save( user )
+	}
+
+	/**
+	 * A fresh RateLimitControlService whose environment lookup is stubbed.
+	 *
+	 * A new, autowired instance, not the application's singleton, so the stub cannot leak
+	 * into the switch real requests use.
+	 *
+	 * @value What the RATE_LIMITING_ENABLED lookup should return.
+	 *
+	 * @return The service.
+	 */
+	private function serviceWithEnvironment( required string value ) {
+		var service = prepareMock( new app.models.security.RateLimitControlService() )
+		getWireBox().autowire( service )
+		return service.$( "readEnvironment", arguments.value )
+	}
+
+	function run() {
+		describe( "Rate limiting emergency stop", () => {
+			beforeEach( () => {
+				setup()
+				structClear( form )
+				getFlashScope().clear().removeFlash()
+				securityService.logout( quiet: true )
+				rateLimitCache.clearAll()
+				rateLimitControlService.resume()
+			} )
+
+			afterEach( () => {
+				rateLimitControlService.resume()
+				// The REST Response object outlives a spec: every it() in the run shares one
+				// physical request, and its error flag is never reset on its own. The 422
+				// specs below set it, which made a later bundle that asserts the flag is
+				// false (SettingsTest, which runs next alphabetically) fail.
+				getRequestContext().getResponse().setError( false )
+			} )
+
+			story( "An admin can pause and resume rate limiting", () => {
+				it( "is on by default", () => {
+					var status = rateLimitControlService.getStatus()
+
+					expect( rateLimitControlService.isEnabled() ).toBeTrue()
+					expect( status.paused ).toBeFalse()
+					expect( status.disabledByEnvironment ).toBeFalse()
+				} )
+
+				it( "pauses for a number of minutes, then resumes", () => {
+					var status = rateLimitControlService.pause( minutes: 15 )
+
+					expect( rateLimitControlService.isEnabled() ).toBeFalse()
+					expect( status.paused ).toBeTrue()
+					expect( status.indefinite ).toBeFalse()
+					expect( status.resumesInSeconds ).toBeBetween( 890, 900 )
+					expect( status.pausedAt ).toBeGT( 0 )
+
+					expect( rateLimitControlService.resume().paused ).toBeFalse()
+					expect( rateLimitControlService.isEnabled() ).toBeTrue()
+				} )
+
+				it( "pauses until resumed when given zero minutes", () => {
+					var status = rateLimitControlService.pause( minutes: 0 )
+
+					expect( status.paused ).toBeTrue()
+					expect( status.indefinite ).toBeTrue()
+					expect( status.resumesInSeconds ).toBe( 0 )
+					expect( rateLimitControlService.isEnabled() ).toBeFalse()
+				} )
+
+				it( "refuses a pause that is negative, longer than 24 hours or not a whole number", () => {
+					[ -1, 1441, 2.5 ].each( ( minutes ) => {
+						expect( () => rateLimitControlService.pause( minutes: minutes ) ).toThrow( "RateLimit.InvalidPause" )
+					} )
+					expect( rateLimitControlService.isEnabled() ).toBeTrue()
+				} )
+
+				it( "audits pausing, resuming and the reminder", () => {
+					var paused  = auditCount( "security.ratelimit.paused" )
+					var resumed = auditCount( "security.ratelimit.resumed" )
+					var reminded = auditCount( "security.ratelimit.paused.reminder" )
+
+					rateLimitControlService.pause( minutes: 0 )
+					expect( rateLimitControlService.remindIfPausedIndefinitely() ).toBeTrue()
+					rateLimitControlService.resume()
+
+					expect( auditCount( "security.ratelimit.paused" ) ).toBe( paused + 1 )
+					expect( auditCount( "security.ratelimit.paused.reminder" ) ).toBe( reminded + 1 )
+					expect( auditCount( "security.ratelimit.resumed" ) ).toBe( resumed + 1 )
+				} )
+
+				it( "does not remind about a timed pause or when it is not paused", () => {
+					expect( rateLimitControlService.remindIfPausedIndefinitely() ).toBeFalse()
+
+					rateLimitControlService.pause( minutes: 30 )
+					expect( rateLimitControlService.remindIfPausedIndefinitely() ).toBeFalse()
+				} )
+			} )
+
+			story( "A timed pause ends on its own", () => {
+				it( "counts an elapsed pause as resumed before the scheduled task clears it", () => {
+					var tenSecondsAgo = int( createObject( "java", "java.lang.System" ).currentTimeMillis() / 1000 ) - 10
+					settingService.bulkSave( { cbRateLimitPausedUntil: toString( tenSecondsAgo ) } )
+
+					expect( rateLimitControlService.isEnabled() ).toBeTrue()
+					expect( rateLimitControlService.getStatus().paused ).toBeFalse()
+				} )
+
+				it( "clears the stored pause and audits it when the scheduled task runs", () => {
+					var tenSecondsAgo = int( createObject( "java", "java.lang.System" ).currentTimeMillis() / 1000 ) - 10
+					settingService.bulkSave( { cbRateLimitPausedUntil: toString( tenSecondsAgo ) } )
+					var resumed = auditCount( "security.ratelimit.resumed" )
+
+					expect( rateLimitControlService.expireIfDue() ).toBeTrue()
+					expect( settingService.getSetting( "cbRateLimitPausedUntil" ) ).toBe( "" )
+					expect( auditCount( "security.ratelimit.resumed" ) ).toBe( resumed + 1 )
+					expect( rateLimitControlService.expireIfDue() ).toBeFalse()
+				} )
+
+				it( "leaves a running pause and an open-ended pause alone", () => {
+					rateLimitControlService.pause( minutes: 30 )
+					expect( rateLimitControlService.expireIfDue() ).toBeFalse()
+					expect( rateLimitControlService.isEnabled() ).toBeFalse()
+
+					rateLimitControlService.pause( minutes: 0 )
+					expect( rateLimitControlService.expireIfDue() ).toBeFalse()
+					expect( rateLimitControlService.isEnabled() ).toBeFalse()
+				} )
+			} )
+
+			story( "The RATE_LIMITING_ENABLED environment variable is the break-glass", () => {
+				it( "switches rate limiting off for any false-like value, even when not paused", () => {
+					[ "false", "FALSE", "0", "off", "no", "disabled" ].each( ( value ) => {
+						var service = serviceWithEnvironment( value )
+
+						expect( service.isEnabled() ).toBeFalse( "#value# should disable rate limiting" )
+						expect( service.getStatus().disabledByEnvironment ).toBeTrue()
+					} )
+				} )
+
+				it( "leaves rate limiting on for true, empty or unrecognized values", () => {
+					[ "true", "1", "", "maybe" ].each( ( value ) => {
+						expect( serviceWithEnvironment( value ).isEnabled() ).toBeTrue( "#value# should leave it on" )
+					} )
+				} )
+
+				it( "wins over a resume: the environment keeps it off until it is removed", () => {
+					var service = serviceWithEnvironment( "false" )
+					service.pause( minutes: 5 )
+					service.resume()
+
+					expect( service.isEnabled() ).toBeFalse()
+				} )
+			} )
+
+			story( "AppThrottle stops limiting while paused", () => {
+				it( "lets repeated bad logins through while paused and limits them again once resumed", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					var attemptLogin = () => post(
+						route         = "/login",
+						params        = { email: "nobody@example.com", password: "wrong-password", csrf: cbcsrf.generate() },
+						renderResults = false
+					)
+
+					rateLimitControlService.pause( minutes: 30 )
+					for ( var i = 1; i <= maxAttempts + 3; i++ ) {
+						attemptLogin()
+					}
+					expect( flashText() ).notToInclude( "Too many attempts" )
+
+					rateLimitControlService.resume()
+					rateLimitCache.clearAll()
+					getFlashScope().clear().removeFlash()
+					for ( var i = 1; i <= maxAttempts + 1; i++ ) {
+						attemptLogin()
+					}
+					expect( flashText() ).toInclude( "Too many attempts" )
+				} )
+			} )
+
+			story( "The RateLimiting handler exposes the switch", () => {
+				it( "reports the status", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					var event = execute( event = "ratelimiting.status", prePostExempt = true )
+					var response = event.getPrivateValue( "response" )
+
+					expect( response.getData().enabled ).toBeTrue()
+					expect( response.getData().paused ).toBeFalse()
+				} )
+
+				it( "pauses and resumes through the endpoints", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.minutes = 20
+					form.csrf = cbcsrf.generate()
+					var paused = execute( event = "ratelimiting.pause", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( paused.getData().paused ).toBeTrue()
+					expect( rateLimitControlService.isEnabled() ).toBeFalse()
+
+					structClear( form )
+					form.csrf = cbcsrf.generate()
+					var resumed = execute( event = "ratelimiting.resume", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( resumed.getData().paused ).toBeFalse()
+					expect( rateLimitControlService.isEnabled() ).toBeTrue()
+				} )
+
+				it( "rejects a bad duration with a 422 and does not pause", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.minutes = 99999
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.pause", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 422 )
+					expect( rateLimitControlService.isEnabled() ).toBeTrue()
+				} )
+
+				it( "rejects a missing duration with a 422", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.pause", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 422 )
+					expect( rateLimitControlService.isEnabled() ).toBeTrue()
+				} )
+			} )
+		} )
+	}
+
+}
