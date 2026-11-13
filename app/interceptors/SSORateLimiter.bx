@@ -17,6 +17,9 @@ class extends="coldbox.system.Interceptor" {
 	@inject( "provider:RateLimiter@cbsecurity" )
 	property name="rateLimiter";
 
+	@inject( "provider:RateLimitControlService" )
+	property name="rateLimitControl";
+
 	@inject( "provider:SettingService" )
 	property name="settingService";
 
@@ -45,6 +48,11 @@ class extends="coldbox.system.Interceptor" {
 	function preProcess( event, interceptData, buffer, rc, prc ) {
 		var currentEvent = event.getCurrentEvent()
 		if ( !currentEvent.findNoCase( "cbsso" ) || !currentEvent.findNoCase( "authorize" ) ) {
+			return
+		}
+
+		// The master switch: off through the environment or an admin's pause.
+		if ( !variables.rateLimitControl.isEnabled() ) {
 			return
 		}
 

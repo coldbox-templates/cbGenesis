@@ -1,0 +1,263 @@
+/**
+ * The master switch for rate limiting: whether AppThrottle and SSORateLimiter enforce
+ * their limits right now.
+ *
+ * Rate limiting is off when either
+ *
+ * - the RATE_LIMITING_ENABLED environment variable (or JVM system property) is set to a
+ *   false-like value. This is the break-glass: it needs no login, so it works when the
+ *   limiter has locked out the admins, and it overrides everything else until removed; or
+ * - an admin paused it from the app, for a number of minutes or until they resume it.
+ *
+ * A pause is stored in the settings registry, so every server sees it:
+ *
+ * - cbRateLimitPausedUntil: empty (not paused), "indefinite", or the epoch second the
+ *   pause ends. An elapsed pause counts as resumed at once, even before the scheduled
+ *   task clears it, so a missed task can never extend a pause.
+ * - cbRateLimitPausedBy and cbRateLimitPausedAt: who paused it and when (epoch second).
+ *
+ * Pausing only skips the attempt limits. The counters keep counting, and anything that
+ * protects the server regardless, such as the server ceiling and the blocked IP list,
+ * is not controlled from here.
+ */
+@singleton
+class {
+
+	@inject( "provider:SettingService" )
+	property name="settingService";
+
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
+
+	@inject( "provider:SecurityService" )
+	property name="securityService";
+
+	static {
+		// The value stored in cbRateLimitPausedUntil for a pause with no end time.
+		INDEFINITE        = "indefinite"
+		// The environment variable that switches rate limiting off. Anything in FALSE_VALUES disables it.
+		ENVIRONMENT_KEY   = "RATE_LIMITING_ENABLED"
+		FALSE_VALUES      = "false,0,no,off,disabled"
+		// The longest a timed pause may last, in minutes (24 hours). Longer needs "until resumed".
+		MAX_TIMED_MINUTES = 1440
+	}
+
+	/**
+	 * Whether rate limiting is being enforced right now. Called on every throttled request,
+	 * so it only reads the cached settings and one environment lookup.
+	 *
+	 * @return True when the limits apply, false while disabled by the environment or paused.
+	 */
+	boolean function isEnabled() {
+		if ( isDisabledByEnvironment() ) {
+			return false
+		}
+		return !isPausedNow( variables.settingService.getSetting( "cbRateLimitPausedUntil", "" ) )
+	}
+
+	/**
+	 * Describes the switch for the admin UI and the status endpoint.
+	 *
+	 * @return A struct: enabled, disabledByEnvironment, paused, indefinite, pausedUntil (epoch
+	 *         second, 0 when none), pausedAt, pausedBy, resumesInSeconds (0 when none).
+	 */
+	struct function getStatus() {
+		var pausedUntil = variables.settingService.getSetting( "cbRateLimitPausedUntil", "" )
+		var paused      = isPausedNow( pausedUntil )
+		var indefinite  = paused && pausedUntil == static.INDEFINITE
+		var untilEpoch  = paused && !indefinite ? val( pausedUntil ) : 0
+
+		return {
+			enabled              : isEnabled(),
+			disabledByEnvironment: isDisabledByEnvironment(),
+			paused               : paused,
+			indefinite           : indefinite,
+			pausedUntil          : untilEpoch,
+			pausedAt             : paused ? val( variables.settingService.getSetting( "cbRateLimitPausedAt", 0 ) ) : 0,
+			pausedBy             : paused ? variables.settingService.getSetting( "cbRateLimitPausedBy", "" ) : "",
+			resumesInSeconds     : paused && !indefinite ? max( 0, untilEpoch - nowInSeconds() ) : 0
+		}
+	}
+
+	/**
+	 * Pauses rate limiting and audits it.
+	 *
+	 * @minutes How long to pause, 1 to 1440. Zero means until an admin resumes it.
+	 * @pausedBy A label for who paused it, shown in the UI. Defaults to the signed-in user's email.
+	 *
+	 * @throws RateLimit.InvalidPause When minutes is not a whole number from 0 to 1440.
+	 *
+	 * @return The new status, see getStatus().
+	 */
+	struct function pause( numeric minutes = 0, string pausedBy = "" ) {
+		if ( int( arguments.minutes ) != arguments.minutes || arguments.minutes < 0 || arguments.minutes > static.MAX_TIMED_MINUTES ) {
+			throw(
+				type    = "RateLimit.InvalidPause",
+				message = "A pause must be a whole number of minutes between 1 and #static.MAX_TIMED_MINUTES#, or 0 for until resumed."
+			)
+		}
+
+		var now        = nowInSeconds()
+		var pausedUntil = arguments.minutes == 0 ? static.INDEFINITE : toString( now + arguments.minutes * 60 )
+		var label      = len( arguments.pausedBy ) ? arguments.pausedBy : currentUserLabel()
+
+		variables.settingService.bulkSave( {
+			cbRateLimitPausedUntil: pausedUntil,
+			cbRateLimitPausedBy   : label,
+			cbRateLimitPausedAt   : toString( now )
+		} )
+
+		variables.auditLogService.warn(
+			action  : "security.ratelimit.paused",
+			message : arguments.minutes == 0
+				? "Rate limiting was paused until it is resumed."
+				: "Rate limiting was paused for #arguments.minutes# minutes.",
+			category: "security",
+			metadata: { minutes: arguments.minutes, indefinite: arguments.minutes == 0 }
+		)
+
+		return getStatus()
+	}
+
+	/**
+	 * Resumes rate limiting and audits it. Resuming when it is not paused still clears any
+	 * stale pause values and is not an error.
+	 *
+	 * @resumedBy Who resumed it, for the audit message. Defaults to the signed-in user, else "the system".
+	 *
+	 * @return The new status, see getStatus().
+	 */
+	struct function resume( string resumedBy = "" ) {
+		var wasPaused = isPausedNow( variables.settingService.getSetting( "cbRateLimitPausedUntil", "" ) )
+
+		clearPause()
+
+		if ( wasPaused ) {
+			variables.auditLogService.info(
+				action  : "security.ratelimit.resumed",
+				message : "Rate limiting was resumed.",
+				category: "security"
+			)
+		}
+
+		return getStatus()
+	}
+
+	/**
+	 * Scheduled task: clears a timed pause that has elapsed, so the settings and the UI stop
+	 * showing it, and audits that it ended by itself. isEnabled() does not depend on this
+	 * running, only the tidy-up does.
+	 *
+	 * @return True when an elapsed pause was cleared.
+	 */
+	boolean function expireIfDue() {
+		var pausedUntil = variables.settingService.getSetting( "cbRateLimitPausedUntil", "" )
+
+		if ( !len( pausedUntil ) || pausedUntil == static.INDEFINITE || isPausedNow( pausedUntil ) ) {
+			return false
+		}
+
+		clearPause()
+		variables.auditLogService.info(
+			action  : "security.ratelimit.resumed",
+			message : "Rate limiting resumed: the pause ended.",
+			category: "security",
+			metadata: { automatic: true }
+		)
+		return true
+	}
+
+	/**
+	 * Scheduled task: writes one audit entry per run while a pause has no end time, so an
+	 * open-ended pause cannot be forgotten.
+	 *
+	 * @return True when a reminder was written.
+	 */
+	boolean function remindIfPausedIndefinitely() {
+		var status = getStatus()
+
+		if ( !status.indefinite ) {
+			return false
+		}
+
+		var hours = int( ( nowInSeconds() - status.pausedAt ) / 3600 )
+		variables.auditLogService.warn(
+			action  : "security.ratelimit.paused.reminder",
+			message : "Rate limiting has been paused for #hours# hours with no end time.",
+			category: "security",
+			metadata: { hours: hours, pausedBy: status.pausedBy }
+		)
+		return true
+	}
+
+	/**
+	 * Whether the environment switches rate limiting off.
+	 */
+	private boolean function isDisabledByEnvironment() {
+		var raw = trim( readEnvironment( static.ENVIRONMENT_KEY ) )
+		return len( raw ) && static.FALSE_VALUES.listFindNoCase( raw ) > 0
+	}
+
+	/**
+	 * Reads a JVM system property, then an environment variable. Separate so tests can stub it.
+	 *
+	 * @key The name to read.
+	 *
+	 * @return The value, or an empty string.
+	 */
+	private string function readEnvironment( required string key ) {
+		var system   = createObject( "java", "java.lang.System" )
+		var property = system.getProperty( arguments.key )
+		if ( !isNull( property ) && len( property ) ) {
+			return property
+		}
+		var variable = system.getenv( arguments.key )
+		return isNull( variable ) ? "" : variable
+	}
+
+	/**
+	 * Whether a stored cbRateLimitPausedUntil value is a pause that is still running.
+	 *
+	 * @pausedUntil The stored value: empty, "indefinite", or an epoch second.
+	 */
+	private boolean function isPausedNow( required string pausedUntil ) {
+		if ( !len( arguments.pausedUntil ) ) {
+			return false
+		}
+		if ( arguments.pausedUntil == static.INDEFINITE ) {
+			return true
+		}
+		return isNumeric( arguments.pausedUntil ) && val( arguments.pausedUntil ) > nowInSeconds()
+	}
+
+	/**
+	 * Clears the stored pause values.
+	 */
+	private void function clearPause() {
+		variables.settingService.bulkSave( {
+			cbRateLimitPausedUntil: "",
+			cbRateLimitPausedBy   : "",
+			cbRateLimitPausedAt   : ""
+		} )
+	}
+
+	/**
+	 * The signed-in user's email for the pausedBy label, or "the system" outside a request.
+	 */
+	private string function currentUserLabel() {
+		try {
+			var user = variables.securityService.getCurrentUser()
+			return !isNull( user ) && isObject( user ) && user.isLoaded() ? user.getEmail() : "the system"
+		} catch ( any e ) {
+			return "the system"
+		}
+	}
+
+	/**
+	 * Epoch seconds, UTC.
+	 */
+	private numeric function nowInSeconds() {
+		return int( createObject( "java", "java.lang.System" ).currentTimeMillis() / 1000 )
+	}
+
+}

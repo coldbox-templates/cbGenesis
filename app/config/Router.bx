@@ -131,6 +131,15 @@ class {
 
 		/**
 		 * --------------------------------------------------------------------------
+		 * Rate Limiting Routing (emergency stop)
+		 * --------------------------------------------------------------------------
+		 */
+		route( "ratelimiting/status", "RateLimiting.status" )
+		post( "ratelimiting/pause", "RateLimiting.pause" )
+		post( "ratelimiting/resume", "RateLimiting.resume" )
+
+		/**
+		 * --------------------------------------------------------------------------
 		 * Admin Settings Routing
 		 * --------------------------------------------------------------------------
 		 */

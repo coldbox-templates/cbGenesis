@@ -63,6 +63,13 @@ class extends="app.models.BaseService" {
 			cbRateLimitMaxAttempts   : 5,
 			// Rate limiting window, in seconds. 0 disables rate limiting entirely.
 			cbRateLimitWindowSeconds: 300,
+			// Rate limiting pause (see RateLimitControlService). Empty = not paused, "indefinite" =
+			// until resumed, otherwise the epoch second the pause ends. cbRateLimitPausedBy and
+			// cbRateLimitPausedAt record who paused it and when. Managed by the emergency stop,
+			// not meant to be edited by hand.
+			cbRateLimitPausedUntil   : "",
+			cbRateLimitPausedBy      : "",
+			cbRateLimitPausedAt      : "",
 			// Whether to trust the X-Forwarded-For / X-Cluster-Client-IP headers for the
 			// "real" client IP used by rate limiting, audit logging, and security emails.
 			// Defaults on since this app is typically deployed behind a reverse proxy or
