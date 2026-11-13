@@ -285,6 +285,17 @@ Every blocked request is counted, so the admin page can show top offenders and a
 
 The audit log is separate: one row per blocked window, for security review. History rows are hourly totals: `blockedRequests` (every blocked request), `blockedWindows` (the first block of each window, matching the audit rows) and `peakAttempts`. The service also answers `topOffenders()`, `hourly()` and `latest()` for the admin page.
 
+### Blocked IPs
+
+An address or range on the block list is refused on its first request: `RateLimitBlocker` (an interceptor registered ahead of the others, on `preProcess`) answers `403 Forbidden` before routing, the handler or the database run, and the throttle skips the request. Blocks come from two places:
+
+- **An admin adds one.** `POST /ratelimiting/blocks` with `address` (an address such as `203.0.113.42`, or a CIDR range such as `203.0.113.0/24`, IPv4 or IPv6), `hours` (1 to 8760, or `0` for permanent) and an optional `reason`. `GET /ratelimiting/blocks` lists the active ones and `DELETE /ratelimiting/blocks/:blockId` removes one. They need the `settings:admin` permission, and the writes a CSRF token. A bad address, a range wider than IPv4 `/16` or IPv6 `/48`, and an address that includes the admin's own are refused with a 422 saying why. Host names are never accepted or looked up. The list holds at most 1,000 active blocks.
+- **The automatic rule adds one.** When an IP has been throttled in `cbRateLimitAutoBlockWindows` windows (default 3) within `cbRateLimitAutoBlockPeriodMinutes` (default 60), it is blocked for `cbRateLimitAutoBlockHours` (default 24). `cbRateLimitAutoBlock` switches the rule off. Loopback, private (`10/8`, `172.16/12`, `192.168/16`), link-local and shared (`100.64/10`) addresses are never blocked automatically, because with proxy headers untrusted they can be the proxy or the server itself and so stand for everyone. If the app sits behind a proxy and `cbTrustProxyHeaders` is off, every caller looks like the proxy: that is why those addresses are skipped.
+
+The check is cheap because it never queries the database. It reads an in-memory snapshot of the active blocks, reloaded at most every 30 seconds and at once after this server changes the list. Another server therefore notices a new block within 30 seconds. If a reload fails, the previous snapshot stays in use, and a broken check lets the request through instead of failing it.
+
+A pause from the admin page does **not** switch the block list off: pausing only skips the attempt limits. The `RATE_LIMITING_ENABLED` environment variable is the full break-glass and does switch it off, so a wrong block can never keep an admin out. Each refused request is tallied in the history under the endpoint `Blocked IP`, never written to the audit log; adding, removing and automatically adding a block are audited (`security.ratelimit.ip_blocked`, `ip_unblocked`, `ip_autoblocked`). Expired blocks are ignored at once and deleted daily.
+
 ### Emergency stop
 
 If rate limiting is blocking real people, for example a proxy misconfiguration makes everyone share one IP, you can switch it off without touching the limits. `RateLimitControlService` is the master switch that `AppThrottle` and `SSORateLimiter` check first. Rate limiting is off when either of these is true:
@@ -292,7 +303,7 @@ If rate limiting is blocking real people, for example a proxy misconfiguration m
 - **An admin pauses it.** `POST /ratelimiting/pause` with `minutes` (1 to 1440, or `0` for until resumed) and `POST /ratelimiting/resume`; `GET /ratelimiting/status` reports the state. All three need the `settings:admin` permission, and the two writes need a CSRF token like any other state-changing request. A timed pause ends by itself at the right second: `isEnabled()` compares the stored end time on every request and does not wait for the scheduled task that tidies it up. The pause is stored in the settings registry (`cbRateLimitPausedUntil`, `cbRateLimitPausedBy`, `cbRateLimitPausedAt`), so every server sees it.
 - **The `RATE_LIMITING_ENABLED` environment variable (or JVM system property) is `false`, `0`, `no`, `off` or `disabled`.** This is the break-glass for when the limiter has locked the admins out: it needs no login, takes effect after a restart, and overrides pause and resume until it is removed.
 
-Pausing only skips the attempt limits. Counters keep counting, so the numbers are right when it resumes.
+Pausing only skips the attempt limits. Counters keep counting, so the numbers are right when it resumes. It does not switch off the [block list](#blocked-ips); the environment variable does.
 
 Every pause, resume and automatic end is written to the audit trail (`security.ratelimit.paused`, `security.ratelimit.resumed`). A pause with no end time also writes `security.ratelimit.paused.reminder` once a day at 09:00, so it cannot be forgotten.
 

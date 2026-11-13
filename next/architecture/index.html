@@ -350,6 +350,7 @@ integration.</p>
 <tbody>
 <tr><td>Flush Rate Limit History</td><td>every minute, <strong>every server</strong></td><td>Writes this server's in-memory tally of blocked requests to <code>rate_limit_history</code>. Not <code>onOneServer()</code>, because each server has its own tally</td><td>- see <a href="/next/guides/security/index.html#history">History</a></td></tr>
 <tr><td>Purge Old Rate Limit History</td><td><code>03:45</code></td><td>Deletes <code>rate_limit_history</code> rows older than the retention window</td><td><code>cbRateLimitHistoryRetentionDays</code> (default <code>30</code>, 1 to 365)</td></tr>
+<tr><td>Purge Expired Rate Limit Blocks</td><td><code>03:50</code></td><td>Deletes expired rows from <code>rate_limit_blocks</code> (they are ignored once expired either way)</td><td>- see <a href="/next/guides/security/index.html#blocked-ips">Blocked IPs</a></td></tr>
 <tr><td>Expire Rate Limiting Pause</td><td>every minute</td><td>Clears an elapsed emergency-stop pause and audits it</td><td>- see <a href="/next/guides/security/index.html#emergency-stop">Emergency stop</a></td></tr>
 <tr><td>Remind Rate Limiting Is Paused</td><td><code>09:00</code></td><td>Writes one audit entry while a pause has no end time</td><td>-</td></tr>
 </tbody>
