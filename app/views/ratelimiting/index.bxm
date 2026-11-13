@@ -69,6 +69,24 @@
 		</bx:if>
 	</section>
 
+	<!--- Lockdown banner --->
+	<section class="cb-content-card cb-ratelimit-banner is-off" x-show="overview.ceiling.lockdown" x-cloak>
+		<div class="cb-ratelimit-banner__text">
+			<i class="ph-duotone ph-lock-key" aria-hidden="true"></i>
+			<div>
+				<strong>Lockdown is on</strong>
+				<p class="cb-muted-cell mb-0">Every IP is limited to <span x-text="overview.ceiling.minimum"></span> requests a minute across the whole site.</p>
+			</div>
+		</div>
+		<bx:if prc.canAdmin>
+		<div class="cb-ratelimit-banner__actions">
+			<button type="button" class="btn btn-success" @click="setLockdown( false )" :disabled="busy">
+				<i class="ph-duotone ph-lock-key-open" aria-hidden="true"></i> Turn off lockdown
+			</button>
+		</div>
+		</bx:if>
+	</section>
+
 	<!--- Tabs --->
 	<div class="cb-segmented-control mb-3" aria-label="Rate limiting sections">
 		<button type="button" :class="tab === 'overview' ? 'active' : ''" @click="tab = 'overview'">Overview</button>
@@ -334,6 +352,34 @@
 				<button type="submit" class="btn btn-primary" :disabled="busy"><i class="ph-duotone ph-floppy-disk" aria-hidden="true"></i> Save settings</button>
 				</bx:if>
 			</form>
+		</section>
+	</div>
+
+	<!--- Server ceiling card (inside Settings tab) --->
+	<div x-show="tab === 'settings'" x-cloak>
+		<section class="cb-content-card mt-3">
+			<div class="cb-content-card-header">
+				<h3 class="h6 mb-0"><i class="ph-duotone ph-hard-drives" aria-hidden="true"></i> Server ceiling</h3>
+			</div>
+			<div class="p-3">
+				<p class="cb-muted-cell">The most requests one IP may make per minute to the whole site. It protects the server itself: it cannot be turned off, a pause does not stop it, and excluded addresses are counted too.</p>
+				<form class="cb-ratelimit-form" @submit.prevent="saveCeiling()">
+					<label>Requests per minute per IP
+						<input type="number" class="form-control" :min="overview.ceiling.minimum" :max="overview.ceiling.maximum" x-model.number="ceilingLimit" :disabled="!#prc.canAdmin#">
+						<small class="cb-muted-cell">Between <span x-text="overview.ceiling.minimum"></span> and <span x-text="overview.ceiling.maximum"></span>.</small>
+					</label>
+					<bx:if prc.canAdmin>
+					<button type="submit" class="btn btn-primary" :disabled="busy"><i class="ph-duotone ph-floppy-disk" aria-hidden="true"></i> Save</button>
+					<button type="button" class="btn btn-outline-danger" x-show="!overview.ceiling.lockdown" @click="setLockdown( true )" :disabled="busy">
+						<i class="ph-duotone ph-lock-key" aria-hidden="true"></i> Turn on lockdown
+					</button>
+					</bx:if>
+				</form>
+				<div class="mt-3">
+					<span class="cb-muted-cell">Tracking <span x-text="overview.ceiling.trackedIps"></span> of <span x-text="overview.ceiling.maxTrackedIps"></span> addresses. <span x-text="overview.ceiling.refusedRecently"></span> requests refused in the last two minutes.</span>
+					<div class="cb-ratelimit-bar mt-1"><span :style="{ width: ceilingCapacityPercent + '%' }"></span></div>
+				</div>
+			</div>
 		</section>
 	</div>
 

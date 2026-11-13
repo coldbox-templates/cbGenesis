@@ -149,7 +149,13 @@ class {
 				properties : {}
 			},
 			{
-				// Registered first so a blocked IP is refused before anything else runs.
+				// Registered before everything else: the hard per-IP request cap that protects the server.
+				class      : "app.interceptors.ServerCeiling",
+				name       : "ServerCeiling",
+				properties : {}
+			},
+			{
+				// Registered next so a blocked IP is refused before anything else runs.
 				class      : "app.interceptors.RateLimitBlocker",
 				name       : "RateLimitBlocker",
 				properties : {}

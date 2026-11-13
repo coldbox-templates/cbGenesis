@@ -323,6 +323,19 @@ Some callers should never be held to the attempt limits: an office VPN, an uptim
 
 Like the block list, the check reads an in-memory snapshot, reloaded at most every 30 seconds and at once after this server changes the list. If a reload fails the previous snapshot stays in use, and with no snapshot nothing is excluded, so the limits apply, which is the safe direction.
 
+### Server ceiling
+
+The attempt limits protect sign-in forms. The **server ceiling** protects the server itself: the most requests one IP may make per minute to the whole application, whatever the route. The `ServerCeiling` interceptor is registered before everything else and counts every request in memory, so an IP over the ceiling is turned away before routing, sessions or the database are touched.
+
+- **The limit** is `cbServerCeilingPerMinute`: 120 by default, 30 to 600.
+- **It cannot be removed.** A pause does not stop it, a window of 0 does not disable it and excluded addresses are counted too. Only the `RATE_LIMITING_ENABLED` environment variable (the break-glass) bypasses it.
+- **Lockdown** (`cbServerCeilingLockdown`) holds every IP to the minimum of 30 a minute at once, for an attack in progress. It stays on until an admin turns it off, turning it on or off is audited, and a daily audit entry reminds you while it is on.
+- **Over the ceiling** the request gets a bare `429` with `Retry-After` and is counted in the history under the endpoint "Server ceiling". The audit log gets at most one summary row a minute (`security.ratelimit.ceiling`), however many addresses are refused.
+- **Loopback, private and link-local addresses are never counted**, so health checks and local tools are safe. Behind a proxy that hides the client address, keep `cbTrustProxyHeaders` on so the real address is counted.
+- **Bounded and fail-open.** At most 10,000 addresses are tracked; when full, expired windows go first and then the window closest to ending. Counters are per server instance. If counting fails, the request is allowed: the ceiling never takes the application down. The limit and lockdown settings are reused for 5 seconds, so another server picks up a change within that time.
+
+`GET /ratelimiting/ceiling` reports `{ limit, effectiveLimit, lockdown, minimum, maximum, trackedIps, maxTrackedIps, refusedRecently }`, and `PUT /ratelimiting/ceiling` takes `limit` and/or `lockdown`. Both writes need `settings:admin`; a limit outside 30 to 600 is a 422. The same card is on the **Settings** tab of the admin page, and the overview carries the status.
+
 ### Emergency stop
 
 If rate limiting is blocking real people, for example a proxy misconfiguration makes everyone share one IP, you can switch it off without touching the limits. `RateLimitControlService` is the master switch that `AppThrottle` and `SSORateLimiter` check first. Rate limiting is off when either of these is true:

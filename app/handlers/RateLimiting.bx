@@ -23,6 +23,9 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="rateLimitHistoryService";
 
+	@inject
+	property name="serverCeilingService";
+
 	@inject( "provider:AuditLogService" )
 	property name="auditLogService";
 
@@ -257,6 +260,7 @@ class extends="BaseSecureHandler" {
 
 			return response.setData( data: {
 				status      : rateLimitControlService.getStatus(),
+				ceiling     : serverCeilingService.getStatus(),
 				counters    : rateLimitCounterService.list( 10 ),
 				topOffenders: rateLimitHistoryService.topOffenders( hours, 10 ),
 				hourly      : hourly,
@@ -321,6 +325,72 @@ class extends="BaseSecureHandler" {
 		} catch ( any error ) {
 			log.error( "Error clearing the rate limit counters: #error.message#", error )
 			return response.failure( message: "The counters could not be cleared: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Reads the server ceiling: the configured and effective limit, lockdown, and how many IPs
+	 * are being tracked.
+	 *
+	 * @return The API response whose data is { limit, effectiveLimit, lockdown, minimum, maximum,
+	 *         trackedIps, maxTrackedIps, refusedRecently }.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function ceiling( event, rc, prc ) {
+		return event.getResponse().setData( data: serverCeilingService.getStatus() )
+	}
+
+	/**
+	 * Changes the server ceiling. rc.limit is requests per minute per IP (30 to 600) and
+	 * rc.lockdown turns lockdown on or off; send either or both. A limit out of bounds is a 422.
+	 * Turning lockdown on or off is audited at warning level.
+	 *
+	 * @return The API response whose data is the new status.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin" )
+	function saveCeiling( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var memento = {}
+			if ( rc.keyExists( "limit" ) ) {
+				memento.cbServerCeilingPerMinute = rc.limit
+			}
+			if ( rc.keyExists( "lockdown" ) ) {
+				memento.cbServerCeilingLockdown = isBoolean( rc.lockdown ) && rc.lockdown ? true : false
+			}
+			if ( !memento.count() ) {
+				return response.failure( message: "Send a limit, lockdown, or both.", statusCode: 422 )
+			}
+
+			var wasLockdown = serverCeilingService.isLockdown()
+			settingService.bulkSave( memento )
+			serverCeilingService.refresh()
+
+			var status = serverCeilingService.getStatus()
+			if ( status.lockdown != wasLockdown ) {
+				auditLogService.warn(
+					action  : status.lockdown ? "security.ratelimit.lockdown.enabled" : "security.ratelimit.lockdown.disabled",
+					message : status.lockdown
+						? "Server ceiling lockdown was turned on: every IP is limited to #status.minimum# requests a minute."
+						: "Server ceiling lockdown was turned off.",
+					category: "security"
+				)
+			}
+			if ( memento.keyExists( "cbServerCeilingPerMinute" ) ) {
+				auditLogService.info(
+					action  : "security.ratelimit.ceiling.updated",
+					message : "Server ceiling was set to #status.limit# requests a minute per IP.",
+					category: "security",
+					metadata: { limit: status.limit }
+				)
+			}
+			return response.setData( data: status, message: "The server ceiling was saved." )
+		} catch ( "Setting.Invalid" error ) {
+			return response.failure( message: error.message, statusCode: 422 )
+		} catch ( any error ) {
+			log.error( "Error saving the server ceiling: #error.message#", error )
+			return response.failure( message: "The server ceiling could not be saved: #error.message#", statusCode: 500 )
 		}
 	}
 

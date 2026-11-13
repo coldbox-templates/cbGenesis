@@ -1,0 +1,371 @@
+/**
+ * The server ceiling: a hard cap on how many requests one IP address may make per minute to
+ * the whole application, whatever the route. It protects the server itself, so unlike the
+ * attempt limits it cannot be removed, is not switched off by a pause and does not skip
+ * excluded addresses.
+ *
+ * - The limit is cbServerCeilingPerMinute (30 to 600, default 120).
+ * - Lockdown (cbServerCeilingLockdown) drops every IP to the minimum, 30 a minute, for an
+ *   attack in progress. It stays on until an admin switches it off and is reminded daily.
+ * - Loopback, private and link-local addresses are never counted, so health checks and local
+ *   tooling are not refused. Behind a proxy that hides the client address, set
+ *   cbTrustProxyHeaders so the real address is the one counted.
+ * - Only the RATE_LIMITING_ENABLED environment variable (break-glass) bypasses it.
+ *
+ * Memory is bounded and the hot path never touches the database. Counts live in STRIPES
+ * independent maps, each behind its own lock, so concurrent requests from different IPs
+ * rarely wait on each other. A map holds at most MAX_TRACKED_IPS / STRIPES addresses; when it
+ * is full, expired windows are dropped first and then the window closest to ending. Counters
+ * are fixed 60 second windows per server instance. If counting fails, the request is allowed:
+ * the ceiling never takes the application down itself.
+ *
+ * Refusals go to the history tally. The audit log gets at most one summary row per minute,
+ * however many IPs were refused, so an attacker with many addresses cannot grow it.
+ */
+@singleton
+@threadSafe
+class {
+
+	@inject( "provider:SettingService" )
+	property name="settingService";
+
+	@inject( "IpMatcher" )
+	property name="ipMatcher";
+
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
+
+	@inject( "logbox:logger:{this}" )
+	property name="log";
+
+	static {
+		WINDOW_SECONDS   = 60
+		STRIPES          = 64
+		MAX_TRACKED_IPS  = 10000
+		MIN_PER_MINUTE   = 30
+		MAX_PER_MINUTE   = 600
+		DEFAULT_PER_MINUTE = 120
+		// How long the limit, lockdown and proxy-header settings are reused before they are read
+		// again. Reading a setting costs about a millisecond, too much to pay on every request.
+		SETTINGS_TTL_MS  = 5000
+	}
+
+	/**
+	 * Constructor.
+	 */
+	function init() {
+		variables.stripes = []
+		for ( var i = 1; i <= static.STRIPES; i++ ) {
+			variables.stripes.append( {} )
+		}
+		variables.refusedMinute      = 0
+		variables.refusedThisMinute  = 0
+		variables.refusedLastMinute  = 0
+		variables.refusedSinceAudit  = 0
+		variables.lastAuditAt        = 0
+		// One reference to java.lang.System: looking the class up on every request is slow.
+		variables.javaSystem         = createObject( "java", "java.lang.System" )
+		variables.settingsSnapshot   = {}
+		variables.settingsLoadedAt   = 0
+		return this
+	}
+
+	/**
+	 * Counts a request from an IP and says whether it is over the ceiling.
+	 *
+	 * @ipAddress The client IP.
+	 *
+	 * @return A struct { allowed, retryInSeconds, firstRefusal, limit }. firstRefusal is true
+	 *         for the first refused request of the IP's window. Never throws: on any error the
+	 *         request is allowed.
+	 */
+	struct function hit( required string ipAddress ) {
+		var allowed = { allowed: true, retryInSeconds: 0, firstRefusal: false, limit: 0 }
+
+		try {
+			var address = variables.ipMatcher.parse( arguments.ipAddress )
+			// An unparseable address cannot be counted fairly, and internal ones are never refused.
+			if ( !address.valid || variables.ipMatcher.isInternal( address ) ) {
+				return allowed
+			}
+
+			var limit = effectiveLimit()
+			var now   = nowInSeconds()
+			var index = ( abs( address.key.hashCode() ) mod static.STRIPES ) + 1
+			var count = 0
+			var resetAt = 0
+
+			lock name="serverCeiling-#index#" type="exclusive" timeout="2" throwOnTimeout="true" {
+				var stripe = variables.stripes[ index ]
+				var entry  = stripe[ address.key ] ?: { count: 0, resetAt: 0 }
+
+				if ( entry.resetAt <= now ) {
+					entry = { count: 0, resetAt: now + static.WINDOW_SECONDS }
+				}
+				if ( !stripe.keyExists( address.key ) && stripe.count() >= perStripeLimit() ) {
+					makeRoom( stripe, now )
+				}
+
+				entry.count++
+				stripe[ address.key ] = entry
+				count   = entry.count
+				resetAt = entry.resetAt
+			}
+
+			allowed.limit = limit
+			if ( count > limit ) {
+				allowed.allowed        = false
+				allowed.retryInSeconds = max( 1, resetAt - now )
+				allowed.firstRefusal   = count == limit + 1
+				countRefusal( now )
+			}
+		} catch ( any error ) {
+			variables.log.error( "Server ceiling could not count a request, allowing it: #error.message#" )
+			return { allowed: true, retryInSeconds: 0, firstRefusal: false, limit: 0 }
+		}
+
+		return allowed
+	}
+
+	/**
+	 * The limit in force right now: the configured limit, or the minimum during a lockdown.
+	 *
+	 * @return Requests per minute per IP.
+	 */
+	numeric function effectiveLimit() {
+		return isLockdown() ? static.MIN_PER_MINUTE : configuredLimit()
+	}
+
+	/**
+	 * The configured limit, kept inside its bounds even if the stored value is bad.
+	 *
+	 * @return Requests per minute per IP, 30 to 600.
+	 */
+	numeric function configuredLimit() {
+		var value = readSettings().limit
+		if ( !isNumeric( value ) ) {
+			return static.DEFAULT_PER_MINUTE
+		}
+		return min( max( int( value ), static.MIN_PER_MINUTE ), static.MAX_PER_MINUTE )
+	}
+
+	/**
+	 * Whether lockdown is on.
+	 *
+	 * @return True when every IP is held to the minimum.
+	 */
+	boolean function isLockdown() {
+		var value = readSettings().lockdown
+		return value === true || lCase( toString( value ) ) == "true"
+	}
+
+	/**
+	 * Whether the client IP may be read from proxy headers (cbTrustProxyHeaders). Lives here so
+	 * the request interceptors share one cheap, cached read instead of each reading the setting.
+	 *
+	 * @return True when X-Forwarded-For style headers are trusted.
+	 */
+	boolean function trustsProxyHeaders() {
+		try {
+			var value = readSettings().trustProxy
+			return value === true || lCase( toString( value ) ) == "true"
+		} catch ( any error ) {
+			// Settings unavailable and never read: trust the headers, the shipped default.
+			return true
+		}
+	}
+
+	/**
+	 * Makes the next request read the settings again. Called after this server changes them;
+	 * other servers pick a change up within SETTINGS_TTL_MS.
+	 */
+	void function refresh() {
+		variables.settingsLoadedAt = 0
+	}
+
+	/**
+	 * Describes the ceiling for the admin page.
+	 *
+	 * @return { limit, effectiveLimit, lockdown, minimum, maximum, trackedIps, maxTrackedIps, refusedRecently }.
+	 */
+	struct function getStatus() {
+		var tracked = 0
+		var now     = nowInSeconds()
+		for ( var stripe in variables.stripes ) {
+			tracked += stripe.count()
+		}
+		rollMinute( now )
+		return {
+			limit          : configuredLimit(),
+			effectiveLimit : effectiveLimit(),
+			lockdown       : isLockdown(),
+			minimum        : static.MIN_PER_MINUTE,
+			maximum        : static.MAX_PER_MINUTE,
+			trackedIps     : tracked,
+			maxTrackedIps  : static.MAX_TRACKED_IPS,
+			refusedRecently: variables.refusedThisMinute + variables.refusedLastMinute
+		}
+	}
+
+	/**
+	 * Writes the summary audit row for refusals, at most once a minute.
+	 *
+	 * @ipAddress An IP that was refused, named in the row as an example.
+	 *
+	 * @return True when a row was written.
+	 */
+	boolean function auditRefusals( required string ipAddress ) {
+		var now     = nowInSeconds()
+		var refused = 0
+
+		lock name="serverCeilingAudit" type="exclusive" timeout="2" throwOnTimeout="true" {
+			if ( now - variables.lastAuditAt < static.WINDOW_SECONDS ) {
+				return false
+			}
+			variables.lastAuditAt = now
+			refused = variables.refusedSinceAudit
+			variables.refusedSinceAudit = 0
+		}
+
+		variables.auditLogService.warn(
+			action  : "security.ratelimit.ceiling",
+			message : "The server ceiling refused requests, for example from [#arguments.ipAddress#].",
+			category: "security",
+			metadata: { exampleIp: arguments.ipAddress, refusedSinceLastEntry: refused, limit: effectiveLimit() }
+		)
+		return true
+	}
+
+	/**
+	 * One audit entry a day while lockdown is on, so it cannot be forgotten. Scheduled daily.
+	 *
+	 * @return True when an entry was written.
+	 */
+	boolean function remindIfLockdown() {
+		if ( !isLockdown() ) {
+			return false
+		}
+		variables.auditLogService.warn(
+			action  : "security.ratelimit.lockdown.reminder",
+			message : "Server ceiling lockdown is still on: every IP is limited to #static.MIN_PER_MINUTE# requests a minute.",
+			category: "security"
+		)
+		return true
+	}
+
+	/**
+	 * Forgets every counter. For tests and for an admin recovering from a mistake.
+	 */
+	void function reset() {
+		for ( var i = 1; i <= static.STRIPES; i++ ) {
+			lock name="serverCeiling-#i#" type="exclusive" timeout="2" throwOnTimeout="true" {
+				variables.stripes[ i ] = {}
+			}
+		}
+	}
+
+	/**
+	 * The settings this service needs, reused for SETTINGS_TTL_MS. If a reload fails the previous
+	 * values stay in use; with no previous values the error is thrown, and hit() then allows the
+	 * request.
+	 *
+	 * @return { limit, lockdown, trustProxy }.
+	 */
+	private struct function readSettings() {
+		var nowMs = variables.javaSystem.currentTimeMillis()
+
+		if ( variables.settingsLoadedAt > 0 && nowMs - variables.settingsLoadedAt < static.SETTINGS_TTL_MS ) {
+			return variables.settingsSnapshot
+		}
+
+		try {
+			variables.settingsSnapshot = {
+				limit    : variables.settingService.getSetting( "cbServerCeilingPerMinute", static.DEFAULT_PER_MINUTE ),
+				lockdown : variables.settingService.getSetting( "cbServerCeilingLockdown", false ),
+				trustProxy: variables.settingService.getSetting( "cbTrustProxyHeaders", true )
+			}
+			variables.settingsLoadedAt = nowMs
+		} catch ( any error ) {
+			if ( variables.settingsSnapshot.isEmpty() ) {
+				rethrow
+			}
+			variables.log.error( "Server ceiling could not reload its settings, keeping the old ones: #error.message#" )
+			variables.settingsLoadedAt = nowMs
+		}
+		return variables.settingsSnapshot
+	}
+
+	/**
+	 * How many addresses one stripe may hold, so that all stripes together never exceed MAX_TRACKED_IPS.
+	 *
+	 * @return The per-stripe capacity.
+	 */
+	private numeric function perStripeLimit() {
+		return int( static.MAX_TRACKED_IPS / static.STRIPES )
+	}
+
+	/**
+	 * Makes room in a full stripe: drops expired windows, and if that frees nothing, the
+	 * window closest to ending. Called with the stripe's lock held.
+	 *
+	 * @stripe The map of address key to { count, resetAt }.
+	 * @now    The current epoch second.
+	 */
+	private void function makeRoom( required struct stripe, required numeric now ) {
+		for ( var key in arguments.stripe.keyArray() ) {
+			if ( arguments.stripe[ key ].resetAt <= arguments.now ) {
+				arguments.stripe.delete( key )
+			}
+		}
+		if ( arguments.stripe.count() < perStripeLimit() ) {
+			return
+		}
+		var oldestKey = ""
+		var oldestAt  = 0
+		for ( var key in arguments.stripe ) {
+			if ( !len( oldestKey ) || arguments.stripe[ key ].resetAt < oldestAt ) {
+				oldestKey = key
+				oldestAt  = arguments.stripe[ key ].resetAt
+			}
+		}
+		arguments.stripe.delete( oldestKey )
+	}
+
+	/**
+	 * Adds a refusal to the per-minute and since-last-audit counters.
+	 *
+	 * @now The current epoch second.
+	 */
+	private void function countRefusal( required numeric now ) {
+		lock name="serverCeilingStats" type="exclusive" timeout="2" throwOnTimeout="true" {
+			rollMinute( arguments.now )
+			variables.refusedThisMinute++
+			variables.refusedSinceAudit++
+		}
+	}
+
+	/**
+	 * Moves the refusal counters on to the current minute.
+	 *
+	 * @now The current epoch second.
+	 */
+	private void function rollMinute( required numeric now ) {
+		var minute = int( arguments.now / 60 )
+		if ( minute == variables.refusedMinute ) {
+			return
+		}
+		variables.refusedLastMinute = minute == variables.refusedMinute + 1 ? variables.refusedThisMinute : 0
+		variables.refusedThisMinute = 0
+		variables.refusedMinute     = minute
+	}
+
+	/**
+	 * Epoch seconds.
+	 *
+	 * @return The current time in whole seconds.
+	 */
+	private numeric function nowInSeconds() {
+		return int( variables.javaSystem.currentTimeMillis() / 1000 )
+	}
+
+}
