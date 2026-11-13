@@ -1,0 +1,439 @@
+/**
+ * Tests for the exclusion list: adding and removing IP and user exclusions, what an
+ * exclusion does and does not skip, its safety limits, the in-memory snapshot, and the
+ * RateLimiting handler's exclusion endpoints.
+ *
+ * The tables are emptied around every spec, because rows written through qb are not rolled
+ * back with the spec's transaction, and the snapshots are reloaded so nothing leaks.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
+
+	@inject
+	property name="rateLimitExclusionService";
+
+	@inject
+	property name="rateLimitBlockService";
+
+	@inject
+	property name="rateLimitHistoryService";
+
+	@inject
+	property name="auditLogService";
+
+	@inject( "QueryBuilder@qb" )
+	property name="qb";
+
+	@inject( "CBSecurity@cbsecurity" )
+	property name="cbsecurity";
+
+	@inject
+	property name="roleService";
+
+	/**
+	 * Deletes every exclusion and block and reloads both snapshots.
+	 */
+	private void function resetLists() {
+		qb.newQuery().from( "rate_limit_exclusions" ).delete()
+		qb.newQuery().from( "rate_limit_blocks" ).delete()
+		rateLimitExclusionService.refresh()
+		rateLimitBlockService.refresh()
+	}
+
+	/**
+	 * A fresh RateLimitExclusionService, so specs that break the database or fill the list do
+	 * not touch the singleton the throttle really uses.
+	 */
+	private function freshService() {
+		var service = prepareMock( new app.models.security.RateLimitExclusionService() )
+		getWireBox().autowire( service )
+		return service
+	}
+
+	/**
+	 * The client IP as the application sees it in a test request.
+	 */
+	private string function clientIp() {
+		return cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
+	}
+
+	/**
+	 * The flash messages of the request that just ran, as text.
+	 */
+	private string function flashText() {
+		return jsonSerialize( getFlashScope().getAll() )
+	}
+
+	/**
+	 * Counts the audit entries recorded for an action.
+	 */
+	private numeric function auditCount( required string action ) {
+		ormFlush()
+		return auditLogService.countWhere( action: arguments.action )
+	}
+
+	/**
+	 * A user holding the seeded Admin role, which carries the settings permissions.
+	 */
+	private User function createSettingsAdmin() {
+		var user = createVerifiedUser()
+		user.setRoles( [ roleService.findWhere( { role: "Admin" } ) ] )
+		return userService.save( user )
+	}
+
+	/**
+	 * Makes bad logins and reports whether the last one was throttled.
+	 */
+	private boolean function throttleAfterLogins( required numeric count ) {
+		getFlashScope().clear().removeFlash()
+		for ( var i = 1; i <= arguments.count; i++ ) {
+			post(
+				route         = "/login",
+				params        = { email: "nobody@example.com", password: "wrong-password", csrf: cbcsrf.generate() },
+				renderResults = false
+			)
+		}
+		return flashText().findNoCase( "Too many attempts" ) > 0
+	}
+
+	function run() {
+		describe( "Exclusion list", () => {
+			beforeEach( () => {
+				setup()
+				structClear( form )
+				getFlashScope().clear().removeFlash()
+				securityService.logout( quiet: true )
+				rateLimitCache.clearAll()
+				settingService.bulkSave( { cbRateLimitAutoBlock: true, cbRateLimitAutoBlockWindows: 3 } )
+				resetLists()
+			} )
+
+			afterEach( () => {
+				resetLists()
+				// Flush first so a tally this spec left is not written into the table after the delete.
+				rateLimitHistoryService.flush()
+				qb.newQuery().from( "rate_limit_history" ).delete()
+				getRequestContext().getResponse().setError( false )
+			} )
+
+			story( "An admin can exclude an address, a range or a user", () => {
+				it( "excludes a single address and nothing else", () => {
+					var row = rateLimitExclusionService.excludeIp( address: "203.0.113.42", label: "Office VPN", createdBy: "admin@example.com" )
+
+					expect( rateLimitExclusionService.isExcludedIp( "203.0.113.42" ) ).toBeTrue()
+					expect( rateLimitExclusionService.isExcludedIp( "203.0.113.43" ) ).toBeFalse()
+					expect( row.label ).toBe( "Office VPN" )
+					expect( row.type ).toBe( "ip" )
+					expect( row.createdBy ).toBe( "admin@example.com" )
+				} )
+
+				it( "excludes every address in a range, IPv4 and IPv6", () => {
+					rateLimitExclusionService.excludeIp( address: "192.0.2.0/28" )
+					rateLimitExclusionService.excludeIp( address: "2001:db8:1::/48" )
+
+					expect( rateLimitExclusionService.isExcludedIp( "192.0.2.5" ) ).toBeTrue()
+					expect( rateLimitExclusionService.isExcludedIp( "192.0.2.16" ) ).toBeFalse()
+					expect( rateLimitExclusionService.isExcludedIp( "2001:db8:1:5::9" ) ).toBeTrue()
+					expect( rateLimitExclusionService.isExcludedIp( "2001:db8:2::9" ) ).toBeFalse()
+				} )
+
+				it( "excludes a user by email and reports the email in the list", () => {
+					var user = createVerifiedUser()
+
+					var row = rateLimitExclusionService.excludeUser( email: user.getEmail(), label: "Nightly report service" )
+
+					expect( row.type ).toBe( "user" )
+					expect( row.value ).toBe( user.getUserId() )
+					expect( row.email ).toBe( user.getEmail() )
+					expect( rateLimitExclusionService.isExcluded( "198.51.100.7", user.getUserId() ) ).toBeTrue()
+					expect( rateLimitExclusionService.isExcluded( "198.51.100.7", createUUID() ) ).toBeFalse()
+					expect( rateLimitExclusionService.hasUserExclusions() ).toBeTrue()
+					expect( rateLimitExclusionService.list()[ 1 ].email ).toBe( user.getEmail() )
+				} )
+
+				it( "uses the user's email as the label when none is given", () => {
+					var user = createVerifiedUser()
+
+					expect( rateLimitExclusionService.excludeUser( email: user.getEmail() ).label ).toBe( user.getEmail() )
+				} )
+
+				it( "updates the label instead of adding a second entry for the same address or user", () => {
+					var user = createVerifiedUser()
+					rateLimitExclusionService.excludeIp( address: "203.0.113.42", label: "first" )
+					rateLimitExclusionService.excludeIp( address: "203.0.113.42", label: "second" )
+					rateLimitExclusionService.excludeUser( email: user.getEmail() )
+					rateLimitExclusionService.excludeUser( email: user.getEmail(), label: "renamed" )
+
+					var all = rateLimitExclusionService.list()
+					expect( all ).toHaveLength( 2 )
+					expect( all.filter( ( row ) => row.type == "ip" )[ 1 ].label ).toBe( "second" )
+					expect( all.filter( ( row ) => row.type == "user" )[ 1 ].label ).toBe( "renamed" )
+				} )
+
+				it( "treats two spellings of one range as the same entry", () => {
+					rateLimitExclusionService.excludeIp( address: "192.0.2.0/28" )
+					rateLimitExclusionService.excludeIp( address: "192.0.2.5/28" )
+
+					expect( rateLimitExclusionService.list() ).toHaveLength( 1 )
+				} )
+
+				it( "removes an exclusion and reports false for one that does not exist", () => {
+					var row = rateLimitExclusionService.excludeIp( address: "203.0.113.42" )
+
+					expect( rateLimitExclusionService.remove( row.exclusionId ) ).toBeTrue()
+					expect( rateLimitExclusionService.isExcludedIp( "203.0.113.42" ) ).toBeFalse()
+					expect( rateLimitExclusionService.remove( createUUID() ) ).toBeFalse()
+				} )
+
+				it( "audits adding and removing an exclusion", () => {
+					var added = auditCount( "security.ratelimit.exclusion_added" )
+					var removed = auditCount( "security.ratelimit.exclusion_removed" )
+
+					var row = rateLimitExclusionService.excludeIp( address: "203.0.113.42" )
+					rateLimitExclusionService.remove( row.exclusionId )
+
+					expect( auditCount( "security.ratelimit.exclusion_added" ) ).toBe( added + 1 )
+					expect( auditCount( "security.ratelimit.exclusion_removed" ) ).toBe( removed + 1 )
+				} )
+			} )
+
+			story( "Unsafe exclusions are refused", () => {
+				it( "refuses text that is not an address or range, including host names", () => {
+					[ "localhost", "example.com", "999.1.1.1", "1.2.3.4/40", "" ].each( ( text ) => {
+						expect( () => rateLimitExclusionService.excludeIp( address: text ) ).toThrow( "RateLimit.InvalidAddress" )
+					} )
+				} )
+
+				it( "refuses a range wider than /16 or /48", () => {
+					[ "10.0.0.0/8", "0.0.0.0/0", "2001:db8::/32" ].each( ( text ) => {
+						expect( () => rateLimitExclusionService.excludeIp( address: text ) ).toThrow( "RateLimit.RangeTooWide" )
+					} )
+					expect( rateLimitExclusionService.list() ).toBeEmpty()
+				} )
+
+				it( "refuses a user that does not exist", () => {
+					expect( () => rateLimitExclusionService.excludeUser( email: "nobody-#createUUID()#@example.com" ) ).toThrow( "RateLimit.UserNotFound" )
+				} )
+
+				it( "refuses new entries once the list holds 1,000", () => {
+					var rows = []
+					for ( var i = 1; i <= 1000; i++ ) {
+						rows.append( {
+							exclusionId: createUUID(),
+							type       : "ip",
+							value      : "10.#int( i / 250 )#.#i mod 250#.1",
+							valueKey   : "filler-#i#",
+							label      : "filler",
+							createdBy  : "test",
+							createdDate: now()
+						} )
+					}
+					// In chunks: SQL Server accepts at most 2,100 parameters per statement, and each row uses 7.
+					for ( var start = 1; start <= rows.len(); start += 250 ) {
+						qb.newQuery().from( "rate_limit_exclusions" ).insert( rows.slice( start, min( 250, rows.len() - start + 1 ) ) )
+					}
+
+					expect( () => rateLimitExclusionService.excludeIp( address: "203.0.113.42" ) ).toThrow( "RateLimit.ExclusionsFull" )
+				} )
+
+				it( "refuses to block an address or range that is excluded", () => {
+					rateLimitExclusionService.excludeIp( address: "203.0.113.42" )
+					rateLimitExclusionService.excludeIp( address: "192.0.2.0/28" )
+
+					expect( () => rateLimitBlockService.block( address: "203.0.113.42" ) ).toThrow( "RateLimit.Excluded" )
+					expect( () => rateLimitBlockService.block( address: "192.0.2.5" ) ).toThrow( "RateLimit.Excluded" )
+					expect( () => rateLimitBlockService.block( address: "192.0.2.0/24" ) ).toThrow( "RateLimit.Excluded" )
+					expect( () => rateLimitBlockService.block( address: "203.0.113.0/24" ) ).toThrow( "RateLimit.Excluded" )
+					// A neighbouring address is fine.
+					expect( rateLimitBlockService.block( address: "203.0.113.43" ).address ).toBe( "203.0.113.43" )
+				} )
+			} )
+
+			story( "An exclusion skips the attempt limits", () => {
+				it( "limits the address until it is excluded", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+
+					expect( throttleAfterLogins( maxAttempts + 2 ) ).toBeTrue()
+				} )
+
+				it( "does not throttle an excluded address however many attempts it makes", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					rateLimitExclusionService.excludeIp( address: clientIp() )
+
+					expect( throttleAfterLogins( maxAttempts + 5 ) ).toBeFalse()
+				} )
+
+				it( "limits the address again once the exclusion is removed", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					var row = rateLimitExclusionService.excludeIp( address: clientIp() )
+					rateLimitExclusionService.remove( row.exclusionId )
+
+					expect( throttleAfterLogins( maxAttempts + 2 ) ).toBeTrue()
+				} )
+
+				it( "does not tally an excluded address's requests as blocked", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					rateLimitExclusionService.excludeIp( address: clientIp() )
+					rateLimitHistoryService.flush()
+					qb.newQuery().from( "rate_limit_history" ).delete()
+
+					throttleAfterLogins( maxAttempts + 5 )
+					rateLimitHistoryService.flush()
+
+					expect( qb.newQuery().from( "rate_limit_history" ).count() ).toBe( 0 )
+				} )
+
+				it( "never blocks an excluded address automatically", () => {
+					rateLimitExclusionService.excludeIp( address: "203.0.113.42" )
+
+					for ( var i = 1; i <= 5; i++ ) {
+						expect( rateLimitBlockService.recordThrottledWindow( "203.0.113.42" ) ).toBeFalse()
+					}
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeFalse()
+				} )
+			} )
+
+			story( "An exclusion wins over a block", () => {
+				it( "lets an excluded address through even when it is on the block list", () => {
+					var ip = clientIp()
+					rateLimitBlockService.block( address: ip )
+					// Added after the block, the way an admin would exclude an address that was blocked by mistake.
+					rateLimitExclusionService.excludeIp( address: ip )
+
+					var event = get( route = "/login", renderResults = false )
+
+					expect( event.getRenderData().statusCode ?: 200 ).notToBe( 403 )
+				} )
+			} )
+
+			story( "A user exclusion skips the limits for signed-in users, but not the sign-in endpoints", () => {
+				it( "does not apply to the Auth endpoints, which are always counted", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					var user = createVerifiedUser()
+					rateLimitExclusionService.excludeUser( email: user.getEmail() )
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" )
+
+					expect( throttleAfterLogins( maxAttempts + 2 ) ).toBeTrue()
+				} )
+
+				it( "is not looked up when no user is excluded", () => {
+					rateLimitExclusionService.excludeIp( address: "203.0.113.42" )
+
+					expect( rateLimitExclusionService.hasUserExclusions() ).toBeFalse()
+				} )
+			} )
+
+			story( "The check uses an in-memory snapshot", () => {
+				it( "does not see a row added behind its back until the snapshot reloads", () => {
+					var entry = getInstance( "IpMatcher" ).parse( "203.0.113.42" )
+					qb.newQuery().from( "rate_limit_exclusions" ).insert( {
+						exclusionId: createUUID(),
+						type       : "ip",
+						value      : "203.0.113.42",
+						valueKey   : "ip:#entry.key#",
+						label      : "direct",
+						createdBy  : "test",
+						createdDate: now()
+					} )
+
+					expect( rateLimitExclusionService.isExcludedIp( "203.0.113.42" ) ).toBeFalse()
+					rateLimitExclusionService.refresh()
+					expect( rateLimitExclusionService.isExcludedIp( "203.0.113.42" ) ).toBeTrue()
+				} )
+
+				it( "keeps its exclusions when the database fails on a reload", () => {
+					var service = freshService()
+					service.excludeIp( address: "203.0.113.42" )
+
+					service.$property( propertyName = "qb", mock = createStub().$( "newQuery" ).$throws( type = "Database.Down", message = "database is down" ) )
+					service.refresh()
+
+					expect( service.isExcludedIp( "203.0.113.42" ) ).toBeTrue()
+				} )
+
+				it( "excludes nothing, so the limits apply, when the database is down from the start", () => {
+					var service = freshService()
+					service.$property( propertyName = "qb", mock = createStub().$( "newQuery" ).$throws( type = "Database.Down", message = "database is down" ) )
+
+					expect( service.isExcludedIp( "203.0.113.42" ) ).toBeFalse()
+					expect( service.isExcluded( "203.0.113.42", createUUID() ) ).toBeFalse()
+				} )
+
+				it( "never excludes text that is not an address", () => {
+					rateLimitExclusionService.excludeIp( address: "203.0.113.42" )
+
+					expect( rateLimitExclusionService.isExcludedIp( "not-an-ip" ) ).toBeFalse()
+					expect( rateLimitExclusionService.isExcludedIp( "" ) ).toBeFalse()
+				} )
+			} )
+
+			story( "The RateLimiting handler exposes the exclusion list", () => {
+				it( "adds an IP and a user, lists them, and removes one", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					var other = createVerifiedUser()
+
+					form.type = "ip"
+					form.value = "203.0.113.42"
+					form.label = "Office VPN"
+					form.csrf = cbcsrf.generate()
+					var addedIp = execute( event = "ratelimiting.exclude", prePostExempt = true ).getPrivateValue( "response" )
+					// Read what is needed now: the Response object is shared by every execute() in a run.
+					var exclusionId = addedIp.getData().exclusionId
+					expect( addedIp.getData().value ).toBe( "203.0.113.42" )
+
+					structClear( form )
+					form.type = "user"
+					form.value = other.getEmail()
+					form.csrf = cbcsrf.generate()
+					execute( event = "ratelimiting.exclude", prePostExempt = true )
+
+					var listed = execute( event = "ratelimiting.exclusions", prePostExempt = true ).getPrivateValue( "response" )
+					expect( listed.getData() ).toHaveLength( 2 )
+
+					structClear( form )
+					form.exclusionId = exclusionId
+					form.csrf = cbcsrf.generate()
+					execute( event = "ratelimiting.unexclude", prePostExempt = true )
+					expect( rateLimitExclusionService.isExcludedIp( "203.0.113.42" ) ).toBeFalse()
+				} )
+
+				it( "answers a bad type, a bad address and an unknown user with a 422", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					[
+						{ type: "group", value: "x" },
+						{ type: "ip", value: "not-an-ip" },
+						{ type: "user", value: "nobody-#createUUID()#@example.com" }
+					].each( ( input ) => {
+						structClear( form )
+						form.type = input.type
+						form.value = input.value
+						form.csrf = cbcsrf.generate()
+						var response = execute( event = "ratelimiting.exclude", prePostExempt = true ).getPrivateValue( "response" )
+						expect( response.getStatusCode() ).toBe( 422 )
+					} )
+					expect( rateLimitExclusionService.list() ).toBeEmpty()
+				} )
+
+				it( "answers removing an unknown exclusion with a 404", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.exclusionId = createUUID()
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.unexclude", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 404 )
+				} )
+			} )
+		} )
+	}
+
+}

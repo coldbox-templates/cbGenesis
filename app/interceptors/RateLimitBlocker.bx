@@ -9,6 +9,8 @@
  * only skips the attempt limits. The RATE_LIMITING_ENABLED environment variable is the
  * full break-glass and switches the block list off too.
  *
+ * An excluded IP is never refused, even if it is on the block list (RateLimitExclusionService).
+ *
  * Each refused request is tallied for the history under the endpoint "Blocked IP"; it is
  * never written to the audit log, which would let an attacker grow it.
  *
@@ -21,6 +23,9 @@ class extends="coldbox.system.Interceptor" {
 
 	@inject( "provider:RateLimitControlService" )
 	property name="rateLimitControl";
+
+	@inject( "provider:RateLimitExclusionService" )
+	property name="exclusions";
 
 	@inject( "provider:RateLimitHistoryService" )
 	property name="rateLimitHistory";
@@ -53,6 +58,11 @@ class extends="coldbox.system.Interceptor" {
 		)
 
 		if ( !variables.blockService.isBlocked( ipAddress ) ) {
+			return
+		}
+
+		// An excluded address is never refused, even if it is on the block list.
+		if ( variables.exclusions.isExcludedIp( ipAddress ) ) {
 			return
 		}
 

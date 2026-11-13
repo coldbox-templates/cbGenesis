@@ -36,6 +36,9 @@ class {
 	@inject( "provider:AuditLogService" )
 	property name="auditLogService";
 
+	@inject( "provider:RateLimitExclusionService" )
+	property name="exclusions";
+
 	@inject( "provider:RateLimiter@cbsecurity" )
 	property name="rateLimiter";
 
@@ -112,6 +115,7 @@ class {
 	 * @throws RateLimit.RangeTooWide   When a range is wider than IPv4 /16 or IPv6 /48.
 	 * @throws RateLimit.InvalidDuration When hours is not a whole number from 0 to 8760.
 	 * @throws RateLimit.SelfBlock      When the block would include the admin's own address.
+	 * @throws RateLimit.Excluded       When the address or range overlaps an exclusion.
 	 * @throws RateLimit.BlockListFull  When the list already holds the maximum number of active blocks.
 	 *
 	 * @return The row for the block.
@@ -126,6 +130,10 @@ class {
 		}
 		if ( int( arguments.hours ) != arguments.hours || arguments.hours < 0 || arguments.hours > 8760 ) {
 			throw( type = "RateLimit.InvalidDuration", message = "Block for a whole number of hours from 1 to 8760, or 0 for permanent." )
+		}
+
+		if ( variables.exclusions.overlapsExclusion( entry ) ) {
+			throw( type = "RateLimit.Excluded", message = "That address is excluded from rate limiting. Remove the exclusion first if you want to block it." )
 		}
 
 		var requester = variables.ipMatcher.parse( arguments.requesterIp )
@@ -195,7 +203,7 @@ class {
 			}
 
 			var entry = variables.ipMatcher.parse( arguments.ipAddress )
-			if ( !entry.valid || variables.ipMatcher.isInternal( entry ) || isBlocked( arguments.ipAddress ) ) {
+			if ( !entry.valid || variables.ipMatcher.isInternal( entry ) || variables.exclusions.isExcludedIp( arguments.ipAddress ) || isBlocked( arguments.ipAddress ) ) {
 				return false
 			}
 

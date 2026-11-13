@@ -1,0 +1,350 @@
+/**
+ * The exclusion list: IP addresses, CIDR ranges and users that are never held to the attempt
+ * limits and are never blocked automatically, such as an office VPN, an uptime monitor or a
+ * service account.
+ *
+ * What an exclusion does, and does not do:
+ * - An excluded IP skips AppThrottle and SSORateLimiter, is never blocked automatically, and
+ *   cannot be blocked by hand. If it is on the block list anyway, the exclusion wins.
+ * - An excluded user skips the limits on routes that signed-in users use. It never applies to
+ *   the Auth endpoints (login, registration, password reset): those are always counted, so
+ *   an excluded account cannot be used to guess other accounts' passwords.
+ * - Exclusions never switch off anything that protects the server as a whole.
+ *
+ * isExcluded() runs on throttled requests, so it reads an in-memory snapshot, reloaded at most
+ * every SNAPSHOT_TTL_MS and at once after this server changes the list, exactly like the block
+ * list (RateLimitBlockService). If a reload fails, the previous snapshot stays in use; with no
+ * snapshot at all nothing is excluded, so the limits apply, which is the safe direction.
+ * At most MAX_EXCLUSIONS entries, and ranges are limited to the same widths as blocks.
+ */
+@singleton
+@threadSafe
+class {
+
+	@inject( "provider:QueryBuilder@qb" )
+	property name="qb";
+
+	@inject( "provider:IpMatcher" )
+	property name="ipMatcher";
+
+	@inject( "provider:UserService" )
+	property name="userService";
+
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
+
+	@inject( "logbox:logger:{this}" )
+	property name="log";
+
+	static {
+		TABLE           = "rate_limit_exclusions"
+		MAX_EXCLUSIONS  = 1000
+		SNAPSHOT_TTL_MS = 30000
+	}
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		variables.snapshot         = { singles: {}, ranges: [], users: {} }
+		variables.snapshotLoadedAt = 0
+		return this
+	}
+
+	/**
+	 * Whether a request is excluded from the attempt limits.
+	 *
+	 * @ipAddress The client IP.
+	 * @userId    The signed-in user's id, or empty. Pass empty for the Auth endpoints, where a user exclusion never applies.
+	 *
+	 * @return True when the IP, or the user, is excluded. Never throws.
+	 */
+	boolean function isExcluded( required string ipAddress, string userId = "" ) {
+		try {
+			var current = getSnapshot()
+			if ( len( arguments.userId ) && current.users.keyExists( arguments.userId ) ) {
+				return true
+			}
+			return isExcludedIp( arguments.ipAddress )
+		} catch ( any e ) {
+			variables.log.error( "Exclusion check failed: #e.message#" )
+			return false
+		}
+	}
+
+	/**
+	 * Whether an IP is excluded.
+	 *
+	 * @ipAddress The client IP.
+	 */
+	boolean function isExcludedIp( required string ipAddress ) {
+		try {
+			var address = variables.ipMatcher.parse( arguments.ipAddress )
+			if ( !address.valid ) {
+				return false
+			}
+			var current = getSnapshot()
+			if ( current.singles.keyExists( address.key ) ) {
+				return true
+			}
+			for ( var range in current.ranges ) {
+				if ( variables.ipMatcher.matches( range, address ) ) {
+					return true
+				}
+			}
+		} catch ( any e ) {
+			variables.log.error( "Exclusion check failed: #e.message#" )
+		}
+		return false
+	}
+
+	/**
+	 * Whether an address or range overlaps an exclusion: it contains an excluded address, or is
+	 * inside, or contains the start of, an excluded range. Used to refuse blocking something
+	 * that is excluded.
+	 *
+	 * @entry A parsed address or range from IpMatcher.parse().
+	 */
+	boolean function overlapsExclusion( required struct entry ) {
+		try {
+			var current = getSnapshot()
+			for ( var key in current.singles ) {
+				if ( variables.ipMatcher.matches( arguments.entry, current.singles[ key ] ) ) {
+					return true
+				}
+			}
+			for ( var range in current.ranges ) {
+				if ( variables.ipMatcher.matches( range, arguments.entry ) || variables.ipMatcher.matches( arguments.entry, range ) ) {
+					return true
+				}
+			}
+		} catch ( any e ) {
+			variables.log.error( "Exclusion overlap check failed: #e.message#" )
+		}
+		return false
+	}
+
+	/**
+	 * Whether any user is excluded at all. Lets a caller skip looking up the current user
+	 * when no user exclusion exists.
+	 */
+	boolean function hasUserExclusions() {
+		try {
+			return !getSnapshot().users.isEmpty()
+		} catch ( any e ) {
+			return false
+		}
+	}
+
+	/**
+	 * The exclusions, newest first.
+	 *
+	 * @return An array of rows: exclusionId, type, value, label, createdBy, createdDate. For a user,
+	 *         value is the user's id and email is the address.
+	 */
+	array function list() {
+		var rows = variables.qb.newQuery().from( static.TABLE ).orderBy( "createdDate", "desc" ).get()
+		var userIds = rows.filter( ( row ) => row.type == "user" ).map( ( row ) => row.value )
+		var emails = {}
+
+		for ( var userId in userIds ) {
+			var user = variables.userService.get( userId )
+			if ( !isNull( user ) && isObject( user ) && user.isLoaded() ) {
+				emails[ userId ] = user.getEmail()
+			}
+		}
+
+		return rows.map( ( row ) => {
+			row.email = row.type == "user" ? ( emails[ row.value ] ?: "" ) : ""
+			return row
+		} )
+	}
+
+	/**
+	 * Excludes an IP address or range.
+	 *
+	 * @address   An address or CIDR range.
+	 * @label     What it is for.
+	 * @createdBy Who adds it.
+	 *
+	 * @throws RateLimit.InvalidAddress When the text is not a valid address or range.
+	 * @throws RateLimit.RangeTooWide   When a range is wider than IPv4 /16 or IPv6 /48.
+	 * @throws RateLimit.ExclusionsFull When the list already holds the maximum number of entries.
+	 *
+	 * @return The row.
+	 */
+	struct function excludeIp( required string address, string label = "", string createdBy = "" ) {
+		var entry = variables.ipMatcher.parse( arguments.address )
+		if ( !entry.valid ) {
+			throw( type = "RateLimit.InvalidAddress", message = "[#arguments.address#] is not a valid IP address or CIDR range, for example 203.0.113.42 or 203.0.113.0/24." )
+		}
+		if ( variables.ipMatcher.isTooWide( entry ) ) {
+			throw( type = "RateLimit.RangeTooWide", message = "That range is too wide. The widest range you can exclude is /16 for IPv4 and /48 for IPv6." )
+		}
+
+		var row = saveExclusion( "ip", trim( arguments.address ), "ip:#entry.key#", arguments.label, arguments.createdBy )
+
+		variables.auditLogService.warn(
+			action     : "security.ratelimit.exclusion_added",
+			message    : "[#row.value#] was excluded from rate limiting.",
+			category   : "security",
+			targetType : "RateLimitExclusion",
+			targetId   : row.exclusionId,
+			targetLabel: row.value,
+			metadata   : { type: "ip", label: arguments.label }
+		)
+		return row
+	}
+
+	/**
+	 * Excludes a user from the limits on routes that signed-in users use.
+	 *
+	 * @email     The user's email address.
+	 * @label     What it is for.
+	 * @createdBy Who adds it.
+	 *
+	 * @throws RateLimit.UserNotFound   When no user has that email.
+	 * @throws RateLimit.ExclusionsFull When the list already holds the maximum number of entries.
+	 *
+	 * @return The row, with the user's email.
+	 */
+	struct function excludeUser( required string email, string label = "", string createdBy = "" ) {
+		var user = variables.userService.findWhere( { email: trim( arguments.email ) } )
+		if ( isNull( user ) || !isObject( user ) || !user.isLoaded() ) {
+			throw( type = "RateLimit.UserNotFound", message = "There is no user with the email [#arguments.email#]." )
+		}
+
+		var row = saveExclusion( "user", user.getUserId(), "user:#user.getUserId()#", len( arguments.label ) ? arguments.label : user.getEmail(), arguments.createdBy )
+		row.email = user.getEmail()
+
+		variables.auditLogService.warn(
+			action     : "security.ratelimit.exclusion_added",
+			message    : "[#user.getEmail()#] was excluded from rate limiting.",
+			category   : "security",
+			targetType : "RateLimitExclusion",
+			targetId   : row.exclusionId,
+			targetLabel: user.getEmail(),
+			metadata   : { type: "user", label: arguments.label }
+		)
+		return row
+	}
+
+	/**
+	 * Removes an exclusion.
+	 *
+	 * @exclusionId The exclusion to remove.
+	 *
+	 * @return True when one was removed, false when there was none with that id.
+	 */
+	boolean function remove( required string exclusionId ) {
+		var row = variables.qb.newQuery().from( static.TABLE ).where( "exclusionId", arguments.exclusionId ).first()
+		if ( row.isEmpty() ) {
+			return false
+		}
+
+		variables.qb.newQuery().from( static.TABLE ).where( "exclusionId", arguments.exclusionId ).delete()
+		refresh()
+
+		variables.auditLogService.info(
+			action     : "security.ratelimit.exclusion_removed",
+			message    : "[#row.value#] is no longer excluded from rate limiting.",
+			category   : "security",
+			targetType : "RateLimitExclusion",
+			targetId   : row.exclusionId,
+			targetLabel: row.value
+		)
+		return true
+	}
+
+	/**
+	 * Reloads the snapshot from the database now.
+	 */
+	void function refresh() {
+		loadSnapshot()
+	}
+
+	/**
+	 * Inserts an exclusion, or updates the label of the existing one with the same key.
+	 *
+	 * @type      "ip" or "user".
+	 * @value     The address as typed, or the user id.
+	 * @valueKey  The normalized key, with the type.
+	 * @label     What it is for.
+	 * @createdBy Who adds it.
+	 */
+	private struct function saveExclusion( required string type, required string value, required string valueKey, required string label, required string createdBy ) {
+		var existing = variables.qb.newQuery().from( static.TABLE ).where( "valueKey", arguments.valueKey ).first()
+
+		if ( !existing.isEmpty() ) {
+			variables.qb.newQuery().from( static.TABLE ).where( "exclusionId", existing.exclusionId ).update( { label: left( arguments.label, 255 ) } )
+			refresh()
+			return variables.qb.newQuery().from( static.TABLE ).where( "exclusionId", existing.exclusionId ).first()
+		}
+
+		if ( variables.qb.newQuery().from( static.TABLE ).count() >= static.MAX_EXCLUSIONS ) {
+			throw( type = "RateLimit.ExclusionsFull", message = "The exclusion list is full (#static.MAX_EXCLUSIONS# entries). Remove some before adding more." )
+		}
+
+		var exclusionId = createUUID()
+		variables.qb.newQuery().from( static.TABLE ).insert( {
+			exclusionId: exclusionId,
+			type       : arguments.type,
+			value      : left( arguments.value, 64 ),
+			valueKey   : arguments.valueKey,
+			label      : left( arguments.label, 255 ),
+			createdBy  : left( arguments.createdBy, 255 ),
+			createdDate: now()
+		} )
+		refresh()
+
+		return variables.qb.newQuery().from( static.TABLE ).where( "exclusionId", exclusionId ).first()
+	}
+
+	/**
+	 * The current snapshot, reloaded first when it is older than the TTL.
+	 */
+	private struct function getSnapshot() {
+		if ( getTickCount() - variables.snapshotLoadedAt > static.SNAPSHOT_TTL_MS ) {
+			lock name="rateLimitExclusionsSnapshot" type="exclusive" timeout="1" throwOnTimeout="false" {
+				if ( getTickCount() - variables.snapshotLoadedAt > static.SNAPSHOT_TTL_MS ) {
+					loadSnapshot()
+				}
+			}
+		}
+		return variables.snapshot
+	}
+
+	/**
+	 * Loads the exclusions into a new snapshot. On failure the old snapshot stays and the
+	 * next try is a TTL away.
+	 */
+	private void function loadSnapshot() {
+		try {
+			var singles = {}
+			var ranges  = []
+			var users   = {}
+
+			for ( var row in variables.qb.newQuery().from( static.TABLE ).select( "type, value" ).get() ) {
+				if ( row.type == "user" ) {
+					users[ row.value ] = true
+					continue
+				}
+				var entry = variables.ipMatcher.parse( row.value )
+				if ( !entry.valid ) {
+					continue
+				}
+				if ( entry.isRange ) {
+					ranges.append( entry )
+				} else {
+					singles[ entry.key ] = entry
+				}
+			}
+
+			variables.snapshot = { singles: singles, ranges: ranges, users: users }
+		} catch ( any e ) {
+			variables.log.error( "Could not load the exclusion list, keeping the previous one: #e.message#" )
+		}
+		variables.snapshotLoadedAt = getTickCount()
+	}
+
+}

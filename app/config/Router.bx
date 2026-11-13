@@ -131,7 +131,7 @@ class {
 
 		/**
 		 * --------------------------------------------------------------------------
-		 * Rate Limiting Routing (emergency stop, block list)
+		 * Rate Limiting Routing (emergency stop, block list, exclusions)
 		 * --------------------------------------------------------------------------
 		 */
 		route( "ratelimiting/status", "RateLimiting.status" )
@@ -141,6 +141,11 @@ class {
 		route( "ratelimiting/blocks" ).withHandler( "RateLimiting" ).toAction({
 			GET : "blocks",
 			POST: "block"
+		})
+		route( "ratelimiting/exclusions/:exclusionId" ).withHandler( "RateLimiting" ).toAction({ DELETE: "unexclude" })
+		route( "ratelimiting/exclusions" ).withHandler( "RateLimiting" ).toAction({
+			GET : "exclusions",
+			POST: "exclude"
 		})
 
 		/**

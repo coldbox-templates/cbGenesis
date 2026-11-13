@@ -42,6 +42,12 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	@inject( "provider:RateLimitBlockService" )
 	property name="rateLimitBlocks";
 
+	@inject( "provider:RateLimitExclusionService" )
+	property name="rateLimitExclusions";
+
+	@inject( "provider:SecurityService" )
+	property name="securityService";
+
 	@inject( "coldbox:flash" )
 	property name="flash";
 
@@ -71,6 +77,11 @@ class extends="cbsecurity.models.middleware.Throttle" {
 
 		// The master switch: off through the environment or an admin's pause.
 		if ( !variables.rateLimitControl.isEnabled() ) {
+			return false
+		}
+
+		// Excluded IPs and users are not held to the attempt limits.
+		if ( isExcluded( arguments.event ) ) {
 			return false
 		}
 
@@ -153,6 +164,32 @@ class extends="cbsecurity.models.middleware.Throttle" {
 			value = arguments.limit.maxAttempts - attempts
 		)
 		return false
+	}
+
+	/**
+	 * Whether the request is excluded from the attempt limits: its IP is on the exclusion
+	 * list, or it comes from an excluded signed-in user.
+	 *
+	 * A user exclusion never applies to the Auth endpoints (sign in, registration, password
+	 * reset): those are always counted, so an excluded account cannot be used to guess
+	 * other accounts' passwords.
+	 *
+	 * @event The request context.
+	 *
+	 * @return True when the limits do not apply to this request.
+	 */
+	private boolean function isExcluded( required event ) {
+		var userId = ""
+
+		if (
+			variables.rateLimitExclusions.hasUserExclusions()
+			&& !lCase( arguments.event.getCurrentEvent() ).startsWith( "auth." )
+			&& variables.securityService.isLoggedIn()
+		) {
+			userId = variables.securityService.getCurrentUser().getUserId()
+		}
+
+		return variables.rateLimitExclusions.isExcluded( getClientIP( arguments.event ), userId )
 	}
 
 	/**
