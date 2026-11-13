@@ -36,6 +36,9 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	@inject( "provider:RateLimitControlService" )
 	property name="rateLimitControl";
 
+	@inject( "provider:RateLimitHistoryService" )
+	property name="rateLimitHistory";
+
 	@inject( "coldbox:flash" )
 	property name="flash";
 
@@ -97,6 +100,14 @@ class extends="cbsecurity.models.middleware.Throttle" {
 		arguments.event.setHTTPHeader( name = "X-RateLimit-Limit", value = arguments.limit.maxAttempts )
 
 		if ( attempts > arguments.limit.maxAttempts ) {
+			// Volume goes to the in-memory tally (flushed to the database by a scheduled
+			// task), one entry per blocked request. The audit row below is once per window.
+			variables.rateLimitHistory.record(
+				getClientIP( arguments.event ),
+				arguments.limit.name,
+				attempts,
+				attempts == arguments.limit.maxAttempts + 1
+			)
 			// One audit row per endpoint and IP per window, not one per blocked request: an
 			// attacker could otherwise grow the audit table as fast as they can send requests.
 			// hit() returns each count exactly once, so exactly one request sees this value.

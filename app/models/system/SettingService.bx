@@ -67,6 +67,8 @@ class extends="app.models.BaseService" {
 			// until resumed, otherwise the epoch second the pause ends. cbRateLimitPausedBy and
 			// cbRateLimitPausedAt record who paused it and when. Managed by the emergency stop,
 			// not meant to be edited by hand.
+			// How long the rate limit history (hourly blocked-request totals) is kept, in days.
+			cbRateLimitHistoryRetentionDays: 30,
 			cbRateLimitPausedUntil   : "",
 			cbRateLimitPausedBy      : "",
 			cbRateLimitPausedAt      : "",
@@ -376,6 +378,15 @@ class extends="app.models.BaseService" {
 			throw(
 				type   = "Setting.Invalid",
 				message = "Rate limit maximum attempts must be a whole number between 1 and 100."
+			)
+		}
+
+		// Validate the cbRateLimitHistoryRetentionDays setting to be a whole number between 1 and 365
+		var historyDays = arguments.memento?.cbRateLimitHistoryRetentionDays ?: this.DEFAULTS.cbRateLimitHistoryRetentionDays
+		if ( !isNumeric( historyDays ) || int( historyDays ) != historyDays || int( historyDays ) < 1 || int( historyDays ) > 365 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "Rate limit history retention must be a whole number between 1 and 365 days."
 			)
 		}
 

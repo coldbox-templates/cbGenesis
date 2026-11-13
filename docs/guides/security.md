@@ -275,6 +275,16 @@ Only the first blocked request of each window is written to the audit trail (`se
 !!! note "In-memory by default"
     Counters live in the `rateLimit` CacheBox region (`app/config/CacheBox.bx`), which is in-memory and therefore **per application instance**. Behind a load balancer with more than one instance, each instance enforces its own limit independently - a caller could get `cbRateLimitMaxAttempts` free attempts per instance rather than in total. To share counts across instances, swap the `rateLimit` region's `provider`/`properties` for a distributed CacheBox provider (Redis, Couchbase, or any provider CacheBox supports) - no code change needed, since `AppThrottle` and `SSORateLimiter` both count in the `rateLimit` region.
 
+### History
+
+Every blocked request is counted, so the admin page can show top offenders and a history chart, without a database write per request, which an attacker could otherwise drive. `RateLimitHistoryService` keeps it bounded at each step:
+
+1. **Tally.** A blocked request adds to an in-memory tally keyed by hour, IP and endpoint. This is a map update, never a database call. The tally holds at most 2,000 keys; further IPs add to a shared `other` entry.
+2. **Flush.** A scheduled task writes each server's tally to `rate_limit_history` every minute, adding to the row for that hour, IP and endpoint. An hour keeps at most 500 rows; further IPs add to that hour's `other` row. The task runs on every server (each has its own tally), and the unique key makes concurrent flushes safe. A failed flush puts its tally back and tries again, so a database outage loses nothing and cannot grow the tally past its cap. A server that stops loses at most the last minute.
+3. **Purge.** A daily task deletes rows older than `cbRateLimitHistoryRetentionDays` (default 30).
+
+The audit log is separate: one row per blocked window, for security review. History rows are hourly totals: `blockedRequests` (every blocked request), `blockedWindows` (the first block of each window, matching the audit rows) and `peakAttempts`. The service also answers `topOffenders()`, `hourly()` and `latest()` for the admin page.
+
 ### Emergency stop
 
 If rate limiting is blocking real people, for example a proxy misconfiguration makes everyone share one IP, you can switch it off without touching the limits. `RateLimitControlService` is the master switch that `AppThrottle` and `SSORateLimiter` check first. Rate limiting is off when either of these is true:
