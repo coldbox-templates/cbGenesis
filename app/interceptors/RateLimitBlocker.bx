@@ -30,8 +30,8 @@ class extends="coldbox.system.Interceptor" {
 	@inject( "provider:RateLimitHistoryService" )
 	property name="rateLimitHistory";
 
-	@inject( "provider:SettingService" )
-	property name="settingService";
+	@inject( "provider:ServerCeilingService" )
+	property name="ceilingService";
 
 	@inject( "provider:CBSecurity@cbsecurity" )
 	property name="cbsecurity";
@@ -48,14 +48,14 @@ class extends="coldbox.system.Interceptor" {
 	 * @return Nothing. For a blocked IP it renders a 403 and stops the request.
 	 */
 	function preProcess( event, interceptData, buffer, rc, prc ) {
-		if ( variables.rateLimitControl.isDisabledByEnvironment() ) {
+		// ServerCeiling runs first and leaves these in prc; work them out here only if it did not.
+		if ( arguments.prc.rateLimitEnvDisabled ?: variables.rateLimitControl.isDisabledByEnvironment() ) {
 			return
 		}
 
 		// trustUpstream mirrors cbTrustProxyHeaders: see AppThrottle.getClientIP().
-		var ipAddress = variables.cbsecurity.getRealIP(
-			trustUpstream = variables.settingService.getSetting( "cbTrustProxyHeaders", true )
-		)
+		// The setting comes from ServerCeilingService's cached copy: this runs on every request.
+		var ipAddress = arguments.prc.rateLimitClientIp ?: variables.cbsecurity.getRealIP( trustUpstream = variables.ceilingService.trustsProxyHeaders() )
 
 		if ( !variables.blockService.isBlocked( ipAddress ) ) {
 			return

@@ -80,7 +80,8 @@ export function rateLimitAdmin( initialData = {}, csrfToken = "" ) {
 					this.get( "/ratelimiting/exclusions" ),
 					this.get( "/ratelimiting/settings" ),
 				] );
-				this.overview   = overview;
+				this.overview     = overview;
+				this.ceilingLimit = overview.ceiling.limit;
 				this.blocks     = blocks;
 				this.exclusions = exclusions;
 				this.settings   = this.normalizeSettings( settings );
@@ -429,6 +430,36 @@ export function rateLimitAdmin( initialData = {}, csrfToken = "" ) {
 		 */
 		async saveSettings() {
 			await this.run( () => this.write( "/ratelimiting/settings", "PUT", this.settings ) );
+		},
+		// ---------- Server ceiling ----------
+
+		/**
+		 * How full the server ceiling's address tracking is, as a percentage.
+		 *
+		 * @returns {number} 0 to 100.
+		 */
+		get ceilingCapacityPercent() {
+			const { trackedIps, maxTrackedIps } = this.overview.ceiling;
+			return Math.min( 100, Math.round( ( trackedIps / Math.max( 1, maxTrackedIps ) ) * 100 ) );
+		},
+
+		/**
+		 * Saves the server ceiling limit. A value outside the allowed range shows the server's message.
+		 *
+		 * @returns {Promise<void>}
+		 */
+		async saveCeiling() {
+			await this.run( () => this.write( "/ratelimiting/ceiling", "PUT", { limit: this.ceilingLimit } ) );
+		},
+
+		/**
+		 * Turns lockdown on or off. While on, every IP is held to the minimum limit.
+		 *
+		 * @param {boolean} enabled True to turn lockdown on.
+		 * @returns {Promise<void>}
+		 */
+		async setLockdown( enabled ) {
+			await this.run( () => this.write( "/ratelimiting/ceiling", "PUT", { lockdown: enabled } ) );
 		},
 	};
 }

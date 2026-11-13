@@ -71,9 +71,12 @@ class {
 			.onOneServer()
 			.withNoOverlaps()
 
-		// One audit entry a day while a pause has no end time, so it cannot be forgotten.
+		// One audit entry a day while a pause has no end time, or the server ceiling is in lockdown, so it cannot be forgotten.
 		task( "Remind Rate Limiting Is Paused" )
-			.call( () => getInstance( "RateLimitControlService" ).remindIfPausedIndefinitely() )
+			.call( () => {
+				getInstance( "RateLimitControlService" ).remindIfPausedIndefinitely()
+				getInstance( "ServerCeilingService" ).remindIfLockdown()
+			} )
 			.everyDayAt( "09:00" )
 			.onOneServer()
 			.withNoOverlaps()

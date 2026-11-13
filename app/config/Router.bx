@@ -138,6 +138,10 @@ class {
 		post( "ratelimiting/pause", "RateLimiting.pause" )
 		post( "ratelimiting/resume", "RateLimiting.resume" )
 		route( "ratelimiting/overview", "RateLimiting.overview" )
+		route( "ratelimiting/ceiling" ).withHandler( "RateLimiting" ).toAction({
+			GET: "ceiling",
+			PUT: "saveCeiling"
+		})
 		route( "ratelimiting/counters/:counterKey" ).withHandler( "RateLimiting" ).toAction({ DELETE: "clearCounter" })
 		route( "ratelimiting/counters" ).withHandler( "RateLimiting" ).toAction({
 			GET   : "counters",

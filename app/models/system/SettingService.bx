@@ -76,6 +76,10 @@ class extends="app.models.BaseService" {
 			cbRateLimitAutoBlockWindows      : 3,
 			cbRateLimitAutoBlockPeriodMinutes: 60,
 			cbRateLimitAutoBlockHours        : 24,
+			// Server ceiling (see ServerCeilingService): the most requests one IP may make per minute
+			// to the whole application, 30 to 600. Lockdown holds every IP to the minimum of 30.
+			cbServerCeilingPerMinute: 120,
+			cbServerCeilingLockdown : false,
 			cbRateLimitPausedUntil   : "",
 			cbRateLimitPausedBy      : "",
 			cbRateLimitPausedAt      : "",
@@ -411,6 +415,15 @@ class extends="app.models.BaseService" {
 					message = "#rule.label# must be a whole number between #rule.min# and #rule.max#."
 				)
 			}
+		}
+
+		// Validate the server ceiling: a whole number of requests per minute from 30 to 600
+		var ceilingPerMinute = arguments.memento.keyExists( "cbServerCeilingPerMinute" ) ? arguments.memento.cbServerCeilingPerMinute : this.DEFAULTS.cbServerCeilingPerMinute
+		if ( !isNumeric( ceilingPerMinute ) || int( ceilingPerMinute ) != ceilingPerMinute || int( ceilingPerMinute ) < 30 || int( ceilingPerMinute ) > 600 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "Server ceiling must be a whole number of requests per minute between 30 and 600."
+			)
 		}
 
 		// Validate the cbRateLimitWindowSeconds setting to be a whole number between 0 and 86400 (one day). 0 disables rate limiting.
