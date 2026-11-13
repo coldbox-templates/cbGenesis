@@ -98,6 +98,16 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					expect( row.ipAddress ).toBe( "2001:db8::1" )
 				} )
 
+				it( "drops the ip- prefix AppThrottle puts on the client", () => {
+					hitCounter( "Auth.login:ip-203.0.113.7", 1 )
+					hitCounter( "SSO.callback:203.0.113.8", 1 )
+
+					var addresses = rateLimitCounterService.list().rows.map( ( row ) => row.ipAddress )
+					addresses.sort( "text" )
+
+					expect( addresses ).toBe( [ "203.0.113.7", "203.0.113.8" ] )
+				} )
+
 				it( "ignores cache entries that are not rate limiter counters", () => {
 					rateLimitCache.set( "something-else", { attempts: 99, resetAt: 9999999999 } )
 
@@ -227,6 +237,29 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					var response = execute( event = "ratelimiting.overview", prePostExempt = true ).getPrivateValue( "response" )
 
 					expect( response.getError() ).toBeFalse()
+				} )
+			} )
+
+			story( "The page", () => {
+				it( "renders for an admin with the component and the write controls", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					var event = execute( event = "ratelimiting.index", renderResults = true )
+					var html = event.getRenderedContent()
+
+					expect( html ).toInclude( "rateLimitAdmin(" )
+					expect( html ).toInclude( "addBlock()" )
+					expect( html ).toInclude( "askClearAll()" )
+				} )
+
+				it( "is refused for a user without the settings permissions", () => {
+					var user = createVerifiedUser()
+					securityService.authenticate( username: user.getEmail(), password: "correct-password" )
+
+					var event = execute( event = "ratelimiting.index", renderResults = true )
+
+					expect( event.getRenderedContent() ).notToInclude( "rateLimitAdmin(" )
 				} )
 			} )
 

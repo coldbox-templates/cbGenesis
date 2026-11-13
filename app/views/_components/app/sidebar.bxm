@@ -135,6 +135,16 @@
                         <li><a href="#event.route( "settings/registry" )#" class="cb-sidebar-nav-subitem" :class="#event.routeIs( "settings/registry" )# ? 'active' : ''"><i class="ph-duotone ph-list-dashes" aria-hidden="true"></i><span>Registry</span></a></li>
                     </ul>
                 </li>
+                <li>
+                    <a href="#event.route( "ratelimiting" )#"
+                       class="cb-sidebar-nav-item"
+                       @click="$store.sidebar.close()"
+                       :class="#event.routeIs( "ratelimiting" )# ? 'active' : ''"
+                       title="Rate Limiting">
+                        <i class="ph-duotone ph-gauge cb-sidebar-nav-icon" aria-hidden="true"></i>
+                        <span class="cb-sidebar-nav-text">Rate Limiting</span>
+                    </a>
+                </li>
             </ul>
 		</div>
 		</bx:if>

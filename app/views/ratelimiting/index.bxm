@@ -1,0 +1,358 @@
+<bx:output>
+<!--- Rate limiting admin: overview, blocked IPs, exclusions and settings. All data loads from /ratelimiting/* --->
+<div x-data='rateLimitAdmin( #forAttribute( { canWrite: prc.canWrite, canAdmin: prc.canAdmin } )#, "#csrfToken()#" )'>
+
+	<!--- Header --->
+	<div class="cb-page-header cb-admin-page-heading">
+		<div>
+			<p class="cb-eyebrow">System</p>
+			<h2 class="cb-page-title">Rate Limiting</h2>
+			<p class="cb-page-subtitle">See who is being throttled, block or exclude addresses, and tune the limits.</p>
+		</div>
+		<div class="d-flex gap-2">
+			<button type="button" class="btn btn-light" @click="refresh()" :disabled="loading">
+				<i class="ph-duotone ph-arrows-clockwise" aria-hidden="true"></i>
+				Refresh
+			</button>
+		</div>
+	</div>
+
+	<!--- Error message --->
+	<div class="alert alert-danger" role="alert" x-show="error" x-cloak>
+		<i class="ph-duotone ph-warning" aria-hidden="true"></i>
+		<span x-text="error"></span>
+	</div>
+
+	<!--- Protection banner / paused state --->
+	<section class="cb-content-card cb-ratelimit-banner" :class="overview.status.enabled ? 'is-on' : 'is-off'">
+		<div class="cb-ratelimit-banner__text">
+			<i class="ph-duotone" :class="overview.status.enabled ? 'ph-shield-check' : 'ph-warning-octagon'" aria-hidden="true"></i>
+			<div>
+				<strong x-show="overview.status.enabled">Rate limiting is on</strong>
+				<strong x-show="!overview.status.enabled && overview.status.disabledByEnvironment" x-cloak>Rate limiting is switched off by the environment</strong>
+				<strong x-show="!overview.status.enabled && !overview.status.disabledByEnvironment" x-cloak>
+					<span x-text="overview.status.indefinite ? 'Rate limiting is paused until you resume it' : 'Rate limiting is paused'"></span>
+				</strong>
+				<p class="cb-muted-cell mb-0" x-show="overview.status.enabled">
+					The blocked IP list stays active even while the limits are paused.
+				</p>
+				<p class="cb-muted-cell mb-0" x-show="overview.status.paused" x-cloak>
+					Paused by <span x-text="overview.status.pausedBy"></span><span x-show="!overview.status.indefinite">, resumes in <span x-text="retryLabel( overview.status.resumesInSeconds )"></span></span>.
+				</p>
+				<p class="cb-muted-cell mb-0" x-show="overview.status.disabledByEnvironment" x-cloak>
+					The RATE_LIMITING_ENABLED variable is false. Remove it and restart to turn limiting back on.
+				</p>
+			</div>
+		</div>
+		<bx:if prc.canWrite>
+		<div class="cb-ratelimit-banner__actions" x-show="!overview.status.disabledByEnvironment">
+			<template x-if="overview.status.enabled">
+				<div class="d-flex gap-2">
+					<select class="cb-filter-select" x-model="pauseMinutes" aria-label="Pause duration">
+						<option value="15">15 minutes</option>
+						<option value="60">1 hour</option>
+						<option value="240">4 hours</option>
+						<option value="1440">24 hours</option>
+						<option value="0">Until I resume</option>
+					</select>
+					<button type="button" class="btn btn-outline-danger" @click="pause()" :disabled="busy">
+						<i class="ph-duotone ph-pause-circle" aria-hidden="true"></i> Pause
+					</button>
+				</div>
+			</template>
+			<template x-if="!overview.status.enabled">
+				<button type="button" class="btn btn-success" @click="resume()" :disabled="busy">
+					<i class="ph-duotone ph-play-circle" aria-hidden="true"></i> Resume now
+				</button>
+			</template>
+		</div>
+		</bx:if>
+	</section>
+
+	<!--- Tabs --->
+	<div class="cb-segmented-control mb-3" aria-label="Rate limiting sections">
+		<button type="button" :class="tab === 'overview' ? 'active' : ''" @click="tab = 'overview'">Overview</button>
+		<button type="button" :class="tab === 'blocked' ? 'active' : ''" @click="tab = 'blocked'">Blocked IPs <span class="cb-tab-count" x-text="blocks.length"></span></button>
+		<button type="button" :class="tab === 'exclusions' ? 'active' : ''" @click="tab = 'exclusions'">Exclusions <span class="cb-tab-count" x-text="exclusions.length"></span></button>
+		<button type="button" :class="tab === 'settings' ? 'active' : ''" @click="tab = 'settings'">Settings</button>
+	</div>
+
+	<!--- ============ OVERVIEW ============ --->
+	<div x-show="tab === 'overview'">
+		<div class="cb-ratelimit-kpis">
+			<div class="cb-stat-card"><span class="cb-muted-cell">Throttled right now</span><strong x-text="overview.counters.throttled"></strong></div>
+			<div class="cb-stat-card"><span class="cb-muted-cell">Blocked requests (<span x-text="hours"></span> h)</span><strong x-text="overview.totals.blockedRequests"></strong></div>
+			<div class="cb-stat-card"><span class="cb-muted-cell">Blocked IPs</span><strong x-text="overview.totals.blocks"></strong></div>
+			<div class="cb-stat-card"><span class="cb-muted-cell">Exclusions</span><strong x-text="overview.totals.exclusions"></strong></div>
+		</div>
+
+		<div class="cb-segmented-control mb-3" aria-label="History period">
+			<button type="button" :class="hours === 24 ? 'active' : ''" @click="setHours( 24 )">24 hours</button>
+			<button type="button" :class="hours === 72 ? 'active' : ''" @click="setHours( 72 )">3 days</button>
+			<button type="button" :class="hours === 168 ? 'active' : ''" @click="setHours( 168 )">7 days</button>
+		</div>
+
+		<div class="cb-ratelimit-grid">
+			<!--- Top offenders --->
+			<section class="cb-content-card">
+				<div class="cb-content-card-header"><h3 class="h6 mb-0"><i class="ph-duotone ph-ranking" aria-hidden="true"></i> Top offenders</h3></div>
+				<div class="p-3">
+					<p class="cb-muted-cell" x-show="!overview.topOffenders.length">No blocked requests in this period.</p>
+					<template x-for="row in overview.topOffenders" :key="row.ipAddress">
+						<div class="cb-ratelimit-bar-row">
+							<code x-text="row.ipAddress"></code>
+							<div class="cb-ratelimit-bar"><span :style="{ width: barWidth( row.blockedRequests, offenderPeak ) }"></span></div>
+							<span class="cb-muted-cell" x-text="row.blockedRequests"></span>
+						</div>
+					</template>
+				</div>
+			</section>
+
+			<!--- Hourly history --->
+			<section class="cb-content-card">
+				<div class="cb-content-card-header"><h3 class="h6 mb-0"><i class="ph-duotone ph-chart-bar" aria-hidden="true"></i> Blocked requests per hour</h3></div>
+				<div class="p-3">
+					<p class="cb-muted-cell" x-show="!overview.hourly.length">Nothing blocked in this period.</p>
+					<div class="cb-ratelimit-chart" x-show="overview.hourly.length">
+						<template x-for="row in overview.hourly" :key="row.bucketStart">
+							<span class="cb-ratelimit-chart__bar"
+								:style="{ height: barWidth( row.blockedRequests, hourlyPeak ) }"
+								:title="`${ $formatDateTime( row.bucketStart ) }: ${ row.blockedRequests } blocked`"></span>
+						</template>
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<!--- Throttled right now --->
+		<section class="cb-content-card mt-3">
+			<div class="cb-content-card-header">
+				<h3 class="h6 mb-0"><i class="ph-duotone ph-timer" aria-hidden="true"></i> Live counters <span class="cb-tab-count" x-text="overview.counters.total"></span></h3>
+				<bx:if prc.canAdmin>
+				<button type="button" class="btn btn-sm btn-outline-danger" @click="askClearAll()" :disabled="!overview.counters.total">
+					<i class="ph-duotone ph-broom" aria-hidden="true"></i> Clear all
+				</button>
+				</bx:if>
+			</div>
+			<div class="table-responsive">
+				<table class="table cb-admin-table mb-0">
+					<thead><tr><th>Client</th><th>Endpoint</th><th>Attempts</th><th>Resets in</th><th></th></tr></thead>
+					<tbody>
+						<tr x-show="!overview.counters.rows.length"><td colspan="5" class="cb-muted-cell">No active counters.</td></tr>
+						<template x-for="row in overview.counters.rows" :key="row.key">
+							<tr>
+								<td><code x-text="row.ipAddress"></code></td>
+								<td x-text="row.endpoint"></td>
+								<td>
+									<span class="badge" :class="row.throttled ? 'text-bg-danger' : 'text-bg-secondary'" x-text="row.attempts"></span>
+								</td>
+								<td x-text="retryLabel( row.retryInSeconds )"></td>
+								<td class="text-end">
+									<bx:if prc.canAdmin>
+									<button type="button" class="btn btn-sm btn-light" @click="askClearOne( row )" title="Clear this counter"><i class="ph-duotone ph-eraser" aria-hidden="true"></i> Clear</button>
+									</bx:if>
+									<bx:if prc.canWrite>
+									<button type="button" class="btn btn-sm btn-light" @click="blockFromRow( row )" :disabled="busy" title="Block this IP for 24 hours"><i class="ph-duotone ph-prohibit" aria-hidden="true"></i> Block</button>
+									<button type="button" class="btn btn-sm btn-light" @click="excludeFromRow( row )" :disabled="busy" title="Exclude this IP from the limits"><i class="ph-duotone ph-shield-check" aria-hidden="true"></i> Exclude</button>
+									</bx:if>
+								</td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<!--- Latest history --->
+		<section class="cb-content-card mt-3">
+			<div class="cb-content-card-header">
+				<h3 class="h6 mb-0"><i class="ph-duotone ph-clock-counter-clockwise" aria-hidden="true"></i> Latest blocks</h3>
+				<select class="cb-filter-select" x-model.number="latest" @change="refresh()" aria-label="How many rows">
+					<option value="10">Latest 10</option>
+					<option value="25">Latest 25</option>
+					<option value="100">Latest 100</option>
+				</select>
+			</div>
+			<div class="table-responsive">
+				<table class="table cb-admin-table mb-0">
+					<thead><tr><th>Last blocked</th><th>Client</th><th>Endpoint</th><th>Requests</th><th>Windows</th></tr></thead>
+					<tbody>
+						<tr x-show="!overview.latest.length"><td colspan="5" class="cb-muted-cell">Nothing recorded yet.</td></tr>
+						<template x-for="row in overview.latest" :key="row.historyId">
+							<tr>
+								<td x-text="$formatDateTime( row.lastBlockedAt )"></td>
+								<td><code x-text="row.ipAddress"></code></td>
+								<td x-text="row.endpoint"></td>
+								<td x-text="row.blockedRequests"></td>
+								<td x-text="row.blockedWindows"></td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			</div>
+		</section>
+	</div>
+
+	<!--- ============ BLOCKED IPS ============ --->
+	<div x-show="tab === 'blocked'" x-cloak>
+		<bx:if prc.canWrite>
+		<section class="cb-content-card mb-3">
+			<form class="p-3 cb-ratelimit-form" @submit.prevent="addBlock()">
+				<label>Address or range
+					<input type="text" class="form-control" x-model="blockForm.address" placeholder="203.0.113.42 or 203.0.113.0/24" required>
+				</label>
+				<label>For
+					<select class="form-select" x-model="blockForm.hours">
+						<option value="1">1 hour</option>
+						<option value="24">24 hours</option>
+						<option value="168">7 days</option>
+						<option value="0">Permanent</option>
+					</select>
+				</label>
+				<label>Reason
+					<input type="text" class="form-control" x-model="blockForm.reason" maxlength="255">
+				</label>
+				<button type="submit" class="btn btn-primary" :disabled="busy">
+					<i class="ph-duotone ph-prohibit" aria-hidden="true"></i> Block
+				</button>
+			</form>
+		</section>
+		</bx:if>
+		<section class="cb-content-card">
+			<div class="table-responsive">
+				<table class="table cb-admin-table mb-0">
+					<thead><tr><th>Address</th><th>Source</th><th>Reason</th><th>Until</th><th></th></tr></thead>
+					<tbody>
+						<tr x-show="!blocks.length"><td colspan="5" class="cb-muted-cell">No blocked addresses.</td></tr>
+						<template x-for="block in blocks" :key="block.blockId">
+							<tr>
+								<td><code x-text="block.address"></code></td>
+								<td><span class="badge text-bg-secondary" x-text="block.source"></span></td>
+								<td x-text="block.reason"></td>
+								<td x-text="blockUntil( block )"></td>
+								<td class="text-end">
+									<bx:if prc.canWrite>
+									<button type="button" class="btn btn-sm btn-light" @click="askUnblock( block )"><i class="ph-duotone ph-lock-open" aria-hidden="true"></i> Unblock</button>
+									</bx:if>
+								</td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			</div>
+		</section>
+	</div>
+
+	<!--- ============ EXCLUSIONS ============ --->
+	<div x-show="tab === 'exclusions'" x-cloak>
+		<bx:if prc.canWrite>
+		<section class="cb-content-card mb-3">
+			<form class="p-3 cb-ratelimit-form" @submit.prevent="addExclusion()">
+				<label>Type
+					<select class="form-select" x-model="exclusionForm.type">
+						<option value="ip">IP or range</option>
+						<option value="user">User (email)</option>
+					</select>
+				</label>
+				<label>Value
+					<input type="text" class="form-control" x-model="exclusionForm.value" :placeholder="exclusionForm.type === 'ip' ? '203.0.113.42 or 203.0.113.0/24' : 'name@example.com'" required>
+				</label>
+				<label>Label
+					<input type="text" class="form-control" x-model="exclusionForm.label" maxlength="255" placeholder="Office VPN">
+				</label>
+				<button type="submit" class="btn btn-primary" :disabled="busy">
+					<i class="ph-duotone ph-shield-check" aria-hidden="true"></i> Exclude
+				</button>
+			</form>
+		</section>
+		</bx:if>
+		<div class="cb-ratelimit-grid">
+			<section class="cb-content-card">
+				<div class="cb-content-card-header"><h3 class="h6 mb-0"><i class="ph-duotone ph-globe" aria-hidden="true"></i> IPs and ranges <span class="cb-tab-count" x-text="ipExclusions.length"></span></h3></div>
+				<ul class="list-group list-group-flush">
+					<li class="list-group-item cb-muted-cell" x-show="!ipExclusions.length">None.</li>
+					<template x-for="row in ipExclusions" :key="row.exclusionId">
+						<li class="list-group-item d-flex justify-content-between align-items-center">
+							<span><code x-text="row.value"></code> <span class="cb-muted-cell" x-text="row.label"></span></span>
+							<bx:if prc.canWrite>
+							<button type="button" class="btn btn-sm btn-light" @click="removeExclusion( row )" :disabled="busy" aria-label="Remove exclusion"><i class="ph-duotone ph-trash" aria-hidden="true"></i></button>
+							</bx:if>
+						</li>
+					</template>
+				</ul>
+			</section>
+			<section class="cb-content-card">
+				<div class="cb-content-card-header"><h3 class="h6 mb-0"><i class="ph-duotone ph-user-circle" aria-hidden="true"></i> Users <span class="cb-tab-count" x-text="userExclusions.length"></span></h3></div>
+				<ul class="list-group list-group-flush">
+					<li class="list-group-item cb-muted-cell" x-show="!userExclusions.length">None.</li>
+					<template x-for="row in userExclusions" :key="row.exclusionId">
+						<li class="list-group-item d-flex justify-content-between align-items-center">
+							<span><span x-text="row.email || row.value"></span> <span class="cb-muted-cell" x-text="row.label"></span></span>
+							<bx:if prc.canWrite>
+							<button type="button" class="btn btn-sm btn-light" @click="removeExclusion( row )" :disabled="busy" aria-label="Remove exclusion"><i class="ph-duotone ph-trash" aria-hidden="true"></i></button>
+							</bx:if>
+						</li>
+					</template>
+				</ul>
+				<p class="cb-muted-cell p-3 mb-0">A user exclusion never applies to sign in, registration or password reset.</p>
+			</section>
+		</div>
+	</div>
+
+	<!--- ============ SETTINGS ============ --->
+	<div x-show="tab === 'settings'" x-cloak>
+		<section class="cb-content-card">
+			<form class="p-3 cb-ratelimit-form cb-ratelimit-form--settings" @submit.prevent="saveSettings()">
+				<label>Attempts per window
+					<input type="number" min="1" max="100" class="form-control" x-model="settings.cbRateLimitMaxAttempts" :disabled="!#prc.canWrite#">
+				</label>
+				<label>Window (seconds)
+					<input type="number" min="0" max="86400" class="form-control" x-model="settings.cbRateLimitWindowSeconds" :disabled="!#prc.canWrite#">
+				</label>
+				<label>History kept (days)
+					<input type="number" min="1" max="365" class="form-control" x-model="settings.cbRateLimitHistoryRetentionDays" :disabled="!#prc.canWrite#">
+				</label>
+				<label class="form-check">
+					<input type="checkbox" class="form-check-input" x-model="settings.cbTrustProxyHeaders" :disabled="!#prc.canWrite#">
+					<span class="form-check-label">Trust proxy headers (X-Forwarded-For)</span>
+				</label>
+				<hr class="w-100">
+				<label class="form-check">
+					<input type="checkbox" class="form-check-input" x-model="settings.cbRateLimitAutoBlock" :disabled="!#prc.canWrite#">
+					<span class="form-check-label">Block an IP automatically after repeated throttling</span>
+				</label>
+				<label>After this many throttled windows
+					<input type="number" min="1" max="100" class="form-control" x-model="settings.cbRateLimitAutoBlockWindows" :disabled="!#prc.canWrite#">
+				</label>
+				<label>Within (minutes)
+					<input type="number" min="1" max="1440" class="form-control" x-model="settings.cbRateLimitAutoBlockPeriodMinutes" :disabled="!#prc.canWrite#">
+				</label>
+				<label>Block for (hours)
+					<input type="number" min="1" max="8760" class="form-control" x-model="settings.cbRateLimitAutoBlockHours" :disabled="!#prc.canWrite#">
+				</label>
+				<bx:if prc.canWrite>
+				<button type="submit" class="btn btn-primary" :disabled="busy"><i class="ph-duotone ph-floppy-disk" aria-hidden="true"></i> Save settings</button>
+				</bx:if>
+			</form>
+		</section>
+	</div>
+
+	<!--- Confirmation dialog --->
+	<div class="cb-ui-modal" x-show="confirm.open" x-cloak x-transition.opacity role="dialog" aria-modal="true" aria-labelledby="cb-ratelimit-confirm-title" @click.self="cancelConfirm()" @keydown.escape.window="cancelConfirm()">
+		<div class="cb-ui-modal__dialog" x-transition.scale.95>
+			<div class="cb-ui-modal__header">
+				<h2 id="cb-ratelimit-confirm-title" x-text="confirm.title"></h2>
+				<button type="button" class="cb-ui-modal__close" @click="cancelConfirm()" aria-label="Close dialog"><i class="ph-duotone ph-x" aria-hidden="true"></i></button>
+			</div>
+			<div class="cb-ui-modal__body cb-delete-confirmation">
+				<i class="ph-duotone ph-warning" aria-hidden="true"></i>
+				<p x-text="confirm.body"></p>
+			</div>
+			<div class="cb-ui-modal__footer">
+				<button type="button" class="btn btn-light" @click="cancelConfirm()" :disabled="busy">Cancel</button>
+				<button type="button" class="btn btn-danger" @click="doConfirm()" :disabled="busy" x-text="busy ? 'Working...' : 'Confirm'"></button>
+			</div>
+		</div>
+	</div>
+</div>
+</bx:output>

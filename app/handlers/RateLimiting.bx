@@ -44,6 +44,17 @@ class extends="BaseSecureHandler" {
 	}
 
 	/**
+	 * Renders the rate limiting admin page. The page loads its data from the JSON endpoints
+	 * below, so this only passes what the buttons need to know: which writes the user may make.
+	 */
+	function index( event, rc, prc ) {
+		prc.title = "Rate Limiting"
+		prc.canWrite = prc.authUser.hasPermission( "settings:admin,settings:write" )
+		prc.canAdmin = prc.authUser.hasPermission( "settings:admin" )
+		event.setView( "ratelimiting/index" )
+	}
+
+	/**
 	 * Reports whether rate limiting is being enforced and, if paused, until when and by whom.
 	 *
 	 * @return The API response whose data is the status: enabled, disabledByEnvironment,
