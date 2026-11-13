@@ -1,0 +1,30 @@
+class {
+
+	function up( schema, qb ) {
+		// Blocked IPs - addresses and ranges refused on their first request, before a session
+		// or the database is touched. Added by an admin or by the automatic blocking rule.
+		schema.create( "rate_limit_blocks", ( table ) => {
+			table.string( "blockId", 36 ).primaryKey()
+
+			// A single address or a CIDR range, as the admin typed it
+			table.string( "address", 64 )
+			// The normalized form (network bytes and prefix), so one range cannot be added twice
+			table.string( "addressKey", 80 ).unique()
+
+			table.string( "reason", 255 ).nullable()
+			// "manual" or "automatic"
+			table.string( "source", 20 )
+			table.string( "createdBy", 255 ).nullable()
+			table.timestamp( "createdDate" )
+			// Empty means permanent
+			table.timestamp( "expiresAt" ).nullable()
+
+			table.index( "expiresAt", "idx_rateLimitBlocksExpires" )
+		} )
+	}
+
+	function down( schema, qb ) {
+		schema.dropIfExists( "rate_limit_blocks" )
+	}
+
+}

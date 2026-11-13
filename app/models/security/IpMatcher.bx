@@ -1,0 +1,187 @@
+/**
+ * Parses and compares IP addresses and CIDR ranges, IPv4 and IPv6, for the rate limit
+ * block list.
+ *
+ * Only literal addresses are accepted: the text is checked against a strict pattern before
+ * it reaches Java, so no host name is ever looked up and nothing here touches the network.
+ * An address is turned into its bytes once (parse()) and compared as bytes, which makes
+ * "203.0.113.42", its IPv6-mapped form "::ffff:203.0.113.42" and ranges like
+ * "203.0.113.0/24" all comparable without string tricks.
+ */
+@singleton
+@threadSafe
+class {
+
+	static {
+		// The widest range that may be blocked: shorter prefixes would block a large share of the internet.
+		MIN_PREFIX_IPV4 = 16
+		MIN_PREFIX_IPV6 = 48
+	}
+
+	/**
+	 * Parses an address or CIDR range.
+	 *
+	 * @text An address such as "203.0.113.42" or "2001:db8::1", or a range such as "203.0.113.0/24".
+	 *
+	 * @return A struct: valid, and when valid also bytes (the address), prefix (bits that must
+	 *         match, the full length for a single address), isRange, isIPv6, and key (a
+	 *         normalized text form, the same for equal addresses and ranges).
+	 */
+	struct function parse( required string text ) {
+		var invalid = { valid: false }
+		var input   = trim( arguments.text )
+		var prefix  = -1
+		var isRange = false
+
+		if ( input.find( "/" ) ) {
+			var parts = input.listToArray( "/" )
+			if ( parts.len() != 2 || !reFind( "^\d{1,3}$", parts[ 2 ] ) ) {
+				return invalid
+			}
+			input   = parts[ 1 ]
+			prefix  = int( parts[ 2 ] )
+			isRange = true
+		}
+
+		if ( !isLiteral( input ) ) {
+			return invalid
+		}
+
+		var address = ""
+		try {
+			address = createObject( "java", "java.net.InetAddress" ).getByName( input ).getAddress()
+		} catch ( any e ) {
+			return invalid
+		}
+
+		var bytes = []
+		for ( var b in address ) {
+			bytes.append( bitAnd( b, 255 ) )
+		}
+		var bits  = bytes.len() * 8
+		if ( !isRange ) {
+			prefix = bits
+		}
+		if ( prefix < 0 || prefix > bits ) {
+			return invalid
+		}
+
+		return {
+			valid  : true,
+			bytes  : bytes,
+			prefix : prefix,
+			isRange: isRange,
+			isIPv6 : bytes.len() == 16,
+			// A range is keyed by its network part, so 10.0.0.5/24 and 10.0.0.0/24 are the same entry.
+			key    : toHex( maskedBytes( bytes, prefix ) ) & "/" & prefix
+		}
+	}
+
+	/**
+	 * Whether an address falls inside an entry, an address or a range.
+	 *
+	 * @entry   A parsed entry from parse().
+	 * @address A parsed single address from parse().
+	 *
+	 * @return True when the address is the entry or inside it. IPv4 and IPv6 never match each other.
+	 */
+	boolean function matches( required struct entry, required struct address ) {
+		if ( arguments.entry.bytes.len() != arguments.address.bytes.len() ) {
+			return false
+		}
+
+		var fullBytes = int( arguments.entry.prefix / 8 )
+		var restBits  = arguments.entry.prefix mod 8
+
+		for ( var i = 1; i <= fullBytes; i++ ) {
+			if ( arguments.entry.bytes[ i ] != arguments.address.bytes[ i ] ) {
+				return false
+			}
+		}
+
+		if ( restBits == 0 ) {
+			return true
+		}
+
+		var mask = bitAnd( bitShln( 255, 8 - restBits ), 255 )
+		return bitAnd( arguments.entry.bytes[ fullBytes + 1 ], mask ) == bitAnd( arguments.address.bytes[ fullBytes + 1 ], mask )
+	}
+
+	/**
+	 * Whether a block entry is too wide to accept: an IPv4 range shorter than /16 or an IPv6
+	 * range shorter than /48.
+	 *
+	 * @entry A parsed entry from parse().
+	 */
+	boolean function isTooWide( required struct entry ) {
+		return arguments.entry.prefix < ( arguments.entry.isIPv6 ? static.MIN_PREFIX_IPV6 : static.MIN_PREFIX_IPV4 )
+	}
+
+	/**
+	 * Whether an entry is loopback, private or link-local: addresses that, behind a proxy or
+	 * with proxy headers untrusted, stand for many users at once or for the server itself, so
+	 * they are never blocked automatically.
+	 *
+	 * @entry A parsed entry from parse().
+	 */
+	boolean function isInternal( required struct entry ) {
+		var b = arguments.entry.bytes
+
+		if ( !arguments.entry.isIPv6 ) {
+			return b[ 1 ] == 127
+				|| b[ 1 ] == 10
+				|| b[ 1 ] == 0
+				|| ( b[ 1 ] == 172 && b[ 2 ] >= 16 && b[ 2 ] <= 31 )
+				|| ( b[ 1 ] == 192 && b[ 2 ] == 168 )
+				|| ( b[ 1 ] == 169 && b[ 2 ] == 254 )
+				|| ( b[ 1 ] == 100 && b[ 2 ] >= 64 && b[ 2 ] <= 127 )
+		}
+
+		// ::1 and ::, unique local fc00::/7, link-local fe80::/10.
+		var isLoopbackOrAny = b.slice( 1, 15 ).every( ( v ) => v == 0 ) && b[ 16 ] <= 1
+		return isLoopbackOrAny || bitAnd( b[ 1 ], 254 ) == 252 || ( b[ 1 ] == 254 && bitAnd( b[ 2 ], 192 ) == 128 )
+	}
+
+	/**
+	 * Whether the text is a literal address, not a host name.
+	 */
+	private boolean function isLiteral( required string text ) {
+		if ( arguments.text.find( ":" ) ) {
+			return reFind( "^[0-9a-fA-F:.]+$", arguments.text ) > 0
+		}
+		if ( !reFind( "^\d{1,3}(\.\d{1,3}){3}$", arguments.text ) ) {
+			return false
+		}
+		return arguments.text.listToArray( "." ).every( ( octet ) => int( octet ) <= 255 )
+	}
+
+	/**
+	 * The address bytes with every bit past the prefix cleared.
+	 */
+	private array function maskedBytes( required array bytes, required numeric prefix ) {
+		var masked = []
+		for ( var index = 1; index <= arguments.bytes.len(); index++ ) {
+			var start = ( index - 1 ) * 8
+			if ( arguments.prefix >= start + 8 ) {
+				masked.append( arguments.bytes[ index ] )
+			} else if ( arguments.prefix <= start ) {
+				masked.append( 0 )
+			} else {
+				masked.append( bitAnd( arguments.bytes[ index ], bitAnd( bitShln( 255, 8 - ( arguments.prefix - start ) ), 255 ) ) )
+			}
+		}
+		return masked
+	}
+
+	/**
+	 * Bytes as a lower case hex string.
+	 */
+	private string function toHex( required array bytes ) {
+		var text = ""
+		for ( var b in arguments.bytes ) {
+			text &= right( "0" & lCase( formatBaseN( b, 16 ) ), 2 )
+		}
+		return text
+	}
+
+}

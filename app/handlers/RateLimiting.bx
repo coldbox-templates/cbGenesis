@@ -11,6 +11,12 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="rateLimitControlService";
 
+	@inject
+	property name="rateLimitBlockService";
+
+	@inject( "CBSecurity@cbsecurity" )
+	property name="cbsecurity";
+
 	/**
 	 * Reports whether rate limiting is being enforced and, if paused, until when and by whom.
 	 *
@@ -67,6 +73,67 @@ class extends="BaseSecureHandler" {
 		} catch ( any error ) {
 			log.error( "Error resuming rate limiting: #error.message#", error )
 			return response.failure( message: "Rate limiting could not be resumed: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Lists the active blocked IPs and ranges, newest first.
+	 *
+	 * @return The API response whose data is an array of blocks.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function blocks( event, rc, prc ) {
+		return event.getResponse().setData( data: rateLimitBlockService.list() )
+	}
+
+	/**
+	 * Blocks an IP address or CIDR range.
+	 *
+	 * rc.address is an address or range, rc.hours is 1 to 8760 or 0 for permanent, and
+	 * rc.reason is optional. A bad address, a range that is too wide, the admin's own
+	 * address and a full list are each a 422 with a message saying what to fix.
+	 *
+	 * @return The API response whose data is the block.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function block( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var row = rateLimitBlockService.block(
+				address    : rc.address ?: "",
+				reason     : rc.reason ?: "",
+				hours      : isNumeric( rc.hours ?: "" ) ? val( rc.hours ) : 0,
+				createdBy  : prc.authUser.getEmail(),
+				requesterIp: cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
+			)
+			return response.setData( data: row, message: "[#row.address#] is blocked." )
+		} catch ( any error ) {
+			if ( error.type.startsWith( "RateLimit." ) ) {
+				return response.failure( message: error.message, statusCode: 422 )
+			}
+			log.error( "Error blocking an IP: #error.message#", error )
+			return response.failure( message: "The IP could not be blocked: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Removes a block. rc.blockId comes from the route.
+	 *
+	 * @return The API response, a 404 when there is no such block.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function unblock( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			if ( !rateLimitBlockService.unblock( rc.blockId ?: "" ) ) {
+				return response.failure( message: "That block does not exist.", statusCode: 404 )
+			}
+			return response.setData( data: {}, message: "The IP is unblocked." )
+		} catch ( any error ) {
+			log.error( "Error unblocking an IP: #error.message#", error )
+			return response.failure( message: "The IP could not be unblocked: #error.message#", statusCode: 500 )
 		}
 	}
 

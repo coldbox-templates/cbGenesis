@@ -91,7 +91,7 @@ Current event handlers and their public actions (auto-updated on `coldbox ai ref
 - **Dashboard**: index, notAuthorized
 - **Main**: onAppInit, onRequestStart, onRequestEnd, onSessionStart, onSessionEnd, onException
 - **Permissions**: index, create, update, delete
-- **RateLimiting**: status, pause, resume
+- **RateLimiting**: status, pause, resume, blocks, block, unblock
 - **Profile**: index, passkeyRequired, save, requestEmailChange, cancelEmailChange, doPasswordChange, listTokens, createToken, updateToken, deleteToken, listPasskeys, updatePasskey, deletePasskey, uploadAvatar, deleteAvatar
 - **Roles**: index, create, update, delete, users, availableUsers, addUser, removeUser
 - **Settings**: index, registry, registrySearch, createRegistry, updateRegistry, toggleRegistryStatus, deleteRegistry, save, clearTemplateCache, clearSessionsCache, revokeRememberTokens, flushSettingsCache, uploadLogo, deleteLogo
@@ -104,6 +104,7 @@ All handlers except `Auth` and `Main` extend `BaseSecureHandler`, whose `preHand
 Registered interceptors and their interception points (auto-updated on `coldbox ai refresh`):
 
 - **AuditLogger** (`app/interceptors/AuditLogger.bx`, registered in `Coldbox.bx`): `postAuthentication`, `preLogout`, `cbSecurity_onInvalidAuthentication`, `cbSecurity_onInvalidAuthorization` — writes each to the audit trail via `AuditLogService`.
+- **RateLimitBlocker** (`app/interceptors/RateLimitBlocker.bx`, registered first in `Coldbox.bx`): `preProcess` - answers `403` for a blocked IP before anything else runs, using `RateLimitBlockService.isBlocked()` (an in-memory snapshot, never a query) and flags the request so `AppThrottle` skips it.
 - **SSORateLimiter** (`app/interceptors/SSORateLimiter.bx`, registered in `Coldbox.bx`): `preProcess` - throttles the cbSSO authorization callback (a module route, so route middleware cannot reach it) by client IP via cbsecurity's `RateLimiter`.
 
 ## Route Middleware
@@ -112,6 +113,7 @@ Route middleware is attached in `app/config/Router.bx` by WireBox ID. App classe
 
 - **`Honeypot@cbsecurity`**: hidden `website_url` field on the register form, silent.
 - **Emergency stop** (`RateLimitControlService`): `AppThrottle` and `SSORateLimiter` check `isEnabled()` first. Off when the `RATE_LIMITING_ENABLED` environment variable is false-like (break-glass, no login needed) or an admin paused it (`POST ratelimiting/pause` with `minutes` 1-1440 or 0 for until resumed, `ratelimiting/resume`, `settings:admin`). A timed pause ends on its own; counters keep counting; every change is audited.
+- **Block list** (`RateLimitBlockService`, table `rate_limit_blocks`): addresses and CIDR ranges (IPv4/IPv6, parsed by `IpMatcher`, never host names) refused by `RateLimitBlocker`. Added by an admin (`POST ratelimiting/blocks`; refuses ranges wider than /16 or /48, the admin's own address, and a list over 1,000) or automatically when `AppThrottle` throttles an IP in `cbRateLimitAutoBlockWindows` windows (never loopback/private/link-local addresses). A pause leaves the block list on; only `RATE_LIMITING_ENABLED=false` switches it off.
 - **Rate limit history** (`RateLimitHistoryService`): `AppThrottle` and `SSORateLimiter` call `record()` for every blocked request. It only updates an in-memory tally (never the database); a scheduled task flushes it to `rate_limit_history` every minute on every server. Bounded: 2,000 tally keys, 500 rows per hour (the rest roll into an `other` row), purged after `cbRateLimitHistoryRetentionDays`. The audit log stays one row per blocked window.
 - **`AppThrottle`** (extends `Throttle@cbsecurity`): per-IP limits from the `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds` settings, fixed window, counted in the `rateLimit` CacheBox region. Attached to the Auth form routes and the Profile SSO routes. Each form page and its submit are ONE route (ColdBox merges same-pattern routes and keeps only the first one's middleware); `AppThrottle` counts only the methods in the route's `throttleMethods` meta (default `POST,PUT,PATCH,DELETE`). Other meta: `throttleRedirect`, `throttleTokenParam`. The catch-all route also exposes every Auth action at `auth/<action>`, so `auth/doLogin`, `auth/doRegister`, `auth/doActivateInvitation`, `auth/doForgotPassword` and `auth/doResetPassword` have their own throttled routes in `Router.bx` (same middleware and meta, shared counter). Add one whenever you add a throttled Auth form.
 
