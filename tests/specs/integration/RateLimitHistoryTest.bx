@@ -1,0 +1,331 @@
+/**
+ * Tests for the rate limit history: the in-memory tally, the flush into the
+ * rate_limit_history table, the bounds that keep both small under an attack, the queries
+ * the admin page will use, and the hook in AppThrottle.
+ *
+ * The table is emptied around every spec, because rows written through qb are not rolled
+ * back with the spec's transaction.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
+
+	@inject
+	property name="rateLimitHistoryService";
+
+	@inject( "QueryBuilder@qb" )
+	property name="qb";
+
+	/**
+	 * Deletes every history row.
+	 */
+	private void function emptyTable() {
+		qb.newQuery().from( "rate_limit_history" ).delete()
+	}
+
+	/**
+	 * All history rows.
+	 *
+	 * @return An array of row structs.
+	 */
+	private array function rows() {
+		return qb.newQuery().from( "rate_limit_history" ).get()
+	}
+
+	/**
+	 * A fresh RateLimitHistoryService, so specs that fill the tally or break the database do
+	 * not touch the singleton that AppThrottle really records into.
+	 *
+	 * @return The autowired service.
+	 */
+	private function freshService() {
+		var service = prepareMock( new app.models.security.RateLimitHistoryService() )
+		getWireBox().autowire( service )
+		return service
+	}
+
+	function run() {
+		describe( "Rate limit history", () => {
+			beforeEach( () => {
+				setup()
+				structClear( form )
+				getFlashScope().clear().removeFlash()
+				securityService.logout( quiet: true )
+				rateLimitCache.clearAll()
+				// Drain whatever an earlier spec left in the shared tally, then start empty.
+				rateLimitHistoryService.flush()
+				emptyTable()
+			} )
+
+			afterEach( () => {
+				rateLimitHistoryService.flush()
+				emptyTable()
+				getRequestContext().getResponse().setError( false )
+			} )
+
+			story( "Blocked requests are tallied in memory and flushed to the table", () => {
+				it( "writes one row per hour, IP and endpoint with the totals", () => {
+					var service = freshService()
+
+					service.record( "203.0.113.42", "Auth.doLogin", 6, true )
+					service.record( "203.0.113.42", "Auth.doLogin", 7, false )
+					service.record( "203.0.113.42", "Auth.doLogin", 9, false )
+
+					expect( service.flush() ).toBe( 1 )
+
+					var written = rows()
+					expect( written ).toHaveLength( 1 )
+					expect( written[ 1 ].ipAddress ).toBe( "203.0.113.42" )
+					expect( written[ 1 ].endpoint ).toBe( "Auth.doLogin" )
+					expect( written[ 1 ].blockedRequests ).toBe( 3 )
+					expect( written[ 1 ].blockedWindows ).toBe( 1 )
+					expect( written[ 1 ].peakAttempts ).toBe( 9 )
+				} )
+
+				it( "adds to the existing row on the next flush instead of creating another", () => {
+					var service = freshService()
+
+					service.record( "203.0.113.42", "Auth.doLogin", 6, true )
+					service.flush()
+					service.record( "203.0.113.42", "Auth.doLogin", 12, false )
+					service.record( "203.0.113.42", "Auth.doLogin", 4, false )
+					service.flush()
+
+					var written = rows()
+					expect( written ).toHaveLength( 1 )
+					expect( written[ 1 ].blockedRequests ).toBe( 3 )
+					expect( written[ 1 ].blockedWindows ).toBe( 1 )
+					expect( written[ 1 ].peakAttempts ).toBe( 12 )
+				} )
+
+				it( "keeps a separate row for each endpoint", () => {
+					var service = freshService()
+
+					service.record( "203.0.113.42", "Auth.doLogin", 6, true )
+					service.record( "203.0.113.42", "Auth.doRegister", 6, true )
+
+					expect( service.flush() ).toBe( 2 )
+					expect( rows() ).toHaveLength( 2 )
+				} )
+
+				it( "writes nothing and returns zero when nothing was blocked", () => {
+					expect( freshService().flush() ).toBe( 0 )
+					expect( rows() ).toBeEmpty()
+				} )
+
+				it( "clears the tally once it is written", () => {
+					var service = freshService()
+
+					service.record( "203.0.113.42", "Auth.doLogin", 6, true )
+					service.flush()
+
+					expect( service.getTallySnapshot() ).toBeEmpty()
+				} )
+			} )
+
+			story( "The tally and the table stay bounded under an attack", () => {
+				it( "rolls IPs into one shared entry once the tally is full", () => {
+					var service = freshService()
+					var cap = 2000
+
+					for ( var i = 1; i <= cap + 5; i++ ) {
+						service.record( "10.#int( i / 250 )#.#i mod 250#.1", "Auth.doLogin", 6, true )
+					}
+
+					var tally = service.getTallySnapshot()
+					// The cap, plus the one roll-up entry for this hour and endpoint.
+					expect( tally.count() ).toBeLTE( cap + 1 )
+					var other = tally.filter( ( key, entry ) => entry.ipAddress == "other" )
+					expect( other ).toHaveLength( 1 )
+					expect( other.reduce( ( total, key, entry ) => total + entry.requests, 0 ) ).toBe( 5 )
+				} )
+
+				it( "rolls IPs into the other row once an hour has 500 rows", () => {
+					var service = freshService()
+
+					for ( var i = 1; i <= 505; i++ ) {
+						service.record( "10.#int( i / 250 )#.#i mod 250#.1", "Auth.doLogin", 6, true )
+					}
+					service.flush()
+
+					var written = rows()
+					// 500 IPs with their own row, plus the roll-up row.
+					expect( written ).toHaveLength( 501 )
+					var other = written.filter( ( row ) => row.ipAddress == "other" )
+					expect( other ).toHaveLength( 1 )
+					expect( other[ 1 ].blockedRequests ).toBe( 5 )
+				} )
+			} )
+
+			story( "A failed flush loses nothing", () => {
+				it( "puts the tally back and writes it on the next flush", () => {
+					var service = freshService()
+					var realQb = qb
+					service.record( "203.0.113.42", "Auth.doLogin", 6, true )
+					service.record( "198.51.100.7", "Auth.doLogin", 6, true )
+
+					var brokenQb = createStub().$( "newQuery" ).$throws( type = "Database.Down", message = "database is down" )
+					service.$property( propertyName = "qb", mock = brokenQb )
+
+					expect( service.flush() ).toBe( 0 )
+					expect( service.getTallySnapshot() ).toHaveLength( 2 )
+					expect( rows() ).toBeEmpty()
+
+					service.$property( propertyName = "qb", mock = realQb )
+					expect( service.flush() ).toBe( 2 )
+					expect( rows() ).toHaveLength( 2 )
+				} )
+			} )
+
+			story( "The history can be queried", () => {
+				it( "ranks the top offenders and breaks each down by endpoint", () => {
+					var service = freshService()
+
+					for ( var i = 1; i <= 5; i++ ) {
+						service.record( "203.0.113.42", "Auth.doLogin", 5 + i, i == 1 )
+					}
+					service.record( "203.0.113.42", "Auth.doRegister", 6, true )
+					service.record( "198.51.100.7", "Auth.doLogin", 6, true )
+					service.flush()
+
+					var top = service.topOffenders( hours: 24, max: 10 )
+
+					expect( top ).toHaveLength( 2 )
+					expect( top[ 1 ].ipAddress ).toBe( "203.0.113.42" )
+					expect( top[ 1 ].blockedRequests ).toBe( 6 )
+					expect( top[ 1 ].endpoints[ "Auth.doLogin" ] ).toBe( 1 )
+					expect( top[ 1 ].endpoints[ "Auth.doRegister" ] ).toBe( 1 )
+					expect( top[ 2 ].ipAddress ).toBe( "198.51.100.7" )
+				} )
+
+				it( "limits the top offenders to the number asked for and leaves out the roll-up row", () => {
+					var service = freshService()
+
+					for ( var i = 1; i <= 505; i++ ) {
+						service.record( "10.#int( i / 250 )#.#i mod 250#.1", "Auth.doLogin", 6, true )
+					}
+					service.flush()
+
+					var top = service.topOffenders( hours: 24, max: 3 )
+
+					expect( top ).toHaveLength( 3 )
+					expect( top.filter( ( row ) => row.ipAddress == "other" ) ).toBeEmpty()
+				} )
+
+				it( "totals blocked requests and windows per hour", () => {
+					var service = freshService()
+
+					service.record( "203.0.113.42", "Auth.doLogin", 6, true )
+					service.record( "198.51.100.7", "Auth.doLogin", 6, true )
+					service.record( "198.51.100.7", "Auth.doLogin", 7, false )
+					service.flush()
+
+					var hours = service.hourly( hours: 24 )
+
+					expect( hours ).toHaveLength( 1 )
+					expect( hours[ 1 ].blockedRequests ).toBe( 3 )
+					expect( hours[ 1 ].blockedWindows ).toBe( 2 )
+				} )
+
+				it( "lists the most recently blocked rows first", () => {
+					var service = freshService()
+
+					service.record( "203.0.113.42", "Auth.doLogin", 6, true )
+					service.flush()
+					sleep( 1100 )
+					service.record( "198.51.100.7", "Auth.doRegister", 6, true )
+					service.flush()
+
+					var latest = service.latest( max: 10 )
+
+					expect( latest ).toHaveLength( 2 )
+					expect( latest[ 1 ].ipAddress ).toBe( "198.51.100.7" )
+					expect( service.latest( max: 1 ) ).toHaveLength( 1 )
+				} )
+			} )
+
+			story( "Old history is purged", () => {
+				it( "deletes rows older than the retention and keeps newer ones", () => {
+					var service = freshService()
+					service.record( "203.0.113.42", "Auth.doLogin", 6, true )
+					service.flush()
+
+					qb.newQuery().from( "rate_limit_history" ).insert( {
+						historyId      : createUUID(),
+						bucketStart    : dateAdd( "d", -40, now() ),
+						ipAddress      : "192.0.2.1",
+						endpoint       : "Auth.doLogin",
+						blockedRequests: 9,
+						blockedWindows : 1,
+						peakAttempts   : 9,
+						lastBlockedAt  : dateAdd( "d", -40, now() )
+					} )
+
+					expect( service.purgeOlderThan( days: 30 ) ).toBe( 1 )
+					expect( rows() ).toHaveLength( 1 )
+					expect( rows()[ 1 ].ipAddress ).toBe( "203.0.113.42" )
+				} )
+
+				it( "deletes nothing when the retention is zero", () => {
+					var service = freshService()
+					service.record( "203.0.113.42", "Auth.doLogin", 6, true )
+					service.flush()
+
+					expect( service.purgeOlderThan( days: 0 ) ).toBe( 0 )
+					expect( rows() ).toHaveLength( 1 )
+				} )
+
+				it( "only accepts a retention from 1 to 365 days", () => {
+					[ 0, 366, 2.5, "abc" ].each( ( days ) => {
+						expect( () => settingService.bulkSave( { cbRateLimitHistoryRetentionDays: days } ) ).toThrow( "Setting.Invalid" )
+					} )
+				} )
+			} )
+
+			story( "AppThrottle records blocked requests", () => {
+				it( "tallies every blocked request and one blocked window", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+
+					// maxAttempts allowed, then 4 blocked: the first of those starts the blocked window.
+					for ( var i = 1; i <= maxAttempts + 4; i++ ) {
+						post(
+							route         = "/login",
+							params        = { email: "nobody@example.com", password: "wrong-password", csrf: cbcsrf.generate() },
+							renderResults = false
+						)
+					}
+
+					// Read the table, not the tally: the scheduled flush runs on its own clock and
+					// may have moved the tally into the table between two statements here.
+					rateLimitHistoryService.flush()
+
+					var written = rows().filter( ( row ) => row.endpoint == "Auth.doLogin" )
+					expect( written ).toHaveLength( 1 )
+					expect( written[ 1 ].blockedRequests ).toBe( 4 )
+					expect( written[ 1 ].blockedWindows ).toBe( 1 )
+					expect( written[ 1 ].peakAttempts ).toBe( maxAttempts + 4 )
+				} )
+
+				it( "does not tally requests that were allowed", () => {
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+
+					for ( var i = 1; i <= maxAttempts; i++ ) {
+						post(
+							route         = "/login",
+							params        = { email: "nobody@example.com", password: "wrong-password", csrf: cbcsrf.generate() },
+							renderResults = false
+						)
+					}
+
+					rateLimitHistoryService.flush()
+					expect( rows() ).toBeEmpty()
+				} )
+			} )
+		} )
+	}
+
+}

@@ -1,0 +1,35 @@
+class {
+
+	function up( schema, qb ) {
+		// Rate limit history - hourly totals of blocked requests per IP and endpoint, flushed
+		// from the in-memory tally by RateLimitHistoryService. Aggregated on purpose: the audit
+		// log keeps one row per blocked window for security events, this table keeps the volume
+		// without a row per request, so an attack cannot grow it at the rate requests arrive.
+		schema.create( "rate_limit_history", ( table ) => {
+			table.string( "historyId", 36 ).primaryKey()
+
+			// The start of the hour the counts belong to (server time)
+			table.timestamp( "bucketStart" )
+			// The client IP, or "other" for IPs rolled up once an hour reaches its row cap
+			table.string( "ipAddress", 45 )
+			// The endpoint that blocked, for example "Auth.doLogin"
+			table.string( "endpoint", 100 )
+
+			// Blocked requests, blocked windows (first block per window), and the highest attempt count seen
+			table.integer( "blockedRequests" ).default( 0 )
+			table.integer( "blockedWindows" ).default( 0 )
+			table.integer( "peakAttempts" ).default( 0 )
+			// The last time a flush added to this row, for "latest" views
+			table.timestamp( "lastBlockedAt" )
+
+			table.unique( [ "bucketStart", "ipAddress", "endpoint" ], "uq_rateLimitHistoryKey" )
+			table.index( "bucketStart", "idx_rateLimitHistoryBucket" )
+			table.index( "lastBlockedAt", "idx_rateLimitHistoryLast" )
+		} )
+	}
+
+	function down( schema, qb ) {
+		schema.dropIfExists( "rate_limit_history" )
+	}
+
+}

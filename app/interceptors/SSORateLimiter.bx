@@ -20,6 +20,9 @@ class extends="coldbox.system.Interceptor" {
 	@inject( "provider:RateLimitControlService" )
 	property name="rateLimitControl";
 
+	@inject( "provider:RateLimitHistoryService" )
+	property name="rateLimitHistory";
+
 	@inject( "provider:SettingService" )
 	property name="settingService";
 
@@ -72,6 +75,14 @@ class extends="coldbox.system.Interceptor" {
 		if ( attempts <= maxAttempts ) {
 			return
 		}
+
+		// Volume goes to the in-memory tally; see AppThrottle.
+		variables.rateLimitHistory.record(
+			variables.cbsecurity.getRealIP( trustUpstream = variables.settingService.getSetting( "cbTrustProxyHeaders", true ) ),
+			static.LIMIT_KEY,
+			attempts,
+			attempts == maxAttempts + 1
+		)
 
 		// One audit row per IP per window, not one per blocked request.
 		if ( attempts == maxAttempts + 1 ) {

@@ -1,0 +1,429 @@
+/**
+ * Hourly history of rate limit blocks: how many requests were blocked, for which IP and
+ * endpoint, without a database write per request.
+ *
+ * The audit log keeps one row per blocked window, for security review. This service keeps
+ * the volume. Both are bounded, because under an attack the number of blocked requests is
+ * controlled by the attacker:
+ *
+ * 1. Every blocked request adds to an in-memory tally (record()). That is a map update
+ *    and never touches the database. The tally holds at most MAX_TALLY_KEYS distinct
+ *    hour, IP and endpoint combinations; further IPs are added to a shared "other" row.
+ * 2. A scheduled task flushes the tally to the rate_limit_history table every minute
+ *    (flush()), adding to the row for that hour, IP and endpoint. An hour keeps at most
+ *    MAX_ROWS_PER_HOUR rows; once it is full, new IPs add to the "other" row for that hour.
+ *    Every server flushes its own tally (the task is not onOneServer), and the unique key
+ *    plus add-to updates make concurrent flushes from several servers safe.
+ * 3. A daily task deletes rows older than cbRateLimitHistoryRetentionDays (purgeOlderThan()).
+ *
+ * A server that stops loses at most the last minute of tallies, and a failed flush puts its
+ * tallies back, so a database outage cannot lose or grow them past the cap.
+ */
+@singleton
+@threadSafe
+class {
+
+	@inject( "provider:QueryBuilder@qb" )
+	property name="qb";
+
+	@inject( "logbox:logger:{this}" )
+	property name="log";
+
+	static {
+		// The ipAddress of the roll-up row.
+		OTHER_IP         = "other"
+		// The most distinct hour, IP and endpoint combinations held in memory between flushes.
+		MAX_TALLY_KEYS   = 2000
+		// The most rows one hour may hold before new IPs go to the roll-up row.
+		MAX_ROWS_PER_HOUR = 500
+		TABLE            = "rate_limit_history"
+	}
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		variables.tally = {}
+		return this
+	}
+
+	/**
+	 * Adds one blocked request to the in-memory tally. Never throws and never touches the
+	 * database, so a block is never made slower or failed by the history.
+	 *
+	 * @ipAddress  The client IP that was blocked.
+	 * @endpoint   The endpoint that blocked it, for example "Auth.doLogin".
+	 * @attempts   The attempt count of this request in its window.
+	 * @firstBlock True for the first block of a window, which counts as one blocked window.
+	 */
+	void function record( required string ipAddress, required string endpoint, required numeric attempts, boolean firstBlock = false ) {
+		try {
+			addToTally(
+				hourKey( now() ),
+				arguments.ipAddress,
+				arguments.endpoint,
+				1,
+				arguments.firstBlock ? 1 : 0,
+				arguments.attempts
+			)
+		} catch ( any e ) {
+			// The history is best effort: losing a sample is better than failing a request.
+			variables.log.error( "Could not tally a rate limit block: #e.message#" )
+		}
+	}
+
+	/**
+	 * Writes the tally to the database and clears it. If the write fails, the tally is put
+	 * back (merged with anything recorded meanwhile) and tried again on the next flush.
+	 *
+	 * @return The number of tally entries written.
+	 */
+	numeric function flush() {
+		var snapshot = {}
+
+		lock name="rateLimitHistoryTally" type="exclusive" timeout="5" {
+			snapshot = variables.tally
+			variables.tally = {}
+		}
+
+		if ( snapshot.isEmpty() ) {
+			return 0
+		}
+
+		try {
+			writeRows( snapshot )
+		} catch ( any e ) {
+			variables.log.error( "Rate limit history flush failed, keeping the tally: #e.message#" )
+			// A plain loop, not a closure: this runs inside a catch block, where a closure
+			// cannot see this component's variables scope.
+			for ( var key in snapshot ) {
+				var entry = snapshot[ key ]
+				addToTally( entry.hour, entry.ipAddress, entry.endpoint, entry.requests, entry.windows, entry.peak )
+			}
+			return 0
+		}
+
+		return snapshot.count()
+	}
+
+	/**
+	 * A copy of the tally, for tests and diagnostics.
+	 *
+	 * @return A struct of tally entries keyed by hour, IP and endpoint.
+	 */
+	struct function getTallySnapshot() {
+		var copy = {}
+		lock name="rateLimitHistoryTally" type="exclusive" timeout="5" {
+			copy = duplicate( variables.tally )
+		}
+		return copy
+	}
+
+	/**
+	 * The IPs with the most blocked requests since a number of hours ago, with the windows
+	 * each endpoint blocked, for the top offenders chart. The roll-up row is left out.
+	 *
+	 * @hours How far back to look.
+	 * @max   How many IPs to return.
+	 *
+	 * @return An array of { ipAddress, blockedRequests, blockedWindows, endpoints }, where
+	 *         endpoints maps each endpoint to its blocked windows, busiest IP first.
+	 */
+	array function topOffenders( numeric hours = 24, numeric max = 10 ) {
+		var since = dateAdd( "h", -arguments.hours, now() )
+		var top = variables.qb
+			.newQuery()
+			.from( static.TABLE )
+			.select( "ipAddress" )
+			.selectRaw( "#sumOf( 'blockedRequests' )#, #sumOf( 'blockedWindows' )#" )
+			.where( "bucketStart", ">=", since )
+			.where( "ipAddress", "<>", static.OTHER_IP )
+			.groupBy( "ipAddress" )
+			.orderBy( "blockedRequests", "desc" )
+			.limit( arguments.max )
+			.get()
+
+		if ( !top.len() ) {
+			return []
+		}
+
+		var perEndpoint = variables.qb
+			.newQuery()
+			.from( static.TABLE )
+			.select( "ipAddress, endpoint" )
+			.selectRaw( sumOf( "blockedWindows" ) )
+			.where( "bucketStart", ">=", since )
+			.whereIn( "ipAddress", top.map( ( row ) => row.ipAddress ) )
+			.groupBy( [ "ipAddress", "endpoint" ] )
+			.get()
+
+		return top.map( ( row ) => {
+			var endpoints = {}
+			perEndpoint
+				.filter( ( detail ) => detail.ipAddress == row.ipAddress )
+				.each( ( detail ) => endpoints[ detail.endpoint ] = detail.blockedWindows )
+			return {
+				ipAddress      : row.ipAddress,
+				blockedRequests: row.blockedRequests,
+				blockedWindows : row.blockedWindows,
+				endpoints      : endpoints
+			}
+		} )
+	}
+
+	/**
+	 * Blocked requests and windows per hour since a number of hours ago, oldest first, for
+	 * the history chart. Hours with no blocks are not returned.
+	 *
+	 * @hours How far back to look.
+	 *
+	 * @return An array of { bucketStart, blockedRequests, blockedWindows }.
+	 */
+	array function hourly( numeric hours = 24 ) {
+		return variables.qb
+			.newQuery()
+			.from( static.TABLE )
+			.select( "bucketStart" )
+			.selectRaw( "#sumOf( 'blockedRequests' )#, #sumOf( 'blockedWindows' )#" )
+			.where( "bucketStart", ">=", dateAdd( "h", -arguments.hours, now() ) )
+			.groupBy( "bucketStart" )
+			.orderBy( "bucketStart", "asc" )
+			.get()
+	}
+
+	/**
+	 * The rows that were added to most recently, for the "latest blocks" list.
+	 *
+	 * @max How many rows to return.
+	 *
+	 * @return An array of rows, newest first.
+	 */
+	array function latest( numeric max = 25 ) {
+		return variables.qb
+			.newQuery()
+			.from( static.TABLE )
+			.orderBy( "lastBlockedAt", "desc" )
+			.limit( arguments.max )
+			.get()
+	}
+
+	/**
+	 * Deletes history older than a number of days. Scheduled daily.
+	 *
+	 * @days Rows whose hour started more than this many days ago are deleted. Zero or less deletes nothing.
+	 *
+	 * @return The number of rows deleted.
+	 */
+	numeric function purgeOlderThan( required numeric days ) {
+		if ( arguments.days <= 0 ) {
+			return 0
+		}
+
+		var result = variables.qb
+			.newQuery()
+			.from( static.TABLE )
+			.where( "bucketStart", "<", dateAdd( "d", -arguments.days, now() ) )
+			.delete()
+		return result?.result?.recordcount ?: 0
+	}
+
+	/**
+	 * Adds counts to the tally, rolling an IP into the shared row once the tally is full.
+	 *
+	 * @hour      The hour key, see hourKey().
+	 * @ipAddress The client IP.
+	 * @endpoint  The endpoint.
+	 * @requests  Blocked requests to add.
+	 * @windows   Blocked windows to add.
+	 * @peak      An attempt count, kept if higher than the current peak.
+	 */
+	private void function addToTally( required string hour, required string ipAddress, required string endpoint, required numeric requests, required numeric windows, required numeric peak ) {
+		// A short wait: if the lock is busy under heavy load, dropping this sample is fine.
+		lock name="rateLimitHistoryTally" type="exclusive" timeout="1" throwOnTimeout="false" {
+			var ip  = arguments.ipAddress
+			var key = "#arguments.hour#|#ip#|#arguments.endpoint#"
+
+			if ( !variables.tally.keyExists( key ) && variables.tally.count() >= static.MAX_TALLY_KEYS ) {
+				ip  = static.OTHER_IP
+				key = "#arguments.hour#|#ip#|#arguments.endpoint#"
+			}
+
+			if ( !variables.tally.keyExists( key ) ) {
+				variables.tally[ key ] = {
+					hour     : arguments.hour,
+					ipAddress: ip,
+					endpoint : arguments.endpoint,
+					requests : 0,
+					windows  : 0,
+					peak     : 0
+				}
+			}
+
+			var entry = variables.tally[ key ]
+			entry.requests += arguments.requests
+			entry.windows  += arguments.windows
+			entry.peak      = max( entry.peak, arguments.peak )
+		}
+	}
+
+	/**
+	 * Writes a snapshot of the tally, one hour at a time. Within an hour, an IP over the row
+	 * cap adds to the roll-up row instead of getting its own.
+	 *
+	 * @snapshot The tally entries, keyed by hour, IP and endpoint.
+	 */
+	private void function writeRows( required struct snapshot ) {
+		var rowsPerHour = {}
+
+		// Busiest first, so when an hour's rows run out it is the small ones that roll up.
+		var entries = arguments.snapshot.reduce( ( all, key, entry ) => all.append( entry ), [] )
+			.sort( ( a, b ) => b.requests - a.requests )
+
+		entries.each( ( entry ) => {
+			var bucket = parseHour( entry.hour )
+
+			if ( !rowsPerHour.keyExists( entry.hour ) ) {
+				rowsPerHour[ entry.hour ] = variables.qb.newQuery().from( static.TABLE ).where( "bucketStart", bucket ).count()
+			}
+
+			var ip = entry.ipAddress
+			if ( ip != static.OTHER_IP && rowsPerHour[ entry.hour ] >= static.MAX_ROWS_PER_HOUR && !rowExists( bucket, ip, entry.endpoint ) ) {
+				ip = static.OTHER_IP
+			}
+
+			if ( addToRow( bucket, ip, entry ) ) {
+				rowsPerHour[ entry.hour ]++
+			}
+		} )
+	}
+
+	/**
+	 * Adds an entry's counts to the row for its hour, IP and endpoint, creating the row if
+	 * there is none. If another server creates the row first, the insert fails on the
+	 * unique key and the counts are added to that row instead.
+	 *
+	 * @bucket The hour's start.
+	 * @ip     The IP for the row, which may be the roll-up.
+	 * @entry  The tally entry.
+	 *
+	 * @return True when a new row was created.
+	 */
+	private boolean function addToRow( required date bucket, required string ip, required struct entry ) {
+		if ( updateRow( arguments.bucket, arguments.ip, arguments.entry ) ) {
+			return false
+		}
+
+		try {
+			variables.qb.newQuery().from( static.TABLE ).insert( {
+				historyId      : createUUID(),
+				bucketStart    : arguments.bucket,
+				ipAddress      : arguments.ip,
+				endpoint       : arguments.entry.endpoint,
+				blockedRequests: arguments.entry.requests,
+				blockedWindows : arguments.entry.windows,
+				peakAttempts   : arguments.entry.peak,
+				lastBlockedAt  : now()
+			} )
+			return true
+		} catch ( any e ) {
+			// Lost the race to create the row: it exists now, so add to it.
+			if ( updateRow( arguments.bucket, arguments.ip, arguments.entry ) ) {
+				return false
+			}
+			rethrow
+		}
+	}
+
+	/**
+	 * Adds an entry's counts to an existing row.
+	 *
+	 * @return True when a row existed and was updated.
+	 */
+	private boolean function updateRow( required date bucket, required string ip, required struct entry ) {
+		var existing = variables.qb
+			.newQuery()
+			.from( static.TABLE )
+			.where( "bucketStart", arguments.bucket )
+			.where( "ipAddress", arguments.ip )
+			.where( "endpoint", arguments.entry.endpoint )
+			.first()
+
+		if ( existing.isEmpty() ) {
+			return false
+		}
+
+		variables.qb
+			.newQuery()
+			.from( static.TABLE )
+			.where( "historyId", existing.historyId )
+			.update( {
+				blockedRequests: variables.qb.raw( "#quoted( 'blockedRequests' )# + #int( arguments.entry.requests )#" ),
+				blockedWindows : variables.qb.raw( "#quoted( 'blockedWindows' )# + #int( arguments.entry.windows )#" ),
+				// The peak is approximate if two servers update at once: it is a display value.
+				peakAttempts   : max( existing.peakAttempts, arguments.entry.peak ),
+				lastBlockedAt  : now()
+			} )
+		return true
+	}
+
+	/**
+	 * Whether the row for an hour, IP and endpoint exists.
+	 */
+	private boolean function rowExists( required date bucket, required string ip, required string endpoint ) {
+		return variables.qb
+			.newQuery()
+			.from( static.TABLE )
+			.where( "bucketStart", arguments.bucket )
+			.where( "ipAddress", arguments.ip )
+			.where( "endpoint", arguments.endpoint )
+			.count() > 0
+	}
+
+	/**
+	 * Quotes an identifier for the database in use. The columns are camel case, which
+	 * PostgreSQL folds to lower case unless quoted, and qb only quotes what it builds
+	 * itself, so any hand-written SQL fragment has to quote its own column names.
+	 *
+	 * @name The column or alias name.
+	 *
+	 * @return The quoted identifier.
+	 */
+	private string function quoted( required string name ) {
+		return variables.qb.getGrammar().wrapValue( arguments.name )
+	}
+
+	/**
+	 * A SUM() select expression over a column, with the same name as its alias.
+	 *
+	 * @column The column to total.
+	 */
+	private string function sumOf( required string column ) {
+		return "SUM(#quoted( arguments.column )#) AS #quoted( arguments.column )#"
+	}
+
+	/**
+	 * The key for the hour a date falls in, such as 2026111316.
+	 *
+	 * @date The moment to key.
+	 */
+	private string function hourKey( required date date ) {
+		return dateTimeFormat( arguments.date, "yyyyMMddHH" )
+	}
+
+	/**
+	 * The start of the hour for a key from hourKey().
+	 *
+	 * @hour The hour key.
+	 */
+	private date function parseHour( required string hour ) {
+		return createDateTime(
+			int( left( arguments.hour, 4 ) ),
+			int( mid( arguments.hour, 5, 2 ) ),
+			int( mid( arguments.hour, 7, 2 ) ),
+			int( right( arguments.hour, 2 ) ),
+			0,
+			0
+		)
+	}
+
+}
