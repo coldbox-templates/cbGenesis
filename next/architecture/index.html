@@ -331,7 +331,7 @@ the reason cbGenesis uses a custom handler instead of cbSSO's generic cbAuth
 integration.</p>
 <p>Add your own to the <code>variables.interceptors</code> array in <code>Coldbox.bx</code>; they fire in declaration order.</p>
 <h2 id="scheduled-tasks"><a href="#scheduled-tasks" id="scheduled-tasks" name="scheduled-tasks" class="anchor"></a>Scheduled tasks</h2>
-<p><code>app/config/Scheduler.bx</code> registers three daily background tasks, each <code>onOneServer()</code> and <code>withNoOverlaps()</code> so a multi-instance deployment runs each one exactly once:</p>
+<p><code>app/config/Scheduler.bx</code> registers three daily purge tasks, each <code>onOneServer()</code> and <code>withNoOverlaps()</code> so a multi-instance deployment runs each one exactly once:</p>
 <div class="bxsites-table-wrap"><table class="table">
 <thead>
 <tr><th>Task</th><th>Runs</th><th>Deletes</th><th>Governed by</th></tr>
@@ -342,7 +342,19 @@ integration.</p>
 <tr><td>Purge Old Audit Logs</td><td><code>03:30</code></td><td><code>audit_logs</code> rows older than the retention window</td><td><code>cbAuditLogRetentionDays</code> (default <code>90</code>; <code>0</code> disables the purge) - see <a href="/next/reference/settings/index.html#password--token-policy">App Settings</a></td></tr>
 </tbody>
 </table></div>
-<p>All three call a <code>purgeExpiredTokens()</code>/<code>purgeOlderThan()</code> method on the owning service rather than querying the table directly, so the same purge logic is reachable (and testable) outside the scheduler. Add a new task the same way - see <a href="/next/guides/extending/index.html#adding-a-scheduled-task">Extending the App</a>.</p>
+<p>The rate limiting tasks run alongside them:</p>
+<div class="bxsites-table-wrap"><table class="table">
+<thead>
+<tr><th>Task</th><th>Runs</th><th>Does</th><th>Governed by</th></tr>
+</thead>
+<tbody>
+<tr><td>Flush Rate Limit History</td><td>every minute, <strong>every server</strong></td><td>Writes this server's in-memory tally of blocked requests to <code>rate_limit_history</code>. Not <code>onOneServer()</code>, because each server has its own tally</td><td>- see <a href="/next/guides/security/index.html#history">History</a></td></tr>
+<tr><td>Purge Old Rate Limit History</td><td><code>03:45</code></td><td>Deletes <code>rate_limit_history</code> rows older than the retention window</td><td><code>cbRateLimitHistoryRetentionDays</code> (default <code>30</code>, 1 to 365)</td></tr>
+<tr><td>Expire Rate Limiting Pause</td><td>every minute</td><td>Clears an elapsed emergency-stop pause and audits it</td><td>- see <a href="/next/guides/security/index.html#emergency-stop">Emergency stop</a></td></tr>
+<tr><td>Remind Rate Limiting Is Paused</td><td><code>09:00</code></td><td>Writes one audit entry while a pause has no end time</td><td>-</td></tr>
+</tbody>
+</table></div>
+<p>The purge tasks call a <code>purgeExpiredTokens()</code>/<code>purgeOlderThan()</code> method on the owning service rather than querying the table directly, so the same purge logic is reachable (and testable) outside the scheduler. Add a new task the same way - see <a href="/next/guides/extending/index.html#adding-a-scheduled-task">Extending the App</a>.</p>
 <h2 id="full-project-tree"><a href="#full-project-tree" id="full-project-tree" name="full-project-tree" class="anchor"></a>Full project tree</h2>
 <pre data-bxsites-start-line="1" data-bxsites-title="Project structure"><code class="language-text">cbgenesis/
 ├── app/                      Application code
