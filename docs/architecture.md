@@ -115,6 +115,7 @@ The rate limiting tasks run alongside them:
 |---|---|---|---|
 | Flush Rate Limit History | every minute, **every server** | Writes this server's in-memory tally of blocked requests to `rate_limit_history`. Not `onOneServer()`, because each server has its own tally | - see [History](guides/security.md#history) |
 | Purge Old Rate Limit History | `03:45` | Deletes `rate_limit_history` rows older than the retention window | `cbRateLimitHistoryRetentionDays` (default `30`, 1 to 365) |
+| Purge Expired Rate Limit Blocks | `03:50` | Deletes expired rows from `rate_limit_blocks` (they are ignored once expired either way) | - see [Blocked IPs](guides/security.md#blocked-ips) |
 | Expire Rate Limiting Pause | every minute | Clears an elapsed emergency-stop pause and audits it | - see [Emergency stop](guides/security.md#emergency-stop) |
 | Remind Rate Limiting Is Paused | `09:00` | Writes one audit entry while a pause has no end time | - |
 

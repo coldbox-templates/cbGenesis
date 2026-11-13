@@ -149,6 +149,12 @@ class {
 				properties : {}
 			},
 			{
+				// Registered first so a blocked IP is refused before anything else runs.
+				class      : "app.interceptors.RateLimitBlocker",
+				name       : "RateLimitBlocker",
+				properties : {}
+			},
+			{
 				class      : "app.interceptors.SSORateLimiter",
 				name       : "SSORateLimiter",
 				properties : {}

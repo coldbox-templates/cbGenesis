@@ -1,0 +1,374 @@
+/**
+ * The block list: IP addresses and CIDR ranges refused on their first request.
+ *
+ * Blocks come from two places: an admin adds them (block()), or the automatic rule adds
+ * one when an IP keeps getting throttled (recordThrottledWindow()). They are stored in
+ * rate_limit_blocks and expire on their own, or never when permanent.
+ *
+ * isBlocked() runs on every request, so it never queries the database. It checks an
+ * in-memory snapshot of the active blocks that is reloaded at most every SNAPSHOT_TTL_MS,
+ * and immediately after this server changes the list. Another server therefore notices a
+ * new block within the TTL. If a reload fails, the previous snapshot keeps being used, so a
+ * database outage cannot unblock anyone or fail a request.
+ *
+ * What keeps it bounded and safe:
+ * - At most MAX_BLOCKS active blocks. A manual add past that is refused; an automatic one
+ *   is skipped and logged.
+ * - A range wider than IPv4 /16 or IPv6 /48 is refused (IpMatcher.isTooWide()).
+ * - An admin cannot block the address they are using.
+ * - Automatic blocking never blocks loopback, private or link-local addresses, which with
+ *   proxy headers untrusted can be the proxy or the server itself, and so stand for
+ *   everyone.
+ */
+@singleton
+@threadSafe
+class {
+
+	@inject( "provider:QueryBuilder@qb" )
+	property name="qb";
+
+	@inject( "provider:IpMatcher" )
+	property name="ipMatcher";
+
+	@inject( "provider:SettingService" )
+	property name="settingService";
+
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
+
+	@inject( "provider:RateLimiter@cbsecurity" )
+	property name="rateLimiter";
+
+	@inject( "logbox:logger:{this}" )
+	property name="log";
+
+	static {
+		TABLE           = "rate_limit_blocks"
+		// The most active blocks the list holds.
+		MAX_BLOCKS      = 1000
+		// How long a loaded snapshot is used before the next request reloads it.
+		SNAPSHOT_TTL_MS = 30000
+	}
+
+	/**
+	 * Constructor
+	 */
+	function init() {
+		variables.snapshot         = { singles: {}, ranges: [] }
+		variables.snapshotLoadedAt = 0
+		return this
+	}
+
+	/**
+	 * Whether an IP is blocked right now. Called on every request: it only reads the
+	 * in-memory snapshot and never throws.
+	 *
+	 * @ipAddress The client IP.
+	 *
+	 * @return True when the IP is, or is inside, an active block.
+	 */
+	boolean function isBlocked( required string ipAddress ) {
+		try {
+			var address = variables.ipMatcher.parse( arguments.ipAddress )
+			if ( !address.valid ) {
+				return false
+			}
+
+			var current = getSnapshot()
+			if ( current.singles.keyExists( address.key ) ) {
+				return true
+			}
+			for ( var range in current.ranges ) {
+				if ( variables.ipMatcher.matches( range.entry, address ) ) {
+					return true
+				}
+			}
+		} catch ( any e ) {
+			// Failing open is right here: a broken check must not take the site down.
+			variables.log.error( "Block list check failed: #e.message#" )
+		}
+		return false
+	}
+
+	/**
+	 * The active blocks, newest first.
+	 *
+	 * @return An array of rows: blockId, address, reason, source, createdBy, createdDate, expiresAt.
+	 */
+	array function list() {
+		return activeQuery().orderBy( "createdDate", "desc" ).get()
+	}
+
+	/**
+	 * Adds a block for an address or range. If it is already blocked, its reason and expiry are updated.
+	 *
+	 * @address     An address ("203.0.113.42") or range ("203.0.113.0/24").
+	 * @reason      Why, shown in the list.
+	 * @hours       How long to block for, 1 to 8760, or 0 for permanent.
+	 * @createdBy   Who adds it, usually the admin's email.
+	 * @requesterIp The address the admin is using, which may not be blocked.
+	 *
+	 * @throws RateLimit.InvalidAddress When the text is not a valid address or range.
+	 * @throws RateLimit.RangeTooWide   When a range is wider than IPv4 /16 or IPv6 /48.
+	 * @throws RateLimit.InvalidDuration When hours is not a whole number from 0 to 8760.
+	 * @throws RateLimit.SelfBlock      When the block would include the admin's own address.
+	 * @throws RateLimit.BlockListFull  When the list already holds the maximum number of active blocks.
+	 *
+	 * @return The row for the block.
+	 */
+	struct function block( required string address, string reason = "", numeric hours = 0, string createdBy = "", string requesterIp = "" ) {
+		var entry = variables.ipMatcher.parse( arguments.address )
+		if ( !entry.valid ) {
+			throw( type = "RateLimit.InvalidAddress", message = "[#arguments.address#] is not a valid IP address or CIDR range, for example 203.0.113.42 or 203.0.113.0/24." )
+		}
+		if ( variables.ipMatcher.isTooWide( entry ) ) {
+			throw( type = "RateLimit.RangeTooWide", message = "That range is too wide. The widest range you can block is /16 for IPv4 and /48 for IPv6." )
+		}
+		if ( int( arguments.hours ) != arguments.hours || arguments.hours < 0 || arguments.hours > 8760 ) {
+			throw( type = "RateLimit.InvalidDuration", message = "Block for a whole number of hours from 1 to 8760, or 0 for permanent." )
+		}
+
+		var requester = variables.ipMatcher.parse( arguments.requesterIp )
+		if ( requester.valid && variables.ipMatcher.matches( entry, requester ) ) {
+			throw( type = "RateLimit.SelfBlock", message = "That would block your own address (#arguments.requesterIp#)." )
+		}
+
+		var row = createBlock( entry, trim( arguments.address ), arguments.reason, "manual", arguments.createdBy, arguments.hours, true )
+
+		var duration = arguments.hours > 0 ? " for #arguments.hours# hours" : " permanently"
+		variables.auditLogService.warn(
+			action     : "security.ratelimit.ip_blocked",
+			message    : "[#row.address#] was blocked#duration#.",
+			category   : "security",
+			targetType : "RateLimitBlock",
+			targetId   : row.blockId,
+			targetLabel: row.address,
+			metadata   : { reason: arguments.reason, hours: arguments.hours }
+		)
+
+		return row
+	}
+
+	/**
+	 * Removes a block.
+	 *
+	 * @blockId The block to remove.
+	 *
+	 * @return True when a block was removed, false when there was none with that id.
+	 */
+	boolean function unblock( required string blockId ) {
+		var row = variables.qb.newQuery().from( static.TABLE ).where( "blockId", arguments.blockId ).first()
+		if ( row.isEmpty() ) {
+			return false
+		}
+
+		variables.qb.newQuery().from( static.TABLE ).where( "blockId", arguments.blockId ).delete()
+		refresh()
+
+		variables.auditLogService.info(
+			action     : "security.ratelimit.ip_unblocked",
+			message    : "[#row.address#] was unblocked.",
+			category   : "security",
+			targetType : "RateLimitBlock",
+			targetId   : row.blockId,
+			targetLabel: row.address
+		)
+		return true
+	}
+
+	/**
+	 * Counts one throttled window for an IP and blocks it automatically when it reaches the
+	 * threshold. Called by the throttle when it blocks the first request of a window.
+	 *
+	 * The rule is the cbRateLimitAutoBlock settings: windows throttled within a period, then a
+	 * block of some hours. Counting uses the shared rate limit cache, and only the request that
+	 * reaches the threshold exactly creates the block. Never throws.
+	 *
+	 * @ipAddress The client IP that was throttled.
+	 *
+	 * @return True when this call blocked the IP.
+	 */
+	boolean function recordThrottledWindow( required string ipAddress ) {
+		try {
+			if ( !variables.settingService.getSetting( "cbRateLimitAutoBlock", true ) ) {
+				return false
+			}
+
+			var entry = variables.ipMatcher.parse( arguments.ipAddress )
+			if ( !entry.valid || variables.ipMatcher.isInternal( entry ) || isBlocked( arguments.ipAddress ) ) {
+				return false
+			}
+
+			var windows = variables.settingService.getSetting( "cbRateLimitAutoBlockWindows", 3 )
+			var minutes = variables.settingService.getSetting( "cbRateLimitAutoBlockPeriodMinutes", 60 )
+			var hours   = variables.settingService.getSetting( "cbRateLimitAutoBlockHours", 24 )
+
+			if ( variables.rateLimiter.hit( "autoblock:#entry.key#", minutes * 60, "rateLimit" ) != windows ) {
+				return false
+			}
+
+			var row = createBlock(
+				entry,
+				arguments.ipAddress,
+				"Throttled in #windows# windows within #minutes# minutes",
+				"automatic",
+				"system",
+				hours,
+				false
+			)
+			if ( row.isEmpty() ) {
+				return false
+			}
+
+			variables.auditLogService.warn(
+				action     : "security.ratelimit.ip_autoblocked",
+				message    : "[#arguments.ipAddress#] was blocked automatically for #hours# hours.",
+				category   : "security",
+				targetType : "RateLimitBlock",
+				targetId   : row.blockId,
+				targetLabel: arguments.ipAddress,
+				metadata   : { windows: windows, minutes: minutes, hours: hours }
+			)
+			return true
+		} catch ( any e ) {
+			variables.log.error( "Automatic block failed for [#arguments.ipAddress#]: #e.message#" )
+			return false
+		}
+	}
+
+	/**
+	 * Deletes blocks that have expired. They are ignored once expired either way; this only
+	 * keeps the table small. Scheduled daily.
+	 *
+	 * @return The number of rows deleted.
+	 */
+	numeric function purgeExpired() {
+		var result = variables.qb.newQuery().from( static.TABLE ).where( "expiresAt", "<", now() ).delete()
+		return result?.result?.recordcount ?: 0
+	}
+
+	/**
+	 * Reloads the snapshot from the database now.
+	 */
+	void function refresh() {
+		loadSnapshot()
+	}
+
+	/**
+	 * Inserts a block, or updates the existing one for the same address or range.
+	 *
+	 * @entry       The parsed address.
+	 * @address     The address as typed.
+	 * @reason      Why.
+	 * @source      "manual" or "automatic".
+	 * @createdBy   Who added it.
+	 * @hours       Hours to block for, 0 for permanent.
+	 * @throwIfFull True to throw when the list is full, false to return an empty struct.
+	 *
+	 * @return The row, or an empty struct when the list was full and throwIfFull is false.
+	 */
+	private struct function createBlock( required struct entry, required string address, required string reason, required string source, required string createdBy, required numeric hours, required boolean throwIfFull ) {
+		var expiry = arguments.hours > 0 ? dateAdd( "h", arguments.hours, now() ) : ""
+
+		// An expired block with the same key would hit the unique key: it is already ignored, so remove it.
+		variables.qb.newQuery().from( static.TABLE )
+			.where( "addressKey", arguments.entry.key )
+			.where( "expiresAt", "<", now() )
+			.delete()
+
+		var existing = activeQuery().where( "addressKey", arguments.entry.key ).first()
+
+		if ( !existing.isEmpty() ) {
+			variables.qb.newQuery().from( static.TABLE ).where( "blockId", existing.blockId ).update( {
+				reason   : left( arguments.reason, 255 ),
+				// Permanent is a NULL expiry, which a plain value cannot say.
+				expiresAt: isDate( expiry ) ? expiry : variables.qb.raw( "NULL" )
+			} )
+			refresh()
+			return variables.qb.newQuery().from( static.TABLE ).where( "blockId", existing.blockId ).first()
+		}
+
+		if ( activeQuery().count() >= static.MAX_BLOCKS ) {
+			if ( arguments.throwIfFull ) {
+				throw( type = "RateLimit.BlockListFull", message = "The block list is full (#static.MAX_BLOCKS# active blocks). Remove some before adding more." )
+			}
+			variables.log.warn( "Block list is full, not blocking [#arguments.address#]." )
+			return {}
+		}
+
+		var blockId = createUUID()
+		var values  = {
+			blockId    : blockId,
+			address    : left( arguments.address, 64 ),
+			addressKey : arguments.entry.key,
+			reason     : left( arguments.reason, 255 ),
+			source     : arguments.source,
+			createdBy  : left( arguments.createdBy, 255 ),
+			createdDate: now()
+		}
+		// Left out when permanent: the column is nullable and NULL means never expires.
+		if ( isDate( expiry ) ) {
+			values.expiresAt = expiry
+		}
+		variables.qb.newQuery().from( static.TABLE ).insert( values )
+		refresh()
+
+		return variables.qb.newQuery().from( static.TABLE ).where( "blockId", blockId ).first()
+	}
+
+	/**
+	 * A query for the blocks that have not expired.
+	 */
+	private function activeQuery() {
+		return variables.qb
+			.newQuery()
+			.from( static.TABLE )
+			.where( ( q ) => {
+				q.whereNull( "expiresAt" ).orWhere( "expiresAt", ">", now() )
+			} )
+	}
+
+	/**
+	 * The current snapshot, reloaded first when it is older than the TTL. One request
+	 * reloads while the others keep using the previous snapshot.
+	 */
+	private struct function getSnapshot() {
+		if ( getTickCount() - variables.snapshotLoadedAt > static.SNAPSHOT_TTL_MS ) {
+			lock name="rateLimitBlocksSnapshot" type="exclusive" timeout="1" throwOnTimeout="false" {
+				if ( getTickCount() - variables.snapshotLoadedAt > static.SNAPSHOT_TTL_MS ) {
+					loadSnapshot()
+				}
+			}
+		}
+		return variables.snapshot
+	}
+
+	/**
+	 * Loads the active blocks into a new snapshot: single addresses in a map by key, ranges
+	 * in a list. On failure the old snapshot stays and the next try is a TTL away.
+	 */
+	private void function loadSnapshot() {
+		try {
+			var singles = {}
+			var ranges  = []
+
+			for ( var row in activeQuery().select( "address" ).get() ) {
+				var entry = variables.ipMatcher.parse( row.address )
+				if ( !entry.valid ) {
+					continue
+				}
+				if ( entry.isRange ) {
+					ranges.append( { entry: entry } )
+				} else {
+					singles[ entry.key ] = true
+				}
+			}
+
+			variables.snapshot = { singles: singles, ranges: ranges }
+		} catch ( any e ) {
+			variables.log.error( "Could not load the block list, keeping the previous one: #e.message#" )
+		}
+		variables.snapshotLoadedAt = getTickCount()
+	}
+
+}

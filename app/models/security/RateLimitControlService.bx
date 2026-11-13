@@ -191,9 +191,12 @@ class {
 	}
 
 	/**
-	 * Whether the environment switches rate limiting off.
+	 * Whether the environment switches rate limiting off. This is the full break-glass: it
+	 * also switches off the block list, so a wrong block can never keep an admin out.
+	 *
+	 * @return True when RATE_LIMITING_ENABLED is false-like.
 	 */
-	private boolean function isDisabledByEnvironment() {
+	boolean function isDisabledByEnvironment() {
 		var raw = trim( readEnvironment( static.ENVIRONMENT_KEY ) )
 		return len( raw ) && static.FALSE_VALUES.listFindNoCase( raw ) > 0
 	}

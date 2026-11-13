@@ -1,0 +1,508 @@
+/**
+ * Tests for the block list: adding and removing blocks, ranges and expiry, the safety
+ * limits, the in-memory snapshot, automatic blocking, the RateLimitBlocker interceptor and
+ * the RateLimiting handler's block endpoints.
+ *
+ * The block table is emptied around every spec, because rows written through qb are not
+ * rolled back with the spec's transaction, and the snapshot is reloaded so no block leaks
+ * into the next spec.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
+
+	@inject
+	property name="rateLimitBlockService";
+
+	@inject
+	property name="rateLimitControlService";
+
+	@inject
+	property name="rateLimitHistoryService";
+
+	@inject
+	property name="auditLogService";
+
+	@inject( "QueryBuilder@qb" )
+	property name="qb";
+
+	@inject( "CBSecurity@cbsecurity" )
+	property name="cbsecurity";
+
+	@inject
+	property name="roleService";
+
+	/**
+	 * Deletes every block and reloads the snapshot.
+	 */
+	private void function resetBlocks() {
+		qb.newQuery().from( "rate_limit_blocks" ).delete()
+		rateLimitBlockService.refresh()
+	}
+
+	/**
+	 * A fresh RateLimitBlockService, so specs that break the database or fill the list do
+	 * not touch the singleton that the interceptor and the throttle really use.
+	 *
+	 * @return The autowired service.
+	 */
+	private function freshService() {
+		var service = prepareMock( new app.models.security.RateLimitBlockService() )
+		getWireBox().autowire( service )
+		return service
+	}
+
+	/**
+	 * Counts the audit entries recorded for an action.
+	 */
+	private numeric function auditCount( required string action ) {
+		ormFlush()
+		return auditLogService.countWhere( action: arguments.action )
+	}
+
+	/**
+	 * A user holding the seeded Admin role, which carries the settings permissions.
+	 */
+	private User function createSettingsAdmin() {
+		var user = createVerifiedUser()
+		user.setRoles( [ roleService.findWhere( { role: "Admin" } ) ] )
+		return userService.save( user )
+	}
+
+	/**
+	 * Inserts a block row directly, bypassing the service and its snapshot.
+	 */
+	private void function insertRow( required string address, any expiresAt = "" ) {
+		var entry = getInstance( "IpMatcher" ).parse( arguments.address )
+		var values = {
+			blockId    : createUUID(),
+			address    : arguments.address,
+			addressKey : entry.key,
+			reason     : "direct insert",
+			source     : "manual",
+			createdBy  : "test",
+			createdDate: now()
+		}
+		if ( isDate( arguments.expiresAt ) ) {
+			values.expiresAt = arguments.expiresAt
+		}
+		qb.newQuery().from( "rate_limit_blocks" ).insert( values )
+	}
+
+	function run() {
+		describe( "Block list", () => {
+			beforeEach( () => {
+				setup()
+				structClear( form )
+				getFlashScope().clear().removeFlash()
+				securityService.logout( quiet: true )
+				rateLimitCache.clearAll()
+				rateLimitControlService.resume()
+				settingService.bulkSave( { cbRateLimitAutoBlock: true, cbRateLimitAutoBlockWindows: 3, cbRateLimitAutoBlockPeriodMinutes: 60, cbRateLimitAutoBlockHours: 24 } )
+				resetBlocks()
+			} )
+
+			afterEach( () => {
+				resetBlocks()
+				rateLimitControlService.resume()
+				settingService.bulkSave( { cbRateLimitAutoBlock: true, cbRateLimitAutoBlockWindows: 3, cbRateLimitAutoBlockPeriodMinutes: 60, cbRateLimitAutoBlockHours: 24 } )
+				getRequestContext().getResponse().setError( false )
+			} )
+
+			story( "An admin can block an address or a range", () => {
+				it( "blocks a single address and nothing else", () => {
+					var row = rateLimitBlockService.block( address: "203.0.113.42", reason: "Credential stuffing", hours: 24, createdBy: "admin@example.com" )
+
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeTrue()
+					expect( rateLimitBlockService.isBlocked( "203.0.113.43" ) ).toBeFalse()
+					expect( row.source ).toBe( "manual" )
+					expect( row.reason ).toBe( "Credential stuffing" )
+					expect( row.createdBy ).toBe( "admin@example.com" )
+					expect( row.expiresAt ).notToBeNull()
+				} )
+
+				it( "blocks every address in a range", () => {
+					rateLimitBlockService.block( address: "203.0.113.0/24", hours: 0 )
+
+					expect( rateLimitBlockService.isBlocked( "203.0.113.1" ) ).toBeTrue()
+					expect( rateLimitBlockService.isBlocked( "203.0.113.254" ) ).toBeTrue()
+					expect( rateLimitBlockService.isBlocked( "203.0.114.1" ) ).toBeFalse()
+				} )
+
+				it( "blocks an IPv6 address and an IPv6 range", () => {
+					rateLimitBlockService.block( address: "2001:db8::1" )
+					rateLimitBlockService.block( address: "2001:db9:1::/48" )
+
+					expect( rateLimitBlockService.isBlocked( "2001:db8::1" ) ).toBeTrue()
+					expect( rateLimitBlockService.isBlocked( "2001:db8::2" ) ).toBeFalse()
+					expect( rateLimitBlockService.isBlocked( "2001:db9:1:ffff::5" ) ).toBeTrue()
+				} )
+
+				it( "makes a permanent block with no expiry", () => {
+					var row = rateLimitBlockService.block( address: "203.0.113.42", hours: 0 )
+
+					expect( qb.newQuery().from( "rate_limit_blocks" ).whereNull( "expiresAt" ).count() ).toBe( 1 )
+					expect( rateLimitBlockService.list() ).toHaveLength( 1 )
+				} )
+
+				it( "updates the existing block instead of adding a second one for the same address", () => {
+					rateLimitBlockService.block( address: "203.0.113.42", reason: "first", hours: 1 )
+					rateLimitBlockService.block( address: "203.0.113.42", reason: "second", hours: 0 )
+
+					var blocks = rateLimitBlockService.list()
+					expect( blocks ).toHaveLength( 1 )
+					expect( blocks[ 1 ].reason ).toBe( "second" )
+				} )
+
+				it( "treats two spellings of one range as the same block", () => {
+					rateLimitBlockService.block( address: "203.0.113.0/24" )
+					rateLimitBlockService.block( address: "203.0.113.77/24" )
+
+					expect( rateLimitBlockService.list() ).toHaveLength( 1 )
+				} )
+
+				it( "audits adding and removing a block", () => {
+					var added = auditCount( "security.ratelimit.ip_blocked" )
+					var removed = auditCount( "security.ratelimit.ip_unblocked" )
+
+					var row = rateLimitBlockService.block( address: "203.0.113.42", hours: 1 )
+					rateLimitBlockService.unblock( row.blockId )
+
+					expect( auditCount( "security.ratelimit.ip_blocked" ) ).toBe( added + 1 )
+					expect( auditCount( "security.ratelimit.ip_unblocked" ) ).toBe( removed + 1 )
+				} )
+			} )
+
+			story( "Unsafe blocks are refused", () => {
+				it( "refuses text that is not an address or range, including host names", () => {
+					[ "localhost", "example.com", "999.1.1.1", "1.2.3.4/40", "" ].each( ( text ) => {
+						expect( () => rateLimitBlockService.block( address: text ) ).toThrow( "RateLimit.InvalidAddress" )
+					} )
+				} )
+
+				it( "refuses a range wider than /16 or /48", () => {
+					[ "10.0.0.0/8", "0.0.0.0/0", "2001:db8::/32" ].each( ( text ) => {
+						expect( () => rateLimitBlockService.block( address: text ) ).toThrow( "RateLimit.RangeTooWide" )
+					} )
+					expect( rateLimitBlockService.list() ).toBeEmpty()
+				} )
+
+				it( "refuses a duration that is negative, over a year or not whole", () => {
+					[ -1, 8761, 2.5 ].each( ( hours ) => {
+						expect( () => rateLimitBlockService.block( address: "203.0.113.42", hours: hours ) ).toThrow( "RateLimit.InvalidDuration" )
+					} )
+				} )
+
+				it( "refuses a block that would include the admin's own address", () => {
+					expect( () => rateLimitBlockService.block( address: "203.0.113.0/24", requesterIp: "203.0.113.9" ) ).toThrow( "RateLimit.SelfBlock" )
+					expect( () => rateLimitBlockService.block( address: "203.0.113.9", requesterIp: "203.0.113.9" ) ).toThrow( "RateLimit.SelfBlock" )
+					expect( rateLimitBlockService.list() ).toBeEmpty()
+				} )
+
+				it( "refuses a manual block once the list holds 1,000 active blocks", () => {
+					var rows = []
+					for ( var i = 1; i <= 1000; i++ ) {
+						rows.append( {
+							blockId    : createUUID(),
+							address    : "10.#int( i / 250 )#.#i mod 250#.1",
+							addressKey : "filler-#i#",
+							reason     : "filler",
+							source     : "automatic",
+							createdBy  : "test",
+							createdDate: now()
+						} )
+					}
+					qb.newQuery().from( "rate_limit_blocks" ).insert( rows )
+
+					expect( () => rateLimitBlockService.block( address: "203.0.113.42" ) ).toThrow( "RateLimit.BlockListFull" )
+					// An automatic block is skipped quietly rather than failing a request.
+					expect( rateLimitBlockService.recordThrottledWindow( "203.0.113.42" ) ).toBeFalse()
+				} )
+			} )
+
+			story( "Blocks end", () => {
+				it( "removes a block and stops refusing the address", () => {
+					var row = rateLimitBlockService.block( address: "203.0.113.42" )
+
+					expect( rateLimitBlockService.unblock( row.blockId ) ).toBeTrue()
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeFalse()
+					expect( rateLimitBlockService.list() ).toBeEmpty()
+				} )
+
+				it( "reports false when unblocking something that is not blocked", () => {
+					expect( rateLimitBlockService.unblock( createUUID() ) ).toBeFalse()
+				} )
+
+				it( "ignores an expired block and removes it when purged", () => {
+					insertRow( "203.0.113.42", dateAdd( "h", -1, now() ) )
+					rateLimitBlockService.refresh()
+
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeFalse()
+					expect( rateLimitBlockService.list() ).toBeEmpty()
+					expect( rateLimitBlockService.purgeExpired() ).toBe( 1 )
+				} )
+
+				it( "replaces an expired block when the same address is blocked again", () => {
+					insertRow( "203.0.113.42", dateAdd( "h", -1, now() ) )
+					rateLimitBlockService.refresh()
+
+					rateLimitBlockService.block( address: "203.0.113.42", hours: 1 )
+
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeTrue()
+					expect( rateLimitBlockService.list() ).toHaveLength( 1 )
+				} )
+
+				it( "keeps a block that has not expired when purging", () => {
+					rateLimitBlockService.block( address: "203.0.113.42", hours: 5 )
+
+					expect( rateLimitBlockService.purgeExpired() ).toBe( 0 )
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeTrue()
+				} )
+			} )
+
+			story( "The check uses an in-memory snapshot", () => {
+				it( "does not see a row added behind its back until the snapshot reloads", () => {
+					insertRow( "203.0.113.42" )
+
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeFalse()
+					rateLimitBlockService.refresh()
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeTrue()
+				} )
+
+				it( "keeps refusing blocked addresses when the database fails on a reload", () => {
+					var service = freshService()
+					service.block( address: "203.0.113.42" )
+
+					service.$property( propertyName = "qb", mock = createStub().$( "newQuery" ).$throws( type = "Database.Down", message = "database is down" ) )
+					service.refresh()
+
+					expect( service.isBlocked( "203.0.113.42" ) ).toBeTrue()
+					expect( service.isBlocked( "203.0.113.43" ) ).toBeFalse()
+				} )
+
+				it( "fails open and does not throw when the database is down from the start", () => {
+					var service = freshService()
+					service.$property( propertyName = "qb", mock = createStub().$( "newQuery" ).$throws( type = "Database.Down", message = "database is down" ) )
+
+					expect( service.isBlocked( "203.0.113.42" ) ).toBeFalse()
+				} )
+
+				it( "never blocks text that is not an address", () => {
+					rateLimitBlockService.block( address: "203.0.113.42" )
+
+					expect( rateLimitBlockService.isBlocked( "not-an-ip" ) ).toBeFalse()
+					expect( rateLimitBlockService.isBlocked( "" ) ).toBeFalse()
+				} )
+			} )
+
+			story( "An IP that keeps getting throttled is blocked automatically", () => {
+				it( "blocks on the third throttled window, once, for the configured time", () => {
+					expect( rateLimitBlockService.recordThrottledWindow( "203.0.113.42" ) ).toBeFalse()
+					expect( rateLimitBlockService.recordThrottledWindow( "203.0.113.42" ) ).toBeFalse()
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeFalse()
+
+					expect( rateLimitBlockService.recordThrottledWindow( "203.0.113.42" ) ).toBeTrue()
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeTrue()
+					// Already blocked: nothing more to do.
+					expect( rateLimitBlockService.recordThrottledWindow( "203.0.113.42" ) ).toBeFalse()
+
+					var blocks = rateLimitBlockService.list()
+					expect( blocks ).toHaveLength( 1 )
+					expect( blocks[ 1 ].source ).toBe( "automatic" )
+					expect( dateDiff( "h", now(), blocks[ 1 ].expiresAt ) ).toBeBetween( 22, 24 )
+				} )
+
+				it( "counts each IP on its own", () => {
+					rateLimitBlockService.recordThrottledWindow( "203.0.113.42" )
+					rateLimitBlockService.recordThrottledWindow( "203.0.113.42" )
+
+					expect( rateLimitBlockService.recordThrottledWindow( "198.51.100.7" ) ).toBeFalse()
+					expect( rateLimitBlockService.isBlocked( "198.51.100.7" ) ).toBeFalse()
+				} )
+
+				it( "never blocks loopback, private or link-local addresses", () => {
+					[ "127.0.0.1", "10.1.2.3", "172.16.5.5", "192.168.1.1", "169.254.0.9", "::1", "fd00::5" ].each( ( ip ) => {
+						for ( var i = 1; i <= 5; i++ ) {
+							expect( rateLimitBlockService.recordThrottledWindow( ip ) ).toBeFalse()
+						}
+						expect( rateLimitBlockService.isBlocked( ip ) ).toBeFalse( "#ip# must not be auto-blocked" )
+					} )
+				} )
+
+				it( "does nothing when automatic blocking is switched off", () => {
+					settingService.bulkSave( { cbRateLimitAutoBlock: false } )
+
+					for ( var i = 1; i <= 5; i++ ) {
+						expect( rateLimitBlockService.recordThrottledWindow( "203.0.113.42" ) ).toBeFalse()
+					}
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeFalse()
+				} )
+
+				it( "follows the configured number of windows", () => {
+					settingService.bulkSave( { cbRateLimitAutoBlockWindows: 1 } )
+
+					expect( rateLimitBlockService.recordThrottledWindow( "203.0.113.42" ) ).toBeTrue()
+				} )
+
+				it( "only accepts sensible automatic blocking settings", () => {
+					[
+						{ cbRateLimitAutoBlockWindows: 0 },
+						{ cbRateLimitAutoBlockWindows: 101 },
+						{ cbRateLimitAutoBlockPeriodMinutes: 0 },
+						{ cbRateLimitAutoBlockPeriodMinutes: 1441 },
+						{ cbRateLimitAutoBlockHours: 0 },
+						{ cbRateLimitAutoBlockHours: 8761 },
+						{ cbRateLimitAutoBlockHours: 2.5 }
+					].each( ( memento ) => {
+						expect( () => settingService.bulkSave( memento ) ).toThrow( "Setting.Invalid" )
+					} )
+				} )
+			} )
+
+			story( "The RateLimitBlocker interceptor refuses blocked addresses", () => {
+				it( "answers a blocked address with a 403 before the handler runs", () => {
+					var ip = cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
+					rateLimitBlockService.block( address: ip )
+
+					var event = get( route = "/login", renderResults = false )
+
+					expect( event.getRenderData().statusCode ).toBe( 403 )
+					expect( event.getRenderData().data ).toBe( "Forbidden" )
+				} )
+
+				it( "answers a blocked address's form posts with the 403 too, without counting them as attempts", () => {
+					var ip = cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
+					rateLimitBlockService.block( address: ip )
+					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					qb.newQuery().from( "rate_limit_history" ).delete()
+					rateLimitHistoryService.flush()
+
+					// More posts than the limit allows: if they reached AppThrottle the later ones
+					// would be answered with its redirect and tallied as throttled.
+					for ( var i = 1; i <= maxAttempts + 3; i++ ) {
+						var event = post(
+							route         = "/login",
+							params        = { email: "nobody@example.com", password: "wrong-password", csrf: cbcsrf.generate() },
+							renderResults = false
+						)
+						expect( event.getRenderData().statusCode ).toBe( 403 )
+					}
+
+					rateLimitHistoryService.flush()
+					expect( qb.newQuery().from( "rate_limit_history" ).where( "endpoint", "Auth.doLogin" ).count() ).toBe( 0 )
+					qb.newQuery().from( "rate_limit_history" ).delete()
+				} )
+
+				it( "lets the same request through once unblocked", () => {
+					var ip = cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
+					var row = rateLimitBlockService.block( address: ip )
+					rateLimitBlockService.unblock( row.blockId )
+
+					var event = get( route = "/login", renderResults = false )
+
+					expect( event.getRenderData().statusCode ?: 200 ).notToBe( 403 )
+				} )
+
+				it( "still refuses blocked addresses while rate limiting is paused", () => {
+					var ip = cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
+					rateLimitBlockService.block( address: ip )
+					rateLimitControlService.pause( minutes: 30 )
+
+					var event = get( route = "/login", renderResults = false )
+
+					expect( event.getRenderData().statusCode ).toBe( 403 )
+				} )
+
+				it( "lets everything through when the environment break-glass is set", () => {
+					var ip = cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
+					rateLimitBlockService.block( address: ip )
+
+					var control = prepareMock( new app.models.security.RateLimitControlService() )
+					getWireBox().autowire( control )
+					control.$( "readEnvironment", "false" )
+
+					var interceptor = prepareMock( new app.interceptors.RateLimitBlocker( getController() ) )
+					getWireBox().autowire( interceptor )
+					interceptor.$property( propertyName = "rateLimitControl", mock = control )
+
+					var event = prepareMock( getRequestContext() )
+					interceptor.preProcess( event, {}, "", {}, {} )
+
+					expect( event.getRenderData().statusCode ?: 200 ).notToBe( 403 )
+				} )
+
+				it( "tallies each refused request for the history under Blocked IP", () => {
+					var ip = cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
+					rateLimitBlockService.block( address: ip )
+					qb.newQuery().from( "rate_limit_history" ).delete()
+					rateLimitHistoryService.flush()
+
+					get( route = "/login", renderResults = false )
+					get( route = "/login", renderResults = false )
+					rateLimitHistoryService.flush()
+
+					// The test harness announces preProcess for each get(), so the count is a multiple of
+					// the two requests; the live count is checked over real HTTP.
+					var rows = qb.newQuery().from( "rate_limit_history" ).where( "endpoint", "Blocked IP" ).get()
+					expect( rows ).toHaveLength( 1 )
+					expect( rows[ 1 ].blockedRequests ).toBeGTE( 2 )
+					qb.newQuery().from( "rate_limit_history" ).delete()
+				} )
+			} )
+
+			story( "The RateLimiting handler exposes the block list", () => {
+				it( "adds, lists and removes a block", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.address = "203.0.113.42"
+					form.reason = "From the handler"
+					form.hours = 12
+					form.csrf = cbcsrf.generate()
+					var added = execute( event = "ratelimiting.block", prePostExempt = true ).getPrivateValue( "response" )
+					// Read what is needed now: the Response object is shared by every execute() in a run.
+					var blockId = added.getData().blockId
+					expect( added.getData().address ).toBe( "203.0.113.42" )
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeTrue()
+
+					var listed = execute( event = "ratelimiting.blocks", prePostExempt = true ).getPrivateValue( "response" )
+					expect( listed.getData() ).toHaveLength( 1 )
+
+					structClear( form )
+					form.blockId = blockId
+					form.csrf = cbcsrf.generate()
+					execute( event = "ratelimiting.unblock", prePostExempt = true )
+					expect( rateLimitBlockService.isBlocked( "203.0.113.42" ) ).toBeFalse()
+				} )
+
+				it( "answers a bad address with a 422", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.address = "not-an-ip"
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.block", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 422 )
+					expect( rateLimitBlockService.list() ).toBeEmpty()
+				} )
+
+				it( "answers unblocking an unknown block with a 404", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.blockId = createUUID()
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.unblock", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 404 )
+				} )
+			} )
+		} )
+	}
+
+}

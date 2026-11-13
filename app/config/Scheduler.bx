@@ -56,6 +56,13 @@ class {
 			.onOneServer()
 			.withNoOverlaps()
 
+		// Expired blocks are ignored either way; this keeps the table small.
+		task( "Purge Expired Rate Limit Blocks" )
+			.call( () => getInstance( "RateLimitBlockService" ).purgeExpired() )
+			.everyDayAt( "03:50" )
+			.onOneServer()
+			.withNoOverlaps()
+
 		// A timed pause switches off by itself on time (RateLimitControlService.isEnabled()
 		// does not wait for this); this only clears the stored values and audits it.
 		task( "Expire Rate Limiting Pause" )

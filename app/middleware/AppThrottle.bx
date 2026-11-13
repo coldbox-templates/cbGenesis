@@ -39,6 +39,9 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	@inject( "provider:RateLimitHistoryService" )
 	property name="rateLimitHistory";
 
+	@inject( "provider:RateLimitBlockService" )
+	property name="rateLimitBlocks";
+
 	@inject( "coldbox:flash" )
 	property name="flash";
 
@@ -60,6 +63,12 @@ class extends="cbsecurity.models.middleware.Throttle" {
 	 * @return True when the request was blocked and the remaining middleware must be skipped.
 	 */
 	boolean function preProcess( required event, rc, prc ) {
+		// Already refused by the block list (RateLimitBlocker): do not count it or answer it
+		// with a redirect, and skip the rest of the route's middleware.
+		if ( arguments.prc.rateLimitRefused ?: false ) {
+			return true
+		}
+
 		// The master switch: off through the environment or an admin's pause.
 		if ( !variables.rateLimitControl.isEnabled() ) {
 			return false
@@ -102,12 +111,17 @@ class extends="cbsecurity.models.middleware.Throttle" {
 		if ( attempts > arguments.limit.maxAttempts ) {
 			// Volume goes to the in-memory tally (flushed to the database by a scheduled
 			// task), one entry per blocked request. The audit row below is once per window.
+			var clientIP = getClientIP( arguments.event )
 			variables.rateLimitHistory.record(
-				getClientIP( arguments.event ),
+				clientIP,
 				arguments.limit.name,
 				attempts,
 				attempts == arguments.limit.maxAttempts + 1
 			)
+			// The first block of a window counts toward blocking the IP outright.
+			if ( attempts == arguments.limit.maxAttempts + 1 ) {
+				variables.rateLimitBlocks.recordThrottledWindow( clientIP )
+			}
 			// One audit row per endpoint and IP per window, not one per blocked request: an
 			// attacker could otherwise grow the audit table as fast as they can send requests.
 			// hit() returns each count exactly once, so exactly one request sees this value.
