@@ -48,7 +48,7 @@ Seleziona **Auth Center** o **Auth Split** in `/settings`, salva le impostazioni
 | `cbApiTokenMaxValidityMonths` | Durata massima per cui può essere emesso un token API (default: `12`) |
 | `cbAuditLogRetentionDays` | Età, in giorni, alla quale il task pianificato giornaliero elimina definitivamente le voci del registro di audit (default: `90`). `0` disabilita la purga - vedi [Task pianificati](../architecture.md#scheduled-tasks) |
 | `cbRateLimitMaxAttempts` | Tentativi consentiti per IP, per endpoint, prima che `RateLimiter` blocchi login/registrazione/reset password (default: `5`) - vedi [Rate limiting](../guides/security.md#rate-limiting) |
-| `cbRateLimitWindowSeconds` | Finestra di rate limit, in secondi (default: `300`). `0` disabilita completamente il rate limiting |
+| `cbRateLimitWindowSeconds` | Finestra di rate limit, in secondi (default: `300`). Intervallo da 1 a 86400. Per disattivarlo, usa l'arresto di emergenza. |
 | `cbTrustProxyHeaders` | Se `RateLimiter`, il registro di audit, e le email di sicurezza si fidano degli header `X-Forwarded-For`/`X-Cluster-Client-IP` per l'IP del chiamante (default: `true`, poiché questa app è tipicamente distribuita dietro un reverse proxy o load balancer). Disattivalo solo se l'app è direttamente esposta a internet senza nulla davanti - vedi [Deployment dietro un proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 | `cbEncryptionKey` / `cbSaltingKey` | Chiavi di crittografia/salting usate dal livello di sicurezza |
 

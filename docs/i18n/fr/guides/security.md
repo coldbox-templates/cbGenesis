@@ -263,7 +263,7 @@ Un appelant qui dépasse la limite est redirigé vers le formulaire avec une err
 | Paramètre | Objet |
 |---|---|
 | `cbRateLimitMaxAttempts` | Tentatives autorisées par IP, par point de terminaison, dans la fenêtre (par défaut : `5`) |
-| `cbRateLimitWindowSeconds` | Durée de la fenêtre, en secondes (par défaut : `300`). `0` désactive entièrement la limitation de débit |
+| `cbRateLimitWindowSeconds` | Durée de la fenêtre, en secondes (par défaut : `300`). Plage de 1 à 86400. Pour la désactiver, utilisez l'arrêt d'urgence. |
 | `cbTrustProxyHeaders` | Si le « par IP » de « par IP, par point de terminaison » provient de `X-Forwarded-For` ou de l'adresse brute du socket (par défaut : `true`) - voir [Déployer derrière un proxy inverse](../deployment.md#deploying-behind-a-reverse-proxy) |
 
 Les trois sont modifiables sur `/settings` comme n'importe quel autre paramètre de l'application - voir [Paramètres de l'application](../reference/settings.md#password--token-policy).

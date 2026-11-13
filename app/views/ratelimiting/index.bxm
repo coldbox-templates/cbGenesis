@@ -325,7 +325,7 @@
 					<input type="number" min="1" max="100" class="form-control" x-model="settings.cbRateLimitMaxAttempts" :disabled="!#prc.canWrite#">
 				</label>
 				<label>Window (seconds)
-					<input type="number" min="0" max="86400" class="form-control" x-model="settings.cbRateLimitWindowSeconds" :disabled="!#prc.canWrite#">
+					<input type="number" min="1" max="86400" class="form-control" x-model="settings.cbRateLimitWindowSeconds" :disabled="!#prc.canWrite#">
 				</label>
 				<label>History kept (days)
 					<input type="number" min="1" max="365" class="form-control" x-model="settings.cbRateLimitHistoryRetentionDays" :disabled="!#prc.canWrite#">

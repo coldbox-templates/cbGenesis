@@ -48,7 +48,7 @@ tags: [reference, configuration, settings]
 | `cbApiTokenMaxValidityMonths` | API トークンを発行できる最大有効期間(デフォルト: `12`) |
 | `cbAuditLogRetentionDays` | 日次のスケジュールタスクが監査ログエントリを完全削除する経過日数(デフォルト: `90`)。`0` でパージを無効化します - 詳細は [スケジュールタスク](../architecture.md#scheduled-tasks) を参照 |
 | `cbRateLimitMaxAttempts` | `RateLimiter` がログイン/登録/パスワードリセットをブロックする前に、IP ごと、エンドポイントごとに許可される試行回数(デフォルト: `5`) - 詳細は [レート制限](../guides/security.md#rate-limiting) を参照 |
-| `cbRateLimitWindowSeconds` | レート制限の期間(秒単位、デフォルト: `300`)。`0` でレート制限を完全に無効化します |
+| `cbRateLimitWindowSeconds` | レート制限の期間(秒単位、デフォルト: `300`)。範囲は 1〜86400。無効にするには緊急停止を使用します。 |
 | `cbTrustProxyHeaders` | `RateLimiter`、監査トレイル、セキュリティメールが、呼び出し元の IP について `X-Forwarded-For`/`X-Cluster-Client-IP` ヘッダーを信頼するかどうか(デフォルト: `true`。このアプリは通常、リバースプロキシやロードバランサーの背後にデプロイされるためです)。アプリの前段に何もなく、直接インターネットに公開されている場合にのみこれをオフにしてください - 詳細は [プロキシの背後でのデプロイ](../deployment.md#deploying-behind-a-reverse-proxy) を参照 |
 | `cbEncryptionKey` / `cbSaltingKey` | セキュリティレイヤーで使用される暗号化/ソルト鍵 |
 
