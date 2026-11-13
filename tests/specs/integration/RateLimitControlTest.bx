@@ -85,6 +85,11 @@ class extends="tests.resources.BaseIntegrationSpec" {
 
 			afterEach( () => {
 				rateLimitControlService.resume()
+				// The REST Response object outlives a spec: every it() in the run shares one
+				// physical request, and its error flag is never reset on its own. The 422
+				// specs below set it, which made a later bundle that asserts the flag is
+				// false (SettingsTest, which runs next alphabetically) fail.
+				getRequestContext().getResponse().setError( false )
 			} )
 
 			story( "An admin can pause and resume rate limiting", () => {
