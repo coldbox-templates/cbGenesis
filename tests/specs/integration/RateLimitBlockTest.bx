@@ -381,8 +381,9 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					var ip = cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
 					rateLimitBlockService.block( address: ip )
 					var maxAttempts = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
-					qb.newQuery().from( "rate_limit_history" ).delete()
+					// Flush first: a tally left by an earlier spec or bundle would otherwise be written after the delete.
 					rateLimitHistoryService.flush()
+					qb.newQuery().from( "rate_limit_history" ).delete()
 
 					// More posts than the limit allows: if they reached AppThrottle the later ones
 					// would be answered with its redirect and tallied as throttled.
@@ -441,8 +442,9 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				it( "tallies each refused request for the history under Blocked IP", () => {
 					var ip = cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
 					rateLimitBlockService.block( address: ip )
-					qb.newQuery().from( "rate_limit_history" ).delete()
+					// Flush first: a tally left by an earlier spec or bundle would otherwise be written after the delete.
 					rateLimitHistoryService.flush()
+					qb.newQuery().from( "rate_limit_history" ).delete()
 
 					get( route = "/login", renderResults = false )
 					get( route = "/login", renderResults = false )

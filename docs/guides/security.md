@@ -296,6 +296,18 @@ The check is cheap because it never queries the database. It reads an in-memory 
 
 A pause from the admin page does **not** switch the block list off: pausing only skips the attempt limits. The `RATE_LIMITING_ENABLED` environment variable is the full break-glass and does switch it off, so a wrong block can never keep an admin out. Each refused request is tallied in the history under the endpoint `Blocked IP`, never written to the audit log; adding, removing and automatically adding a block are audited (`security.ratelimit.ip_blocked`, `ip_unblocked`, `ip_autoblocked`). Expired blocks are ignored at once and deleted daily.
 
+### Exclusions
+
+Some callers should never be held to the attempt limits: an office VPN, an uptime monitor, a service account. An exclusion says so, for an IP address, a CIDR range or a user.
+
+- **IP and range exclusions** skip `AppThrottle` and `SSORateLimiter`, are never blocked automatically, and cannot be blocked by hand (the block is refused with a 422 if it overlaps an exclusion). If an excluded address is on the block list anyway, for example because it was blocked first, the exclusion wins and the request is let through. A range may be no wider than IPv4 `/16` or IPv6 `/48`, the same as a block.
+- **User exclusions** skip the limits on the routes signed-in users use. They never apply to the Auth endpoints (sign-in, registration, password reset): those are always counted, so an excluded account cannot be used to guess other accounts' passwords.
+- Exclusions only skip the attempt limits. They never switch off anything that protects the server as a whole.
+
+`POST /ratelimiting/exclusions` adds one: `type` is `ip` or `user`, `value` is an address or range, or the user's email, and `label` says what it is for. `GET /ratelimiting/exclusions` lists them (a user entry carries the email) and `DELETE /ratelimiting/exclusions/:exclusionId` removes one. They need the `settings:admin` permission, and the writes a CSRF token. Adding adds to the list, or updates the label of an existing entry; a bad address, a range that is too wide, an unknown user and a full list (1,000 entries) are each a 422 saying why. Adding and removing are audited (`security.ratelimit.exclusion_added`, `exclusion_removed`).
+
+Like the block list, the check reads an in-memory snapshot, reloaded at most every 30 seconds and at once after this server changes the list. If a reload fails the previous snapshot stays in use, and with no snapshot nothing is excluded, so the limits apply, which is the safe direction.
+
 ### Emergency stop
 
 If rate limiting is blocking real people, for example a proxy misconfiguration makes everyone share one IP, you can switch it off without touching the limits. `RateLimitControlService` is the master switch that `AppThrottle` and `SSORateLimiter` check first. Rate limiting is off when either of these is true:

@@ -14,6 +14,9 @@ class extends="BaseSecureHandler" {
 	@inject
 	property name="rateLimitBlockService";
 
+	@inject
+	property name="rateLimitExclusionService";
+
 	@inject( "CBSecurity@cbsecurity" )
 	property name="cbsecurity";
 
@@ -134,6 +137,69 @@ class extends="BaseSecureHandler" {
 		} catch ( any error ) {
 			log.error( "Error unblocking an IP: #error.message#", error )
 			return response.failure( message: "The IP could not be unblocked: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Lists the exclusions, newest first. A user exclusion also carries the user's email.
+	 *
+	 * @return The API response whose data is an array of exclusions.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function exclusions( event, rc, prc ) {
+		return event.getResponse().setData( data: rateLimitExclusionService.list() )
+	}
+
+	/**
+	 * Excludes an IP address, a range or a user from the attempt limits.
+	 *
+	 * rc.type is "ip" or "user". For "ip", rc.value is an address or range; for "user" it is
+	 * the user's email. rc.label is optional. A bad address, a range that is too wide, an
+	 * unknown user, an unknown type and a full list are each a 422 saying what to fix.
+	 *
+	 * @return The API response whose data is the exclusion.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function exclude( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var type = lCase( rc.type ?: "" )
+			if ( !listFind( "ip,user", type ) ) {
+				throw( type = "RateLimit.InvalidType", message = "Choose what to exclude: an IP address or a user." )
+			}
+
+			var row = type == "ip"
+				? rateLimitExclusionService.excludeIp( address: rc.value ?: "", label: rc.label ?: "", createdBy: prc.authUser.getEmail() )
+				: rateLimitExclusionService.excludeUser( email: rc.value ?: "", label: rc.label ?: "", createdBy: prc.authUser.getEmail() )
+
+			return response.setData( data: row, message: "[#row.value#] is excluded." )
+		} catch ( any error ) {
+			if ( error.type.startsWith( "RateLimit." ) ) {
+				return response.failure( message: error.message, statusCode: 422 )
+			}
+			log.error( "Error adding an exclusion: #error.message#", error )
+			return response.failure( message: "The exclusion could not be added: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Removes an exclusion. rc.exclusionId comes from the route.
+	 *
+	 * @return The API response, a 404 when there is no such exclusion.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function unexclude( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			if ( !rateLimitExclusionService.remove( rc.exclusionId ?: "" ) ) {
+				return response.failure( message: "That exclusion does not exist.", statusCode: 404 )
+			}
+			return response.setData( data: {}, message: "The exclusion was removed." )
+		} catch ( any error ) {
+			log.error( "Error removing an exclusion: #error.message#", error )
+			return response.failure( message: "The exclusion could not be removed: #error.message#", statusCode: 500 )
 		}
 	}
 
