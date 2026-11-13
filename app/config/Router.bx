@@ -137,6 +137,16 @@ class {
 		route( "ratelimiting/status", "RateLimiting.status" )
 		post( "ratelimiting/pause", "RateLimiting.pause" )
 		post( "ratelimiting/resume", "RateLimiting.resume" )
+		route( "ratelimiting/overview", "RateLimiting.overview" )
+		route( "ratelimiting/counters/:counterKey" ).withHandler( "RateLimiting" ).toAction({ DELETE: "clearCounter" })
+		route( "ratelimiting/counters" ).withHandler( "RateLimiting" ).toAction({
+			GET   : "counters",
+			DELETE: "clearCounters"
+		})
+		route( "ratelimiting/settings" ).withHandler( "RateLimiting" ).toAction({
+			GET: "settings",
+			PUT: "saveSettings"
+		})
 		route( "ratelimiting/blocks/:blockId" ).withHandler( "RateLimiting" ).toAction({ DELETE: "unblock" })
 		route( "ratelimiting/blocks" ).withHandler( "RateLimiting" ).toAction({
 			GET : "blocks",
