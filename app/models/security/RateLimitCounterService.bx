@@ -1,0 +1,190 @@
+/**
+ * Lists and clears the live attempt counters that AppThrottle and SSORateLimiter keep in the
+ * "rateLimit" CacheBox region, for the rate limiting admin page.
+ *
+ * Each counter is one cbsecurity RateLimiter key, "<event>:<ip>", holding { attempts, resetAt }.
+ * The cache store lower-cases its keys, so endpoints are listed in lower case ("auth.login").
+ * Clearing a counter only gives that client a fresh window: it never touches the block list,
+ * the exclusions or the history.
+ *
+ * Bounded: the region is capped (maxObjects in CacheBox.bx), and list() returns at most MAX_ROWS
+ * rows, busiest first, so a flood of counters cannot make the page or the response grow.
+ * The counters are per server instance unless the region is backed by a shared cache.
+ */
+@singleton
+@threadSafe
+class {
+
+	@inject( "cachebox" )
+	property name="cachebox";
+
+	@inject( "provider:RateLimiter@cbsecurity" )
+	property name="rateLimiter";
+
+	@inject( "provider:SettingService" )
+	property name="settingService";
+
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
+
+	@inject( "logbox:logger:{this}" )
+	property name="log";
+
+	static {
+		CACHE_NAME = "rateLimit"
+		// cbsecurity's RateLimiter prefix for every key it stores.
+		KEY_PREFIX = "cbsecurity-ratelimit-"
+		MAX_ROWS   = 100
+	}
+
+	/**
+	 * Lists the live counters, busiest first.
+	 *
+	 * An entry is "throttled" when its attempts are over cbRateLimitMaxAttempts. Expired
+	 * windows are skipped.
+	 *
+	 * @max How many rows to return, 1 to MAX_ROWS.
+	 *
+	 * @return { total, throttled, rows } where rows is an array of
+	 *         { key, endpoint, ipAddress, attempts, retryInSeconds, throttled }; total and
+	 *         throttled count every live counter, not only the returned rows.
+	 */
+	struct function list( numeric max = 25 ) {
+		var limit     = min( max( 1, int( arguments.max ) ), static.MAX_ROWS )
+		var maxHits   = variables.settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+		var now       = nowInSeconds()
+		var rows      = []
+		var throttled = 0
+
+		for ( var counter in liveCounters() ) {
+			var isThrottled = counter.record.attempts > maxHits
+			if ( isThrottled ) {
+				throttled++
+			}
+			rows.append( {
+				key           : counter.key,
+				endpoint      : counter.endpoint,
+				ipAddress     : counter.ipAddress,
+				attempts      : counter.record.attempts,
+				retryInSeconds: max( 0, counter.record.resetAt - now ),
+				throttled     : isThrottled
+			} )
+		}
+
+		var total = rows.len()
+		rows.sort( ( a, b ) => b.attempts - a.attempts )
+
+		return {
+			total    : total,
+			throttled: throttled,
+			rows     : total > limit ? rows.slice( 1, limit ) : rows
+		}
+	}
+
+	/**
+	 * Clears one counter so that client starts a fresh window.
+	 *
+	 * @key The counter key from list(), "<event>:<ip>".
+	 *
+	 * @return True when the counter existed and was cleared.
+	 */
+	boolean function clear( required string key ) {
+		if ( !len( arguments.key ) ) {
+			return false
+		}
+		var existed = !isNull( getRegion().get( static.KEY_PREFIX & arguments.key ) )
+		if ( existed ) {
+			variables.rateLimiter.clear( arguments.key, static.CACHE_NAME )
+			variables.auditLogService.info(
+				action     : "security.ratelimit.counter.cleared",
+				message    : "Rate limit counter [#arguments.key#] was cleared.",
+				category   : "security",
+				targetType : "RateLimitCounter",
+				targetLabel: arguments.key
+			)
+		}
+		return existed
+	}
+
+	/**
+	 * Clears every live counter.
+	 *
+	 * @return How many counters were cleared.
+	 */
+	numeric function clearAll() {
+		var cleared = 0
+		for ( var counter in liveCounters() ) {
+			variables.rateLimiter.clear( counter.key, static.CACHE_NAME )
+			cleared++
+		}
+		variables.auditLogService.warn(
+			action  : "security.ratelimit.counters.cleared",
+			message : "All rate limit counters were cleared (#cleared#).",
+			category: "security",
+			metadata: { cleared: cleared }
+		)
+		return cleared
+	}
+
+	/**
+	 * Reads every live counter out of the region.
+	 *
+	 * @return An array of { key, endpoint, ipAddress, record }. Never throws: a counter
+	 *         that vanishes or is malformed while reading is skipped.
+	 */
+	private array function liveCounters() {
+		var counters = []
+		var now      = nowInSeconds()
+		var prefix   = static.KEY_PREFIX
+		var region   = getRegion()
+
+		for ( var cacheKey in region.getKeys() ) {
+			if ( !cacheKey.startsWith( prefix ) ) {
+				continue
+			}
+			try {
+				var record = region.get( cacheKey )
+				if (
+					isNull( record )
+					|| !isStruct( record )
+					|| !record.keyExists( "attempts" )
+					|| !record.keyExists( "resetAt" )
+					|| record.resetAt <= now
+				) {
+					continue
+				}
+				var key   = cacheKey.mid( len( prefix ) + 1, len( cacheKey ) )
+				// Event names contain no colon but IPv6 addresses do: split at the first one.
+				var split = key.find( ":" )
+				counters.append( {
+					key      : key,
+					endpoint : split > 0 ? key.left( split - 1 ) : key,
+					ipAddress: split > 0 ? key.mid( split + 1, len( key ) ) : "",
+					record   : record
+				} )
+			} catch ( any error ) {
+				variables.log.warn( "Skipped an unreadable rate limit counter: #error.message#" )
+			}
+		}
+		return counters
+	}
+
+	/**
+	 * The rate limit cache region.
+	 *
+	 * @return The CacheBox provider.
+	 */
+	private function getRegion() {
+		return variables.cachebox.getCache( static.CACHE_NAME )
+	}
+
+	/**
+	 * Epoch seconds.
+	 *
+	 * @return The current time in whole seconds.
+	 */
+	private numeric function nowInSeconds() {
+		return int( createObject( "java", "java.lang.System" ).currentTimeMillis() / 1000 )
+	}
+
+}

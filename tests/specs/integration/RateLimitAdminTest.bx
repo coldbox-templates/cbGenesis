@@ -1,0 +1,299 @@
+/**
+ * Tests for the rate limiting admin endpoints: the live counters (list, clear one, clear
+ * all), the overview and the settings. The counters live in the "rateLimit" cache region, so
+ * the specs hit the real RateLimiter and clean the region around every spec.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	@inject( "cachebox:rateLimit" )
+	property name="rateLimitCache";
+
+	@inject( "RateLimiter@cbsecurity" )
+	property name="rateLimiter";
+
+	@inject
+	property name="rateLimitCounterService";
+
+	@inject
+	property name="rateLimitHistoryService";
+
+	@inject
+	property name="auditLogService";
+
+	@inject( "QueryBuilder@qb" )
+	property name="qb";
+
+	@inject
+	property name="roleService";
+
+	/**
+	 * A user holding the seeded Admin role, which carries the settings permissions.
+	 */
+	private User function createSettingsAdmin() {
+		var user = createVerifiedUser()
+		user.setRoles( [ roleService.findWhere( { role: "Admin" } ) ] )
+		return userService.save( user )
+	}
+
+	/**
+	 * Counts the audit entries recorded for an action.
+	 */
+	private numeric function auditCount( required string action ) {
+		ormFlush()
+		return auditLogService.countWhere( action: arguments.action )
+	}
+
+	/**
+	 * Records attempts against a counter the way AppThrottle does.
+	 */
+	private void function hitCounter( required string key, required numeric times ) {
+		for ( var i = 1; i <= arguments.times; i++ ) {
+			rateLimiter.hit( arguments.key, 300, "rateLimit" )
+		}
+	}
+
+	function run() {
+		describe( "Rate limiting admin endpoints", () => {
+			beforeEach( () => {
+				setup()
+				structClear( form )
+				securityService.logout( quiet: true )
+				rateLimitCache.clearAll()
+			} )
+
+			afterEach( () => {
+				rateLimitCache.clearAll()
+				rateLimitHistoryService.flush()
+				qb.newQuery().from( "rate_limit_history" ).delete()
+				getRequestContext().getResponse().setError( false )
+			} )
+
+			story( "Live counters", () => {
+				it( "lists counters busiest first and marks the throttled ones", () => {
+					var max = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					hitCounter( "Auth.login:203.0.113.7", max + 2 )
+					hitCounter( "Auth.register:198.51.100.9", 1 )
+
+					var result = rateLimitCounterService.list()
+
+					expect( result.total ).toBe( 2 )
+					expect( result.throttled ).toBe( 1 )
+					expect( result.rows[ 1 ].endpoint ).toBe( "auth.login" )
+					expect( result.rows[ 1 ].ipAddress ).toBe( "203.0.113.7" )
+					expect( result.rows[ 1 ].attempts ).toBe( max + 2 )
+					expect( result.rows[ 1 ].throttled ).toBeTrue()
+					expect( result.rows[ 1 ].retryInSeconds ).toBeGT( 0 )
+					expect( result.rows[ 2 ].throttled ).toBeFalse()
+				} )
+
+				it( "splits an IPv6 client at the first colon only", () => {
+					hitCounter( "Auth.login:2001:db8::1", 1 )
+
+					var row = rateLimitCounterService.list().rows[ 1 ]
+
+					expect( row.endpoint ).toBe( "auth.login" )
+					expect( row.ipAddress ).toBe( "2001:db8::1" )
+				} )
+
+				it( "ignores cache entries that are not rate limiter counters", () => {
+					rateLimitCache.set( "something-else", { attempts: 99, resetAt: 9999999999 } )
+
+					expect( rateLimitCounterService.list().total ).toBe( 0 )
+				} )
+
+				it( "caps the rows returned but still counts every counter", () => {
+					for ( var i = 1; i <= 7; i++ ) {
+						hitCounter( "Auth.login:203.0.113.#i#", 1 )
+					}
+
+					var result = rateLimitCounterService.list( 3 )
+
+					expect( result.rows ).toHaveLength( 3 )
+					expect( result.total ).toBe( 7 )
+				} )
+
+				it( "clears one counter and audits it", () => {
+					hitCounter( "Auth.login:203.0.113.7", 3 )
+					hitCounter( "Auth.login:203.0.113.8", 3 )
+					var before = auditCount( "security.ratelimit.counter.cleared" )
+
+					expect( rateLimitCounterService.clear( "Auth.login:203.0.113.7" ) ).toBeTrue()
+
+					expect( rateLimitCounterService.list().total ).toBe( 1 )
+					expect( auditCount( "security.ratelimit.counter.cleared" ) ).toBe( before + 1 )
+				} )
+
+				it( "reports a counter that does not exist", () => {
+					expect( rateLimitCounterService.clear( "Auth.login:203.0.113.99" ) ).toBeFalse()
+					expect( rateLimitCounterService.clear( "" ) ).toBeFalse()
+				} )
+
+				it( "clears every counter and audits it", () => {
+					hitCounter( "Auth.login:203.0.113.7", 3 )
+					hitCounter( "Auth.register:203.0.113.8", 3 )
+					var before = auditCount( "security.ratelimit.counters.cleared" )
+
+					expect( rateLimitCounterService.clearAll() ).toBe( 2 )
+
+					expect( rateLimitCounterService.list().total ).toBe( 0 )
+					expect( auditCount( "security.ratelimit.counters.cleared" ) ).toBe( before + 1 )
+				} )
+
+				it( "gives a cleared client a fresh window", () => {
+					var max = settingService.getSetting( "cbRateLimitMaxAttempts", 5 )
+					hitCounter( "Auth.login:203.0.113.7", max + 2 )
+					rateLimitCounterService.clear( "Auth.login:203.0.113.7" )
+
+					expect( rateLimiter.hit( "Auth.login:203.0.113.7", 300, "rateLimit" ) ).toBe( 1 )
+				} )
+			} )
+
+			story( "The endpoints", () => {
+				it( "lists the counters", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					hitCounter( "Auth.login:203.0.113.7", 2 )
+
+					var response = execute( event = "ratelimiting.counters", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getData().total ).toBe( 1 )
+					expect( response.getData().rows[ 1 ].ipAddress ).toBe( "203.0.113.7" )
+				} )
+
+				it( "clears one counter, taking the key from the route", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					hitCounter( "Auth.login:203.0.113.7", 2 )
+
+					form.counterKey = urlEncodedFormat( "Auth.login:203.0.113.7" )
+					form.csrf = cbcsrf.generate()
+					execute( event = "ratelimiting.clearCounter", prePostExempt = true )
+
+					expect( rateLimitCounterService.list().total ).toBe( 0 )
+				} )
+
+				it( "answers clearing an unknown counter with a 404", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.counterKey = "Auth.login:203.0.113.99"
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.clearCounter", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 404 )
+				} )
+
+				it( "clears all counters", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					hitCounter( "Auth.login:203.0.113.7", 2 )
+					hitCounter( "Auth.login:203.0.113.8", 2 )
+
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.clearCounters", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getData().cleared ).toBe( 2 )
+					expect( rateLimitCounterService.list().total ).toBe( 0 )
+				} )
+
+				it( "returns the overview in one call", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					hitCounter( "Auth.login:203.0.113.7", 2 )
+					rateLimitHistoryService.record( "203.0.113.7", "Auth.login", 6, true )
+					rateLimitHistoryService.flush()
+
+					var data = execute( event = "ratelimiting.overview", prePostExempt = true ).getPrivateValue( "response" ).getData()
+
+					expect( data ).toHaveKey( "status" )
+					expect( data ).toHaveKey( "counters" )
+					expect( data ).toHaveKey( "topOffenders" )
+					expect( data ).toHaveKey( "hourly" )
+					expect( data ).toHaveKey( "latest" )
+					expect( data.totals.blockedRequests ).toBeGTE( 1 )
+					expect( data.counters.total ).toBe( 1 )
+					expect( data.topOffenders[ 1 ].ipAddress ).toBe( "203.0.113.7" )
+				} )
+
+				it( "clamps the overview period and falls back when it is not a number", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.hours = "banana"
+					form.latest = 100000
+					var response = execute( event = "ratelimiting.overview", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getError() ).toBeFalse()
+				} )
+			} )
+
+			story( "Settings", () => {
+				afterEach( () => {
+					settingService.bulkSave( {
+						cbRateLimitMaxAttempts          : 5,
+						cbRateLimitWindowSeconds        : 300,
+						cbRateLimitHistoryRetentionDays : 30,
+						cbRateLimitAutoBlock            : true,
+						cbRateLimitAutoBlockWindows     : 3,
+						cbRateLimitAutoBlockPeriodMinutes: 60,
+						cbRateLimitAutoBlockHours       : 24
+					} )
+				} )
+
+				it( "reads the rate limiting settings", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					var data = execute( event = "ratelimiting.settings", prePostExempt = true ).getPrivateValue( "response" ).getData()
+
+					expect( data.cbRateLimitMaxAttempts ).toBe( 5 )
+					expect( data ).toHaveKey( "cbRateLimitAutoBlock" )
+					expect( data ).notToHaveKey( "cbRateLimitPausedUntil" )
+				} )
+
+				it( "saves valid values, audits the change and applies them", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					var before = auditCount( "security.ratelimit.settings.updated" )
+
+					form.cbRateLimitMaxAttempts = 9
+					form.cbRateLimitAutoBlockHours = 48
+					form.csrf = cbcsrf.generate()
+					var data = execute( event = "ratelimiting.saveSettings", prePostExempt = true ).getPrivateValue( "response" ).getData()
+
+					expect( data.cbRateLimitMaxAttempts ).toBe( 9 )
+					expect( settingService.getSetting( "cbRateLimitAutoBlockHours", 24 ) ).toBe( 48 )
+					expect( auditCount( "security.ratelimit.settings.updated" ) ).toBe( before + 1 )
+				} )
+
+				it( "answers an invalid value with a 422 and saves nothing", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.cbRateLimitMaxAttempts = 0
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.saveSettings", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 422 )
+					expect( settingService.getSetting( "cbRateLimitMaxAttempts", 5 ) ).toBe( 5 )
+				} )
+
+				it( "ignores settings that are not editable here, such as the pause", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.cbRateLimitPausedUntil = "indefinite"
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.saveSettings", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 422 )
+					expect( settingService.getSetting( "cbRateLimitPausedUntil", "" ) ).toBe( "" )
+				} )
+			} )
+		} )
+	}
+
+}

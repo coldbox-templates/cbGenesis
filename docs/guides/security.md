@@ -296,6 +296,21 @@ The check is cheap because it never queries the database. It reads an in-memory 
 
 A pause from the admin page does **not** switch the block list off: pausing only skips the attempt limits. The `RATE_LIMITING_ENABLED` environment variable is the full break-glass and does switch it off, so a wrong block can never keep an admin out. Each refused request is tallied in the history under the endpoint `Blocked IP`, never written to the audit log; adding, removing and automatically adding a block are audited (`security.ratelimit.ip_blocked`, `ip_unblocked`, `ip_autoblocked`). Expired blocks are ignored at once and deleted daily.
 
+### Admin endpoints
+
+The rate limiting admin page is built on these endpoints, all under `/ratelimiting`:
+
+| Request | Permission | What it does |
+|---|---|---|
+| `GET overview?hours=24&latest=25` | `settings:read` | Status, live counters, top offenders, hourly history, latest history rows and totals in one call. `hours` is 1 to 168, `latest` 1 to 100. |
+| `GET counters?max=25` | `settings:read` | The live attempt counters, busiest first, at most 100 rows, with the total and how many are throttled. |
+| `DELETE counters/:counterKey` | `settings:admin` | Clears one counter (`<event>:<ip>`, URL encoded) so that client starts a fresh window. 404 when it has expired. |
+| `DELETE counters` | `settings:admin` | Clears every counter. |
+| `GET settings` | `settings:read` | The rate limiting settings. |
+| `PUT settings` | `settings:admin` and `settings:write` | Saves the rate limiting settings. Other keys are ignored and a bad value is a 422 naming the field. |
+
+Clearing counters only resets the attempt windows: the block list, the exclusions and the history are not touched. Both clears are audited (`security.ratelimit.counter.cleared`, `security.ratelimit.counters.cleared`), and so are settings changes (`security.ratelimit.settings.updated`). The cache store lower-cases its keys, so endpoints appear in lower case, for example `auth.login`.
+
 ### Exclusions
 
 Some callers should never be held to the attempt limits: an office VPN, an uptime monitor, a service account. An exclusion says so, for an IP address, a CIDR range or a user.
