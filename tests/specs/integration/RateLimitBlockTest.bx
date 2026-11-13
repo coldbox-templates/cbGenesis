@@ -216,7 +216,10 @@ class extends="tests.resources.BaseIntegrationSpec" {
 							createdDate: now()
 						} )
 					}
-					qb.newQuery().from( "rate_limit_blocks" ).insert( rows )
+					// In chunks: SQL Server accepts at most 2,100 parameters per statement, and each row uses 7.
+					for ( var start = 1; start <= rows.len(); start += 250 ) {
+						qb.newQuery().from( "rate_limit_blocks" ).insert( rows.slice( start, min( 250, rows.len() - start + 1 ) ) )
+					}
 
 					expect( () => rateLimitBlockService.block( address: "203.0.113.42" ) ).toThrow( "RateLimit.BlockListFull" )
 					// An automatic block is skipped quietly rather than failing a request.
