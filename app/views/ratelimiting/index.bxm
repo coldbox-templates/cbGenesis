@@ -323,7 +323,7 @@
 			<form class="p-3 cb-ratelimit-form cb-ratelimit-form--settings" @submit.prevent="saveSettings()">
 				<p class="cb-ratelimit-settings__intro">
 					These limits apply per caller IP to protected sign-in, registration, password-reset, and profile SSO actions.
-					Set the window to 0 to disable attempt throttling; history retention is separate.
+					The window is 1 to 86400 seconds. To switch attempt throttling off, use Pause above; history retention is separate.
 				</p>
 				<p class="cb-ratelimit-settings__route-help">
 					To apply these limits to another route, add the middleware in <code>app/config/Router.bx</code>, for example:
@@ -337,7 +337,7 @@
 						<input type="number" min="1" max="100" class="form-control" x-model="settings.cbRateLimitMaxAttempts" :disabled="!#prc.canWrite#">
 					</label>
 					<label>Window (seconds)
-						<input type="number" min="0" max="86400" class="form-control" x-model="settings.cbRateLimitWindowSeconds" :disabled="!#prc.canWrite#">
+						<input type="number" min="1" max="86400" class="form-control" x-model="settings.cbRateLimitWindowSeconds" :disabled="!#prc.canWrite#">
 					</label>
 					<label>History kept (days)
 						<input type="number" min="1" max="365" class="form-control" x-model="settings.cbRateLimitHistoryRetentionDays" :disabled="!#prc.canWrite#">

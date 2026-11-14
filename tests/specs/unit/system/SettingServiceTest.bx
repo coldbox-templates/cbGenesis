@@ -81,6 +81,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				expect( () => settingService.bulkSave( { cbRateLimitMaxAttempts: 0 } ) ).toThrow( "Setting.Invalid" )
 				expect( () => settingService.bulkSave( { cbRateLimitMaxAttempts: 101 } ) ).toThrow( "Setting.Invalid" )
 				expect( () => settingService.bulkSave( { cbRateLimitMaxAttempts: "not-a-number" } ) ).toThrow( "Setting.Invalid" )
+				expect( () => settingService.bulkSave( { cbRateLimitWindowSeconds: 0 } ) ).toThrow( "Setting.Invalid" )
 				expect( () => settingService.bulkSave( { cbRateLimitWindowSeconds: -1 } ) ).toThrow( "Setting.Invalid" )
 				expect( () => settingService.bulkSave( { cbRateLimitWindowSeconds: 86401 } ) ).toThrow( "Setting.Invalid" )
 			} )
