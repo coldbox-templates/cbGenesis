@@ -9,7 +9,7 @@ This is a ColdBox HMVC application using the **modern template structure** with 
 ## Project Overview
 
 **Language Mode:** BoxLang
-**ColdBox Version:** be
+**ColdBox Version:** ^8.3.0
 **Template Type:** Modern (app/public separation)
 **Features:** Vite, ORM, Migrations
 
@@ -75,52 +75,43 @@ explicitly when you need framework fundamentals:
 
 The following ColdBox modules are installed in this project. Use these when generating code, checking available services, and suggesting relevant skills or guidelines:
 
+- **cbfs** (^1.2.0)
 - **cbmailservices** (^2)
-- **cborm** (^4.12.1+10)
-- **cbsecurity** (^3)
+- **cborm** (^5.0.0)
+- **cbsecurity** (^3.9.0)
+- **cbsecurity-passkeys** (^1.0.8)
+- **cbsso** (^3.0.0+17)
 - **qb** (^13)
+- **route-visualizer** (^2.2.0+2)
 - **vite-helpers** (^2)
 
 ## Handlers Snapshot
 
 Current event handlers and their public actions (auto-updated on `coldbox ai refresh`):
 
+- **Assets**: avatar, logo, streamVariant, notFound, isValidUserId, isValidSize, canViewAvatar
 - **AuditLog**: index, search, show, export, purge, clear
-- **Assets**: avatar, logo
-- **Auth**: login, doLogin, register, checkEmailAvailability, doRegister, verifyRegistration, verifyEmailChange, activateInvitation, doActivateInvitation, forgotPassword, doForgotPassword, resetPassword, doResetPassword, logout
+- **Auth**: preHandler, login, doLogin, register, checkEmailAvailability, doRegister, verifyRegistration, verifyEmailChange, activateInvitation, doActivateInvitation, forgotPassword, doForgotPassword, resetPassword, doResetPassword, logout
+- **BaseSecureHandler**: preHandler, onInvalidCSRF, getApiResults, ensureSortDirection, getPagination, decodeDataUri
 - **Dashboard**: index, notAuthorized
-- **Main**: onAppInit, onRequestStart, onRequestEnd, onSessionStart, onSessionEnd, onException
+- **Main**: onAppInit, onException
 - **Permissions**: index, create, update, delete
-- **RateLimiting**: index, overview, counters, clearCounter, clearCounters, ceiling, saveCeiling, settings, saveSettings, status, pause, resume, blocks, block, unblock, exclusions, exclude, unexclude
-- **Profile**: index, passkeyRequired, save, requestEmailChange, cancelEmailChange, doPasswordChange, listTokens, createToken, updateToken, deleteToken, listPasskeys, updatePasskey, deletePasskey, uploadAvatar, deleteAvatar
+- **Profile**: index, passkeyRequired, listSSO, startSSO, unlinkSSO, save, uploadAvatar, deleteAvatar, requestEmailChange, cancelEmailChange, doPasswordChange, listTokens, listPasskeys, updatePasskey, deletePasskey, createToken, updateToken, deleteToken
+- **RateLimiting**: index, status, pause, resume, blocks, block, unblock, exclusions, exclude, unexclude, overview, counters, clearCounter, clearCounters, ceiling, saveCeiling, settings, saveSettings, readSettings, clampWhole
 - **Roles**: index, create, update, delete, users, availableUsers, addUser, removeUser
-- **Settings**: index, registry, registrySearch, createRegistry, updateRegistry, toggleRegistryStatus, deleteRegistry, save, clearTemplateCache, clearSessionsCache, revokeRememberTokens, flushSettingsCache, uploadLogo, deleteLogo
-- **Users**: index, search, create, show, update, delete, resendInvitation, updateProfile, setStatus, resetPassword, forcePasswordReset, verify, revokeRememberTokens, addRole, removeRole, addPermission, removePermission, savePreferences, revokeToken, revokeAllTokens
-
-All handlers except `Auth` and `Main` extend `BaseSecureHandler`, whose `preHandler` verifies CSRF deny-by-default: any request that is not `GET`/`HEAD`/`OPTIONS` must carry a valid `rc.csrf`. Override `onInvalidCSRF()` in a handler that renders HTML instead of JSON.
+- **Settings**: onInvalidCSRF, index, registry, registrySearch, createRegistry, updateRegistry, toggleRegistryStatus, deleteRegistry, uploadLogo, deleteLogo, save, clearTemplateCache, clearSessionsCache, revokeRememberTokens, flushSettingsCache
+- **SSO**: complete
+- **Users**: index, search, create, resendInvitation, show, buildDetailPayload, getManagedUser, ensureNotSelf, updateProfile, setStatus, resetPassword, forcePasswordReset, verify, revokeRememberTokens, addRole, removeRole, addPermission, removePermission, savePreferences, revokeToken, revokeAllTokens, update, delete
 
 ## Interceptors Snapshot
 
 Registered interceptors and their interception points (auto-updated on `coldbox ai refresh`):
 
-- **AuditLogger** (`app/interceptors/AuditLogger.bx`, registered in `Coldbox.bx`): `postAuthentication`, `preLogout`, `cbSecurity_onInvalidAuthentication`, `cbSecurity_onInvalidAuthorization` — writes each to the audit trail via `AuditLogService`.
-- **ServerCeiling** (`app/interceptors/ServerCeiling.bx`, registered first in `Coldbox.bx`): `preProcess` - the hard per-IP request cap (`ServerCeilingService`, default 120/min, 30 to 600, lockdown = 30). Answers `429` + `Retry-After`; leaves `prc.rateLimitEnvDisabled` and `prc.rateLimitClientIp` for `RateLimitBlocker`. Never skipped for exclusions or a pause; loopback/private IPs are not counted; fails open.
-- **RateLimitBlocker** (`app/interceptors/RateLimitBlocker.bx`, registered right after `ServerCeiling` in `Coldbox.bx`): `preProcess` - answers `403` for a blocked IP before anything else runs, using `RateLimitBlockService.isBlocked()` (an in-memory snapshot, never a query) and flags the request so `AppThrottle` skips it.
-- **SSORateLimiter** (`app/interceptors/SSORateLimiter.bx`, registered in `Coldbox.bx`): `preProcess` - throttles the cbSSO authorization callback (a module route, so route middleware cannot reach it) by client IP via cbsecurity's `RateLimiter`.
-
-## Route Middleware
-
-Route middleware is attached in `app/config/Router.bx` by WireBox ID. App classes live in `app/middleware/` and extend the cbsecurity middleware, overriding only what differs. `execute( "handler.action" )` in tests bypasses route middleware; use `post( route = "..." )` to run it.
-
-- **`Honeypot@cbsecurity`**: hidden `website_url` field on the register form, silent.
-- **Emergency stop** (`RateLimitControlService`): `AppThrottle` and `SSORateLimiter` check `isEnabled()` first. Off when the `RATE_LIMITING_ENABLED` environment variable is false-like (break-glass, no login needed) or an admin paused it (`POST ratelimiting/pause` with `minutes` 1-1440 or 0 for until resumed, `ratelimiting/resume`, `settings:admin`). A timed pause ends on its own; counters keep counting; every change is audited.
-- **Block list** (`RateLimitBlockService`, table `rate_limit_blocks`): addresses and CIDR ranges (IPv4/IPv6, parsed by `IpMatcher`, never host names) refused by `RateLimitBlocker`. Added by an admin (`POST ratelimiting/blocks`; refuses ranges wider than /16 or /48, the admin's own address, and a list over 1,000) or automatically when `AppThrottle` throttles an IP in `cbRateLimitAutoBlockWindows` windows (never loopback/private/link-local addresses). A pause leaves the block list on; only `RATE_LIMITING_ENABLED=false` switches it off.
-- **Exclusions** (`RateLimitExclusionService`, table `rate_limit_exclusions`): IPs, CIDR ranges and users that skip the attempt limits in `AppThrottle` and `SSORateLimiter`, are never blocked automatically and cannot be blocked by hand; an exclusion wins over a block in `RateLimitBlocker`. A user exclusion never applies to `Auth.*` events, which are always counted. Same in-memory snapshot design as the block list; with no snapshot nothing is excluded, so the limits apply.
-- **Admin page** (`/ratelimiting`, System sidebar, `settings:read`): Overview, Blocked IPs, Exclusions and Settings tabs in `app/views/ratelimiting/index.bxm`, driven by the `rateLimitAdmin` Alpine component (`resources/assets/js/components/security/RateLimitAdmin.js`). Write buttons show only with `settings:write` / `settings:admin`. A red strip on every other admin page shows while rate limiting is paused. The page route must stay after the other `ratelimiting/*` routes in `Router.bx` (prefix match).
-- **Server ceiling** (`ServerCeilingService`): in-memory striped fixed 60 s windows per IP, max 10,000 tracked, settings cached 5 s (call `refresh()` after saving them). `GET/PUT ratelimiting/ceiling` (`settings:admin`) and a card on the Settings tab. One summary audit row a minute at most; daily reminder while lockdown is on.
-- **Admin endpoints** (`RateLimiting` handler): `GET ratelimiting/overview` (status, live counters, top offenders, hourly history, latest rows, totals in one call), `GET/DELETE ratelimiting/counters` and `DELETE ratelimiting/counters/:counterKey` (`RateLimitCounterService` lists and clears the `rateLimit` region's counters, max 100 rows; clearing is `settings:admin`, audited, and never touches blocks, exclusions or history), `GET/PUT ratelimiting/settings` (only the keys in the handler's `EDITABLE_SETTINGS`, validated by `SettingService`).
-- **Rate limit history** (`RateLimitHistoryService`): `AppThrottle` and `SSORateLimiter` call `record()` for every blocked request. It only updates an in-memory tally (never the database); a scheduled task flushes it to `rate_limit_history` every minute on every server. Bounded: 2,000 tally keys, 500 rows per hour (the rest roll into an `other` row), purged after `cbRateLimitHistoryRetentionDays`. The audit log stays one row per blocked window.
-- **`AppThrottle`** (extends `Throttle@cbsecurity`): per-IP limits from the `cbRateLimitMaxAttempts`/`cbRateLimitWindowSeconds` settings, fixed window, counted in the `rateLimit` CacheBox region. Attached to the Auth form routes and the Profile SSO routes. Each form page and its submit are ONE route (ColdBox merges same-pattern routes and keeps only the first one's middleware); `AppThrottle` counts only the methods in the route's `throttleMethods` meta (default `POST,PUT,PATCH,DELETE`). Other meta: `throttleRedirect`, `throttleTokenParam`. The catch-all route also exposes every Auth action at `auth/<action>`, so `auth/doLogin`, `auth/doRegister`, `auth/doActivateInvitation`, `auth/doForgotPassword` and `auth/doResetPassword` have their own throttled routes in `Router.bx` (same middleware and meta, shared counter). Add one whenever you add a throttled Auth form.
+- **AuditLogger**: postAuthentication, preLogout, cbSecurity_onInvalidAuthentication, cbSecurity_onInvalidAuthorization, CBSSOMissingProvider
+- **RateLimitBlocker**: preProcess
+- **ServerCeiling**: preProcess
+- **SSOAuthorization**: CBSSOAuthorization
+- **SSORateLimiter**: preProcess
 
 ## Layouts
 
@@ -146,7 +137,6 @@ This project includes AI-powered development assistance with on-demand guideline
 ### Code Style
 
 - **Semicolons:** Optional in CFML/BoxLang. Only use when demarcating properties or in inline component syntax
-- **Naming:** Prefer descriptive, unabbreviated names for component arguments and state. Use names such as `messageExpression`, `typeExpression`, and `dismissAction`; avoid abbreviations unless they are established domain terms.
 - **Handler naming:** Plural nouns (Users.cfc, Orders.cfc)
 - **Service naming:** Descriptive with "Service" suffix (UserService.cfc)
 - **Dependency injection:** Use `property name="service" inject` over manual getInstance()
@@ -185,9 +175,9 @@ npm install
 npm run dev          # Development with HMR
 npm run build        # Production build
 
-# Docker (local dev: app + MySQL, no local BoxLang/MySQL install needed)
-docker compose -f resources/docker/docker-compose.yml up -d
-docker compose -f resources/docker/docker-compose.yml logs -f
+# Docker (if enabled)
+docker-compose up -d
+docker-compose logs -f
 ```
 
 ## Optional Features
@@ -195,7 +185,7 @@ docker compose -f resources/docker/docker-compose.yml logs -f
 <!-- Mark which features are enabled in this project -->
 
 - **Vite:** Yes - Modern frontend asset building with hot module replacement
-- **Docker:** Yes - `resources/docker/Dockerfile` and `docker-compose.yml` (app + MySQL 8, for local development without installing BoxLang/MySQL) - see [Deployment](docs/deployment.md#docker)
+- **Docker:** No - Containerized development and deployment
 - **ORM:** Yes - Object-Relational Mapping via CBORM or Quick
 - **Migrations:** Yes - Database version control with CommandBox Migrations
 
@@ -271,7 +261,7 @@ The following skills provide step-by-step implementation patterns. Request speci
 
 **Module Skills:**
 
-_BoxLang (43):_
+_BoxLang (45):_
 - **boxlang-application-descriptor** - Use this skill when designing or debugging Application.bx behavior: app discover...
 - **boxlang-async-programming** - Use this skill when writing BoxLang asynchronous code: BoxFuture, futureNew, asy...
 - **boxlang-best-practices** - Use this skill when writing, reviewing, or improving BoxLang code to ensure it f...
@@ -295,7 +285,7 @@ _BoxLang (43):_
 - **boxlang-runtime-chromebook** - Use this skill when setting up or developing BoxLang on a Chromebook, including ...
 - **boxlang-runtime-cli-scripting** - Use this skill when writing BoxLang CLI scripts and classes, handling command-li...
 - **boxlang-runtime-commandbox** - Use this skill when deploying BoxLang as an enterprise Java servlet application ...
-- **boxlang-runtime-compiled-native-binaries** - Use this skill when compiling BoxLang scripts to standalone native executables u...
+- **boxlang-runtime-compiled-native-binaries** - Use this skill when compiling BoxLang scripts to standalone native executables w...
 - **boxlang-runtime-desktop** - Use this skill when building BoxLang desktop applications with Electron and the ...
 - **boxlang-runtime-desktop-electron** - Use this skill when building BoxLang desktop applications with Electron and the ...
 - **boxlang-runtime-digitalocean-app** - Use this skill when deploying BoxLang applications to DigitalOcean App Platform ...
@@ -304,7 +294,7 @@ _BoxLang (43):_
 - **boxlang-runtime-github-actions** - Use this skill when setting up GitHub Actions CI/CD pipelines for BoxLang projec...
 - **boxlang-runtime-google-cloud-functions** - Use this skill when building, testing, or deploying BoxLang applications on Goog...
 - **boxlang-runtime-jsr-223** - Use this skill when embedding BoxLang into Java applications via the JSR-223 scr...
-- **boxlang-runtime-matchbox** - Use this skill when using MatchBox, the Rust-based native implementation of BoxL...
+- **boxlang-runtime-matchbox** - Use this skill when working with MatchBox, the Rust runtime for BoxLang (alongsi...
 - **boxlang-runtime-miniserver** - Use this skill when running BoxLang as a lightweight web server using the BoxLan...
 - **boxlang-runtime-spring-boot** - Use this skill when integrating BoxLang with Spring Boot applications, including...
 - **boxlang-runtime-wasm-container** - Use this skill when compiling BoxLang applications to server-side WebAssembly (W...
@@ -315,11 +305,13 @@ _BoxLang (43):_
 - **boxlang-testing** - Use this skill when writing, running, or debugging tests for BoxLang application...
 - **boxlang-web-development** - Use this skill when building BoxLang web applications: Application.bx lifecycle,...
 - **boxlang-zip** - Use this skill when creating, extracting, listing, or modifying ZIP archives in ...
+- **boxlang-runtime-azure-functions** - Use this skill when building, testing, or deploying BoxLang applications on Micr...
+- **boxlang-syntax-check** - Use this skill to validate BoxLang and CFML source files for syntax errors witho...
 
 _CacheBox (1):_
 - **cachebox-standalone** - Use this skill when working with CacheBox as a standalone caching framework (out...
 
-_ColdBox (29):_
+_ColdBox (31):_
 - **coldbox-ai-integration** - Use this skill when integrating AI capabilities into a ColdBox application using...
 - **coldbox-app-layouts** - Use this skill when choosing a ColdBox application layout (flat, boxlang, or mod...
 - **coldbox-async-programming** - Use this skill when building async pipelines, working with ColdBox Futures, runn...
@@ -349,6 +341,8 @@ _ColdBox (29):_
 - **coldbox-testing-interceptor** - Use this skill when unit testing ColdBox interceptors in isolation using BaseInt...
 - **coldbox-testing-model** - Use this skill when unit testing ColdBox model objects (services, repositories, ...
 - **coldbox-view-rendering** - Use this skill when rendering views and partials in ColdBox, creating reusable v...
+- **coldbox-sse-streaming** - Use this skill when streaming Server-Sent Events (SSE) from a ColdBox handler or...
+- **coldbox-testing-browser** - Use this skill when writing browser tests for a ColdBox application with coldbox...
 
 _CommandBox (11):_
 - **commandbox-config-settings** - Use this skill for CommandBox global configuration: config set/show/clear comman...
@@ -366,7 +360,7 @@ _CommandBox (11):_
 _LogBox (1):_
 - **logbox** - Use this skill whenever working with LogBox -- standalone or inside a ColdBox ap...
 
-_Other (8):_
+_Other (14):_
 - **ortus-coding-standards** - Use this skill when writing, reviewing, or formatting any Ortus Solutions code (...
 - **database-migrations** - Use this skill when managing database schema changes in ColdBox/BoxLang using cf...
 - **testing-coverage** - Use this skill when setting up code coverage analysis for ColdBox/ColdFusion/Box...
@@ -375,36 +369,40 @@ _Other (8):_
 - **cborm** - Use this skill when working with Hibernate ORM in ColdBox/BoxLang using the cbor...
 - **cbsecurity** - Use this skill when securing ColdBox/BoxLang applications with cbsecurity. Cover...
 - **qb** - Use this skill when building database queries with qb (Query Builder) in ColdBox...
+- **matchbox-mvm** - Use this skill when installing or managing MatchBox versions with MVM, the Match...
+- **matchbox-native-fusion** - Use this skill when writing Rust for MatchBox Native Fusion: exposing Rust funct...
+- **cbfs** - Use this skill when working with the cbfs file system abstraction module in Cold...
+- **cbsecurity-passkeys** - Use this skill when implementing WebAuthn/Passkeys authentication in ColdBox/Box...
+- **cbsso** - Use this skill when implementing Single Sign-On (SSO) in ColdBox/BoxLang using t...
+- **route-visualizer** - Use this skill when inspecting all registered ColdBox routes using the route-vis...
 
-_TestBox (9):_
+_TestBox (10):_
 - **testbox-assertions** - Use this skill when using the TestBox $assert object for xUnit-style assertions:...
 - **testbox-bdd** - Use this skill when writing BDD-style tests with TestBox using describe/it block...
 - **testbox-cbmockdata** - Use this skill when generating realistic fake/mock data in tests using cbMockDat...
-- **testbox-expectations** - Use this skill when writing fluent expectations in TestBox using expect(), expec...
+- **testbox-expectations** - Use this skill when writing fluent expectations in TestBox using expect(), the c...
 - **testbox-listeners** - Use this skill when implementing TestBox run listeners (callbacks): onBundleStar...
 - **testbox-mockbox** - Use this skill when creating mocks, stubs, and spies in TestBox using MockBox: c...
-- **testbox-reporters** - Use this skill when selecting or configuring TestBox reporters: ANTJunit, Consol...
+- **testbox-reporters** - Use this skill when selecting or configuring TestBox reporters: Agent, ANTJunit,...
 - **testbox-runners** - Use this skill when running TestBox tests: CommandBox CLI (testbox run), BoxLang...
 - **testbox-unit-xunit** - Use this skill when writing xUnit-style tests in TestBox using test functions (t...
+- **testbox-browser-testing** - Use this skill when writing or running browser tests with TestBox on BoxLang: ex...
 
 _WireBox (2):_
 - **wirebox-di** - Use this skill when working with WireBox dependency injection -- bootstrapping t...
 - **wirebox-aop** - Use this skill when working with WireBox Aspect-Oriented Programming (AOP) -- ac...
 
+**Custom Skills:**
+
+_Other (6):_
+- **cbgenesis-rbac-permissions** - Development skill
+- **cbgenesis-csrf-frontend** - Development skill
+- **cbgenesis-crud-resource** - Development skill
+- **cbgenesis-alpine-components** - Development skill
+- **cbgenesis-testing-conventions** - Development skill
+- **cbgenesis-settings-config** - Development skill
+
 **To load a skill:** Use `read_file` on `.agents/skills/{skill-name}/SKILL.md` (e.g., `.agents/skills/coldbox-handler-development/SKILL.md`) for core skills, or `.agents/skills-custom/{skill-name}/SKILL.md` for custom project skills.
-
-### Custom Skills (cbGenesis-specific)
-
-These capture conventions specific to *this* application that the generic ColdBox/BoxLang skills above can't know - the permission model, the CSRF frontend contract, the exact CRUD vertical slice this codebase uses, and so on. Load one whenever a task matches its description, the same way you would a core skill:
-
-- **cbgenesis-rbac-permissions** - Use this skill when adding or changing access control - securing a new handler or action, adding a permission, checking a permission in a view or handler, or reasoning about the CSRF gate on state-changing requests.
-- **cbgenesis-csrf-frontend** - Use this skill when writing or editing an Alpine.js component that sends a non-GET request (create, update, delete, status toggle, file upload).
-- **cbgenesis-crud-resource** - Use this skill when adding a new admin-managed CRUD resource end to end - entity, service, handler, routes, permissions, view, and Alpine form component.
-- **cbgenesis-alpine-components** - Use this skill when adding or editing any Alpine.js component - module shape, registration in App.js, the shared utils/magic-property library, and the JSDoc requirement.
-- **cbgenesis-testing-conventions** - Use this skill when writing or running tests - BaseIntegrationSpec, the real transaction-rollback isolation mechanism, fixture helpers, and exercising CSRF-protected actions.
-- **cbgenesis-settings-config** - Use this skill when adding a new configuration value - deciding between an environment variable and the DB-backed settings registry.
-
-**To load a custom skill:** `read_file` on `.agents/skills-custom/{skill-name}/SKILL.md`.
 
 ## MCP Documentation Servers
 
@@ -426,6 +424,8 @@ This project has access to the following Model Context Protocol (MCP) documentat
 - **cbmailservices**: CBMailServices Email Integration - https://coldbox-mailservices.ortusbooks.com/~gitbook/mcp
 - **cbsecurity**: CBSecurity Authentication/Authorization - https://coldbox-security.ortusbooks.com/~gitbook/mcp
 - **cborm**: ColdBox ORM Utilities - https://coldbox-orm.ortusbooks.com/~gitbook/mcp
+- **cbfs**: CBFS File System Abstraction - https://cbfs.ortusbooks.com/~gitbook/mcp
+- **cbsso**: CBSSO Single Sign-On - https://cbsso.ortusbooks.com/~gitbook/mcp
 - **cfmigrations**: Database Migrations - https://cfmigrations.ortusbooks.com/~gitbook/mcp
 
 **Using MCP Servers:** Query these servers when you need current documentation, API references, or code examples. They provide live, up-to-date information directly from official documentation sources.

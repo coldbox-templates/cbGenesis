@@ -25,7 +25,7 @@
         "modules":"lib/modules"
     },
     "devDependencies":{
-        "testbox":"be",
+        "testbox":"*",
         "commandbox-boxlang":"*",
         "commandbox-migrations":"*"
     },
