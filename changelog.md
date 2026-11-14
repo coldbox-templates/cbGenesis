@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-14
+
 ### Added
 
 - Added a rate limiting administration page with live counters, traffic history, settings, and controls for blocking and excluding IP addresses, CIDR ranges, and users.
@@ -31,5 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First Release
 
-[unreleased]: https://github.com/coldbox-templates/cbGenesis/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/coldbox-templates/cbGenesis/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/coldbox-templates/cbGenesis/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/coldbox-templates/cbGenesis/compare/66b7421f9c17dc56fa58fb365216b3bc6f81bce0...v1.0.0
