@@ -106,7 +106,7 @@ Abra o ficheiro `.env` no seu editor de texto preferido e atualize as credenciai
 Depois de definir o seu `.env`, execute os seguintes comandos para inicializar e semear a base de dados. Deverá transferir automaticamente os drivers necessários para ligar a CLI à base de dados configurada. Se houver algum problema na ligação, garanta que o `DB_DRIVER` correto está definido e que o módulo do driver JDBC correspondente está instalado.
 
 ```bash frame="terminal" title="Terminal"
-migrate init
+migrate install
 migrate up --seed
 ```
 

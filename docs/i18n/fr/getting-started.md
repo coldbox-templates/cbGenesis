@@ -106,7 +106,7 @@ Ouvrez le fichier `.env` dans votre éditeur de texte préféré et mettez à jo
 Une fois votre `.env` configuré, exécutez les commandes suivantes pour initialiser et semer la base de données. Les pilotes nécessaires pour connecter le CLI à la base de données configurée devraient être téléchargés automatiquement. En cas de problème de connexion, assurez-vous que le bon `DB_DRIVER` est défini et que le module de pilote JDBC correspondant est installé.
 
 ```bash frame="terminal" title="Terminal"
-migrate init
+migrate install
 migrate up --seed
 ```
 

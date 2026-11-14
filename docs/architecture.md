@@ -76,7 +76,7 @@ sequenceDiagram
 
 ## Interceptors
 
-`app/config/Coldbox.bx` registers three application interceptors, in this order:
+`app/config/Coldbox.bx` registers five application interceptors:
 
 **`app/interceptors/AuditLogger.bx`** writes to the audit trail on four interception points:
 
@@ -88,6 +88,8 @@ sequenceDiagram
 | `cbSecurity_onInvalidAuthorization` | An authenticated user missing the required permission |
 
 **`app/middleware/AppThrottle.bx`** is route middleware (attached in `app/config/Router.bx`) that throttles five unauthenticated `Auth` routes (login, register, forgot/reset password, invitation activation) and the SSO routes by client IP. `app/interceptors/SSORateLimiter.bx` covers the cbSSO callback, which is a module route. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
+
+**`app/interceptors/ServerCeiling.bx`** enforces the site-wide per-IP ceiling before routing. **`app/interceptors/RateLimitBlocker.bx`** refuses blocked IPs, subject to exclusions. Both run before `SSORateLimiter`.
 
 **`app/interceptors/SSOAuthorization.bx`** handles cbSSO's
 `CBSSOAuthorization` interception point. It connects a verified provider
@@ -117,7 +119,7 @@ The rate limiting tasks run alongside them:
 | Purge Old Rate Limit History | `03:45` | Deletes `rate_limit_history` rows older than the retention window | `cbRateLimitHistoryRetentionDays` (default `30`, 1 to 365) |
 | Purge Expired Rate Limit Blocks | `03:50` | Deletes expired rows from `rate_limit_blocks` (they are ignored once expired either way) | - see [Blocked IPs](guides/security.md#blocked-ips) |
 | Expire Rate Limiting Pause | every minute | Clears an elapsed emergency-stop pause and audits it | - see [Emergency stop](guides/security.md#emergency-stop) |
-| Remind Rate Limiting Is Paused | `09:00` | Writes one audit entry while a pause has no end time | - |
+| Remind Rate Limiting Is Paused | `09:00` | Writes audit reminders while a pause has no end time or lockdown is on | - |
 
 The purge tasks call a `purgeExpiredTokens()`/`purgeOlderThan()` method on the owning service rather than querying the table directly, so the same purge logic is reachable (and testable) outside the scheduler. Add a new task the same way - see [Extending the App](guides/extending.md#adding-a-scheduled-task).
 

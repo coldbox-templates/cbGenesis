@@ -252,13 +252,21 @@ A blocked HTML form post is redirected back to the form with a flash error (the 
 
 The cbSSO callback is a route owned by the cbsso module, so application middleware cannot be attached to it. `app/interceptors/SSORateLimiter.bx` throttles that one endpoint with the same limits.
 
+To apply the same limits to an application route, attach `AppThrottle` in `app/config/Router.bx`:
+
+```boxlang
+post( "orders" ).middleware( "AppThrottle" ).to( "Orders.create" )
+```
+
+By default, the middleware counts `POST`, `PUT`, `PATCH` and `DELETE`. To count a `GET`, add `.meta( { throttleMethods: "GET" } )` before `.to()`. For a form, set `throttleRedirect` to the form's event or URL; without it the response is JSON. If the same handler action is reachable through other routes, attach the middleware to each of those routes too.
+
 | Setting | Purpose |
 |---|---|
 | `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, within the window (default: `5`) |
-| `cbRateLimitWindowSeconds` | Window length, in seconds (default: `300`). `0` disables rate limiting entirely |
+| `cbRateLimitWindowSeconds` | Window length, in seconds (default: `300`). `0` disables attempt throttling, not the block list or server ceiling |
 | `cbTrustProxyHeaders` | Whether the "per IP" in "per IP, per endpoint" comes from `X-Forwarded-For` or the raw socket address (default: `true`) - see [Deploying behind a reverse proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 
-All three are editable at `/settings` like any other app setting - see [App Settings](../reference/settings.md#password--token-policy).
+The attempt settings are editable at `/settings` and `/ratelimiting`; proxy-header trust is a global setting editable at `/settings` - see [App Settings](../reference/settings.md#password--token-policy).
 
 !!! warning "`cbTrustProxyHeaders` is a deployment decision, not a code decision"
     `X-Forwarded-For` is a plain HTTP header - any caller can set it to anything unless something in front of the app (a reverse proxy or load balancer) strips whatever the client sent and sets it itself. Whether that's true is something only the person deploying the app knows.
@@ -287,9 +295,9 @@ The audit log is separate: one row per blocked window, for security review. Hist
 
 ### Blocked IPs
 
-An address or range on the block list is refused on its first request: `RateLimitBlocker` (an interceptor registered ahead of the others, on `preProcess`) answers `403 Forbidden` before routing, the handler or the database run, and the throttle skips the request. Blocks come from two places:
+An address or range on the block list is refused on its first request: `RateLimitBlocker` (registered after the server ceiling, on `preProcess`) answers `403 Forbidden` before routing or the handler runs, and the throttle skips the request. Blocks come from two places:
 
-- **An admin adds one.** `POST /ratelimiting/blocks` with `address` (an address such as `203.0.113.42`, or a CIDR range such as `203.0.113.0/24`, IPv4 or IPv6), `hours` (1 to 8760, or `0` for permanent) and an optional `reason`. `GET /ratelimiting/blocks` lists the active ones and `DELETE /ratelimiting/blocks/:blockId` removes one. They need the `settings:admin` permission, and the writes a CSRF token. A bad address, a range wider than IPv4 `/16` or IPv6 `/48`, and an address that includes the admin's own are refused with a 422 saying why. Host names are never accepted or looked up. The list holds at most 1,000 active blocks.
+- **An admin adds one.** `POST /ratelimiting/blocks` with `address` (an address such as `203.0.113.42`, or a CIDR range such as `203.0.113.0/24`, IPv4 or IPv6), `hours` (1 to 8760, or `0` for permanent) and an optional `reason`. `GET /ratelimiting/blocks` lists the active ones and `DELETE /ratelimiting/blocks/:blockId` removes one. Reading requires `settings:read` or `settings:admin`; writes require `settings:write` or `settings:admin` and a CSRF token. A bad address, a range wider than IPv4 `/16` or IPv6 `/48`, and an address that includes the admin's own are refused with a 422 saying why. Host names are never accepted or looked up. The list holds at most 1,000 active blocks.
 - **The automatic rule adds one.** When an IP has been throttled in `cbRateLimitAutoBlockWindows` windows (default 3) within `cbRateLimitAutoBlockPeriodMinutes` (default 60), it is blocked for `cbRateLimitAutoBlockHours` (default 24). `cbRateLimitAutoBlock` switches the rule off. Loopback, private (`10/8`, `172.16/12`, `192.168/16`), link-local and shared (`100.64/10`) addresses are never blocked automatically, because with proxy headers untrusted they can be the proxy or the server itself and so stand for everyone. If the app sits behind a proxy and `cbTrustProxyHeaders` is off, every caller looks like the proxy: that is why those addresses are skipped.
 
 The check is cheap because it never queries the database. It reads an in-memory snapshot of the active blocks, reloaded at most every 30 seconds and at once after this server changes the list. Another server therefore notices a new block within 30 seconds. If a reload fails, the previous snapshot stays in use, and a broken check lets the request through instead of failing it.
@@ -307,7 +315,7 @@ The admin page is at **System > Rate Limiting** (`/ratelimiting`, needs `setting
 | `DELETE counters/:counterKey` | `settings:admin` | Clears one counter (`<event>:<ip>`, URL encoded) so that client starts a fresh window. 404 when it has expired. |
 | `DELETE counters` | `settings:admin` | Clears every counter. |
 | `GET settings` | `settings:read` | The rate limiting settings. |
-| `PUT settings` | `settings:admin` and `settings:write` | Saves the rate limiting settings. Other keys are ignored and a bad value is a 422 naming the field. |
+| `PUT settings` | `settings:admin` or `settings:write` | Saves the rate limiting settings. Other keys, including the global `cbTrustProxyHeaders`, are ignored and a bad value is a 422 naming the field. |
 
 Clearing counters only resets the attempt windows: the block list, the exclusions and the history are not touched. Both clears are audited (`security.ratelimit.counter.cleared`, `security.ratelimit.counters.cleared`), and so are settings changes (`security.ratelimit.settings.updated`). The cache store lower-cases its keys, so endpoints appear in lower case, for example `auth.login`.
 
@@ -319,31 +327,31 @@ Some callers should never be held to the attempt limits: an office VPN, an uptim
 - **User exclusions** skip the limits on the routes signed-in users use. They never apply to the Auth endpoints (sign-in, registration, password reset): those are always counted, so an excluded account cannot be used to guess other accounts' passwords.
 - Exclusions only skip the attempt limits. They never switch off anything that protects the server as a whole.
 
-`POST /ratelimiting/exclusions` adds one: `type` is `ip` or `user`, `value` is an address or range, or the user's email, and `label` says what it is for. `GET /ratelimiting/exclusions` lists them (a user entry carries the email) and `DELETE /ratelimiting/exclusions/:exclusionId` removes one. They need the `settings:admin` permission, and the writes a CSRF token. Adding adds to the list, or updates the label of an existing entry; a bad address, a range that is too wide, an unknown user and a full list (1,000 entries) are each a 422 saying why. Adding and removing are audited (`security.ratelimit.exclusion_added`, `exclusion_removed`).
+`POST /ratelimiting/exclusions` adds one: `type` is `ip` or `user`, `value` is an address or range, or the user's email, and `label` says what it is for. `GET /ratelimiting/exclusions` lists them (a user entry carries the email) and `DELETE /ratelimiting/exclusions/:exclusionId` removes one. Reading requires `settings:read` or `settings:admin`; writes require `settings:write` or `settings:admin` and a CSRF token. Adding adds to the list, or updates the label of an existing entry; a bad address, a range that is too wide, an unknown user and a full list (1,000 entries) are each a 422 saying why. Adding and removing are audited (`security.ratelimit.exclusion_added`, `exclusion_removed`).
 
 Like the block list, the check reads an in-memory snapshot, reloaded at most every 30 seconds and at once after this server changes the list. If a reload fails the previous snapshot stays in use, and with no snapshot nothing is excluded, so the limits apply, which is the safe direction.
 
 ### Server ceiling
 
-The attempt limits protect sign-in forms. The **server ceiling** protects the server itself: the most requests one IP may make per minute to the whole application, whatever the route. The `ServerCeiling` interceptor is registered before everything else and counts every request in memory, so an IP over the ceiling is turned away before routing, sessions or the database are touched.
+The attempt limits protect sign-in forms. The **server ceiling** protects the server itself: the most requests one IP may make per minute to the whole application, whatever the route. The `ServerCeiling` interceptor runs before routing and counts requests in memory, so an IP over the ceiling is turned away before the handler or database are reached.
 
 - **The limit** is `cbServerCeilingPerMinute`: 120 by default, 30 to 600.
 - **It cannot be removed.** A pause does not stop it, a window of 0 does not disable it and excluded addresses are counted too. Only the `RATE_LIMITING_ENABLED` environment variable (the break-glass) bypasses it.
-- **Lockdown** (`cbServerCeilingLockdown`) holds every IP to the minimum of 30 a minute at once, for an attack in progress. It stays on until an admin turns it off, turning it on or off is audited, and a daily audit entry reminds you while it is on.
+- **Lockdown** (`cbServerCeilingLockdown`) holds every counted IP to the fixed minimum of 30 requests per minute during an attack. This is an application-defined emergency threshold, not an industry standard; it can also affect legitimate users sharing an IP. It stays on until an admin turns it off, turning it on or off is audited, and a daily audit entry reminds you while it is on.
 - **Over the ceiling** the request gets a bare `429` with `Retry-After` and is counted in the history under the endpoint "Server ceiling". The audit log gets at most one summary row a minute (`security.ratelimit.ceiling`), however many addresses are refused.
 - **Loopback, private and link-local addresses are never counted**, so health checks and local tools are safe. Behind a proxy that hides the client address, keep `cbTrustProxyHeaders` on so the real address is counted.
 - **Bounded and fail-open.** At most 10,000 addresses are tracked; when full, expired windows go first and then the window closest to ending. Counters are per server instance. If counting fails, the request is allowed: the ceiling never takes the application down. The limit and lockdown settings are reused for 5 seconds, so another server picks up a change within that time.
 
-`GET /ratelimiting/ceiling` reports `{ limit, effectiveLimit, lockdown, minimum, maximum, trackedIps, maxTrackedIps, refusedRecently }`, and `PUT /ratelimiting/ceiling` takes `limit` and/or `lockdown`. Both writes need `settings:admin`; a limit outside 30 to 600 is a 422. The same card is on the **Settings** tab of the admin page, and the overview carries the status.
+`GET /ratelimiting/ceiling` reports `{ limit, effectiveLimit, lockdown, minimum, maximum, trackedIps, maxTrackedIps, refusedRecently }`, and `PUT /ratelimiting/ceiling` takes `limit` and/or `lockdown`. Reading requires `settings:read` or `settings:admin`; changes require `settings:admin`. A limit outside 30 to 600 is a 422. The same card is on the **Settings** tab of the admin page, and the overview carries the status.
 
 ### Emergency stop
 
 If rate limiting is blocking real people, for example a proxy misconfiguration makes everyone share one IP, you can switch it off without touching the limits. `RateLimitControlService` is the master switch that `AppThrottle` and `SSORateLimiter` check first. Rate limiting is off when either of these is true:
 
-- **An admin pauses it.** `POST /ratelimiting/pause` with `minutes` (1 to 1440, or `0` for until resumed) and `POST /ratelimiting/resume`; `GET /ratelimiting/status` reports the state. All three need the `settings:admin` permission, and the two writes need a CSRF token like any other state-changing request. A timed pause ends by itself at the right second: `isEnabled()` compares the stored end time on every request and does not wait for the scheduled task that tidies it up. The pause is stored in the settings registry (`cbRateLimitPausedUntil`, `cbRateLimitPausedBy`, `cbRateLimitPausedAt`), so every server sees it.
+- **An admin pauses it.** `POST /ratelimiting/pause` with `minutes` (1 to 1440, or `0` for until resumed) and `POST /ratelimiting/resume`; `GET /ratelimiting/status` reports the state. Reading requires `settings:read` or `settings:admin`; writes require `settings:write` or `settings:admin` and a CSRF token. A timed pause ends by itself at the right second: `isEnabled()` compares the stored end time on every request and does not wait for the scheduled task that tidies it up. The pause is stored in the settings registry (`cbRateLimitPausedUntil`, `cbRateLimitPausedBy`, `cbRateLimitPausedAt`), so every server sees it.
 - **The `RATE_LIMITING_ENABLED` environment variable (or JVM system property) is `false`, `0`, `no`, `off` or `disabled`.** This is the break-glass for when the limiter has locked the admins out: it needs no login, takes effect after a restart, and overrides pause and resume until it is removed.
 
-Pausing only skips the attempt limits. Counters keep counting, so the numbers are right when it resumes. It does not switch off the [block list](#blocked-ips); the environment variable does.
+Pausing skips attempt counting and enforcement; existing counters can expire while paused. It does not switch off the [block list](#blocked-ips) or the server ceiling; the environment variable bypasses both.
 
 Every pause, resume and automatic end is written to the audit trail (`security.ratelimit.paused`, `security.ratelimit.resumed`). A pause with no end time also writes `security.ratelimit.paused.reminder` once a day at 09:00, so it cannot be forgotten.
 

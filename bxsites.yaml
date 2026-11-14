@@ -12,8 +12,8 @@ nav: []
 # where the next release's docs are written, served at /next/. See
 # https://ortus-boxlang.github.io/bx-sites/guides/versioning
 versions:
-  default: "1.0.0"
-# Translated content lives in docs/i18n/<code>/ (and docs/versions/1.0.0/i18n/<code>/
+  default: "1.0.x"
+# Translated content lives in docs/i18n/<code>/ (and docs/versions/<version>/i18n/<code>/
 # for the released version), mirroring docs/ page-for-page. de/es/it get fully
 # translated theme chrome (search box, nav labels, etc.) built into bx-sites;
 # fr/pt/ja override the same keys here since they have no built-in chrome yet.
