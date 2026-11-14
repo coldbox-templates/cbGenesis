@@ -96,8 +96,8 @@ class {
 		 * Profile Routing
 		 * --------------------------------------------------------------------------
 		 */
-		route( "profile/sso/:provider/start", "Profile.startSSO" )
-		route( "profile/sso/:provider" ).withHandler( "Profile" ).toAction({ DELETE: "unlinkSSO" })
+		route( "profile/sso/:provider/start" ).middleware( "AppThrottle" ).meta( { throttleMethods: "GET", throttleRedirect: "profile" } ).to( "Profile.startSSO" )
+		route( "profile/sso/:provider" ).withHandler( "Profile" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "profile" } ).toAction({ DELETE: "unlinkSSO" })
 		route( "profile/sso", "Profile.listSSO" )
 		post( "profile/password", "Profile.doPasswordChange" )
 		route( "profile/api-tokens/:tokenId" ).withHandler( "Profile" ).toAction({
@@ -128,6 +128,41 @@ class {
 			GET: "index",
 			POST: "save"
 		})
+
+		/**
+		 * --------------------------------------------------------------------------
+		 * Rate Limiting Routing (emergency stop, block list, exclusions)
+		 * --------------------------------------------------------------------------
+		 */
+		route( "ratelimiting/status", "RateLimiting.status" )
+		post( "ratelimiting/pause", "RateLimiting.pause" )
+		post( "ratelimiting/resume", "RateLimiting.resume" )
+		route( "ratelimiting/overview", "RateLimiting.overview" )
+		route( "ratelimiting/ceiling" ).withHandler( "RateLimiting" ).toAction({
+			GET: "ceiling",
+			PUT: "saveCeiling"
+		})
+		route( "ratelimiting/counters/:counterKey" ).withHandler( "RateLimiting" ).toAction({ DELETE: "clearCounter" })
+		route( "ratelimiting/counters" ).withHandler( "RateLimiting" ).toAction({
+			GET   : "counters",
+			DELETE: "clearCounters"
+		})
+		route( "ratelimiting/settings" ).withHandler( "RateLimiting" ).toAction({
+			GET: "settings",
+			PUT: "saveSettings"
+		})
+		route( "ratelimiting/blocks/:blockId" ).withHandler( "RateLimiting" ).toAction({ DELETE: "unblock" })
+		route( "ratelimiting/blocks" ).withHandler( "RateLimiting" ).toAction({
+			GET : "blocks",
+			POST: "block"
+		})
+		route( "ratelimiting/exclusions/:exclusionId" ).withHandler( "RateLimiting" ).toAction({ DELETE: "unexclude" })
+		route( "ratelimiting/exclusions" ).withHandler( "RateLimiting" ).toAction({
+			GET : "exclusions",
+			POST: "exclude"
+		})
+		// The page itself goes last: a pattern matches as a prefix, so it would swallow the routes above.
+		route( "ratelimiting", "RateLimiting.index" )
 
 		/**
 		 * --------------------------------------------------------------------------
@@ -173,30 +208,44 @@ class {
 		 * Authentication Routing
 		 * --------------------------------------------------------------------------
 		 */
-		route( "login" ).withHandler( "Auth" ).toAction({
+		// Each form is ONE route for its page and its submit. ColdBox merges routes that share a
+		// pattern and keeps only the first one's middleware, so splitting them would silently
+		// drop the middleware. AppThrottle counts only the submit (POST) on its own.
+		route( "login" ).withHandler( "Auth" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "login" } ).toAction({
 			GET: "login",
 			POST: "doLogin"
 		})
 		route( "register/check-email", "Auth.checkEmailAvailability" )
-		route( "register" ).withHandler( "Auth" ).toAction({
+		route( "register" ).withHandler( "Auth" ).middleware( [ "Honeypot@cbsecurity", "AppThrottle" ] ).meta( { throttleRedirect: "register" } ).toAction({
 			GET: "register",
 			POST: "doRegister"
 		})
 		route( "verify-registration", "Auth.verifyRegistration" )
 		route( "confirm-email-change", "Auth.verifyEmailChange" )
-		route( "activate-invitation" ).withHandler( "Auth" ).toAction({
+		route( "activate-invitation" ).withHandler( "Auth" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "activate-invitation", throttleTokenParam: "token" } ).toAction({
 			GET: "activateInvitation",
 			POST: "doActivateInvitation"
 		})
 		post( pattern = "logout", target = "Auth.logout" )
-		route( "forgot-password" ).withHandler( "Auth" ).toAction({
+		route( "forgot-password" ).withHandler( "Auth" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "forgot-password" } ).toAction({
 			GET: "forgotPassword",
 			POST: "doForgotPassword"
 		})
-		route( "reset-password" ).withHandler( "Auth" ).toAction({
+		route( "reset-password" ).withHandler( "Auth" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "reset-password", throttleTokenParam: "token" } ).toAction({
 			GET: "resetPassword",
 			POST: "doResetPassword"
 		})
+
+		// The conventions-based catch-all below also exposes every Auth action at auth/<action>
+		// (the login form itself posts to auth/doLogin). A request to those URLs never matches the
+		// routes above, so without these entries it would skip the honeypot and the throttle. They
+		// reuse the same middleware and meta; AppThrottle names its counter after the event
+		// (Auth.doLogin), so a form post and a direct post to either URL share one budget.
+		post( "auth/doLogin" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "login" } ).to( "Auth.doLogin" )
+		post( "auth/doRegister" ).middleware( [ "Honeypot@cbsecurity", "AppThrottle" ] ).meta( { throttleRedirect: "register" } ).to( "Auth.doRegister" )
+		post( "auth/doActivateInvitation" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "activate-invitation", throttleTokenParam: "token" } ).to( "Auth.doActivateInvitation" )
+		post( "auth/doForgotPassword" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "forgot-password" } ).to( "Auth.doForgotPassword" )
+		post( "auth/doResetPassword" ).middleware( "AppThrottle" ).meta( { throttleRedirect: "reset-password", throttleTokenParam: "token" } ).to( "Auth.doResetPassword" )
 		route( "sso/complete", "SSO.complete" )
 
 		// @app_routes@

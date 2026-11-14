@@ -1,6 +1,6 @@
 {
     "name":"CB Genesis Starter Template",
-    "version":"1.0.0",
+    "version":"1.1.0",
     "author":"You",
     "location":"forgeboxStorage",
     "language":"BoxLang",
@@ -16,7 +16,7 @@
     "shortDescription":"This starter template will give you all the basics you need to get started with ColdBox.",
     "contributors":[],
     "ignore":[
-		".github/**",
+        ".github/**",
         "docs/**",
         "/bxsites.yaml",
         "/changelog.md"
@@ -25,15 +25,15 @@
         "modules":"lib/modules"
     },
     "devDependencies":{
-        "testbox":"be",
+        "testbox":"*",
         "commandbox-boxlang":"*",
         "commandbox-migrations":"*"
     },
     "dependencies":{
-        "coldbox":"^8.2.0",
+        "coldbox":"^8.3.0",
         "qb":"^13",
         "cbmailservices":"^2",
-        "cbsecurity":"^3",
+        "cbsecurity":"^3.9.0",
         "vite-helpers":"^2",
         "cborm":"^5.0.0",
         "route-visualizer":"^2.2.0+2",
@@ -42,8 +42,8 @@
         "cbsso":"^3.0.0+17"
     },
     "installPaths":{
-        "coldbox":"lib/",
-        "testbox":"lib/"
+        "coldbox":"lib/coldbox/",
+        "testbox":"lib/testbox/"
     },
     "scripts":{
         "postInstall":"pathExists .env || cp .env.example .env",

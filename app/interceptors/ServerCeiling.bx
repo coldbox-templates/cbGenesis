@@ -1,0 +1,75 @@
+/**
+ * Enforces the server ceiling: the most requests one IP address may make per minute to the
+ * whole application. Registered first, so an IP over the ceiling is turned away before
+ * routing, sessions or the database are touched.
+ *
+ * Unlike the attempt limits this protects the server itself, so it is not skipped for excluded
+ * addresses and is not affected by an admin's pause. Only the RATE_LIMITING_ENABLED
+ * environment variable (break-glass) bypasses it. See ServerCeilingService for the counting,
+ * the bounds and the lockdown mode.
+ *
+ * A refused request gets a bare 429 with Retry-After and is tallied for the history under the
+ * endpoint "Server ceiling". The audit log gets at most one summary row a minute.
+ *
+ * See docs/guides/security.md#server-ceiling.
+ */
+class extends="coldbox.system.Interceptor" {
+
+	@inject( "provider:ServerCeilingService" )
+	property name="ceilingService";
+
+	@inject( "provider:RateLimitControlService" )
+	property name="rateLimitControl";
+
+	@inject( "provider:RateLimitHistoryService" )
+	property name="rateLimitHistory";
+
+	@inject( "provider:CBSecurity@cbsecurity" )
+	property name="cbsecurity";
+
+	/**
+	 * Counts the request and refuses it when the client IP is over the ceiling.
+	 *
+	 * @event         The ColdBox request context.
+	 * @interceptData Interception data.
+	 * @buffer        The output buffer.
+	 * @rc            The request collection.
+	 * @prc           The private request collection.
+	 *
+	 * @return Nothing. For an IP over the ceiling it renders a 429 and stops the request.
+	 */
+	function preProcess( event, interceptData, buffer, rc, prc ) {
+		// Shared with RateLimitBlocker through prc, which runs right after this one: the
+		// environment check and the client IP are each worked out once per request.
+		arguments.prc.rateLimitEnvDisabled = variables.rateLimitControl.isDisabledByEnvironment()
+		if ( arguments.prc.rateLimitEnvDisabled ) {
+			return
+		}
+
+		// trustUpstream mirrors cbTrustProxyHeaders: see AppThrottle.getClientIP(). The setting
+		// comes from the service's cached copy because this runs on every request.
+		var ipAddress = variables.cbsecurity.getRealIP( trustUpstream = variables.ceilingService.trustsProxyHeaders() )
+		arguments.prc.rateLimitClientIp = ipAddress
+		var result = variables.ceilingService.hit( ipAddress )
+
+		if ( result.allowed ) {
+			return
+		}
+
+		variables.rateLimitHistory.record( ipAddress, "Server ceiling", 0, result.firstRefusal )
+		try {
+			variables.ceilingService.auditRefusals( ipAddress )
+		} catch ( any error ) {
+			// Auditing is best effort: never let it stop the refusal.
+			log.error( "Could not audit a server ceiling refusal: #error.message#" )
+		}
+
+		// Route middleware still runs after a preProcess interceptor stops the event; flag the
+		// request so AppThrottle leaves it alone, as it does for a blocked IP.
+		arguments.prc.rateLimitRefused = true
+
+		event.setHTTPHeader( name = "Retry-After", value = result.retryInSeconds )
+		event.renderData( type = "text", data = "Too many requests", statusCode = 429 ).noExecution()
+	}
+
+}

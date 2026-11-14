@@ -1,0 +1,100 @@
+/**
+ * Tests for IpMatcher: parsing addresses and CIDR ranges, comparing them, the width limit
+ * and the internal-address check that keeps automatic blocking off proxies and the server.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject
+	property name="ipMatcher";
+
+	function run() {
+		describe( "IpMatcher", () => {
+			story( "It parses literal addresses and ranges", () => {
+				it( "accepts IPv4 and IPv6 addresses and ranges", () => {
+					[ "203.0.113.42", "203.0.113.0/24", "2001:db8::1", "2001:db8::/32", "::1", "0.0.0.0/0" ].each( ( text ) => {
+						expect( ipMatcher.parse( text ).valid ).toBeTrue( "#text# should be valid" )
+					} )
+				} )
+
+				it( "rejects host names, bad octets, bad prefixes and empty text", () => {
+					[ "localhost", "example.com", "999.1.1.1", "1.2.3", "1.2.3.4/33", "1.2.3.4/", "1.2.3.4/a", "2001:db8::/129", "", "1.2.3.4/24/8", "::g" ].each( ( text ) => {
+						expect( ipMatcher.parse( text ).valid ).toBeFalse( "#text# should be invalid" )
+					} )
+				} )
+
+				it( "keys equal addresses and ranges the same, including an IPv4 address in IPv6 form", () => {
+					expect( ipMatcher.parse( "::ffff:203.0.113.42" ).key ).toBe( ipMatcher.parse( "203.0.113.42" ).key )
+					expect( ipMatcher.parse( "10.0.0.77/24" ).key ).toBe( ipMatcher.parse( "10.0.0.0/24" ).key )
+					expect( ipMatcher.parse( "10.0.0.0/24" ).key ).notToBe( ipMatcher.parse( "10.0.0.0/25" ).key )
+				} )
+			} )
+
+			story( "It compares addresses to entries", () => {
+				it( "matches an address against itself and against a range that holds it", () => {
+					var address = ipMatcher.parse( "203.0.113.42" )
+
+					expect( ipMatcher.matches( ipMatcher.parse( "203.0.113.42" ), address ) ).toBeTrue()
+					expect( ipMatcher.matches( ipMatcher.parse( "203.0.113.0/24" ), address ) ).toBeTrue()
+					expect( ipMatcher.matches( ipMatcher.parse( "203.0.0.0/16" ), address ) ).toBeTrue()
+				} )
+
+				it( "does not match an address outside the entry", () => {
+					var address = ipMatcher.parse( "203.0.113.42" )
+
+					expect( ipMatcher.matches( ipMatcher.parse( "203.0.113.43" ), address ) ).toBeFalse()
+					expect( ipMatcher.matches( ipMatcher.parse( "198.51.100.0/24" ), address ) ).toBeFalse()
+				} )
+
+				it( "honors prefixes that do not fall on a byte boundary", () => {
+					var range = ipMatcher.parse( "10.1.16.0/20" )
+
+					expect( ipMatcher.matches( range, ipMatcher.parse( "10.1.16.0" ) ) ).toBeTrue()
+					expect( ipMatcher.matches( range, ipMatcher.parse( "10.1.31.255" ) ) ).toBeTrue()
+					expect( ipMatcher.matches( range, ipMatcher.parse( "10.1.32.0" ) ) ).toBeFalse()
+					expect( ipMatcher.matches( range, ipMatcher.parse( "10.1.15.255" ) ) ).toBeFalse()
+				} )
+
+				it( "matches IPv6 ranges and never matches IPv4 against IPv6", () => {
+					expect( ipMatcher.matches( ipMatcher.parse( "2001:db8::/32" ), ipMatcher.parse( "2001:db8:abcd::1" ) ) ).toBeTrue()
+					expect( ipMatcher.matches( ipMatcher.parse( "2001:db8::/32" ), ipMatcher.parse( "2001:db9::1" ) ) ).toBeFalse()
+					expect( ipMatcher.matches( ipMatcher.parse( "203.0.113.0/24" ), ipMatcher.parse( "2001:db8::1" ) ) ).toBeFalse()
+				} )
+
+				it( "matches an IPv4 address written in IPv6 form", () => {
+					expect( ipMatcher.matches( ipMatcher.parse( "203.0.113.0/24" ), ipMatcher.parse( "::ffff:203.0.113.42" ) ) ).toBeTrue()
+				} )
+			} )
+
+			story( "It limits how wide a block can be", () => {
+				it( "refuses an IPv4 range shorter than /16 and an IPv6 range shorter than /48", () => {
+					expect( ipMatcher.isTooWide( ipMatcher.parse( "10.0.0.0/8" ) ) ).toBeTrue()
+					expect( ipMatcher.isTooWide( ipMatcher.parse( "0.0.0.0/0" ) ) ).toBeTrue()
+					expect( ipMatcher.isTooWide( ipMatcher.parse( "2001:db8::/32" ) ) ).toBeTrue()
+				} )
+
+				it( "allows /16 and /48 and narrower, and single addresses", () => {
+					expect( ipMatcher.isTooWide( ipMatcher.parse( "203.0.0.0/16" ) ) ).toBeFalse()
+					expect( ipMatcher.isTooWide( ipMatcher.parse( "203.0.113.0/24" ) ) ).toBeFalse()
+					expect( ipMatcher.isTooWide( ipMatcher.parse( "2001:db8:1::/48" ) ) ).toBeFalse()
+					expect( ipMatcher.isTooWide( ipMatcher.parse( "203.0.113.42" ) ) ).toBeFalse()
+					expect( ipMatcher.isTooWide( ipMatcher.parse( "2001:db8::1" ) ) ).toBeFalse()
+				} )
+			} )
+
+			story( "It recognizes internal addresses", () => {
+				it( "treats loopback, private, link-local and shared address space as internal", () => {
+					[ "127.0.0.1", "10.2.3.4", "172.16.0.1", "172.31.255.255", "192.168.1.5", "169.254.1.1", "100.64.0.1", "0.0.0.0", "::1", "::", "fd00::1", "fc00::1", "fe80::1" ].each( ( text ) => {
+						expect( ipMatcher.isInternal( ipMatcher.parse( text ) ) ).toBeTrue( "#text# should be internal" )
+					} )
+				} )
+
+				it( "treats public addresses as external", () => {
+					[ "203.0.113.42", "198.51.100.7", "8.8.8.8", "172.32.0.1", "172.15.0.1", "192.169.0.1", "2001:db8::1", "2606:4700::1111" ].each( ( text ) => {
+						expect( ipMatcher.isInternal( ipMatcher.parse( text ) ) ).toBeFalse( "#text# should be external" )
+					} )
+				} )
+			} )
+		} )
+	}
+
+}

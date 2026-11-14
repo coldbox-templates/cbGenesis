@@ -56,7 +56,7 @@
 	 * `navExpandAll` is on. `nested`/`collapsed` track recursion state.
 	 */
 	function renderNavList( required array nodes, boolean nested = false, boolean collapsed = false ) {
-		var html = sb{ "<ul class=""nav flex-column" & ( arguments.nested ? " nav--nested" : "" ) & """" & ( arguments.collapsed ? " hidden" : "" ) & ">" }
+		var html = sb{ "<ul class=""nav flex-column" & ( arguments.nested ? " nav--nested bxsites-nav-nested" : "" ) & """" & ( arguments.collapsed ? " hidden" : "" ) & ">" }
 		for ( var node in arguments.nodes ) {
 			var isActive = len( node.url ) && ( node.url == variables.page.urlPath || ( len( variables.page.course.id ) && node.url == variables.page.course.indexUrl ) )
 			var linkClass = "nav-link" & ( isActive ? " active" : "" )
@@ -115,23 +115,6 @@
 		for ( var link in arguments.links ) {
 			html &= '<a class="social-link" href="' & bxsitesUrlAttr( link.url ) & '" target="_blank" rel="noopener noreferrer" aria-label="' & encodeForHTML( link.label ?: link.icon ?: "Link" ) & '" title="' & encodeForHTML( link.label ?: link.icon ?: "Link" ) & '">' & bxsitesIcon( link.icon ?: "generic" ) & '</a>'
 		}
-		return html
-	}
-
-	/**
-	 * Renders the docs version switcher - a plain <select> whose onchange
-	 * handler jumps straight to the picked version's own URL (no JS
-	 * framework needed). Labels/URLs come from bxsites.yaml's own
-	 * versioning config; the current version's option is marked selected.
-	 * Only rendered when there is more than one version.
-	 */
-	function renderVersionSwitcher( required array versions, required string currentVersion ) {
-		var html = sb{ '<select class="version-switcher form-select form-select-sm" onchange="location.href=this.value" aria-label="' & encodeForHTML( variables.strings.version ) & '">' }
-		for ( var v in arguments.versions ) {
-			var selected = v.label == arguments.currentVersion ? " selected" : ""
-			html &= '<option value="' & bxsitesUrlAttr( v.url ) & '"' & selected & '>' & encodeForHTML( v.label ) & '</option>'
-		}
-		html &= '</select>'
 		return html
 	}
 

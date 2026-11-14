@@ -40,13 +40,54 @@ class {
 			.everyDayAt( "03:30" )
 			.onOneServer()
 			.withNoOverlaps()
+
+		// Rate limit history: every server flushes its own in-memory tally every minute, so
+		// this is deliberately not onOneServer. Concurrent flushes add to the same rows.
+		task( "Flush Rate Limit History" )
+			.call( () => getInstance( "RateLimitHistoryService" ).flush() )
+			.everyMinute()
+			.withNoOverlaps()
+
+		task( "Purge Old Rate Limit History" )
+			.call( () => getInstance( "RateLimitHistoryService" ).purgeOlderThan(
+				getInstance( "SettingService" ).getSetting( "cbRateLimitHistoryRetentionDays", 30 )
+			) )
+			.everyDayAt( "03:45" )
+			.onOneServer()
+			.withNoOverlaps()
+
+		// Expired blocks are ignored either way; this keeps the table small.
+		task( "Purge Expired Rate Limit Blocks" )
+			.call( () => getInstance( "RateLimitBlockService" ).purgeExpired() )
+			.everyDayAt( "03:50" )
+			.onOneServer()
+			.withNoOverlaps()
+
+		// A timed pause switches off by itself on time (RateLimitControlService.isEnabled()
+		// does not wait for this); this only clears the stored values and audits it.
+		task( "Expire Rate Limiting Pause" )
+			.call( () => getInstance( "RateLimitControlService" ).expireIfDue() )
+			.everyMinute()
+			.onOneServer()
+			.withNoOverlaps()
+
+		// One audit entry a day while a pause has no end time, or the server ceiling is in lockdown, so it cannot be forgotten.
+		task( "Remind Rate Limiting Is Paused" )
+			.call( () => {
+				getInstance( "RateLimitControlService" ).remindIfPausedIndefinitely()
+				getInstance( "ServerCeilingService" ).remindIfLockdown()
+			} )
+			.everyDayAt( "09:00" )
+			.onOneServer()
+			.withNoOverlaps()
 	}
 
 	/**
 	 * Called before the scheduler is going to be shutdown
 	 */
 	function onShutdown() {
-
+		// Do not lose the last minute of rate limit tallies on a normal stop.
+		getInstance( "RateLimitHistoryService" ).flush()
 	}
 
 	/**

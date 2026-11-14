@@ -21,7 +21,8 @@
 		"title": "Reference",
 		"children": [
 			"reference/routes.md",
-			"reference/settings.md"
+			"reference/settings.md",
+			"reference/release-notes.md"
 		]
 	},
 	"deployment.md"

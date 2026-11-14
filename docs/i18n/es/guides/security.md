@@ -247,7 +247,7 @@ Un llamante que excede el límite es redirigido de vuelta al formulario con un e
 | Ajuste | Propósito |
 |---|---|
 | `cbRateLimitMaxAttempts` | Intentos permitidos por IP, por endpoint, dentro de la ventana (predeterminado: `5`) |
-| `cbRateLimitWindowSeconds` | Longitud de la ventana, en segundos (predeterminado: `300`). `0` desactiva la limitación de tasa por completo |
+| `cbRateLimitWindowSeconds` | Longitud de la ventana, en segundos (predeterminado: `300`). Rango de 1 a 86400. Para desactivarla, use la parada de emergencia. |
 | `cbTrustProxyHeaders` | Si el "por IP" en "por IP, por endpoint" proviene de `X-Forwarded-For` o de la dirección de socket sin procesar (predeterminado: `true`) - consulta [Desplegando detrás de un proxy inverso](../deployment.md#deploying-behind-a-reverse-proxy) |
 
 Los tres son editables en `/settings` como cualquier otro ajuste de la aplicación - consulta [Ajustes de la aplicación](../reference/settings.md#password--token-policy).

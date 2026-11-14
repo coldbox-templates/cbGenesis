@@ -41,6 +41,17 @@
         #view( "_components/app/topbar" )#
 
         <!--- ── Page content ─────────────────────────────────────── --->
+        <!--- Red strip while rate limiting is paused, so a pause is never forgotten --->
+        <bx:set pausedUntil = prc.settings[ "cbRateLimitPausedUntil" ] ?: "">
+        <bx:set pausedNow = pausedUntil == "indefinite" || ( isNumeric( pausedUntil ) && val( pausedUntil ) > int( createObject( "java", "java.lang.System" ).currentTimeMillis() / 1000 ) )>
+        <bx:if pausedNow && !event.routeIs( "ratelimiting" ) && prc.authUser.hasPermission( "settings:read,settings:admin" )>
+        <div class="cb-ratelimit-paused-strip" role="status">
+            <i class="ph-duotone ph-warning-octagon" aria-hidden="true"></i>
+            <span>Rate limiting is paused.</span>
+            <a href="#event.route( "ratelimiting" )#">Review</a>
+        </div>
+        </bx:if>
+
         <main class="cb-main-content" id="main-content" tabindex="-1">
             <div class="container-fluid">
                 #view()#

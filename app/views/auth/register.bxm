@@ -33,6 +33,11 @@
 		<!--- CSRF token --->
         #csrfField()#
 
+		<div style="position:absolute;left:-9999px" aria-hidden="true">
+			<label for="website_url">Leave this field empty</label>
+			<input type="text" id="website_url" name="website_url" tabindex="-1" autocomplete="off">
+		</div>
+
         <!--- First + Last name --->
         <div class="row g-3 mb-3">
             <div class="col-6">

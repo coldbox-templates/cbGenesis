@@ -85,7 +85,7 @@ class {
 				 * --------------------------------------------------------------------------
 				 * Rate Limit Counters
 				 * --------------------------------------------------------------------------
-				 * Backs RateLimitService's per-key attempt counters (see app/interceptors/RateLimiter.bx).
+				 * Backs cbsecurity's RateLimiter attempt counters, used by the AppThrottle route middleware and SSORateLimiter.
 				 * In-memory and per-instance by default: on a multi-instance deployment, each instance
 				 * enforces its own limit unless this provider is swapped for a distributed one (Redis,
 				 * Couchbase, etc. - anything CacheBox has a provider for) so all instances share counts.

@@ -1,0 +1,470 @@
+/**
+ * Rate limiting administration: the emergency stop.
+ *
+ * Pausing and resuming change what the whole application enforces, so they need the
+ * settings write permission. Like every BaseSecureHandler, state-changing actions also
+ * need a valid CSRF token. The status action is read-only.
+ */
+@secured( "settings:admin,settings:read" )
+class extends="BaseSecureHandler" {
+
+	@inject
+	property name="rateLimitControlService";
+
+	@inject
+	property name="rateLimitBlockService";
+
+	@inject
+	property name="rateLimitExclusionService";
+
+	@inject
+	property name="rateLimitCounterService";
+
+	@inject
+	property name="rateLimitHistoryService";
+
+	@inject
+	property name="serverCeilingService";
+
+	@inject( "provider:AuditLogService" )
+	property name="auditLogService";
+
+	@inject( "CBSecurity@cbsecurity" )
+	property name="cbsecurity";
+
+	static {
+		// The settings the admin page may change; saveSettings() ignores every other key.
+		EDITABLE_SETTINGS = [
+			"cbRateLimitMaxAttempts",
+			"cbRateLimitWindowSeconds",
+			"cbRateLimitHistoryRetentionDays",
+			"cbRateLimitAutoBlock",
+			"cbRateLimitAutoBlockWindows",
+			"cbRateLimitAutoBlockPeriodMinutes",
+			"cbRateLimitAutoBlockHours"
+		]
+	}
+
+	/**
+	 * Renders the rate limiting admin page. The page loads its data from the JSON endpoints
+	 * below, so this only passes what the buttons need to know: which writes the user may make.
+	 */
+	function index( event, rc, prc ) {
+		prc.title = "Rate Limiting"
+		prc.canWrite = prc.authUser.hasPermission( "settings:admin,settings:write" )
+		prc.canAdmin = prc.authUser.hasPermission( "settings:admin" )
+		event.setView( "ratelimiting/index" )
+	}
+
+	/**
+	 * Reports whether rate limiting is being enforced and, if paused, until when and by whom.
+	 *
+	 * @return The API response whose data is the status: enabled, disabledByEnvironment,
+	 *         paused, indefinite, pausedUntil, pausedAt, pausedBy, resumesInSeconds.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function status( event, rc, prc ) {
+		return event.getResponse().setData( data: rateLimitControlService.getStatus() )
+	}
+
+	/**
+	 * Pauses rate limiting.
+	 *
+	 * rc.minutes is a whole number from 1 to 1440, or 0 for "until I resume". Anything else
+	 * is a 422. The pause is audited with who did it.
+	 *
+	 * @return The API response whose data is the new status.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function pause( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			if ( !isNumeric( rc.minutes ?: "" ) ) {
+				throw( type = "RateLimit.InvalidPause", message = "Choose how many minutes to pause for, or 0 for until resumed." )
+			}
+			var status = rateLimitControlService.pause( minutes: val( rc.minutes ) )
+			return response.setData(
+				data   : status,
+				message: status.indefinite
+					? "Rate limiting is paused until you resume it."
+					: "Rate limiting is paused for #int( status.resumesInSeconds / 60 )# minutes."
+			)
+		} catch ( "RateLimit.InvalidPause" error ) {
+			return response.failure( message: error.message, statusCode: 422 )
+		} catch ( any error ) {
+			log.error( "Error pausing rate limiting: #error.message#", error )
+			return response.failure( message: "Rate limiting could not be paused: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Resumes rate limiting. Safe to call when it is not paused.
+	 *
+	 * @return The API response whose data is the new status.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function resume( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			return response.setData( data: rateLimitControlService.resume(), message: "Rate limiting is on." )
+		} catch ( any error ) {
+			log.error( "Error resuming rate limiting: #error.message#", error )
+			return response.failure( message: "Rate limiting could not be resumed: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Lists the active blocked IPs and ranges, newest first.
+	 *
+	 * @return The API response whose data is an array of blocks.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function blocks( event, rc, prc ) {
+		return event.getResponse().setData( data: rateLimitBlockService.list() )
+	}
+
+	/**
+	 * Blocks an IP address or CIDR range.
+	 *
+	 * rc.address is an address or range, rc.hours is 1 to 8760 or 0 for permanent, and
+	 * rc.reason is optional. A bad address, a range that is too wide, the admin's own
+	 * address and a full list are each a 422 with a message saying what to fix.
+	 *
+	 * @return The API response whose data is the block.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function block( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var row = rateLimitBlockService.block(
+				address    : rc.address ?: "",
+				reason     : rc.reason ?: "",
+				hours      : isNumeric( rc.hours ?: "" ) ? val( rc.hours ) : 0,
+				createdBy  : prc.authUser.getEmail(),
+				requesterIp: cbsecurity.getRealIP( trustUpstream = settingService.getSetting( "cbTrustProxyHeaders", true ) )
+			)
+			return response.setData( data: row, message: "[#row.address#] is blocked." )
+		} catch ( any error ) {
+			if ( error.type.startsWith( "RateLimit." ) ) {
+				return response.failure( message: error.message, statusCode: 422 )
+			}
+			log.error( "Error blocking an IP: #error.message#", error )
+			return response.failure( message: "The IP could not be blocked: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Removes a block. rc.blockId comes from the route.
+	 *
+	 * @return The API response, a 404 when there is no such block.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function unblock( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			if ( !rateLimitBlockService.unblock( rc.blockId ?: "" ) ) {
+				return response.failure( message: "That block does not exist.", statusCode: 404 )
+			}
+			return response.setData( data: {}, message: "The IP is unblocked." )
+		} catch ( any error ) {
+			log.error( "Error unblocking an IP: #error.message#", error )
+			return response.failure( message: "The IP could not be unblocked: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Lists the exclusions, newest first. A user exclusion also carries the user's email.
+	 *
+	 * @return The API response whose data is an array of exclusions.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function exclusions( event, rc, prc ) {
+		return event.getResponse().setData( data: rateLimitExclusionService.list() )
+	}
+
+	/**
+	 * Excludes an IP address, a range or a user from the attempt limits.
+	 *
+	 * rc.type is "ip" or "user". For "ip", rc.value is an address or range; for "user" it is
+	 * the user's email. rc.label is optional. A bad address, a range that is too wide, an
+	 * unknown user, an unknown type and a full list are each a 422 saying what to fix.
+	 *
+	 * @return The API response whose data is the exclusion.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function exclude( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var type = lCase( rc.type ?: "" )
+			if ( !listFind( "ip,user", type ) ) {
+				throw( type = "RateLimit.InvalidType", message = "Choose what to exclude: an IP address or a user." )
+			}
+
+			var row = type == "ip"
+				? rateLimitExclusionService.excludeIp( address: rc.value ?: "", label: rc.label ?: "", createdBy: prc.authUser.getEmail() )
+				: rateLimitExclusionService.excludeUser( email: rc.value ?: "", label: rc.label ?: "", createdBy: prc.authUser.getEmail() )
+
+			return response.setData( data: row, message: "[#row.value#] is excluded." )
+		} catch ( any error ) {
+			if ( error.type.startsWith( "RateLimit." ) ) {
+				return response.failure( message: error.message, statusCode: 422 )
+			}
+			log.error( "Error adding an exclusion: #error.message#", error )
+			return response.failure( message: "The exclusion could not be added: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Removes an exclusion. rc.exclusionId comes from the route.
+	 *
+	 * @return The API response, a 404 when there is no such exclusion.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function unexclude( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			if ( !rateLimitExclusionService.remove( rc.exclusionId ?: "" ) ) {
+				return response.failure( message: "That exclusion does not exist.", statusCode: 404 )
+			}
+			return response.setData( data: {}, message: "The exclusion was removed." )
+		} catch ( any error ) {
+			log.error( "Error removing an exclusion: #error.message#", error )
+			return response.failure( message: "The exclusion could not be removed: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Everything the Overview tab shows in one call.
+	 *
+	 * rc.hours is how far back the history looks (1 to 168, default 24) and rc.latest how many
+	 * recent history rows to return (1 to 100, default 25).
+	 *
+	 * @return The API response whose data is { status, counters, topOffenders, hourly, latest,
+	 *         totals } where totals holds the blocked requests and windows for the period and
+	 *         the number of active blocks and exclusions.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function overview( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var hours  = clampWhole( rc.hours ?: "", 24, 1, 168 )
+			var latest = clampWhole( rc.latest ?: "", 25, 1, 100 )
+			var hourly = rateLimitHistoryService.hourly( hours )
+
+			return response.setData( data: {
+				status      : rateLimitControlService.getStatus(),
+				ceiling     : serverCeilingService.getStatus(),
+				counters    : rateLimitCounterService.list( 10 ),
+				topOffenders: rateLimitHistoryService.topOffenders( hours, 10 ),
+				hourly      : hourly,
+				latest      : rateLimitHistoryService.latest( latest ),
+				totals      : {
+					blockedRequests: hourly.reduce( ( total, row ) => total + row.blockedRequests, 0 ),
+					blockedWindows : hourly.reduce( ( total, row ) => total + row.blockedWindows, 0 ),
+					blocks         : rateLimitBlockService.list().len(),
+					exclusions     : rateLimitExclusionService.list().len()
+				}
+			} )
+		} catch ( any error ) {
+			log.error( "Error loading the rate limiting overview: #error.message#", error )
+			return response.failure( message: "The overview could not be loaded: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Lists the live attempt counters, busiest first.
+	 *
+	 * rc.max is how many rows to return (1 to 100, default 25).
+	 *
+	 * @return The API response whose data is { total, throttled, rows }.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function counters( event, rc, prc ) {
+		return event.getResponse().setData( data: rateLimitCounterService.list( clampWhole( rc.max ?: "", 25, 1, 100 ) ) )
+	}
+
+	/**
+	 * Clears one counter, giving that client a fresh window. rc.counterKey comes from the route.
+	 *
+	 * @return The API response, a 404 when there is no such live counter.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin" )
+	function clearCounter( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			if ( !rateLimitCounterService.clear( urlDecode( rc.counterKey ?: "" ) ) ) {
+				return response.failure( message: "That counter does not exist or has already expired.", statusCode: 404 )
+			}
+			return response.setData( data: {}, message: "The counter was cleared." )
+		} catch ( any error ) {
+			log.error( "Error clearing a rate limit counter: #error.message#", error )
+			return response.failure( message: "The counter could not be cleared: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Clears every live counter. The block list, exclusions and history are not touched.
+	 *
+	 * @return The API response whose data is { cleared }.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin" )
+	function clearCounters( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var cleared = rateLimitCounterService.clearAll()
+			return response.setData( data: { cleared: cleared }, message: "#cleared# counters were cleared." )
+		} catch ( any error ) {
+			log.error( "Error clearing the rate limit counters: #error.message#", error )
+			return response.failure( message: "The counters could not be cleared: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Reads the server ceiling: the configured and effective limit, lockdown, and how many IPs
+	 * are being tracked.
+	 *
+	 * @return The API response whose data is { limit, effectiveLimit, lockdown, minimum, maximum,
+	 *         trackedIps, maxTrackedIps, refusedRecently }.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function ceiling( event, rc, prc ) {
+		return event.getResponse().setData( data: serverCeilingService.getStatus() )
+	}
+
+	/**
+	 * Changes the server ceiling. rc.limit is requests per minute per IP (30 to 600) and
+	 * rc.lockdown turns lockdown on or off; send either or both. A limit out of bounds is a 422.
+	 * Turning lockdown on or off is audited at warning level.
+	 *
+	 * @return The API response whose data is the new status.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin" )
+	function saveCeiling( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var memento = {}
+			if ( rc.keyExists( "limit" ) ) {
+				memento.cbServerCeilingPerMinute = rc.limit
+			}
+			if ( rc.keyExists( "lockdown" ) ) {
+				memento.cbServerCeilingLockdown = isBoolean( rc.lockdown ) && rc.lockdown ? true : false
+			}
+			if ( !memento.count() ) {
+				return response.failure( message: "Send a limit, lockdown, or both.", statusCode: 422 )
+			}
+
+			var wasLockdown = serverCeilingService.isLockdown()
+			settingService.bulkSave( memento )
+			serverCeilingService.refresh()
+
+			var status = serverCeilingService.getStatus()
+			if ( status.lockdown != wasLockdown ) {
+				auditLogService.warn(
+					action  : status.lockdown ? "security.ratelimit.lockdown.enabled" : "security.ratelimit.lockdown.disabled",
+					message : status.lockdown
+						? "Server ceiling lockdown was turned on: every IP is limited to #status.minimum# requests a minute."
+						: "Server ceiling lockdown was turned off.",
+					category: "security"
+				)
+			}
+			if ( memento.keyExists( "cbServerCeilingPerMinute" ) ) {
+				auditLogService.info(
+					action  : "security.ratelimit.ceiling.updated",
+					message : "Server ceiling was set to #status.limit# requests a minute per IP.",
+					category: "security",
+					metadata: { limit: status.limit }
+				)
+			}
+			return response.setData( data: status, message: "The server ceiling was saved." )
+		} catch ( "Setting.Invalid" error ) {
+			return response.failure( message: error.message, statusCode: 422 )
+		} catch ( any error ) {
+			log.error( "Error saving the server ceiling: #error.message#", error )
+			return response.failure( message: "The server ceiling could not be saved: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Reads the rate limiting settings.
+	 *
+	 * @return The API response whose data maps each setting name to its current value.
+	 */
+	@remote( "This action is requested remotely via JavaScript" )
+	function settings( event, rc, prc ) {
+		return event.getResponse().setData( data: readSettings() )
+	}
+
+	/**
+	 * Saves the rate limiting settings. Only the keys in the editable list are read from the
+	 * request, anything else is ignored, and the values are validated by SettingService, so a
+	 * bad value is a 422 naming the field.
+	 *
+	 * @return The API response whose data is the saved settings.
+	 */
+	@remote( "This action is submitted remotely via JavaScript" )
+	@secured( "settings:admin,settings:write" )
+	function saveSettings( event, rc, prc ) {
+		var response = event.getResponse()
+		try {
+			var memento = {}
+			for ( var name in static.EDITABLE_SETTINGS ) {
+				if ( rc.keyExists( name ) ) {
+					memento[ name ] = rc[ name ]
+				}
+			}
+			if ( !memento.count() ) {
+				return response.failure( message: "No rate limiting settings were sent.", statusCode: 422 )
+			}
+			settingService.bulkSave( memento )
+			auditLogService.info(
+				action  : "security.ratelimit.settings.updated",
+				message : "Rate limiting settings were updated.",
+				category: "security",
+				metadata: { keys: memento.keyArray() }
+			)
+			return response.setData( data: readSettings(), message: "Rate limiting settings were saved." )
+		} catch ( "Setting.Invalid" error ) {
+			return response.failure( message: error.message, statusCode: 422 )
+		} catch ( any error ) {
+			log.error( "Error saving the rate limiting settings: #error.message#", error )
+			return response.failure( message: "The settings could not be saved: #error.message#", statusCode: 500 )
+		}
+	}
+
+	/**
+	 * Reads the editable rate limiting settings from the settings registry.
+	 *
+	 * @return A struct of setting name to current value.
+	 */
+	private struct function readSettings() {
+		var result = {}
+		for ( var name in static.EDITABLE_SETTINGS ) {
+			result[ name ] = settingService.getSetting( name, settingService.getDefaults()[ name ] ?: "" )
+		}
+		return result
+	}
+
+	/**
+	 * Turns a request value into a whole number within bounds, falling back to a default.
+	 *
+	 * @value    The raw request value.
+	 * @fallback The value to use when it is not numeric.
+	 * @min      The smallest allowed value.
+	 * @max      The largest allowed value.
+	 *
+	 * @return A whole number from min to max.
+	 */
+	private numeric function clampWhole( required any value, required numeric fallback, required numeric min, required numeric max ) {
+		return isNumeric( arguments.value ) ? min( max( int( arguments.value ), arguments.min ), arguments.max ) : arguments.fallback
+	}
+
+}

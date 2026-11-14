@@ -59,10 +59,31 @@ class extends="app.models.BaseService" {
 			cbAuditLogRetentionDays  : 90,
 			// Rate limiting: max attempts allowed per IP within the window below, on
 			// sensitive Auth endpoints (login, register, forgot/reset password, invitation
-			// activation). See RateLimiter interceptor and RateLimitService.
+			// activation). See the AppThrottle route middleware (app/middleware/AppThrottle.bx) and SSORateLimiter.
 			cbRateLimitMaxAttempts   : 5,
-			// Rate limiting window, in seconds. 0 disables rate limiting entirely.
+			// Rate limiting window, in seconds, 1 to 86400. To switch limiting off use the emergency stop
+			// (a pause or the RATE_LIMITING_ENABLED variable), not a window of 0.
 			cbRateLimitWindowSeconds: 300,
+			// Rate limiting pause (see RateLimitControlService). Empty = not paused, "indefinite" =
+			// until resumed, otherwise the epoch second the pause ends. cbRateLimitPausedBy and
+			// cbRateLimitPausedAt record who paused it and when. Managed by the emergency stop,
+			// not meant to be edited by hand.
+			// How long the rate limit history (hourly blocked-request totals) is kept, in days.
+			cbRateLimitHistoryRetentionDays: 30,
+			// Automatic blocking: block an IP for cbRateLimitAutoBlockHours once it has been throttled
+			// in cbRateLimitAutoBlockWindows windows within cbRateLimitAutoBlockPeriodMinutes.
+			// Loopback, private and excluded addresses are never blocked automatically.
+			cbRateLimitAutoBlock             : true,
+			cbRateLimitAutoBlockWindows      : 3,
+			cbRateLimitAutoBlockPeriodMinutes: 60,
+			cbRateLimitAutoBlockHours        : 24,
+			// Server ceiling (see ServerCeilingService): the most requests one IP may make per minute
+			// to the whole application, 30 to 600. Lockdown holds every IP to the minimum of 30.
+			cbServerCeilingPerMinute: 120,
+			cbServerCeilingLockdown : false,
+			cbRateLimitPausedUntil   : "",
+			cbRateLimitPausedBy      : "",
+			cbRateLimitPausedAt      : "",
 			// Whether to trust the X-Forwarded-For / X-Cluster-Client-IP headers for the
 			// "real" client IP used by rate limiting, audit logging, and security emails.
 			// Defaults on since this app is typically deployed behind a reverse proxy or
@@ -372,12 +393,46 @@ class extends="app.models.BaseService" {
 			)
 		}
 
-		// Validate the cbRateLimitWindowSeconds setting to be a whole number between 0 and 86400 (one day). 0 disables rate limiting.
-		var windowSeconds = arguments.memento?.cbRateLimitWindowSeconds ?: this.DEFAULTS.cbRateLimitWindowSeconds
-		if ( !isNumeric( windowSeconds ) || int( windowSeconds ) != windowSeconds || int( windowSeconds ) < 0 || int( windowSeconds ) > 86400 ) {
+		// Validate the cbRateLimitHistoryRetentionDays setting to be a whole number between 1 and 365
+		var historyDays = arguments.memento?.cbRateLimitHistoryRetentionDays ?: this.DEFAULTS.cbRateLimitHistoryRetentionDays
+		if ( !isNumeric( historyDays ) || int( historyDays ) != historyDays || int( historyDays ) < 1 || int( historyDays ) > 365 ) {
 			throw(
 				type   = "Setting.Invalid",
-				message = "Rate limit window must be a whole number of seconds between 0 and 86400."
+				message = "Rate limit history retention must be a whole number between 1 and 365 days."
+			)
+		}
+
+		// Validate the automatic blocking settings: windows 1 to 100, period 1 to 1440 minutes, block 1 to 8760 hours
+		var autoBlockRules = [
+			{ key: "cbRateLimitAutoBlockWindows", min: 1, max: 100, label: "Automatic blocking windows" },
+			{ key: "cbRateLimitAutoBlockPeriodMinutes", min: 1, max: 1440, label: "Automatic blocking period" },
+			{ key: "cbRateLimitAutoBlockHours", min: 1, max: 8760, label: "Automatic block duration" }
+		]
+		for ( var rule in autoBlockRules ) {
+			var value = arguments.memento.keyExists( rule.key ) ? arguments.memento[ rule.key ] : this.DEFAULTS[ rule.key ]
+			if ( !isNumeric( value ) || int( value ) != value || int( value ) < rule.min || int( value ) > rule.max ) {
+				throw(
+					type   = "Setting.Invalid",
+					message = "#rule.label# must be a whole number between #rule.min# and #rule.max#."
+				)
+			}
+		}
+
+		// Validate the server ceiling: a whole number of requests per minute from 30 to 600
+		var ceilingPerMinute = arguments.memento.keyExists( "cbServerCeilingPerMinute" ) ? arguments.memento.cbServerCeilingPerMinute : this.DEFAULTS.cbServerCeilingPerMinute
+		if ( !isNumeric( ceilingPerMinute ) || int( ceilingPerMinute ) != ceilingPerMinute || int( ceilingPerMinute ) < 30 || int( ceilingPerMinute ) > 600 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "Server ceiling must be a whole number of requests per minute between 30 and 600."
+			)
+		}
+
+		// Validate the cbRateLimitWindowSeconds setting to be a whole number between 1 and 86400 (one day). 0 no longer disables rate limiting: use the emergency stop.
+		var windowSeconds = arguments.memento?.cbRateLimitWindowSeconds ?: this.DEFAULTS.cbRateLimitWindowSeconds
+		if ( !isNumeric( windowSeconds ) || int( windowSeconds ) != windowSeconds || int( windowSeconds ) < 1 || int( windowSeconds ) > 86400 ) {
+			throw(
+				type   = "Setting.Invalid",
+				message = "Rate limit window must be a whole number of seconds between 1 and 86400. To switch rate limiting off, use the emergency stop."
 			)
 		}
 	}

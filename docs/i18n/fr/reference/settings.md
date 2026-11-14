@@ -48,7 +48,7 @@ Sélectionnez **Auth Center** ou **Auth Split** sur `/settings`, enregistrez les
 | `cbApiTokenMaxValidityMonths` | Durée de vie maximale pour laquelle un jeton API peut être émis (par défaut : `12`) |
 | `cbAuditLogRetentionDays` | Âge, en jours, auquel la tâche planifiée quotidienne supprime définitivement les entrées du journal d'audit (par défaut : `90`). `0` désactive la purge - voir [Tâches planifiées](../architecture.md#scheduled-tasks) |
 | `cbRateLimitMaxAttempts` | Tentatives autorisées par IP, par point de terminaison, avant que `RateLimiter` ne bloque la connexion/l'inscription/la réinitialisation de mot de passe (par défaut : `5`) - voir [Limitation de débit](../guides/security.md#rate-limiting) |
-| `cbRateLimitWindowSeconds` | Fenêtre de limitation de débit, en secondes (par défaut : `300`). `0` désactive entièrement la limitation de débit |
+| `cbRateLimitWindowSeconds` | Fenêtre de limitation de débit, en secondes (par défaut : `300`). Plage de 1 à 86400. Pour la désactiver, utilisez l'arrêt d'urgence. |
 | `cbTrustProxyHeaders` | Si `RateLimiter`, le journal d'audit, et les emails de sécurité font confiance aux en-têtes `X-Forwarded-For`/`X-Cluster-Client-IP` pour l'IP de l'appelant (par défaut : `true`, puisque cette application est typiquement déployée derrière un proxy inverse ou un répartiteur de charge). Désactivez ceci uniquement si l'application est directement exposée sur Internet sans rien devant elle - voir [Déploiement derrière un proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 | `cbEncryptionKey` / `cbSaltingKey` | Clés de chiffrement/salage utilisées par la couche de sécurité |
 

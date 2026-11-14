@@ -47,9 +47,15 @@ Select **Auth Center** or **Auth Split** at `/settings`, save the settings, and 
 | `cbRegistrationVerificationExpiration` | Registration-verification-token validity, in hours (default: `24`) |
 | `cbApiTokenMaxValidityMonths` | Maximum lifetime an API token can be issued for (default: `12`) |
 | `cbAuditLogRetentionDays` | Age, in days, at which the daily scheduled task hard-deletes audit log entries (default: `90`). `0` disables the purge - see [Scheduled Tasks](../architecture.md#scheduled-tasks) |
-| `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, before `RateLimiter` blocks login/registration/password-reset (default: `5`) - see [Rate limiting](../guides/security.md#rate-limiting) |
-| `cbRateLimitWindowSeconds` | Rate limit window, in seconds (default: `300`). `0` disables rate limiting entirely |
-| `cbTrustProxyHeaders` | Whether `RateLimiter`, the audit trail, and security emails trust the `X-Forwarded-For`/`X-Cluster-Client-IP` headers for the caller's IP (default: `true`, since this app is typically deployed behind a reverse proxy or load balancer). Turn this off only if the app is directly internet-facing with nothing in front of it - see [Deployment behind a proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
+| `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, before the `AppThrottle` middleware blocks login/registration/password-reset (default: `5`) - see [Rate limiting](../guides/security.md#rate-limiting) |
+| `cbRateLimitWindowSeconds` | Rate limit window, in seconds (default: `300`). Range 1 to 86400. To switch limiting off, use the emergency stop. |
+| `cbRateLimitAutoBlock` | Whether an IP that keeps getting throttled is blocked automatically (default: `true`) - see [Blocked IPs](../guides/security.md#blocked-ips) |
+| `cbRateLimitAutoBlockWindows` / `cbRateLimitAutoBlockPeriodMinutes` / `cbRateLimitAutoBlockHours` | The automatic rule: block an IP after this many throttled windows (1 to 100, default `3`) within this many minutes (1 to 1440, default `60`), for this many hours (1 to 8760, default `24`) |
+| `cbRateLimitHistoryRetentionDays` | Days the rate limit history (hourly blocked-request totals) is kept before the daily purge deletes it (default: `30`, 1 to 365) - see [History](../guides/security.md#history) |
+| `cbServerCeilingPerMinute` | The most requests one counted IP may make per minute to the whole site, whatever the route (default: `120`, 30 to 600). Only the `RATE_LIMITING_ENABLED` environment override bypasses it - see [Server ceiling](../guides/security.md#server-ceiling) |
+| `cbServerCeilingLockdown` | When `true`, every counted IP is held to the minimum of 30 requests a minute until an admin turns it off (default: `false`) |
+| `cbRateLimitPausedUntil` / `cbRateLimitPausedBy` / `cbRateLimitPausedAt` | The emergency-stop state: empty when rate limiting is on, `indefinite` or the epoch second the pause ends, who paused it, and when. Managed by `RateLimitControlService`, not meant to be edited by hand - see [Emergency stop](../guides/security.md#emergency-stop) |
+| `cbTrustProxyHeaders` | Whether `AppThrottle`, the audit trail, and security emails trust the `X-Forwarded-For`/`X-Cluster-Client-IP` headers for the caller's IP (default: `true`, since this app is typically deployed behind a reverse proxy or load balancer). Turn this off only if the app is directly internet-facing with nothing in front of it - see [Deployment behind a proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 | `cbEncryptionKey` / `cbSaltingKey` | Encryption/salting keys used by the security layer |
 
 ## Branding & appearance

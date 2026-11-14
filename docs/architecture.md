@@ -76,7 +76,7 @@ sequenceDiagram
 
 ## Interceptors
 
-`app/config/Coldbox.bx` registers three application interceptors, in this order:
+`app/config/Coldbox.bx` registers five application interceptors:
 
 **`app/interceptors/AuditLogger.bx`** writes to the audit trail on four interception points:
 
@@ -87,7 +87,9 @@ sequenceDiagram
 | `cbSecurity_onInvalidAuthentication` | A request that required a session and had none |
 | `cbSecurity_onInvalidAuthorization` | An authenticated user missing the required permission |
 
-**`app/interceptors/RateLimiter.bx`** fires on `preProcess` - before routing, before any handler - and throttles five unauthenticated `Auth` actions (login, register, forgot/reset password, invitation activation) by client IP. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
+**`app/middleware/AppThrottle.bx`** is route middleware (attached in `app/config/Router.bx`) that throttles five unauthenticated `Auth` routes (login, register, forgot/reset password, invitation activation) and the SSO routes by client IP. `app/interceptors/SSORateLimiter.bx` covers the cbSSO callback, which is a module route. See [Rate limiting](guides/security.md#rate-limiting) for the settings and how it works.
+
+**`app/interceptors/ServerCeiling.bx`** enforces the site-wide per-IP ceiling before routing. **`app/interceptors/RateLimitBlocker.bx`** refuses blocked IPs, subject to exclusions. Both run before `SSORateLimiter`.
 
 **`app/interceptors/SSOAuthorization.bx`** handles cbSSO's
 `CBSSOAuthorization` interception point. It connects a verified provider
@@ -101,7 +103,7 @@ Add your own to the `variables.interceptors` array in `Coldbox.bx`; they fire in
 
 ## Scheduled tasks
 
-`app/config/Scheduler.bx` registers three daily background tasks, each `onOneServer()` and `withNoOverlaps()` so a multi-instance deployment runs each one exactly once:
+`app/config/Scheduler.bx` registers three daily purge tasks, each `onOneServer()` and `withNoOverlaps()` so a multi-instance deployment runs each one exactly once:
 
 | Task | Runs | Deletes | Governed by |
 |---|---|---|---|
@@ -109,7 +111,17 @@ Add your own to the `variables.interceptors` array in `Coldbox.bx`; they fire in
 | Purge Expired Remember Tokens | `03:15` | `user_remember_tokens` rows past their `expiration` | Fixed expiration set when the token is issued (`SecurityService`/`RememberTokenService`) |
 | Purge Old Audit Logs | `03:30` | `audit_logs` rows older than the retention window | `cbAuditLogRetentionDays` (default `90`; `0` disables the purge) - see [App Settings](reference/settings.md#password--token-policy) |
 
-All three call a `purgeExpiredTokens()`/`purgeOlderThan()` method on the owning service rather than querying the table directly, so the same purge logic is reachable (and testable) outside the scheduler. Add a new task the same way - see [Extending the App](guides/extending.md#adding-a-scheduled-task).
+The rate limiting tasks run alongside them:
+
+| Task | Runs | Does | Governed by |
+|---|---|---|---|
+| Flush Rate Limit History | every minute, **every server** | Writes this server's in-memory tally of blocked requests to `rate_limit_history`. Not `onOneServer()`, because each server has its own tally | - see [History](guides/security.md#history) |
+| Purge Old Rate Limit History | `03:45` | Deletes `rate_limit_history` rows older than the retention window | `cbRateLimitHistoryRetentionDays` (default `30`, 1 to 365) |
+| Purge Expired Rate Limit Blocks | `03:50` | Deletes expired rows from `rate_limit_blocks` (they are ignored once expired either way) | - see [Blocked IPs](guides/security.md#blocked-ips) |
+| Expire Rate Limiting Pause | every minute | Clears an elapsed emergency-stop pause and audits it | - see [Emergency stop](guides/security.md#emergency-stop) |
+| Remind Rate Limiting Is Paused | `09:00` | Writes audit reminders while a pause has no end time or lockdown is on | - |
+
+The purge tasks call a `purgeExpiredTokens()`/`purgeOlderThan()` method on the owning service rather than querying the table directly, so the same purge logic is reachable (and testable) outside the scheduler. Add a new task the same way - see [Extending the App](guides/extending.md#adding-a-scheduled-task).
 
 ## Full project tree
 
@@ -136,7 +148,7 @@ cbgenesis/
 │   │   └── _components/        Reusable UI partials (app, auth, ui)
 │   ├── email_templates/       Token-based email body templates
 │   ├── helpers/               ApplicationHelper.bxm — global view helpers
-│   └── interceptors/           AuditLogger, RateLimiter, SSOAuthorization
+│   └── interceptors/           AuditLogger, SSORateLimiter, SSOAuthorization
 ├── public/
 │   ├── Application.bx         Entry point — ColdBox + ORM bootstrap
 │   ├── index.bxm               Front controller placeholder

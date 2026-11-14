@@ -1,0 +1,29 @@
+[
+	"index.md",
+	"getting-started.md",
+	"ai-native.md",
+	"architecture.md",
+	{
+		"title": "Guides",
+		"children": [
+			"guides/command-line.md",
+			"guides/handlers-routing.md",
+			"guides/security.md",
+			"guides/database-orm.md",
+			"guides/frontend.md",
+			"guides/email.md",
+			"guides/testing.md",
+			"guides/configuration.md",
+			"guides/extending.md"
+		]
+	},
+	{
+		"title": "Reference",
+		"children": [
+			"reference/routes.md",
+			"reference/settings.md",
+			"reference/release-notes.md"
+		]
+	},
+	"deployment.md"
+]

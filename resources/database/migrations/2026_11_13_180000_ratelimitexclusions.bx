@@ -1,0 +1,29 @@
+class {
+
+	function up( schema, qb ) {
+		// Exclusions - IP addresses, ranges and users that are never held to the attempt limits
+		// or blocked automatically. The server-wide protections still apply to them.
+		schema.create( "rate_limit_exclusions", ( table ) => {
+			table.string( "exclusionId", 36 ).primaryKey()
+
+			// "ip" for an address or CIDR range, "user" for an account
+			table.string( "type", 10 )
+			// The address or range as typed, or the user's id
+			table.string( "value", 64 )
+			// The normalized form with the type, so one entry cannot be added twice
+			table.string( "valueKey", 120 ).unique()
+
+			// What it is for, for example "Office VPN"
+			table.string( "label", 255 ).nullable()
+			table.string( "createdBy", 255 ).nullable()
+			table.timestamp( "createdDate" )
+
+			table.index( "type", "idx_rateLimitExclusionsType" )
+		} )
+	}
+
+	function down( schema, qb ) {
+		schema.dropIfExists( "rate_limit_exclusions" )
+	}
+
+}

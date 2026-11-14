@@ -11,7 +11,9 @@
 		model : string — alias for name (default: "")
 		trueValue : string — submitted value when enabled (default: "true")
 		falseValue : string — submitted value when disabled (default: "false")
-		classes : string — extra CSS classes (default: "") --->
+		classes : string — extra CSS classes (default: "")
+		bind : string — Alpine expression to keep the toggle synchronized with parent state
+		disabled : boolean — disable user interaction (default: false) --->
 <bx:param name="args.value" default="false"/>
 <bx:param name="args.name" default=""/>
 <bx:param name="args.model" default=""/>
@@ -19,6 +21,7 @@
 <bx:param name="args.falseValue" default="false"/>
 <bx:param name="args.classes" default=""/>
 <bx:param name="args.bind" default=""/>
+<bx:param name="args.disabled" default="false"/>
 
 <bx:set localIsTrue = !!args.value>
 <bx:set localName = len( trim( args.name ?: "" ) ) ? trim( args.name ) : trim( args.model ?: "" )>
@@ -48,6 +51,7 @@
 		type="button"
 		class="cb-switch__button"
 		@click="toggle()"
+		:disabled="#args.disabled ? 'true' : 'false'#"
 		:aria-label="ariaLabel"
 		:aria-pressed="checked ? 'true' : 'false'"
 	>

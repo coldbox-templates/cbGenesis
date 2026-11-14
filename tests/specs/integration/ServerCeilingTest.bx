@@ -1,0 +1,376 @@
+/**
+ * Tests for the server ceiling: the per-IP request cap over the whole application. Covers the
+ * counting service (limits, lockdown, exemptions, bounded memory, failing open, audit volume),
+ * the interceptor that enforces it on real requests, and the admin endpoints.
+ */
+class extends="tests.resources.BaseIntegrationSpec" {
+
+	@inject( "@cbcsrf" )
+	property name="cbcsrf";
+
+	@inject
+	property name="serverCeilingService";
+
+	@inject
+	property name="rateLimitHistoryService";
+
+	@inject
+	property name="rateLimitExclusionService";
+
+	@inject
+	property name="rateLimitControlService";
+
+	@inject
+	property name="auditLogService";
+
+	@inject( "QueryBuilder@qb" )
+	property name="qb";
+
+	@inject
+	property name="roleService";
+
+	/**
+	 * A user holding the seeded Admin role, which carries the settings permissions.
+	 */
+	private User function createSettingsAdmin() {
+		var user = createVerifiedUser()
+		user.setRoles( [ roleService.findWhere( { role: "Admin" } ) ] )
+		return userService.save( user )
+	}
+
+	/**
+	 * Counts the audit entries recorded for an action.
+	 */
+	private numeric function auditCount( required string action ) {
+		ormFlush()
+		return auditLogService.countWhere( action: arguments.action )
+	}
+
+	/**
+	 * Saves settings and makes the ceiling read them again at once, as the admin endpoint does.
+	 */
+	private void function saveCeilingSettings( required struct memento ) {
+		settingService.bulkSave( arguments.memento )
+		serverCeilingService.refresh()
+	}
+
+	/**
+	 * Makes a number of requests from one address and returns the last answer.
+	 */
+	private struct function hitTimes( required string ipAddress, required numeric times ) {
+		var result = {}
+		for ( var i = 1; i <= arguments.times; i++ ) {
+			result = serverCeilingService.hit( arguments.ipAddress )
+		}
+		return result
+	}
+
+	function run() {
+		describe( "Server ceiling", () => {
+			beforeEach( () => {
+				setup()
+				structClear( form )
+				securityService.logout( quiet: true )
+				serverCeilingService.reset()
+				saveCeilingSettings( { cbServerCeilingPerMinute: 120, cbServerCeilingLockdown: false } )
+			} )
+
+			afterEach( () => {
+				serverCeilingService.reset()
+				saveCeilingSettings( { cbServerCeilingPerMinute: 120, cbServerCeilingLockdown: false } )
+				rateLimitHistoryService.flush()
+				qb.newQuery().from( "rate_limit_history" ).delete()
+				getRequestContext().getResponse().setError( false )
+			} )
+
+			story( "The service counts requests per IP", () => {
+				it( "allows requests up to the limit and refuses the next one", () => {
+					saveCeilingSettings( { cbServerCeilingPerMinute: 30 } )
+
+					expect( hitTimes( "203.0.113.10", 30 ).allowed ).toBeTrue()
+					var refused = serverCeilingService.hit( "203.0.113.10" )
+
+					expect( refused.allowed ).toBeFalse()
+					expect( refused.firstRefusal ).toBeTrue()
+					expect( refused.retryInSeconds ).toBeBetween( 1, 60 )
+				} )
+
+				it( "flags only the first refusal of a window", () => {
+					saveCeilingSettings( { cbServerCeilingPerMinute: 30 } )
+					hitTimes( "203.0.113.10", 30 )
+
+					expect( serverCeilingService.hit( "203.0.113.10" ).firstRefusal ).toBeTrue()
+					expect( serverCeilingService.hit( "203.0.113.10" ).firstRefusal ).toBeFalse()
+				} )
+
+				it( "counts each address on its own", () => {
+					saveCeilingSettings( { cbServerCeilingPerMinute: 30 } )
+					hitTimes( "203.0.113.10", 31 )
+
+					expect( serverCeilingService.hit( "203.0.113.11" ).allowed ).toBeTrue()
+					expect( serverCeilingService.hit( "2001:db8::1" ).allowed ).toBeTrue()
+				} )
+
+				it( "never counts loopback, private or link-local addresses", () => {
+					saveCeilingSettings( { cbServerCeilingPerMinute: 30 } )
+
+					for ( var ip in [ "127.0.0.1", "10.1.2.3", "192.168.1.5", "172.16.0.9", "169.254.1.1", "::1" ] ) {
+						expect( hitTimes( ip, 50 ).allowed ).toBeTrue()
+					}
+				} )
+
+				it( "lets an unparseable address through rather than guessing", () => {
+					expect( hitTimes( "not-an-ip", 200 ).allowed ).toBeTrue()
+				} )
+
+				it( "refuses an excluded address too, because it protects the server", () => {
+					saveCeilingSettings( { cbServerCeilingPerMinute: 30 } )
+					rateLimitExclusionService.excludeIp( address: "203.0.113.10" )
+
+					expect( hitTimes( "203.0.113.10", 31 ).allowed ).toBeFalse()
+
+					rateLimitExclusionService.remove( rateLimitExclusionService.list()[ 1 ].exclusionId )
+				} )
+			} )
+
+			story( "The limit and lockdown", () => {
+				it( "uses 120 a minute by default", () => {
+					expect( serverCeilingService.effectiveLimit() ).toBe( 120 )
+					expect( hitTimes( "203.0.113.10", 120 ).allowed ).toBeTrue()
+					expect( serverCeilingService.hit( "203.0.113.10" ).allowed ).toBeFalse()
+				} )
+
+				it( "drops everyone to the minimum during lockdown", () => {
+					saveCeilingSettings( { cbServerCeilingPerMinute: 600, cbServerCeilingLockdown: true } )
+
+					expect( serverCeilingService.effectiveLimit() ).toBe( 30 )
+					expect( hitTimes( "203.0.113.10", 30 ).allowed ).toBeTrue()
+					expect( serverCeilingService.hit( "203.0.113.10" ).allowed ).toBeFalse()
+				} )
+
+				it( "keeps its last settings when a reload fails", () => {
+					var service = prepareMock( new app.models.security.ServerCeilingService() )
+					getWireBox().autowire( service )
+					service.$property( propertyName = "settingService", mock = createStub().$( "getSetting", 77 ) )
+					service.refresh()
+					expect( service.configuredLimit() ).toBe( 77 )
+
+					service.$property( propertyName = "settingService", mock = createStub().$( "getSetting" ).$throws( type = "Database.Down", message = "down" ) )
+					service.refresh()
+
+					expect( service.configuredLimit() ).toBe( 77 )
+				} )
+
+				it( "keeps a bad stored value inside its bounds", () => {
+					var service = prepareMock( new app.models.security.ServerCeilingService() )
+					getWireBox().autowire( service )
+
+					service.$property( propertyName = "settingService", mock = createStub().$( "getSetting", 5 ) )
+					service.refresh()
+					expect( service.configuredLimit() ).toBe( 30 )
+
+					service.$property( propertyName = "settingService", mock = createStub().$( "getSetting", 99999 ) )
+					service.refresh()
+					expect( service.configuredLimit() ).toBe( 600 )
+
+					service.$property( propertyName = "settingService", mock = createStub().$( "getSetting", "banana" ) )
+					service.refresh()
+					expect( service.configuredLimit() ).toBe( 120 )
+				} )
+
+				it( "refuses limits outside 30 to 600 when saved", () => {
+					expect( () => settingService.bulkSave( { cbServerCeilingPerMinute: 29 } ) ).toThrow( "Setting.Invalid" )
+					expect( () => settingService.bulkSave( { cbServerCeilingPerMinute: 601 } ) ).toThrow( "Setting.Invalid" )
+					expect( () => settingService.bulkSave( { cbServerCeilingPerMinute: "ten" } ) ).toThrow( "Setting.Invalid" )
+				} )
+
+				it( "is not switched off by pausing rate limiting", () => {
+					saveCeilingSettings( { cbServerCeilingPerMinute: 30 } )
+					rateLimitControlService.pause( minutes: 0 )
+
+					try {
+						expect( hitTimes( "203.0.113.10", 31 ).allowed ).toBeFalse()
+					} finally {
+						rateLimitControlService.resume()
+					}
+				} )
+			} )
+
+			story( "Memory and failure behavior", () => {
+				it( "counts a request quickly enough for every request", () => {
+					var started = getTickCount()
+					for ( var i = 1; i <= 2000; i++ ) {
+						serverCeilingService.hit( "203.0.#int( i / 256 ) mod 256#.#i mod 256#" )
+					}
+
+					// A generous bound for slow CI machines: well under a millisecond a request in practice.
+					expect( getTickCount() - started ).toBeLT( 1000 )
+				} )
+
+				it( "never tracks more addresses than its cap", () => {
+					var cap = serverCeilingService.getStatus().maxTrackedIps
+					for ( var i = 1; i <= cap + 1500; i++ ) {
+						serverCeilingService.hit( "203.#int( i / 65536 ) mod 256#.#int( i / 256 ) mod 256#.#i mod 256#" )
+					}
+
+					expect( serverCeilingService.getStatus().trackedIps ).toBeLTE( cap )
+				} )
+
+				it( "allows the request when counting fails", () => {
+					var service = prepareMock( new app.models.security.ServerCeilingService() )
+					getWireBox().autowire( service )
+					service.$property( propertyName = "settingService", mock = createStub().$( "getSetting" ).$throws( type = "Database.Down", message = "down" ) )
+
+					expect( service.hit( "203.0.113.10" ).allowed ).toBeTrue()
+				} )
+
+				it( "writes at most one audit row a minute however many addresses are refused", () => {
+					saveCeilingSettings( { cbServerCeilingPerMinute: 30 } )
+					var before = auditCount( "security.ratelimit.ceiling" )
+
+					var written = 0
+					for ( var i = 1; i <= 5; i++ ) {
+						var ip = "203.0.113.#i#"
+						hitTimes( ip, 31 )
+						written += serverCeilingService.auditRefusals( ip ) ? 1 : 0
+					}
+
+					expect( written ).toBe( 1 )
+					expect( auditCount( "security.ratelimit.ceiling" ) ).toBe( before + 1 )
+				} )
+
+				it( "reminds daily only while lockdown is on", () => {
+					expect( serverCeilingService.remindIfLockdown() ).toBeFalse()
+
+					saveCeilingSettings( { cbServerCeilingLockdown: true } )
+					expect( serverCeilingService.remindIfLockdown() ).toBeTrue()
+				} )
+			} )
+
+			story( "The interceptor enforces it on requests", () => {
+				it( "answers 429 with Retry-After once an address is over the ceiling", () => {
+					saveCeilingSettings( { cbServerCeilingLockdown: true } )
+					var interceptor = prepareMock( getController().getInterceptorService().getInterceptor( "ServerCeiling" ) )
+					var original = interceptor.getCbsecurity()
+					interceptor.$property( propertyName = "cbsecurity", mock = createStub().$( "getRealIP", "203.0.113.50" ) )
+
+					try {
+						var status = 200
+						for ( var i = 1; i <= 33; i++ ) {
+							var event = get( route = "/login", renderResults = false )
+							status = event.getRenderData().statusCode ?: 200
+						}
+
+						expect( status ).toBe( 429 )
+						expect( serverCeilingService.getStatus().refusedRecently ).toBeGT( 0 )
+					} finally {
+						interceptor.$property( propertyName = "cbsecurity", mock = original )
+					}
+				} )
+
+				it( "does not refuse loopback however many requests it makes", () => {
+					saveCeilingSettings( { cbServerCeilingLockdown: true } )
+					var status = 200
+					for ( var i = 1; i <= 35; i++ ) {
+						var event = get( route = "/login", renderResults = false )
+						status = event.getRenderData().statusCode ?: 200
+					}
+
+					expect( status ).notToBe( 429 )
+				} )
+			} )
+
+			story( "The admin endpoints", () => {
+				it( "reads the ceiling", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					var data = execute( event = "ratelimiting.ceiling", prePostExempt = true ).getPrivateValue( "response" ).getData()
+
+					expect( data.limit ).toBe( 120 )
+					expect( data.lockdown ).toBeFalse()
+					expect( data.minimum ).toBe( 30 )
+					expect( data.maximum ).toBe( 600 )
+				} )
+
+				it( "saves a new limit and audits it", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					var before = auditCount( "security.ratelimit.ceiling.updated" )
+
+					form.limit = 200
+					form.csrf = cbcsrf.generate()
+					var data = execute( event = "ratelimiting.saveCeiling", prePostExempt = true ).getPrivateValue( "response" ).getData()
+
+					expect( data.limit ).toBe( 200 )
+					expect( serverCeilingService.effectiveLimit() ).toBe( 200 )
+					expect( auditCount( "security.ratelimit.ceiling.updated" ) ).toBe( before + 1 )
+				} )
+
+				it( "turns lockdown on and off and audits each change", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					var enabled = auditCount( "security.ratelimit.lockdown.enabled" )
+					var disabled = auditCount( "security.ratelimit.lockdown.disabled" )
+
+					form.lockdown = true
+					form.csrf = cbcsrf.generate()
+					execute( event = "ratelimiting.saveCeiling", prePostExempt = true )
+					expect( serverCeilingService.isLockdown() ).toBeTrue()
+					expect( auditCount( "security.ratelimit.lockdown.enabled" ) ).toBe( enabled + 1 )
+
+					structClear( form )
+					form.lockdown = false
+					form.csrf = cbcsrf.generate()
+					execute( event = "ratelimiting.saveCeiling", prePostExempt = true )
+					expect( serverCeilingService.isLockdown() ).toBeFalse()
+					expect( auditCount( "security.ratelimit.lockdown.disabled" ) ).toBe( disabled + 1 )
+				} )
+
+				it( "does not audit a lockdown change that changed nothing", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					var before = auditCount( "security.ratelimit.lockdown.disabled" )
+
+					form.lockdown = false
+					form.csrf = cbcsrf.generate()
+					execute( event = "ratelimiting.saveCeiling", prePostExempt = true )
+
+					expect( auditCount( "security.ratelimit.lockdown.disabled" ) ).toBe( before )
+				} )
+
+				it( "answers a limit out of bounds with a 422 and saves nothing", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.limit = 5
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.saveCeiling", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 422 )
+					expect( serverCeilingService.configuredLimit() ).toBe( 120 )
+				} )
+
+				it( "answers a request with neither a limit nor lockdown with a 422", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					form.csrf = cbcsrf.generate()
+					var response = execute( event = "ratelimiting.saveCeiling", prePostExempt = true ).getPrivateValue( "response" )
+
+					expect( response.getStatusCode() ).toBe( 422 )
+				} )
+
+				it( "includes the ceiling in the overview", () => {
+					var admin = createSettingsAdmin()
+					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+
+					var data = execute( event = "ratelimiting.overview", prePostExempt = true ).getPrivateValue( "response" ).getData()
+
+					expect( data.ceiling.limit ).toBe( 120 )
+				} )
+			} )
+		} )
+	}
+
+}
