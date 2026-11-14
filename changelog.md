@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A rate limit window of `0` no longer disables attempt throttling: the window must be 1 to 86400 seconds, a stored `0` falls back to 300, and the emergency pause or `RATE_LIMITING_ENABLED` is the way to switch it off.
 - Replaced the previous rate limiter with fixed-window `AppThrottle` middleware for authentication and profile SSO routes, including convention URLs; SSO callbacks are also throttled.
 - Raised the minimum dependency versions to ColdBox 8.3 and cbSecurity 3.9, and corrected the framework and TestBox install paths.
 - Updated the documentation theme, database initialization instructions, and rate limiting documentation.
