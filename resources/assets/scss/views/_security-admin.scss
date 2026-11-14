@@ -157,7 +157,7 @@
 	align-items: center;
 	gap: 0.25rem;
 	box-sizing: border-box;
-	height: 3rem;
+	min-height: 3rem;
 	padding: 0.25rem;
 	background: var(--app-surface-raised);
 	border: 1px solid var(--app-border);
@@ -1481,6 +1481,11 @@
 		outline: 2px solid rgba( $bl-cyan, 0.35 );
 		outline-offset: 4px;
 		border-radius: 999px;
+	}
+
+	&__button:disabled {
+		cursor: not-allowed;
+		opacity: 0.55;
 	}
 
 	&__track {

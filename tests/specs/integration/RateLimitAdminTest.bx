@@ -251,6 +251,13 @@ class extends="tests.resources.BaseIntegrationSpec" {
 					expect( html ).toInclude( "rateLimitAdmin(" )
 					expect( html ).toInclude( "addBlock()" )
 					expect( html ).toInclude( "askClearAll()" )
+					expect( html ).toInclude( "Automatically block repeat offenders" )
+					expect( html ).toInclude( "cb-switch__button" )
+					expect( html ).toInclude( "Excluded, private, loopback, and link-local IPs" )
+					expect( html ).toInclude( 'middleware( "AppThrottle" )' )
+					expect( html ).toInclude( 'throttleMethods: "GET"' )
+					expect( html ).toInclude( "Lockdown is an emergency measure" )
+					expect( html ).toInclude( "limits each counted IP to 30 requests per minute" )
 				} )
 
 				it( "is refused for a user without the settings permissions", () => {
@@ -284,6 +291,7 @@ class extends="tests.resources.BaseIntegrationSpec" {
 
 					expect( data.cbRateLimitMaxAttempts ).toBe( 5 )
 					expect( data ).toHaveKey( "cbRateLimitAutoBlock" )
+					expect( data ).notToHaveKey( "cbTrustProxyHeaders" )
 					expect( data ).notToHaveKey( "cbRateLimitPausedUntil" )
 				} )
 
@@ -317,13 +325,16 @@ class extends="tests.resources.BaseIntegrationSpec" {
 				it( "ignores settings that are not editable here, such as the pause", () => {
 					var admin = createSettingsAdmin()
 					securityService.authenticate( username: admin.getEmail(), password: "correct-password" )
+					var originalTrustProxy = settingService.getSetting( "cbTrustProxyHeaders", true )
 
 					form.cbRateLimitPausedUntil = "indefinite"
+					form.cbTrustProxyHeaders = originalTrustProxy == true ? false : true
 					form.csrf = cbcsrf.generate()
 					var response = execute( event = "ratelimiting.saveSettings", prePostExempt = true ).getPrivateValue( "response" )
 
 					expect( response.getStatusCode() ).toBe( 422 )
 					expect( settingService.getSetting( "cbRateLimitPausedUntil", "" ) ).toBe( "" )
+					expect( settingService.getSetting( "cbTrustProxyHeaders", true ) ).toBe( originalTrustProxy )
 				} )
 			} )
 		} )

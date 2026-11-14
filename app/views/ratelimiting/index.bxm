@@ -9,7 +9,7 @@
 			<h2 class="cb-page-title">Rate Limiting</h2>
 			<p class="cb-page-subtitle">See who is being throttled, block or exclude addresses, and tune the limits.</p>
 		</div>
-		<div class="d-flex gap-2">
+		<div class="d-flex justify-content-end gap-2">
 			<button type="button" class="btn btn-light" @click="refresh()" :disabled="loading">
 				<i class="ph-duotone ph-arrows-clockwise" aria-hidden="true"></i>
 				Refresh
@@ -321,33 +321,54 @@
 	<div x-show="tab === 'settings'" x-cloak>
 		<section class="cb-content-card">
 			<form class="p-3 cb-ratelimit-form cb-ratelimit-form--settings" @submit.prevent="saveSettings()">
-				<label>Attempts per window
-					<input type="number" min="1" max="100" class="form-control" x-model="settings.cbRateLimitMaxAttempts" :disabled="!#prc.canWrite#">
-				</label>
-				<label>Window (seconds)
-					<input type="number" min="0" max="86400" class="form-control" x-model="settings.cbRateLimitWindowSeconds" :disabled="!#prc.canWrite#">
-				</label>
-				<label>History kept (days)
-					<input type="number" min="1" max="365" class="form-control" x-model="settings.cbRateLimitHistoryRetentionDays" :disabled="!#prc.canWrite#">
-				</label>
-				<label class="form-check">
-					<input type="checkbox" class="form-check-input" x-model="settings.cbTrustProxyHeaders" :disabled="!#prc.canWrite#">
-					<span class="form-check-label">Trust proxy headers (X-Forwarded-For)</span>
-				</label>
-				<hr class="w-100">
-				<label class="form-check">
-					<input type="checkbox" class="form-check-input" x-model="settings.cbRateLimitAutoBlock" :disabled="!#prc.canWrite#">
-					<span class="form-check-label">Block an IP automatically after repeated throttling</span>
-				</label>
-				<label>After this many throttled windows
-					<input type="number" min="1" max="100" class="form-control" x-model="settings.cbRateLimitAutoBlockWindows" :disabled="!#prc.canWrite#">
-				</label>
-				<label>Within (minutes)
-					<input type="number" min="1" max="1440" class="form-control" x-model="settings.cbRateLimitAutoBlockPeriodMinutes" :disabled="!#prc.canWrite#">
-				</label>
-				<label>Block for (hours)
-					<input type="number" min="1" max="8760" class="form-control" x-model="settings.cbRateLimitAutoBlockHours" :disabled="!#prc.canWrite#">
-				</label>
+				<p class="cb-ratelimit-settings__intro">
+					These limits apply per caller IP to protected sign-in, registration, password-reset, and profile SSO actions.
+					Set the window to 0 to disable attempt throttling; history retention is separate.
+				</p>
+				<p class="cb-ratelimit-settings__route-help">
+					To apply these limits to another route, add the middleware in <code>app/config/Router.bx</code>, for example:
+					<code>route( "api/orders" ).middleware( "AppThrottle" ).to( "Orders.create" )</code>.
+					It counts POST, PUT, PATCH, and DELETE by default. To count GET requests, add
+					<code>.meta( { throttleMethods: "GET" } )</code>. For HTML forms, set <code>throttleRedirect</code>
+					meta to return blocked users to the form; without it, blocked requests receive a JSON 429 response.
+				</p>
+				<div class="cb-ratelimit-settings-grid">
+					<label>Attempts per window
+						<input type="number" min="1" max="100" class="form-control" x-model="settings.cbRateLimitMaxAttempts" :disabled="!#prc.canWrite#">
+					</label>
+					<label>Window (seconds)
+						<input type="number" min="0" max="86400" class="form-control" x-model="settings.cbRateLimitWindowSeconds" :disabled="!#prc.canWrite#">
+					</label>
+					<label>History kept (days)
+						<input type="number" min="1" max="365" class="form-control" x-model="settings.cbRateLimitHistoryRetentionDays" :disabled="!#prc.canWrite#">
+					</label>
+				</div>
+				<hr>
+				<div class="cb-ratelimit-setting-row">
+					<div>
+						<strong>Automatically block repeat offenders</strong>
+						<small>After an IP is throttled in this many windows within the selected period, it is added to the block list for the selected duration. Excluded, private, loopback, and link-local IPs are not automatically blocked.</small>
+					</div>
+					#view(
+						view = "_components/ui/switch",
+						args = {
+							name: "Automatically block repeat offenders",
+							bind: "settings.cbRateLimitAutoBlock",
+							disabled: !prc.canWrite
+						}
+					)#
+				</div>
+				<div class="cb-ratelimit-settings-grid" x-show="settings.cbRateLimitAutoBlock" x-cloak>
+					<label>After this many throttled windows
+						<input type="number" min="1" max="100" class="form-control" x-model="settings.cbRateLimitAutoBlockWindows" :disabled="!#prc.canWrite#">
+					</label>
+					<label>Within (minutes)
+						<input type="number" min="1" max="1440" class="form-control" x-model="settings.cbRateLimitAutoBlockPeriodMinutes" :disabled="!#prc.canWrite#">
+					</label>
+					<label>Block for (hours)
+						<input type="number" min="1" max="8760" class="form-control" x-model="settings.cbRateLimitAutoBlockHours" :disabled="!#prc.canWrite#">
+					</label>
+				</div>
 				<bx:if prc.canWrite>
 				<button type="submit" class="btn btn-primary" :disabled="busy"><i class="ph-duotone ph-floppy-disk" aria-hidden="true"></i> Save settings</button>
 				</bx:if>
@@ -362,18 +383,20 @@
 				<h3 class="h6 mb-0"><i class="ph-duotone ph-hard-drives" aria-hidden="true"></i> Server ceiling</h3>
 			</div>
 			<div class="p-3">
-				<p class="cb-muted-cell">The most requests one IP may make per minute to the whole site. It protects the server itself: it cannot be turned off, a pause does not stop it, and excluded addresses are counted too.</p>
-				<form class="cb-ratelimit-form" @submit.prevent="saveCeiling()">
-					<label>Requests per minute per IP
-						<input type="number" class="form-control" :min="overview.ceiling.minimum" :max="overview.ceiling.maximum" x-model.number="ceilingLimit" :disabled="!#prc.canAdmin#">
-						<small class="cb-muted-cell">Between <span x-text="overview.ceiling.minimum"></span> and <span x-text="overview.ceiling.maximum"></span>.</small>
-					</label>
-					<bx:if prc.canAdmin>
-					<button type="submit" class="btn btn-primary" :disabled="busy"><i class="ph-duotone ph-floppy-disk" aria-hidden="true"></i> Save</button>
-					<button type="button" class="btn btn-outline-danger" x-show="!overview.ceiling.lockdown" @click="setLockdown( true )" :disabled="busy">
-						<i class="ph-duotone ph-lock-key" aria-hidden="true"></i> Turn on lockdown
-					</button>
-					</bx:if>
+				<p class="cb-muted-cell">The ceiling caps each counted IP across the whole site. It protects the server itself, so pausing rate limits does not stop it; excluded addresses are counted too, while loopback, private, and link-local addresses are not.</p>
+				<p class="cb-muted-cell">Lockdown is an emergency measure for an active attack or traffic surge: it overrides the configured ceiling and limits each counted IP to 30 requests per minute. It stays on until an admin turns it off. Excess requests are refused, but lockdown does not add IPs to the block list.</p>
+				<form class="cb-ratelimit-ceiling-form" @submit.prevent="saveCeiling()">
+					<label for="server-ceiling-limit">Requests per minute per IP</label>
+					<div class="cb-ratelimit-ceiling-form__controls">
+						<input id="server-ceiling-limit" type="number" class="form-control" :min="overview.ceiling.minimum" :max="overview.ceiling.maximum" x-model.number="ceilingLimit" :disabled="!#prc.canAdmin#" aria-describedby="server-ceiling-range">
+						<bx:if prc.canAdmin>
+						<button type="submit" class="btn btn-primary" :disabled="busy"><i class="ph-duotone ph-floppy-disk" aria-hidden="true"></i> Save</button>
+						<button type="button" class="btn btn-outline-danger" x-show="!overview.ceiling.lockdown" @click="setLockdown( true )" :disabled="busy">
+							<i class="ph-duotone ph-lock-key" aria-hidden="true"></i> Turn on lockdown
+						</button>
+						</bx:if>
+					</div>
+					<small id="server-ceiling-range" class="cb-muted-cell">Between <span x-text="overview.ceiling.minimum"></span> and <span x-text="overview.ceiling.maximum"></span>.</small>
 				</form>
 				<div class="mt-3">
 					<span class="cb-muted-cell">Tracking <span x-text="overview.ceiling.trackedIps"></span> of <span x-text="overview.ceiling.maxTrackedIps"></span> addresses. <span x-text="overview.ceiling.refusedRecently"></span> requests refused in the last two minutes.</span>

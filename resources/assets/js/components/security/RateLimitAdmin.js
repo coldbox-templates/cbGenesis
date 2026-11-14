@@ -98,13 +98,12 @@ export function rateLimitAdmin( initialData = {}, csrfToken = "" ) {
 		 * booleans so the checkboxes bind correctly.
 		 *
 		 * @param {Object} settings The settings returned by the server.
-		 * @returns {Object} A copy with `cbTrustProxyHeaders` and `cbRateLimitAutoBlock` as booleans.
+		 * @returns {Object} A copy with `cbRateLimitAutoBlock` as a boolean.
 		 */
 		normalizeSettings( settings ) {
 			const flag = ( value ) => value === true || String( value ).toLowerCase() === "true";
 			return {
 				...settings,
-				cbTrustProxyHeaders  : flag( settings.cbTrustProxyHeaders ),
 				cbRateLimitAutoBlock : flag( settings.cbRateLimitAutoBlock ),
 			};
 		},

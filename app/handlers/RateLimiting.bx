@@ -37,7 +37,6 @@ class extends="BaseSecureHandler" {
 		EDITABLE_SETTINGS = [
 			"cbRateLimitMaxAttempts",
 			"cbRateLimitWindowSeconds",
-			"cbTrustProxyHeaders",
 			"cbRateLimitHistoryRetentionDays",
 			"cbRateLimitAutoBlock",
 			"cbRateLimitAutoBlockWindows",
