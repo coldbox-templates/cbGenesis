@@ -460,7 +460,7 @@ documentation.</p>
 </thead>
 <tbody>
 <tr><td><code>cbRateLimitMaxAttempts</code></td><td>Attempts allowed per IP, per endpoint, within the window (default: <code>5</code>)</td></tr>
-<tr><td><code>cbRateLimitWindowSeconds</code></td><td>Window length, in seconds (default: <code>300</code>). <code>0</code> disables attempt throttling, not the block list or server ceiling</td></tr>
+<tr><td><code>cbRateLimitWindowSeconds</code></td><td>Window length, in seconds (default: <code>300</code>, 1 to 86400). <code>0</code> is not allowed: to switch attempt throttling off, use the emergency stop. The block list and server ceiling are separate</td></tr>
 <tr><td><code>cbTrustProxyHeaders</code></td><td>Whether the &quot;per IP&quot; in &quot;per IP, per endpoint&quot; comes from <code>X-Forwarded-For</code> or the raw socket address (default: <code>true</code>) - see <a href="/next/deployment/index.html#deploying-behind-a-reverse-proxy">Deploying behind a reverse proxy</a></td></tr>
 </tbody>
 </table></div>
