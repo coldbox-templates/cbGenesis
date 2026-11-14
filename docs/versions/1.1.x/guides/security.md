@@ -263,7 +263,7 @@ By default, the middleware counts `POST`, `PUT`, `PATCH` and `DELETE`. To count 
 | Setting | Purpose |
 |---|---|
 | `cbRateLimitMaxAttempts` | Attempts allowed per IP, per endpoint, within the window (default: `5`) |
-| `cbRateLimitWindowSeconds` | Window length, in seconds (default: `300`). `0` disables attempt throttling, not the block list or server ceiling |
+| `cbRateLimitWindowSeconds` | Window length, in seconds (default: `300`, 1 to 86400). `0` is not allowed: to switch attempt throttling off, use the emergency stop. The block list and server ceiling are separate |
 | `cbTrustProxyHeaders` | Whether the "per IP" in "per IP, per endpoint" comes from `X-Forwarded-For` or the raw socket address (default: `true`) - see [Deploying behind a reverse proxy](../deployment.md#deploying-behind-a-reverse-proxy) |
 
 The attempt settings are editable at `/settings` and `/ratelimiting`; proxy-header trust is a global setting editable at `/settings` - see [App Settings](../reference/settings.md#password--token-policy).
