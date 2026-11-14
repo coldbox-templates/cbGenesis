@@ -106,7 +106,7 @@ Apri il file `.env` nel tuo editor di testo preferito e aggiorna di conseguenza 
 Una volta impostato il tuo `.env`, esegui i seguenti comandi per inizializzare e seminare il database. Dovrebbe scaricare automaticamente i driver necessari per collegare la CLI al database configurato. Se ci sono problemi di connessione, assicurati che sia impostato il `DB_DRIVER` corretto e che il modulo driver JDBC corrispondente sia installato.
 
 ```bash frame="terminal" title="Terminal"
-migrate init
+migrate install
 migrate up --seed
 ```
 

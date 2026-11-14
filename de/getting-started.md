@@ -106,7 +106,7 @@ coldbox create app name="my-app" skeleton="cbgenesis"
 Sobald deine `.env` gesetzt ist, führe die folgenden Befehle aus, um die Datenbank zu initialisieren und zu seeden. Die benötigten Treiber sollten automatisch heruntergeladen werden, um die CLI mit der konfigurierten Datenbank zu verbinden. Falls es Verbindungsprobleme gibt, stelle sicher, dass der richtige `DB_DRIVER` gesetzt und das entsprechende JDBC-Treibermodul installiert ist.
 
 ```bash frame="terminal" title="Terminal"
-migrate init
+migrate install
 migrate up --seed
 ```
 

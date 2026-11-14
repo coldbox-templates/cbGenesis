@@ -28,6 +28,7 @@ Copy `.env.example` to `.env` and fill in your own values - read anywhere in the
 | `CBFS_ASSETS_DISK_PATH` | Filesystem path for the cbfs `assets` disk that stores avatars and the branding logo (defaults to `<app-root>/.cbfs`) |
 | `COLDBOX_REINIT_PASSWORD` | Password required by `?fwreinit`. Unset means a fresh random value per boot, so reinit is closed - see [Deployment](../deployment.md#production-checklist) |
 | `COLDBOX_SESSION_TIMEOUT` | Session cache timeout, in minutes, for `cbstorages`' session storage (defaults to `60`) |
+| `RATE_LIMITING_ENABLED` | Set to `false`, `0`, `no`, `off`, or `disabled` as a break-glass override to bypass attempt limits, IP blocks, and the server ceiling - see [Emergency stop](security.md#emergency-stop) |
 
 ## Framework settings (`app/config/Coldbox.bx`)
 

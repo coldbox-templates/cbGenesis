@@ -106,7 +106,7 @@ coldbox create app name="my-app" skeleton="cbgenesis"
 `.env` を設定したら、以下のコマンドを実行してデータベースを初期化し、シードします。設定されたデータベースに CLI を接続するために必要なドライバーが自動的にダウンロードされるはずです。接続に問題がある場合は、正しい `DB_DRIVER` が設定されており、対応する JDBC ドライバーモジュールがインストールされていることを確認してください。
 
 ```bash frame="terminal" title="Terminal"
-migrate init
+migrate install
 migrate up --seed
 ```
 
